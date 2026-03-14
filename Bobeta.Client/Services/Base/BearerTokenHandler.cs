@@ -6,14 +6,9 @@ namespace Bobeta.Client.Services.Base;
 /// Delegating handler that attaches the current bearer token to outbound HTTP requests.
 /// Register when using AddBobetaClient with useBearerToken: true and IAccessTokenProvider registered.
 /// </summary>
-public class BearerTokenHandler : DelegatingHandler
+public class BearerTokenHandler(IAccessTokenProvider tokenProvider) : DelegatingHandler
 {
-    private readonly IAccessTokenProvider _tokenProvider;
-
-    public BearerTokenHandler(IAccessTokenProvider tokenProvider)
-    {
-        _tokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
-    }
+    private readonly IAccessTokenProvider _tokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
