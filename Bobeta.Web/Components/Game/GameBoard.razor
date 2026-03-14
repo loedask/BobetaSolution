@@ -1,7 +1,9 @@
 <div class="game-board-dropzone rounded-2xl border border-border bg-card p-6 min-h-[120px] flex items-center justify-center transition-colors @(_dragOver ? "border-primary bg-primary/5" : "")"
      @ondragover="HandleDragOver"
+     @ondragover:preventDefault
      @ondragleave="HandleDragLeave"
-     @ondrop="HandleDrop">
+     @ondrop="HandleDrop"
+     @ondrop:preventDefault>
     @if (LastPlayedCard != null)
     {
         <div class="rounded-lg border border-primary/50 bg-card-surface px-4 py-3 card-play-animation">
@@ -22,8 +24,6 @@
 
     private void HandleDragOver(DragEventArgs e)
     {
-        e.PreventDefault();
-        e.DataTransfer.DropEffect = "move";
         _dragOver = true;
     }
 
@@ -34,7 +34,6 @@
 
     private void HandleDrop(DragEventArgs e)
     {
-        e.PreventDefault();
         _dragOver = false;
         OnCardDropped.InvokeAsync();
     }
