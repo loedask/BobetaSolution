@@ -1,14 +1,13 @@
 @page "/dashboard"
-@inject NavigationManager Nav
-@inject WalletService WalletService
-@inject AppStateService AppState
+@implements IDisposable
+@inject DashboardViewModel ViewModel
 @inject I18nService I18n
 
 <div class="min-h-screen bg-background pb-24">
     <div class="flex items-center justify-between px-5 pt-6 pb-4">
         <div>
             <p class="text-sm text-muted-foreground">@I18n.T("welcome_back")</p>
-            <h1 class="font-display text-xl font-bold text-foreground">@(AppState.State.CurrentPlayerName ?? "Player")</h1>
+            <h1 class="font-display text-xl font-bold text-foreground">@ViewModel.PlayerName</h1>
         </div>
         <button type="button" class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-card">
             <svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
@@ -17,7 +16,22 @@
     </div>
 
     <div class="space-y-6 px-5">
-        <WalletCard Balance="@((decimal)AppState.State.WalletBalance)" OnDeposit="GoDeposit" OnWithdraw="GoWithdraw" />
+        <ErrorBanner Message="@ViewModel.ErrorMessage" />
+        @if (ViewModel.IsLoading && ViewModel.Transactions.Count == 0)
+        {
+            <div class="card-surface glow-gold rounded-2xl p-6">
+                <SkeletonLoader CssClass="mb-2 h-4 w-32" />
+                <SkeletonLoader CssClass="h-12 w-48" />
+                <div class="mt-5 flex gap-3">
+                    <SkeletonLoader CssClass="flex-1 h-12 rounded-xl" />
+                    <SkeletonLoader CssClass="flex-1 h-12 rounded-xl" />
+                </div>
+            </div>
+        }
+        else
+        {
+            <WalletCard Balance="@((decimal)ViewModel.Balance)" OnDeposit="GoDeposit" OnWithdraw="GoWithdraw" />
+        }
 
         <div class="grid grid-cols-3 gap-3">
             <a href="/dashboard" class="gold-gradient flex flex-col items-center gap-2 rounded-xl p-4 transition-all active:scale-[0.97]">
@@ -40,11 +54,15 @@
                 <a href="/history" class="text-sm text-primary hover:underline">@I18n.T("see_all")</a>
             </div>
             <div class="space-y-2">
-                @if (_transactions.Count == 0)
+                @if (ViewModel.IsLoading && ViewModel.Transactions.Count == 0)
+                {
+                    @for (var i = 0; i < 3; i++) { <SkeletonLoader CssClass="h-16 rounded-xl" /> }
+                }
+                else if (ViewModel.Transactions.Count == 0)
                 {
                     <p class="text-sm text-muted-foreground py-4">No recent activity</p>
                 }
-                @foreach (var tx in _transactions)
+                @foreach (var tx in ViewModel.Transactions)
                 {
                     <TransactionItem Description="@tx.Description" Time="@tx.Time" Amount="@tx.Amount" />
                 }
@@ -59,25 +77,10 @@
 </div>
 
 @code {
-    private List<(string Description, string Time, decimal Amount)> _transactions = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        var balanceRes = await WalletService.GetBalanceAsync();
-        if (balanceRes.IsSuccess && balanceRes.Data != null)
-        {
-            AppState.State.WalletBalance = balanceRes.Data.Balance;
-            AppState.State.LockedBalance = balanceRes.Data.LockedBalance;
-            await AppState.SaveAsync();
-        }
-        var txRes = await WalletService.GetTransactionsAsync(0, 10);
-        if (txRes.IsSuccess && txRes.Data != null)
-            _transactions = txRes.Data.Select(t => (
-                t.Type == "Deposit" ? I18n.T("deposit_label") : t.Type == "Withdraw" ? "Withdraw" : t.Type,
-                t.CreatedAt.ToString("g"),
-                t.Amount)).ToList();
-    }
-
-    private void GoDeposit() => Nav.NavigateTo("/deposit");
-    private void GoWithdraw() => Nav.NavigateTo("/withdraw");
+    protected override void OnInitialized() => ViewModel.StateChanged += OnStateChanged;
+    protected override async Task OnInitializedAsync() => await ViewModel.LoadAsync();
+    public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+    private void GoDeposit() => ViewModel.GoToDeposit();
+    private void GoWithdraw() => ViewModel.GoToWithdraw();
 }

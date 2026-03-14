@@ -1,12 +1,25 @@
-<Bootstrap>
-    <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
-        <Found Context="routeData">
-            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        </Found>
-        <NotFound>
-            <LayoutView Layout="@typeof(MainLayout)">
-                <p class="p-6 text-foreground"><a href="/">Return to Home</a></p>
-            </LayoutView>
-        </NotFound>
-    </Router>
-</Bootstrap>
+<ErrorBoundary>
+    <ChildContent>
+        <Bootstrap>
+            <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+                <Found Context="routeData">
+                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+                </Found>
+                <NotFound>
+                    <LayoutView Layout="@typeof(MainLayout)">
+                        <p class="p-6 text-foreground"><a href="/">Return to Home</a></p>
+                    </LayoutView>
+                </NotFound>
+            </Router>
+        </Bootstrap>
+    </ChildContent>
+    <ErrorContent>
+        <div class="min-h-screen bg-background flex items-center justify-center p-6">
+            <div class="rounded-2xl border border-border bg-card p-6 text-center max-w-sm">
+                <p class="text-destructive font-semibold mb-2">Something went wrong.</p>
+                <p class="text-sm text-muted-foreground mb-4">The app encountered an error. Please try again or return home.</p>
+                <a href="/" class="text-primary font-medium hover:underline">Return to Home</a>
+            </div>
+        </div>
+    </ErrorContent>
+</ErrorBoundary>

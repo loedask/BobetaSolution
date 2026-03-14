@@ -1,59 +1,35 @@
 @page "/verify"
 @layout AuthLayout
-@inject NavigationManager Nav
-@inject AuthService AuthService
-@inject AppStateService AppState
+@implements IDisposable
+@inject OtpVerificationViewModel ViewModel
 @inject I18nService I18n
 
 <div class="relative flex min-h-screen flex-col">
     <div class="relative z-10 flex flex-1 flex-col items-center justify-center px-6 w-full max-w-sm">
+        <ErrorBanner Message="@ViewModel.ErrorMessage" />
         <h2 class="mb-2 font-display text-2xl font-bold text-foreground">@I18n.T("verification_code")</h2>
-        <p class="mb-8 text-center text-sm text-muted-foreground">@I18n.T("enter_otp_desc") @AppState.State.PhoneNumber</p>
+        <p class="mb-8 text-center text-sm text-muted-foreground">@I18n.T("enter_otp_desc") @ViewModel.PhoneNumber</p>
         <div class="mb-6 flex justify-center gap-3">
             @for (var i = 0; i < 4; i++)
             {
                 var idx = i;
-                <input type="text" maxlength="1" value="@(Otp.Length > idx ? Otp[idx].ToString() : "")"
+                <input type="text" maxlength="1" value="@(ViewModel.Otp.Length > idx ? ViewModel.Otp[idx].ToString() : "")"
                        class="h-14 w-14 rounded-xl border border-border bg-card text-center font-display text-2xl font-bold text-foreground outline-none focus:border-primary transition-all"
-                       @oninput="e => UpdateOtp(idx, e.Value?.ToString() ?? string.Empty)" />
+                       @oninput="e => ViewModel.UpdateOtp(idx, e.Value?.ToString() ?? string.Empty)" />
             }
         </div>
-        <PrimaryButton OnClick="Verify" Disabled="@(Otp.Length < 4)" CssClass="w-full">
-            @I18n.T("verify")
+        <PrimaryButton OnClick="Verify" Disabled="@(!ViewModel.CanVerify)" CssClass="w-full">
+            @if (ViewModel.IsLoading) { <LoadingSpinner /> } else { @I18n.T("verify") }
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
         </PrimaryButton>
-        <button type="button" class="mt-4 text-sm text-primary hover:underline" @onclick="Resend">@I18n.T("resend_code")</button>
+        <button type="button" class="mt-4 text-sm text-primary hover:underline" @onclick="Resend" disabled="@ViewModel.IsLoading">@I18n.T("resend_code")</button>
     </div>
 </div>
 
 @code {
-    private string Otp { get; set; } = "";
-    private bool _verifying;
-
-    private void UpdateOtp(int index, string value)
-    {
-        if (value.Length > 1) value = value[^1].ToString();
-        var arr = Otp.PadRight(4).ToCharArray();
-        arr[index] = value.Length > 0 ? value[0] : ' ';
-        Otp = new string(arr).TrimEnd().Replace(" ", "");
-    }
-
-    private async Task Verify()
-    {
-        if (Otp.Length < 4 || _verifying) return;
-        _verifying = true;
-        try
-        {
-            var res = await AuthService.VerifyOtpAsync(AppState.State.PhoneNumber ?? "", Otp);
-            if (res.IsSuccess)
-                Nav.NavigateTo("/create-player");
-        }
-        finally { _verifying = false; }
-    }
-
-    private async Task Resend()
-    {
-        if (AppState.State.PhoneNumber == null) return;
-        await AuthService.SendOtpAsync(AppState.State.PhoneNumber);
-    }
+    protected override void OnInitialized() => ViewModel.StateChanged += OnStateChanged;
+    public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+    private async Task Verify() => await ViewModel.VerifyAsync();
+    private async Task Resend() => await ViewModel.ResendAsync();
 }

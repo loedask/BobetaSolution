@@ -1,27 +1,27 @@
 @page "/deposit"
-@inject NavigationManager Nav
-@inject WalletService WalletService
-@inject AppStateService AppState
+@implements IDisposable
+@inject DepositViewModel ViewModel
 @inject I18nService I18n
 
 <div class="min-h-screen bg-background pb-24">
     <AppHeader Title="@I18n.T("deposit")" ShowBack="true" BackHref="/dashboard" />
 
     <div class="space-y-6 px-5">
+        <ErrorBanner Message="@ViewModel.ErrorMessage" />
         <div class="card-surface rounded-2xl p-5">
             <div class="mb-1 flex items-center gap-2 text-sm text-muted-foreground">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
                 <span>@I18n.T("current_balance")</span>
             </div>
-            <span class="gold-text font-display text-3xl font-bold">@AppState.State.WalletBalance.ToString("N0") FCFA</span>
+            <span class="gold-text font-display text-3xl font-bold">@ViewModel.CurrentBalance.ToString("N0") FCFA</span>
         </div>
 
-        @if (_status == "success")
+        @if (ViewModel.IsSuccess)
         {
             <div class="flex flex-col items-center gap-4 py-10">
                 <svg class="h-16 w-16 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <p class="font-display text-xl font-bold text-foreground">@I18n.T("deposit_successful")</p>
-                <p class="text-sm text-muted-foreground">+@_amount.ToString("N0") FCFA @I18n.T("added_to_wallet")</p>
+                <p class="text-sm text-muted-foreground">+@ViewModel.SuccessAmount.ToString("N0") FCFA @I18n.T("added_to_wallet")</p>
             </div>
         }
         else
@@ -29,13 +29,13 @@
             <div class="space-y-5">
                 <div class="space-y-2">
                     <label class="text-sm font-medium text-foreground">@I18n.T("amount_fcfa")</label>
-                    <input type="number" @bind="Amount" placeholder="@I18n.T("enter_amount")" disabled="@(_status == "processing")"
+                    <input type="number" @bind="ViewModel.Amount" @bind:event="oninput" placeholder="@I18n.T("enter_amount")" disabled="@ViewModel.IsProcessing"
                            class="h-14 w-full rounded-xl border border-border bg-card text-center font-display text-2xl font-bold text-foreground placeholder:text-muted-foreground" />
                 </div>
                 <div class="grid grid-cols-4 gap-2">
                     @foreach (var v in new[] { 500, 1000, 2000, 5000 })
                     {
-                        <button type="button" disabled="@(_status == "processing")" class="rounded-xl border border-border bg-card py-2.5 text-sm font-semibold text-foreground transition-all hover:border-primary active:scale-95" @onclick="() => Amount = v.ToString()">@v.ToString("N0")</button>
+                        <button type="button" disabled="@ViewModel.IsProcessing" class="rounded-xl border border-border bg-card py-2.5 text-sm font-semibold text-foreground transition-all hover:border-primary active:scale-95" @onclick="() => ViewModel.SetPresetAmount(v)">@v.ToString("N0")</button>
                     }
                 </div>
                 <div class="flex items-center gap-3 rounded-xl bg-card p-4">
@@ -47,11 +47,9 @@
                         <p class="text-xs text-muted-foreground">@I18n.T("instant_deposit_momo")</p>
                     </div>
                 </div>
-                <PrimaryButton OnClick="Submit" Disabled="@(_status == "processing" || string.IsNullOrEmpty(Amount))" CssClass="w-full">
-                    @if (_status == "processing")
-                    { <span class="inline-flex items-center gap-2"><svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> @I18n.T("processing")</span> }
-                    else
-                    { @I18n.T("confirm_deposit") }
+                <PrimaryButton OnClick="Submit" Disabled="@(!ViewModel.CanSubmit)" CssClass="w-full">
+                    @if (ViewModel.IsProcessing) { <span class="inline-flex items-center gap-2"><LoadingSpinner /> @I18n.T("processing")</span> }
+                    else { @I18n.T("confirm_deposit") }
                 </PrimaryButton>
             </div>
         }
@@ -59,29 +57,8 @@
 </div>
 
 @code {
-    private string Amount { get; set; } = "";
-    private string _status = "idle";
-    private decimal _amount;
-
-    private async Task Submit()
-    {
-        if (!decimal.TryParse(Amount, out var value) || value < 100 || _status == "processing") return;
-        _status = "processing";
-        StateHasChanged();
-        try
-        {
-            var res = await WalletService.DepositAsync((double)value);
-            if (res.IsSuccess)
-            {
-                _amount = value;
-                AppState.State.WalletBalance += value;
-                await AppState.SaveAsync();
-                _status = "success";
-                StateHasChanged();
-                await Task.Delay(1500);
-                Nav.NavigateTo("/dashboard");
-            }
-        }
-        finally { _status = "idle"; StateHasChanged(); }
-    }
+    protected override void OnInitialized() => ViewModel.StateChanged += OnStateChanged;
+    public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+    private async Task Submit() => await ViewModel.SubmitAsync();
 }

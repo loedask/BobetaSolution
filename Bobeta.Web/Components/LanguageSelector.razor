@@ -2,7 +2,7 @@
 @inject AppStateService AppState
 
 <div class="flex gap-1.5">
-    @foreach (var item in Locales)
+    @foreach (var item in I18nService.SupportedLocales)
     {
         var isActive = AppState.State.SelectedLanguage == item.Code;
         <button type="button" aria-label="Select @item.Label" class="flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold transition-all @(isActive ? "bg-primary/15 ring-2 ring-primary text-primary" : "bg-card text-muted-foreground hover:bg-secondary hover:text-foreground")"
@@ -13,15 +13,9 @@
 </div>
 
 @code {
-    private static readonly (string Code, string Label, string ShortCode)[] Locales =
-    {
-        ("en", "English", "EN"),
-        ("fr", "Français", "FR"),
-    };
-
     private async Task SetLocale(string code)
     {
-        AppState.State.SelectedLanguage = code;
-        await AppState.SaveAsync();
+        AppState.SetLanguage(code);
+        await AppState.PersistAsync();
     }
 }

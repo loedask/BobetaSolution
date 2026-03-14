@@ -1,0 +1,7 @@
+@* Skeleton loader - same dimensions as content to avoid layout shift. No Tailwind changes. *@
+<div class="animate-pulse rounded-xl bg-muted/50 @CssClass" style="@(Height > 0 ? $"height: {Height}px;" : "")"></div>
+
+@code {
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter] public int Height { get; set; }
+}

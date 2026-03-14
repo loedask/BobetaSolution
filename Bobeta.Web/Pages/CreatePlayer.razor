@@ -1,49 +1,31 @@
 @page "/create-player"
 @layout AuthLayout
-@inject NavigationManager Nav
-@inject AuthService AuthService
-@inject AppStateService AppState
+@implements IDisposable
+@inject CreatePlayerViewModel ViewModel
 @inject I18nService I18n
 
 <div class="relative flex min-h-screen flex-col">
     <div class="relative z-10 flex flex-1 flex-col items-center justify-center px-6 w-full max-w-sm">
+        <ErrorBanner Message="@ViewModel.ErrorMessage" />
         <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/10">
             <svg class="h-8 w-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
         </div>
         <h2 class="mb-2 font-display text-2xl font-bold text-foreground">@I18n.T("choose_player_name")</h2>
         <p class="mb-8 text-center text-sm text-muted-foreground">@I18n.T("player_name_desc")</p>
         <div class="mb-6 w-full">
-            <input type="text" @bind="PlayerName" @bind:event="oninput" placeholder="@I18n.T("player_name_placeholder")" maxlength="20"
+            <input type="text" @bind="ViewModel.PlayerName" @bind:event="oninput" placeholder="@I18n.T("player_name_placeholder")" maxlength="20"
                    class="w-full rounded-xl border border-border bg-card px-4 py-3 text-lg text-foreground outline-none placeholder:text-muted-foreground/50 focus:border-primary/50 transition-all" />
         </div>
-        <PrimaryButton OnClick="Register" Disabled="@(PlayerName?.Length < 2)" CssClass="w-full">
-            @I18n.T("create_account")
+        <PrimaryButton OnClick="Register" Disabled="@(!ViewModel.CanSubmit)" CssClass="w-full">
+            @if (ViewModel.IsLoading) { <LoadingSpinner /> } else { @I18n.T("create_account") }
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
         </PrimaryButton>
     </div>
 </div>
 
 @code {
-    private string PlayerName { get; set; } = "";
-    private bool _loading;
-
-    private async Task Register()
-    {
-        if (PlayerName.Length < 2 || _loading || string.IsNullOrEmpty(AppState.State.PhoneNumber)) return;
-        _loading = true;
-        try
-        {
-            var req = new CreatePlayerRequest { PhoneNumber = AppState.State.PhoneNumber, PlayerName = PlayerName };
-            var res = await AuthService.RegisterAsync(req);
-            if (res.IsSuccess && res.Data != null)
-            {
-                AppState.State.AccessToken = res.Data.Token;
-                AppState.State.CurrentPlayerId = res.Data.PlayerId;
-                AppState.State.CurrentPlayerName = res.Data.PlayerName;
-                await AppState.SaveAsync();
-                Nav.NavigateTo("/dashboard");
-            }
-        }
-        finally { _loading = false; }
-    }
+    protected override void OnInitialized() => ViewModel.StateChanged += OnStateChanged;
+    public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+    private async Task Register() => await ViewModel.RegisterAsync();
 }

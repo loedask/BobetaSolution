@@ -1,0 +1,60 @@
+using Microsoft.AspNetCore.Components;
+
+namespace Bobeta.Web.ViewModels.Dashboard;
+
+public record TransactionItemDto(string Description, string Time, decimal Amount);
+
+public class DashboardViewModel : ViewModelBase
+{
+    private readonly WalletService _walletService;
+    private readonly AppStateService _appState;
+    private readonly I18nService _i18n;
+    private readonly NavigationManager _nav;
+
+    public DashboardViewModel(WalletService walletService, AppStateService appState, I18nService i18n, NavigationManager nav)
+    {
+        _walletService = walletService;
+        _appState = appState;
+        _i18n = i18n;
+        _nav = nav;
+    }
+
+    public string PlayerName => _appState.State.CurrentPlayerName ?? "Player";
+    public decimal Balance => _appState.State.WalletBalance;
+    public List<TransactionItemDto> Transactions { get; private set; } = new();
+
+    public async Task LoadAsync()
+    {
+        SetLoading(true);
+        ClearError();
+        try
+        {
+            var balanceRes = await _walletService.GetBalanceAsync();
+            if (balanceRes.IsSuccess && balanceRes.Data != null)
+            {
+                _appState.SetWalletBalance(balanceRes.Data.Balance, balanceRes.Data.LockedBalance);
+                await _appState.PersistAsync();
+            }
+            else if (!balanceRes.IsSuccess)
+                SetError(balanceRes.ErrorMessage ?? "Failed to load balance.");
+
+            var txRes = await _walletService.GetTransactionsAsync(0, 10);
+            if (txRes.IsSuccess && txRes.Data != null)
+                Transactions = txRes.Data.Select(t => new TransactionItemDto(
+                    t.Type == "Deposit" ? _i18n.T("deposit_label") : t.Type == "Withdraw" ? "Withdraw" : t.Type,
+                    t.CreatedAt.ToString("g"),
+                    t.Amount)).ToList();
+        }
+        catch (Exception)
+        {
+            SetError("Something went wrong. Please try again.");
+        }
+        finally
+        {
+            SetLoading(false);
+        }
+    }
+
+    public void GoToDeposit() => _nav.NavigateTo("/deposit");
+    public void GoToWithdraw() => _nav.NavigateTo("/withdraw");
+}
