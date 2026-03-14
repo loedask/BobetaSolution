@@ -3,6 +3,7 @@ using Bobeta.Client.Contracts.Interfaces;
 using Bobeta.Client.Models.Games;
 using Bobeta.Web.Services;
 using Bobeta.Web.Services.Realtime;
+using Bobeta.Client.Services;
 
 namespace Bobeta.Web.ViewModels.Games;
 
@@ -131,9 +132,6 @@ public class GamePlayViewModel : ViewModelBase
                 if (res.Data.GameOver)
                     HandleGameResult(res.Data.WinnerPlayerId);
             }
-
-            if (_hubClient != null && res.Data != null)
-                await _hubClient.PlayCardAsync(SessionId, card.Suit, int.TryParse(card.Rank, out var r) ? r : 0);
 
             RaiseStateChanged();
         }
