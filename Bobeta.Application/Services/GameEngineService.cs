@@ -8,6 +8,12 @@ using Bobeta.Domain.ValueObjects;
 
 namespace Bobeta.Application.Services;
 
+/// <summary>
+/// Makopa card game engine. Server-authoritative and deterministic.
+/// Rules: 52-card deck; 4 cards per player; must follow suit if possible; if no matching suit, opponent (second player) takes the trick;
+/// same suit = higher rank wins; winner leads next round; cards removed after each trick;
+/// game ends when a player has one card left and it is their turn (that player wins).
+/// </summary>
 public class GameEngineService(
     IGameSessionRepository sessionRepository,
     IGameMoveRepository moveRepository,
@@ -15,6 +21,8 @@ public class GameEngineService(
     IWalletService walletService) : IGameEngineService
 {
     private const decimal CommissionRate = 0.25m;
+    private const int DeckSize = 52;
+    private const int CardsPerPlayer = 4;
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     private readonly IGameSessionRepository _sessionRepository = sessionRepository;
@@ -31,9 +39,11 @@ public class GameEngineService(
         var creatorId = session.CreatorPlayerId;
         var opponentId = session.OpponentPlayerId.Value;
         var deck = BuildDeck();
-        Shuffle(deck);
-        var creatorHand = deck.Take(4).Select(CardToString).ToList();
-        var opponentHand = deck.Skip(4).Take(4).Select(CardToString).ToList();
+        if (deck.Count != DeckSize)
+            throw new InvalidOperationException($"Deck must have {DeckSize} cards.");
+        Shuffle(deck, sessionId);
+        var creatorHand = deck.Take(CardsPerPlayer).Select(CardToString).ToList();
+        var opponentHand = deck.Skip(CardsPerPlayer).Take(CardsPerPlayer).Select(CardToString).ToList();
         var state = new MakopaGameState
         {
             CreatorHand = creatorHand,
@@ -47,6 +57,7 @@ public class GameEngineService(
         await _sessionRepository.UpdateAsync(session, cancellationToken);
     }
 
+    /// <summary>Server-authoritative play: validates turn, card in hand, and follow-suit rule before applying move.</summary>
     public async Task<GameStateDto?> PlayCardAsync(Guid playerId, Guid sessionId, Card card, CancellationToken cancellationToken = default)
     {
         var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
@@ -57,12 +68,18 @@ public class GameEngineService(
         var opponentId = session.OpponentPlayerId!.Value;
         var hand = playerId == creatorId ? state.CreatorHand : state.OpponentHand;
         var cardStr = CardToString(card.Suit, card.Rank);
-        if (state.CurrentTurnPlayerId != playerId || !hand.Contains(cardStr))
-            return null;
 
-        bool mustFollowSuit = state.TrickSuit != null && hand.Any(c => c.StartsWith(state.TrickSuit!));
-        if (mustFollowSuit && !cardStr.StartsWith(state.TrickSuit!))
-            return null;
+        if (state.CurrentTurnPlayerId != playerId) return null;
+        if (!hand.Contains(cardStr)) return null;
+
+        // Must follow suit if possible (server-authoritative rule).
+        var leadSuit = state.TrickSuit;
+        if (leadSuit != null)
+        {
+            var hasLeadSuit = hand.Any(c => c.StartsWith(leadSuit, StringComparison.Ordinal));
+            if (hasLeadSuit && !cardStr.StartsWith(leadSuit, StringComparison.Ordinal))
+                return null;
+        }
 
         hand.Remove(cardStr);
         state.TrickPlays.Add(new PlayedInTrick { PlayerId = playerId, Card = cardStr });
@@ -82,14 +99,15 @@ public class GameEngineService(
         Guid? nextTurn;
         if (state.TrickPlays.Count == 2)
         {
-            var winner = ResolveTrick(state.TrickPlays[0], state.TrickPlays[1], state.TrickSuit);
+            var winner = ResolveTrick(state.TrickPlays[0], state.TrickPlays[1], state.TrickSuit!);
             state.LeadPlayerId = winner;
             state.CurrentTurnPlayerId = winner;
             state.TrickSuit = null;
             state.TrickPlays.Clear();
             nextTurn = winner;
-            var gameOver = state.CreatorHand.Count == 0 && state.OpponentHand.Count == 0;
-            if (gameOver)
+            // Game ends when a player has one card left and it is their turn (winner of trick leads next and has 1 card).
+            var winnerHandCount = winner == creatorId ? state.CreatorHand.Count : state.OpponentHand.Count;
+            if (winnerHandCount == 1)
             {
                 var (winnerId, loserId) = winner == creatorId ? (creatorId, opponentId) : (opponentId, creatorId);
                 await FinalizeGameAsync(session, winnerId, loserId, cancellationToken);
@@ -144,16 +162,16 @@ public class GameEngineService(
         }, cancellationToken);
     }
 
+    /// <summary>Resolves trick: must follow suit; if second cannot follow, opponent (second) takes the card. Same suit = higher rank wins.</summary>
     private static Guid ResolveTrick(PlayedInTrick first, PlayedInTrick second, string leadSuit)
     {
-        var s1 = first.Card.Split('_');
         var s2 = second.Card.Split('_');
-        var rank1 = int.Parse(s1[1]);
-        var rank2 = int.Parse(s2[1]);
-        var suit1 = s1[0];
         var suit2 = s2[0];
-        if (suit2 != leadSuit) return first.PlayerId;
-        if (suit1 != leadSuit) return second.PlayerId;
+        var rank2 = int.Parse(s2[1]);
+        // If second player did not follow suit, opponent (second player) takes the card.
+        if (suit2 != leadSuit) return second.PlayerId;
+        var s1 = first.Card.Split('_');
+        var rank1 = int.Parse(s1[1]);
         return rank1 >= rank2 ? first.PlayerId : second.PlayerId;
     }
 
@@ -166,9 +184,11 @@ public class GameEngineService(
         return deck;
     }
 
-    private static void Shuffle<T>(IList<T> list)
+    /// <summary>Deterministic Fisher-Yates shuffle seeded by sessionId so the same game always gets the same deal.</summary>
+    private static void Shuffle<T>(IList<T> list, Guid sessionId)
     {
-        var rng = new Random();
+        var seed = BitConverter.ToInt32(sessionId.ToByteArray(), 0);
+        var rng = new Random(seed);
         for (var i = list.Count - 1; i > 0; i--)
         {
             var j = rng.Next(i + 1);
