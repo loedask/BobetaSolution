@@ -1,10 +1,13 @@
 @page "/game/{SessionId}"
 @layout MainLayout
 @using Bobeta.Web.Components.Game
+@using Bobeta.Web.Services.Realtime
 @inject GamePlayService GamePlayService
 @inject IGameService GameService
 @inject AppStateService AppState
 @inject NavigationManager Nav
+@inject GameHubClient GameHubClient
+@inject GamePlayTestService GamePlayTestService
 @implements IDisposable
 
 <div class="min-h-screen bg-background pb-24">
@@ -24,8 +27,8 @@
         {
             <PotDisplay PotAmount="@ViewModel.PotAmount" />
             <OpponentHand CardCount="@ViewModel.OpponentCards.Count" />
-            <GameBoard LastPlayedCard="@ViewModel.LastPlayedCard" />
-            <PlayerHand Cards="@ViewModel.PlayerCards" IsPlayerTurn="@ViewModel.IsPlayerTurn" OnPlayCard="PlayCard" />
+            <GameBoard LastPlayedCard="@ViewModel.LastPlayedCard" OnCardDropped="HandleCardDropped" />
+            <PlayerHand Cards="@ViewModel.PlayerCards" IsPlayerTurn="@ViewModel.IsPlayerTurn" OnPlayCard="PlayCard" OnDragStart="HandleDragStart" OnDragEnd="HandleDragEnd" />
             <TurnIndicator IsPlayerTurn="@ViewModel.IsPlayerTurn" />
         }
     </div>
@@ -33,6 +36,7 @@
 
 @if (ViewModel.ShowGameResult)
 {
+    <WinCelebration Show="true" />
     <GameResultModal WinnerPlayerName="@ViewModel.WinnerPlayerName" />
 }
 
@@ -43,7 +47,7 @@
 
     protected override void OnInitialized()
     {
-        ViewModel = new GamePlayViewModel(GamePlayService, GameService, AppState, Nav);
+        ViewModel = new GamePlayViewModel(GamePlayService, GameService, AppState, Nav, GameHubClient, GamePlayTestService);
         ViewModel.StateChanged += OnStateChanged;
     }
 
@@ -58,4 +62,18 @@
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
 
     private async Task PlayCard(CardViewModel card) => await ViewModel.PlayCardAsync(card);
+
+    private string? _draggedCardDisplayValue;
+
+    private void HandleDragStart(string displayValue) => _draggedCardDisplayValue = displayValue;
+    private void HandleDragEnd() => _draggedCardDisplayValue = null;
+
+    private async Task HandleCardDropped()
+    {
+        if (string.IsNullOrEmpty(_draggedCardDisplayValue)) return;
+        var card = ViewModel.PlayerCards.FirstOrDefault(c => c.DisplayValue == _draggedCardDisplayValue);
+        if (card != null)
+            await ViewModel.PlayCardAsync(card);
+        _draggedCardDisplayValue = null;
+    }
 }

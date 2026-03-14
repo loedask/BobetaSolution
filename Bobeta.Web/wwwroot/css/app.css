@@ -105,3 +105,61 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
 .loading-progress-text:after { content: var(--blazor-load-percentage-text, "Loading"); }
 
 code { color: #c02d76; }
+
+/* Card animations for Makopa gameplay */
+@keyframes card-flip {
+  0% { transform: rotateY(0deg); }
+  50% { transform: rotateY(90deg); }
+  100% { transform: rotateY(0deg); }
+}
+
+@keyframes card-slide {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(var(--slide-x, 0), var(--slide-y, -20px)) scale(1.05); }
+  100% { transform: translate(var(--slide-x-end, 0), var(--slide-y-end, 0)) scale(1); }
+}
+
+@keyframes card-play {
+  0% { transform: scale(0.95); opacity: 0.9; }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.card-flip {
+  animation: card-flip 0.4s ease-in-out;
+}
+
+.card-slide {
+  animation: card-slide 0.35s ease-out forwards;
+}
+
+.card-play-animation {
+  animation: card-play 0.3s ease-out;
+}
+
+.card-draggable:active {
+  cursor: grabbing;
+}
+
+.card-draggable[draggable="true"] {
+  cursor: grab;
+}
+
+/* Win celebration */
+@keyframes win-pulse {
+  0%, 100% { box-shadow: 0 0 40px 20px hsl(45 90% 55% / 0.3); transform: scale(1); }
+  50% { box-shadow: 0 0 80px 40px hsl(45 90% 55% / 0.5); transform: scale(1.1); }
+}
+
+@keyframes confetti-fall {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+  100% { opacity: 0; transform: translate(var(--tx, 0), 80vh) rotate(720deg); }
+}
+
+.win-glow {
+  background: radial-gradient(circle, hsl(45 90% 55% / 0.6), transparent 70%);
+}
+
+.confetti-piece {
+  will-change: transform, opacity;
+}

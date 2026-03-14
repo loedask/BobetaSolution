@@ -1,16 +1,41 @@
-<div class="rounded-2xl border border-border bg-card p-6 min-h-[120px] flex items-center justify-center">
+<div class="game-board-dropzone rounded-2xl border border-border bg-card p-6 min-h-[120px] flex items-center justify-center transition-colors @(_dragOver ? "border-primary bg-primary/5" : "")"
+     @ondragover="HandleDragOver"
+     @ondragleave="HandleDragLeave"
+     @ondrop="HandleDrop">
     @if (LastPlayedCard != null)
     {
-        <div class="rounded-lg border border-primary/50 bg-card-surface px-4 py-3">
+        <div class="rounded-lg border border-primary/50 bg-card-surface px-4 py-3 card-play-animation">
             <span class="font-display text-lg font-bold text-foreground">@LastPlayedCard.DisplayValue</span>
         </div>
     }
     else
     {
-        <span class="text-muted-foreground text-sm">No card played yet</span>
+        <span class="text-muted-foreground text-sm">@(_dragOver ? "Drop card here" : "No card played yet")</span>
     }
 </div>
 
 @code {
     [Parameter] public CardViewModel? LastPlayedCard { get; set; }
+    [Parameter] public EventCallback OnCardDropped { get; set; }
+
+    private bool _dragOver;
+
+    private void HandleDragOver(DragEventArgs e)
+    {
+        e.PreventDefault();
+        e.DataTransfer.DropEffect = "move";
+        _dragOver = true;
+    }
+
+    private void HandleDragLeave(DragEventArgs e)
+    {
+        _dragOver = false;
+    }
+
+    private void HandleDrop(DragEventArgs e)
+    {
+        e.PreventDefault();
+        _dragOver = false;
+        OnCardDropped.InvokeAsync();
+    }
 }

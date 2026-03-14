@@ -1,7 +1,10 @@
-@* Renders a single card; uses existing Tailwind / gold / dark conventions. *@
+@* Renders a single card; uses existing Tailwind / gold / dark conventions. Draggable when not disabled. *@
 @if (Card != null)
 {
-    <button type="button" class="rounded-lg border border-border bg-card p-2 text-foreground transition-all hover:border-primary/50 active:scale-95 disabled:opacity-50 disabled:pointer-events-none @Card.CssClass @CssClass" disabled="@Disabled" @onclick="() => OnClick.InvokeAsync(Card)">
+    <button type="button" draggable="@(!Disabled)" class="card-draggable rounded-lg border border-border bg-card p-2 text-foreground transition-all hover:border-primary/50 active:scale-95 disabled:opacity-50 disabled:pointer-events-none @Card.CssClass @CssClass" disabled="@Disabled"
+            @onclick="() => OnClick.InvokeAsync(Card)"
+            @ondragstart="HandleDragStart"
+            @ondragend="HandleDragEnd">
         <span class="font-display text-sm font-bold">@Card.DisplayValue</span>
     </button>
 }
@@ -11,4 +14,20 @@
     [Parameter] public bool Disabled { get; set; }
     [Parameter] public string? CssClass { get; set; }
     [Parameter] public EventCallback<CardViewModel> OnClick { get; set; }
+    [Parameter] public EventCallback<string> OnDragStart { get; set; }
+    [Parameter] public EventCallback OnDragEnd { get; set; }
+
+    private void HandleDragStart(DragEventArgs e)
+    {
+        if (Card == null || Disabled) return;
+        e.DataTransfer.EffectAllowed = "move";
+        e.DataTransfer.SetData("text/plain", Card.DisplayValue);
+        _ = OnDragStart.InvokeAsync(Card.DisplayValue);
+    }
+
+    private void HandleDragEnd(DragEventArgs e)
+    {
+        e.DataTransfer.ClearData();
+        _ = OnDragEnd.InvokeAsync();
+    }
 }

@@ -7,6 +7,7 @@ using Bobeta.Web.ViewModels.Dashboard;
 using Bobeta.Web.ViewModels.Wallet;
 using Bobeta.Web.ViewModels.Games;
 using Bobeta.Web.ViewModels.Profile;
+using Bobeta.Web.Services.Realtime;
 using Bobeta.Client;
 using Bobeta.Client.Contracts;
 
@@ -31,6 +32,8 @@ builder.Services.AddScoped<WithdrawViewModel>();
 builder.Services.AddScoped<JoinGameViewModel>();
 builder.Services.AddScoped<GameHistoryViewModel>();
 builder.Services.AddScoped<ProfileViewModel>();
+builder.Services.AddScoped<GameHubClient>();
+builder.Services.AddScoped<GamePlayTestService>();
 
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? builder.HostEnvironment.BaseAddress;
 builder.Services.AddBobetaClient(http => http.BaseAddress = new Uri(apiBaseUrl), useBearerToken: true);

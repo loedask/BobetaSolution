@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Bobeta.Client.Contracts.Interfaces;
 using Bobeta.Client.Models.Games;
 using Bobeta.Web.Services;
+using Bobeta.Web.Services.Realtime;
 
 namespace Bobeta.Web.ViewModels.Games;
 
@@ -11,17 +12,24 @@ public class GamePlayViewModel : ViewModelBase
     private readonly IGameService _gameService;
     private readonly AppStateService _appState;
     private readonly NavigationManager _nav;
+    private readonly GameHubClient? _hubClient;
+    private readonly GamePlayTestService? _testService;
+    private CancellationTokenSource? _aiTriggerCts;
 
     public GamePlayViewModel(
         GamePlayService gamePlayService,
         IGameService gameService,
         AppStateService appState,
-        NavigationManager nav)
+        NavigationManager nav,
+        GameHubClient? hubClient = null,
+        GamePlayTestService? testService = null)
     {
         _gamePlayService = gamePlayService;
         _gameService = gameService;
         _appState = appState;
         _nav = nav;
+        _hubClient = hubClient;
+        _testService = testService;
     }
 
     public string SessionId { get; private set; } = "";
@@ -70,6 +78,17 @@ public class GamePlayViewModel : ViewModelBase
             else
                 ShowGameResult = false;
 
+            if (_hubClient != null)
+            {
+                await _hubClient.ConnectAsync(sessionId);
+                _hubClient.OnGameStateUpdated += ApplyGameStateFromHub;
+                _hubClient.OnOpponentMove += ApplyOpponentMoveFromHub;
+                _hubClient.OnGameResult += ApplyGameResultFromHub;
+                _hubClient.OnReconnected += () => _ = LoadGameAsync(sessionId);
+            }
+
+            ScheduleAiOpponentIfNeeded(sessionGuid);
+
             RaiseStateChanged();
         }
         catch (Exception)
@@ -113,6 +132,9 @@ public class GamePlayViewModel : ViewModelBase
                     HandleGameResult(res.Data.WinnerPlayerId);
             }
 
+            if (_hubClient != null && res.Data != null)
+                await _hubClient.PlayCardAsync(SessionId, card.Suit, int.TryParse(card.Rank, out var r) ? r : 0);
+
             RaiseStateChanged();
         }
         catch (Exception)
@@ -150,7 +172,7 @@ public class GamePlayViewModel : ViewModelBase
 
     private static CardViewModel ParseCard(string value)
     {
-        var parts = value.Split('-');
+        var parts = value.Split('-', '_');
         var suit = parts.Length > 0 ? parts[0] : "0";
         var rank = parts.Length > 1 ? parts[1] : value;
         return new CardViewModel
@@ -160,5 +182,49 @@ public class GamePlayViewModel : ViewModelBase
             DisplayValue = value,
             CssClass = "rounded-lg border border-border bg-card p-2 text-foreground"
         };
+    }
+
+    private void ApplyGameStateFromHub(GameStateViewModel state)
+    {
+        PlayerCards = ParseCards(state.MyCards ?? new List<string>());
+        LastPlayedCard = string.IsNullOrEmpty(state.LastPlayedCard) ? null : ParseCard(state.LastPlayedCard);
+        CurrentPlayerId = state.CurrentTurnPlayerId;
+        IsPlayerTurn = state.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
+        if (state.GameOver)
+            HandleGameResult(state.WinnerPlayerId);
+        else
+            ShowGameResult = false;
+        RaiseStateChanged();
+    }
+
+    private void ApplyOpponentMoveFromHub(string cardSuitRank)
+    {
+        _aiTriggerCts?.Cancel();
+        LastPlayedCard = ParseCard(cardSuitRank);
+        IsPlayerTurn = true;
+        RaiseStateChanged();
+    }
+
+    private void ApplyGameResultFromHub(Guid? winnerPlayerId)
+    {
+        HandleGameResult(winnerPlayerId);
+    }
+
+    /// <summary>Local test: if it's opponent's turn and no move after 5s, simulate AI move then reload.</summary>
+    private async void ScheduleAiOpponentIfNeeded(Guid sessionGuid)
+    {
+        _aiTriggerCts?.Cancel();
+        _aiTriggerCts = new CancellationTokenSource();
+        if (ShowGameResult || IsPlayerTurn || _testService == null) return;
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5), _aiTriggerCts.Token);
+            if (_aiTriggerCts.Token.IsCancellationRequested) return;
+            var ok = await _testService.SimulateAiMoveAsync(sessionGuid, _aiTriggerCts.Token);
+            if (ok && !string.IsNullOrEmpty(SessionId))
+                await LoadGameAsync(SessionId);
+        }
+        catch (OperationCanceledException) { }
+        catch { /* ignore */ }
     }
 }
