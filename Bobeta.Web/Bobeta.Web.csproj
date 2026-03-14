@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Bobeta.Client\Bobeta.Client.csproj" />
+    <ProjectReference Include="..\Bobeta.Client\Bobeta.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup>
