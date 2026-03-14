@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Bobeta.Client.Services;
 
 namespace Bobeta.Web.ViewModels.Auth;
 
