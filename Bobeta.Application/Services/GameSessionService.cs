@@ -5,21 +5,14 @@ using Bobeta.Domain.Enums;
 
 namespace Bobeta.Application.Services;
 
-public class GameSessionService : IGameSessionService
+public class GameSessionService(
+    IGameSessionRepository sessionRepository,
+    IPlayerRepository playerRepository,
+    IWalletService walletService) : IGameSessionService
 {
-    private readonly IGameSessionRepository _sessionRepository;
-    private readonly IPlayerRepository _playerRepository;
-    private readonly IWalletService _walletService;
-
-    public GameSessionService(
-        IGameSessionRepository sessionRepository,
-        IPlayerRepository playerRepository,
-        IWalletService walletService)
-    {
-        _sessionRepository = sessionRepository;
-        _playerRepository = playerRepository;
-        _walletService = walletService;
-    }
+    private readonly IGameSessionRepository _sessionRepository = sessionRepository;
+    private readonly IPlayerRepository _playerRepository = playerRepository;
+    private readonly IWalletService _walletService = walletService;
 
     public async Task<GameSessionDto> CreateGameAsync(Guid playerId, decimal betAmount, CancellationToken cancellationToken = default)
     {

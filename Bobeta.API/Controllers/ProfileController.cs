@@ -8,11 +8,9 @@ namespace Bobeta.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class ProfileController : ControllerBase
+public class ProfileController(IPlayerRepository playerRepository) : ControllerBase
 {
-    private readonly IPlayerRepository _playerRepository;
-
-    public ProfileController(IPlayerRepository playerRepository) => _playerRepository = playerRepository;
+    private readonly IPlayerRepository _playerRepository = playerRepository;
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 

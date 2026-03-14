@@ -8,11 +8,9 @@ namespace Bobeta.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class WalletController : ControllerBase
+public class WalletController(IWalletService walletService) : ControllerBase
 {
-    private readonly IWalletService _walletService;
-
-    public WalletController(IWalletService walletService) => _walletService = walletService;
+    private readonly IWalletService _walletService = walletService;
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 

@@ -8,11 +8,9 @@ namespace Bobeta.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class HistoryController : ControllerBase
+public class HistoryController(IGameHistoryService gameHistoryService) : ControllerBase
 {
-    private readonly IGameHistoryService _gameHistoryService;
-
-    public HistoryController(IGameHistoryService gameHistoryService) => _gameHistoryService = gameHistoryService;
+    private readonly IGameHistoryService _gameHistoryService = gameHistoryService;
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 

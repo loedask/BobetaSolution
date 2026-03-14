@@ -4,14 +4,9 @@ using Bobeta.Domain.Enums;
 
 namespace Bobeta.Application.Services;
 
-public class GameHistoryService : IGameHistoryService
+public class GameHistoryService(IGameSessionRepository sessionRepository) : IGameHistoryService
 {
-    private readonly IGameSessionRepository _sessionRepository;
-
-    public GameHistoryService(IGameSessionRepository sessionRepository)
-    {
-        _sessionRepository = sessionRepository;
-    }
+    private readonly IGameSessionRepository _sessionRepository = sessionRepository;
 
     public async Task<IReadOnlyList<GameHistoryItemDto>> GetPlayerHistoryAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default)
     {

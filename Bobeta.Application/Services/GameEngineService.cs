@@ -8,27 +8,19 @@ using Bobeta.Domain.ValueObjects;
 
 namespace Bobeta.Application.Services;
 
-public class GameEngineService : IGameEngineService
+public class GameEngineService(
+    IGameSessionRepository sessionRepository,
+    IGameMoveRepository moveRepository,
+    IGameResultRepository resultRepository,
+    IWalletService walletService) : IGameEngineService
 {
     private const decimal CommissionRate = 0.25m;
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-    private readonly IGameSessionRepository _sessionRepository;
-    private readonly IGameMoveRepository _moveRepository;
-    private readonly IGameResultRepository _resultRepository;
-    private readonly IWalletService _walletService;
-
-    public GameEngineService(
-        IGameSessionRepository sessionRepository,
-        IGameMoveRepository moveRepository,
-        IGameResultRepository resultRepository,
-        IWalletService walletService)
-    {
-        _sessionRepository = sessionRepository;
-        _moveRepository = moveRepository;
-        _resultRepository = resultRepository;
-        _walletService = walletService;
-    }
+    private readonly IGameSessionRepository _sessionRepository = sessionRepository;
+    private readonly IGameMoveRepository _moveRepository = moveRepository;
+    private readonly IGameResultRepository _resultRepository = resultRepository;
+    private readonly IWalletService _walletService = walletService;
 
     public async Task StartGameAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {

@@ -9,11 +9,9 @@ namespace Bobeta.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class GamePlayController : ControllerBase
+public class GamePlayController(IGameEngineService gameEngineService) : ControllerBase
 {
-    private readonly IGameEngineService _gameEngineService;
-
-    public GamePlayController(IGameEngineService gameEngineService) => _gameEngineService = gameEngineService;
+    private readonly IGameEngineService _gameEngineService = gameEngineService;
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
