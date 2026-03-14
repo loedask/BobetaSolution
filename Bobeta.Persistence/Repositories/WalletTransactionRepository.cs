@@ -1,0 +1,27 @@
+using Bobeta.Application.Interfaces;
+using Bobeta.Domain.Entities;
+using Bobeta.Persistence.Context;
+using Microsoft.EntityFrameworkCore;
+
+namespace Bobeta.Persistence.Repositories;
+
+public class WalletTransactionRepository : IWalletTransactionRepository
+{
+    private readonly BobetaDbContext _db;
+
+    public WalletTransactionRepository(BobetaDbContext db) => _db = db;
+
+    public async Task<WalletTransaction> AddAsync(WalletTransaction transaction, CancellationToken cancellationToken = default)
+    {
+        _db.WalletTransactions.Add(transaction);
+        await _db.SaveChangesAsync(cancellationToken);
+        return transaction;
+    }
+
+    public async Task<IReadOnlyList<WalletTransaction>> GetByPlayerIdAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default) =>
+        await _db.WalletTransactions
+            .Where(t => t.PlayerId == playerId)
+            .OrderByDescending(t => t.CreatedAt)
+            .Skip(skip).Take(take)
+            .ToListAsync(cancellationToken);
+}
