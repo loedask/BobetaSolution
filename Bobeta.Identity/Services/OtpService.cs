@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Bobeta.Identity.Services;
 
+/// <summary>Generates and validates OTP codes for phone-based authentication. OTPs expire after a short period and are single-use.</summary>
 public class OtpService
 {
     private const int ExpirationMinutes = 5;
@@ -16,6 +17,7 @@ public class OtpService
         _configuration = configuration;
     }
 
+    /// <summary>Generates a 6-digit OTP, stores it for the phone number with expiration, and returns the code (for sending via SMS in production).</summary>
     public async Task<string> GenerateAndStoreOtpAsync(string phoneNumber, CancellationToken cancellationToken = default)
     {
         var code = GenerateOtpCode();
@@ -31,6 +33,7 @@ public class OtpService
         return code;
     }
 
+    /// <summary>Validates the code for the phone number; if valid, marks the OTP as used and returns true.</summary>
     public async Task<bool> ValidateOtpAsync(string phoneNumber, string code, CancellationToken cancellationToken = default)
     {
         var otp = await _otpRepository.GetLatestByPhoneAsync(phoneNumber, cancellationToken);

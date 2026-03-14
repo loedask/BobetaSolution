@@ -5,6 +5,7 @@ using Bobeta.Domain.Enums;
 
 namespace Bobeta.Identity.Services;
 
+/// <summary>Implements phone-based auth: send OTP, verify OTP, register player (create player + wallet, issue JWT).</summary>
 public class AuthService : IAuthService
 {
     private readonly OtpService _otpService;
@@ -24,12 +25,14 @@ public class AuthService : IAuthService
         _walletRepository = walletRepository;
     }
 
+    /// <inheritdoc />
     public async Task SendOtpAsync(string phoneNumber, CancellationToken cancellationToken = default)
     {
         var code = await _otpService.GenerateAndStoreOtpAsync(phoneNumber, cancellationToken);
         // In production: send code via SMS gateway. Here we do not send (no demo).
     }
 
+    /// <inheritdoc />
     public async Task<VerifyOtpResult> VerifyOtpAsync(string phoneNumber, string code, CancellationToken cancellationToken = default)
     {
         var valid = await _otpService.ValidateOtpAsync(phoneNumber, code, cancellationToken);
@@ -39,6 +42,7 @@ public class AuthService : IAuthService
         return new VerifyOtpResult(true, token);
     }
 
+    /// <inheritdoc />
     public async Task<AuthResponse> RegisterPlayerAsync(string phoneNumber, string playerName, CancellationToken cancellationToken = default)
     {
         var existing = await _playerRepository.GetByPhoneNumberAsync(phoneNumber, cancellationToken);

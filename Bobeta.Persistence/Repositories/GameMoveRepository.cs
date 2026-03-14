@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bobeta.Persistence.Repositories;
 
+/// <summary>Repository implementation for GameMove (add, list by session, count).</summary>
 public class GameMoveRepository : IGameMoveRepository
 {
     private readonly BobetaDbContext _db;

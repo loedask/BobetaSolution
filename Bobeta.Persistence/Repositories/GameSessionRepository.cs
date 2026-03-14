@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bobeta.Persistence.Repositories;
 
+/// <summary>Repository implementation for GameSession (get by id, waiting list, player history, add, update).</summary>
 public class GameSessionRepository : IGameSessionRepository
 {
     private readonly BobetaDbContext _db;

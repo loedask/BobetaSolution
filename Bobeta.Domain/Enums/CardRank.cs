@@ -1,5 +1,6 @@
 namespace Bobeta.Domain.Enums;
 
+/// <summary>Playing card rank. Numeric value used for comparison (Ace high).</summary>
 public enum CardRank
 {
     Two = 2,
@@ -14,5 +15,6 @@ public enum CardRank
     Jack = 11,
     Queen = 12,
     King = 13,
+    /// <summary>Highest rank in Makopa (value 14).</summary>
     Ace = 14
 }

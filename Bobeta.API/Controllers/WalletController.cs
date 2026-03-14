@@ -21,6 +21,7 @@ public class WalletController(IWalletService walletService) : ControllerBase
         return Ok(balance);
     }
 
+    /// <summary>Credits the player's wallet (e.g. after MoMo deposit confirmation).</summary>
     [HttpPost("deposit")]
     public async Task<ActionResult<WalletTransactionDto>> Deposit([FromBody] DepositRequest request, CancellationToken cancellationToken)
     {
@@ -28,6 +29,7 @@ public class WalletController(IWalletService walletService) : ControllerBase
         return Ok(tx);
     }
 
+    /// <summary>Withdraws the specified amount from the player's wallet.</summary>
     [HttpPost("withdraw")]
     public async Task<ActionResult<WalletTransactionDto>> Withdraw([FromBody] WithdrawRequest request, CancellationToken cancellationToken)
     {
@@ -35,6 +37,7 @@ public class WalletController(IWalletService walletService) : ControllerBase
         return Ok(tx);
     }
 
+    /// <summary>Returns paginated transaction history for the authenticated player.</summary>
     [HttpGet("transactions")]
     public async Task<ActionResult<IReadOnlyList<WalletTransactionDto>>> GetTransactions([FromQuery] int skip = 0, [FromQuery] int take = 20, CancellationToken cancellationToken = default)
     {

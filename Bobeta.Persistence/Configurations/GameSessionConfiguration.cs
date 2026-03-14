@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Bobeta.Persistence.Configurations;
 
+/// <summary>EF Core mapping for the GameSession entity (jsonb for game state, FKs).</summary>
 public class GameSessionConfiguration : IEntityTypeConfiguration<GameSession>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<GameSession> builder)
     {
         builder.ToTable("GameSessions");

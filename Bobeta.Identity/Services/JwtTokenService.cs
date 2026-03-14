@@ -7,12 +7,14 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Bobeta.Identity.Services;
 
+/// <summary>Generates JWT bearer tokens for authenticated players (claims: player id, name).</summary>
 public class JwtTokenService : IJwtTokenService
 {
     private readonly IConfiguration _configuration;
 
     public JwtTokenService(IConfiguration configuration) => _configuration = configuration;
 
+    /// <inheritdoc />
     public string GenerateToken(Guid playerId, string playerName)
     {
         var key = _configuration["Jwt:Key"] ?? "BobetaDefaultSecretKeyForJwtSigningThatIsLongEnough";

@@ -4,6 +4,7 @@ using Bobeta.Persistence.Context;
 
 namespace Bobeta.Persistence.Repositories;
 
+/// <summary>Repository implementation for GameResult (add only, created when a game finishes).</summary>
 public class GameResultRepository : IGameResultRepository
 {
     private readonly BobetaDbContext _db;

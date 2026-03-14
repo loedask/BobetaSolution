@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bobeta.Persistence.Repositories;
 
+/// <summary>Repository implementation for OtpCode (latest by phone, add, invalidate).</summary>
 public class OtpRepository : IOtpRepository
 {
     private readonly BobetaDbContext _db;

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bobeta.Persistence.Repositories;
 
+/// <summary>Repository implementation for Player entities (CRUD and lookup by phone).</summary>
 public class PlayerRepository : IPlayerRepository
 {
     private readonly BobetaDbContext _db;

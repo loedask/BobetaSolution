@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bobeta.Persistence.Repositories;
 
+/// <summary>Repository implementation for Wallet entities (one per player).</summary>
 public class WalletRepository : IWalletRepository
 {
     private readonly BobetaDbContext _db;

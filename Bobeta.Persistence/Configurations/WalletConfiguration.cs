@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Bobeta.Persistence.Configurations;
 
+/// <summary>EF Core mapping for the Wallet entity (precision for decimals, unique player index, cascade).</summary>
 public class WalletConfiguration : IEntityTypeConfiguration<Wallet>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Wallet> builder)
     {
         builder.ToTable("Wallets");

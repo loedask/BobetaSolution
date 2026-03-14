@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Bobeta.Persistence.Configurations;
 
+/// <summary>EF Core mapping for the GameMove entity.</summary>
 public class GameMoveConfiguration : IEntityTypeConfiguration<GameMove>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<GameMove> builder)
     {
         builder.ToTable("GameMoves");

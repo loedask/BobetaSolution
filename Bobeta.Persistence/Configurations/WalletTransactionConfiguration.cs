@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Bobeta.Persistence.Configurations;
 
+/// <summary>EF Core mapping for the WalletTransaction entity.</summary>
 public class WalletTransactionConfiguration : IEntityTypeConfiguration<WalletTransaction>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<WalletTransaction> builder)
     {
         builder.ToTable("WalletTransactions");

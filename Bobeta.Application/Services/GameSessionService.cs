@@ -5,6 +5,7 @@ using Bobeta.Domain.Enums;
 
 namespace Bobeta.Application.Services;
 
+/// <summary>Application service for game session lifecycle: create game (lock bet), join game, propose/accept bet changes.</summary>
 public class GameSessionService(
     IGameSessionRepository sessionRepository,
     IPlayerRepository playerRepository,

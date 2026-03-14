@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Bobeta.Persistence.Configurations;
 
+/// <summary>EF Core mapping for the OtpCode entity (index on phone + created for lookup).</summary>
 public class OtpCodeConfiguration : IEntityTypeConfiguration<OtpCode>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<OtpCode> builder)
     {
         builder.ToTable("OtpCodes");

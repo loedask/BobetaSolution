@@ -17,6 +17,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         return Accepted();
     }
 
+    /// <summary>Verifies the OTP code; returns a JWT if the player is already registered.</summary>
     [HttpPost("verify-otp")]
     public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request, CancellationToken cancellationToken)
     {
@@ -25,6 +26,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         return Ok(new { Token = result.Token });
     }
 
+    /// <summary>Registers a new player (phone + name) and returns JWT and profile.</summary>
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterPlayerRequest request, CancellationToken cancellationToken)
     {

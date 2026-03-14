@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Bobeta.Persistence.Configurations;
 
+/// <summary>EF Core mapping for the Player entity (table name, key, indexes, column lengths).</summary>
 public class PlayerConfiguration : IEntityTypeConfiguration<Player>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Player> builder)
     {
         builder.ToTable("Players");

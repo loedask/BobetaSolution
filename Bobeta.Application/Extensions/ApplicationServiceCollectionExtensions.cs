@@ -6,8 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bobeta.Application.Extensions;
 
+/// <summary>Registers application services (wallet, game session, engine, history, notifications) and FluentValidation validators.</summary>
 public static class ApplicationServiceCollectionExtensions
 {
+    /// <summary>Adds Bobeta application layer services and validators to the container.</summary>
     public static IServiceCollection AddBobetaApplication(this IServiceCollection services)
     {
         services.AddScoped<IWalletService, WalletService>();

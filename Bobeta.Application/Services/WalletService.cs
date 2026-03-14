@@ -5,6 +5,7 @@ using Bobeta.Domain.Enums;
 
 namespace Bobeta.Application.Services;
 
+/// <summary>Application service for wallet operations: balance, deposit, withdraw, bet lock/release, and game settlement.</summary>
 public class WalletService : IWalletService
 {
     private readonly IWalletRepository _walletRepository;

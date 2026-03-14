@@ -6,8 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Bobeta.Persistence.Extensions;
 
+/// <summary>Registers Bobeta persistence: DbContext (PostgreSQL) and all repository implementations.</summary>
 public static class PersistenceServiceCollectionExtensions
 {
+    /// <summary>Adds BobetaDbContext and repository implementations; configures PostgreSQL with the given connection string.</summary>
     public static IServiceCollection AddBobetaPersistence(this IServiceCollection services, string connectionString)
     {
         services.AddDbContext<BobetaDbContext>(options =>

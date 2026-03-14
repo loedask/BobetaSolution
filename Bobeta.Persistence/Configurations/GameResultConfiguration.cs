@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Bobeta.Persistence.Configurations;
 
+/// <summary>EF Core mapping for the GameResult entity (precision, FKs to session and players).</summary>
 public class GameResultConfiguration : IEntityTypeConfiguration<GameResult>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<GameResult> builder)
     {
         builder.ToTable("GameResults");

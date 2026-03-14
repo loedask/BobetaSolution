@@ -4,6 +4,7 @@ using Bobeta.Domain.Enums;
 
 namespace Bobeta.Application.Services;
 
+/// <summary>Application service for a player's game history: list of past sessions with opponent and result.</summary>
 public class GameHistoryService(IGameSessionRepository sessionRepository) : IGameHistoryService
 {
     private readonly IGameSessionRepository _sessionRepository = sessionRepository;
