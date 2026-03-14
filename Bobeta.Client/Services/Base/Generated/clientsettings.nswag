@@ -1,0 +1,25 @@
+{
+  "runtime": "Net100",
+  "defaultVariables": null,
+  "documentGenerator": {
+    "fromDocument": {
+      "url": "https://localhost:5001/swagger/v1/swagger.json",
+      "output": null,
+      "newLineBehavior": "Auto"
+    }
+  },
+  "codeGenerators": {
+    "openApiToCSharpClient": {
+      "className": "Client",
+      "namespace": "Bobeta.Client.Services.Base",
+      "output": "ClientService.cs",
+      "injectHttpClient": true,
+      "generateClientInterfaces": true,
+      "useBaseUrl": false,
+      "generateExceptionClasses": true,
+      "exceptionClass": "ApiException",
+      "clientBaseInterface": null,
+      "newLineBehavior": "Auto"
+    }
+  }
+}
