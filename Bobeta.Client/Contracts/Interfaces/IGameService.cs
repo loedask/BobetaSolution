@@ -3,11 +3,13 @@ using Bobeta.Client.Models.Games;
 
 namespace Bobeta.Client.Contracts.Interfaces;
 
-/// <summary>Client contract for game operations (create, join, play, state). Real API calls to be implemented.</summary>
+/// <summary>Client contract for game operations (create, join, propose bet, accept bet, state, open games).</summary>
 public interface IGameService
 {
     Task<Response<GameSessionViewModel?>> CreateGameAsync(CreateGameRequest request, CancellationToken cancellationToken = default);
     Task<Response<GameSessionViewModel?>> JoinGameAsync(JoinGameRequest request, CancellationToken cancellationToken = default);
+    Task<Response<bool>> ProposeBetAsync(Guid gameId, double amount, CancellationToken cancellationToken = default);
+    Task<Response<bool>> AcceptBetChangeAsync(Guid gameId, CancellationToken cancellationToken = default);
+    Task<Response<IReadOnlyList<GameSessionViewModel>>> GetOpenGamesAsync(CancellationToken cancellationToken = default);
     Task<Response<GameStateViewModel?>> GetGameStateAsync(Guid sessionId, CancellationToken cancellationToken = default);
-    Task<Response<GameStateViewModel?>> PlayCardAsync(Guid sessionId, GameMoveRequest request, CancellationToken cancellationToken = default);
 }

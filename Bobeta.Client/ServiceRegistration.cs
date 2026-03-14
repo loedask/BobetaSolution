@@ -45,6 +45,14 @@ public static class ServiceRegistration
             sp.GetRequiredService<IClient>(),
             sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName)));
 
+        services.AddScoped<GamePlayService>(sp => new GamePlayService(
+            sp.GetRequiredService<IClient>(),
+            sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName)));
+
+        services.AddScoped<HistoryService>(sp => new HistoryService(
+            sp.GetRequiredService<IClient>(),
+            sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName)));
+
         return services;
     }
 }
