@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bobeta.API.Controllers;
 
+/// <summary>API for phone-based authentication: send OTP, verify OTP, register player.</summary>
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController(IAuthService authService) : ControllerBase

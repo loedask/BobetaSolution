@@ -8,8 +8,10 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Bobeta.API.Extensions;
 
+/// <summary>Registers all Bobeta services (persistence, application, identity, infrastructure), JWT auth, and SignalR.</summary>
 public static class ApiServiceCollectionExtensions
 {
+    /// <summary>Adds persistence, application, identity, infrastructure, JWT bearer auth (including SignalR query token), and SignalR.</summary>
     public static IServiceCollection AddBobetaServices(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=Bobeta;Username=postgres;Password=postgres";

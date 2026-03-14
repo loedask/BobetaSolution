@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bobeta.API.Controllers;
 
+/// <summary>API for player profile: get profile, update language. Requires authentication.</summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
@@ -14,6 +15,7 @@ public class ProfileController(IPlayerRepository playerRepository) : ControllerB
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
+    /// <summary>Gets the authenticated player's profile.</summary>
     [HttpGet]
     public async Task<ActionResult<PlayerProfileDto>> GetProfile(CancellationToken cancellationToken)
     {
@@ -22,6 +24,8 @@ public class ProfileController(IPlayerRepository playerRepository) : ControllerB
         return Ok(new PlayerProfileDto(player.Id, player.PhoneNumber, player.PlayerName, player.Language, player.CreatedAt, player.IsVerified));
     }
 
+    /// <summary>Updates the player's preferred language.</summary>
+    /// <summary>Updates the player's preferred language.</summary>
     [HttpPatch("language")]
     public async Task<IActionResult> UpdateLanguage([FromBody] UpdateLanguageRequest request, CancellationToken cancellationToken)
     {

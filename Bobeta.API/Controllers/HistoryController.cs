@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bobeta.API.Controllers;
 
+/// <summary>API for player game history. Requires authentication.</summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
@@ -14,6 +15,7 @@ public class HistoryController(IGameHistoryService gameHistoryService) : Control
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
+    /// <summary>Returns paginated game history for the authenticated player.</summary>
     [HttpGet("player")]
     public async Task<ActionResult<IReadOnlyList<GameHistoryItemDto>>> GetPlayerHistory([FromQuery] int skip = 0, [FromQuery] int take = 20, CancellationToken cancellationToken = default)
     {

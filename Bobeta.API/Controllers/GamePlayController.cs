@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bobeta.API.Controllers;
 
+/// <summary>API for Makopa gameplay: start game (deal), play card, get game state. Requires authentication.</summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
@@ -15,6 +16,7 @@ public class GamePlayController(IGameEngineService gameEngineService) : Controll
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
+    /// <summary>Starts the game: deals 4 cards to each player. Session must have two players.</summary>
     [HttpPost("start")]
     public async Task<IActionResult> StartGame([FromQuery] Guid sessionId, CancellationToken cancellationToken)
     {
@@ -22,6 +24,7 @@ public class GamePlayController(IGameEngineService gameEngineService) : Controll
         return Accepted();
     }
 
+    /// <summary>Plays a card in the current turn. Server validates turn and follow-suit rule.</summary>
     [HttpPost("play-card")]
     public async Task<ActionResult<GameStateDto>> PlayCard([FromBody] PlayCardRequest request, CancellationToken cancellationToken)
     {
@@ -31,6 +34,7 @@ public class GamePlayController(IGameEngineService gameEngineService) : Controll
         return Ok(state);
     }
 
+    /// <summary>Gets the current game state for the authenticated player (hand, last card, whose turn, game over, winner).</summary>
     [HttpGet("state")]
     public async Task<ActionResult<GameStateDto>> GetGameState([FromQuery] Guid sessionId, CancellationToken cancellationToken)
     {

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bobeta.API.Controllers;
 
+/// <summary>API for wallet: balance, deposit, withdraw, transaction history. Requires authentication.</summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
@@ -14,6 +15,7 @@ public class WalletController(IWalletService walletService) : ControllerBase
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
+    /// <summary>Gets the current balance and locked balance for the authenticated player.</summary>
     [HttpGet("balance")]
     public async Task<ActionResult<WalletBalanceDto>> GetBalance(CancellationToken cancellationToken)
     {
