@@ -1,0 +1,13 @@
+<div class="flex flex-wrap justify-center gap-2 p-4">
+    @foreach (var card in Cards)
+    {
+        var c = card;
+        <CardComponent Card="@c" Disabled="@(!IsPlayerTurn)" OnClick="() => OnPlayCard.InvokeAsync(c)" />
+    }
+</div>
+
+@code {
+    [Parameter] public List<CardViewModel> Cards { get; set; } = new();
+    [Parameter] public bool IsPlayerTurn { get; set; }
+    [Parameter] public EventCallback<CardViewModel> OnPlayCard { get; set; }
+}

@@ -1,0 +1,16 @@
+<div class="rounded-2xl border border-border bg-card p-6 min-h-[120px] flex items-center justify-center">
+    @if (LastPlayedCard != null)
+    {
+        <div class="rounded-lg border border-primary/50 bg-card-surface px-4 py-3">
+            <span class="font-display text-lg font-bold text-foreground">@LastPlayedCard.DisplayValue</span>
+        </div>
+    }
+    else
+    {
+        <span class="text-muted-foreground text-sm">No card played yet</span>
+    }
+</div>
+
+@code {
+    [Parameter] public CardViewModel? LastPlayedCard { get; set; }
+}

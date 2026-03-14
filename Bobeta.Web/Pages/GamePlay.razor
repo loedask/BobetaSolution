@@ -1,0 +1,61 @@
+@page "/game/{SessionId}"
+@layout MainLayout
+@using Bobeta.Web.Components.Game
+@inject GamePlayService GamePlayService
+@inject IGameService GameService
+@inject AppStateService AppState
+@inject NavigationManager Nav
+@implements IDisposable
+
+<div class="min-h-screen bg-background pb-24">
+    <AppHeader Title="Game" ShowBack="true" BackHref="/dashboard" />
+
+    <div class="space-y-4 px-5 py-4">
+        <ErrorBanner Message="@ViewModel.ErrorMessage" />
+
+        @if (ViewModel.IsLoading && ViewModel.PlayerCards.Count == 0)
+        {
+            <SkeletonLoader CssClass="h-12 rounded-xl mb-4" />
+            <SkeletonLoader CssClass="h-24 rounded-2xl mb-4" />
+            <SkeletonLoader CssClass="h-32 rounded-2xl mb-4" />
+            <SkeletonLoader CssClass="h-20 rounded-xl" />
+        }
+        else
+        {
+            <PotDisplay PotAmount="@ViewModel.PotAmount" />
+            <OpponentHand CardCount="@ViewModel.OpponentCards.Count" />
+            <GameBoard LastPlayedCard="@ViewModel.LastPlayedCard" />
+            <PlayerHand Cards="@ViewModel.PlayerCards" IsPlayerTurn="@ViewModel.IsPlayerTurn" OnPlayCard="PlayCard" />
+            <TurnIndicator IsPlayerTurn="@ViewModel.IsPlayerTurn" />
+        }
+    </div>
+</div>
+
+@if (ViewModel.ShowGameResult)
+{
+    <GameResultModal WinnerPlayerName="@ViewModel.WinnerPlayerName" />
+}
+
+@code {
+    [Parameter] public string SessionId { get; set; } = "";
+
+    private GamePlayViewModel ViewModel { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        ViewModel = new GamePlayViewModel(GamePlayService, GameService, AppState, Nav);
+        ViewModel.StateChanged += OnStateChanged;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(SessionId))
+            await ViewModel.LoadGameAsync(SessionId);
+    }
+
+    public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
+
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task PlayCard(CardViewModel card) => await ViewModel.PlayCardAsync(card);
+}

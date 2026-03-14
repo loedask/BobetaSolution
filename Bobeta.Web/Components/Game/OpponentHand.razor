@@ -1,0 +1,12 @@
+<div class="flex flex-wrap justify-center gap-2 p-4">
+    @for (var i = 0; i < CardCount; i++)
+    {
+        <div class="rounded-lg border border-border bg-secondary h-14 w-10 flex items-center justify-center">
+            <span class="text-muted-foreground text-xs">?</span>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int CardCount { get; set; }
+}
