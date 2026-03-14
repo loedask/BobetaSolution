@@ -14,5 +14,6 @@
   </Folder>
   <Folder Name="/src/UI/">
     <Project Path="Bobeta.Client/Bobeta.Client.csproj" Id="b5e64c6e-5696-4b8e-86c5-15076f88cdd0" />
+    <Project Path="Bobeta.Web/Bobeta.Web.csproj" />
   </Folder>
 </Solution>
