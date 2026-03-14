@@ -1,15 +1,11 @@
+using Bobeta.Client.Services;
 using Bobeta.Client.Services.Base;
 
 namespace Bobeta.Web.ViewModels.Games;
 
-public class GameHistoryViewModel : ViewModelBase
+public class GameHistoryViewModel(HistoryService historyService) : ViewModelBase
 {
-    private readonly HistoryService _historyService;
-
-    public GameHistoryViewModel(HistoryService historyService)
-    {
-        _historyService = historyService;
-    }
+    private readonly HistoryService _historyService = historyService;
 
     public List<GameHistoryItemDto> Items { get; private set; } = new();
 

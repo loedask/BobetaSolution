@@ -1,17 +1,12 @@
+using Bobeta.Web.Services;
 using Microsoft.AspNetCore.Components;
 
 namespace Bobeta.Web.ViewModels.Profile;
 
-public class ProfileViewModel : ViewModelBase
+public class ProfileViewModel(AppStateService appState, NavigationManager nav) : ViewModelBase
 {
-    private readonly AppStateService _appState;
-    private readonly NavigationManager _nav;
-
-    public ProfileViewModel(AppStateService appState, NavigationManager nav)
-    {
-        _appState = appState;
-        _nav = nav;
-    }
+    private readonly AppStateService _appState = appState;
+    private readonly NavigationManager _nav = nav;
 
     public string PlayerName => _appState.State.CurrentPlayerName ?? "Player";
     public string? PhoneNumber => _appState.State.PhoneNumber ?? "—";

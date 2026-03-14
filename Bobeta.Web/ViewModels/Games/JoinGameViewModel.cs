@@ -1,20 +1,15 @@
 using Microsoft.AspNetCore.Components;
 using Bobeta.Client.Models.Games;
+using Bobeta.Client.Contracts.Interfaces;
+using Bobeta.Web.Services;
 
 namespace Bobeta.Web.ViewModels.Games;
 
-public class JoinGameViewModel : ViewModelBase
+public class JoinGameViewModel(IGameService gameService, AppStateService appState, NavigationManager nav) : ViewModelBase
 {
-    private readonly IGameService _gameService;
-    private readonly AppStateService _appState;
-    private readonly NavigationManager _nav;
-
-    public JoinGameViewModel(IGameService gameService, AppStateService appState, NavigationManager nav)
-    {
-        _gameService = gameService;
-        _appState = appState;
-        _nav = nav;
-    }
+    private readonly IGameService _gameService = gameService;
+    private readonly AppStateService _appState = appState;
+    private readonly NavigationManager _nav = nav;
 
     public List<GameSessionViewModel> OpenGames { get; private set; } = new();
 

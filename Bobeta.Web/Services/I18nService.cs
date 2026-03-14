@@ -3,11 +3,9 @@ using System.Collections.Frozen;
 namespace Bobeta.Web.Services;
 
 /// <summary>Supported locales: en, fr, kt, ln, sw. Stored in <see cref="State.AppState.SelectedLanguage"/>.</summary>
-public class I18nService
+public class I18nService(AppStateService appState)
 {
-    private readonly AppStateService _appState;
-
-    public I18nService(AppStateService appState) => _appState = appState;
+    private readonly AppStateService _appState = appState;
 
     public string Locale => _appState.State.SelectedLanguage;
 

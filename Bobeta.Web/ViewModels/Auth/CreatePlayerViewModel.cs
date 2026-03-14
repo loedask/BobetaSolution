@@ -1,21 +1,15 @@
 using Microsoft.AspNetCore.Components;
 using Bobeta.Client.Models.Players;
 using Bobeta.Client.Services;
+using Bobeta.Web.Services;
 
 namespace Bobeta.Web.ViewModels.Auth;
 
-public class CreatePlayerViewModel : ViewModelBase
+public class CreatePlayerViewModel(AuthService authService, AppStateService appState, NavigationManager nav) : ViewModelBase
 {
-    private readonly AuthService _authService;
-    private readonly AppStateService _appState;
-    private readonly NavigationManager _nav;
-
-    public CreatePlayerViewModel(AuthService authService, AppStateService appState, NavigationManager nav)
-    {
-        _authService = authService;
-        _appState = appState;
-        _nav = nav;
-    }
+    private readonly AuthService _authService = authService;
+    private readonly AppStateService _appState = appState;
+    private readonly NavigationManager _nav = nav;
 
     public string PlayerName { get; set; } = "";
 

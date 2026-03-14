@@ -1,20 +1,14 @@
 using Microsoft.AspNetCore.Components;
 using Bobeta.Client.Services;
+using Bobeta.Web.Services;
 
 namespace Bobeta.Web.ViewModels.Auth;
 
-public class PhoneLoginViewModel : ViewModelBase
+public class PhoneLoginViewModel(AuthService authService, AppStateService appState, NavigationManager nav) : ViewModelBase
 {
-    private readonly AuthService _authService;
-    private readonly AppStateService _appState;
-    private readonly NavigationManager _nav;
-
-    public PhoneLoginViewModel(AuthService authService, AppStateService appState, NavigationManager nav)
-    {
-        _authService = authService;
-        _appState = appState;
-        _nav = nav;
-    }
+    private readonly AuthService _authService = authService;
+    private readonly AppStateService _appState = appState;
+    private readonly NavigationManager _nav = nav;
 
     public string Phone { get; set; } = "";
 

@@ -1,23 +1,17 @@
+using Bobeta.Client.Services;
+using Bobeta.Web.Services;
 using Microsoft.AspNetCore.Components;
 
 namespace Bobeta.Web.ViewModels.Dashboard;
 
 public record TransactionItemDto(string Description, string Time, decimal Amount);
 
-public class DashboardViewModel : ViewModelBase
+public class DashboardViewModel(WalletService walletService, AppStateService appState, I18nService i18n, NavigationManager nav) : ViewModelBase
 {
-    private readonly WalletService _walletService;
-    private readonly AppStateService _appState;
-    private readonly I18nService _i18n;
-    private readonly NavigationManager _nav;
-
-    public DashboardViewModel(WalletService walletService, AppStateService appState, I18nService i18n, NavigationManager nav)
-    {
-        _walletService = walletService;
-        _appState = appState;
-        _i18n = i18n;
-        _nav = nav;
-    }
+    private readonly WalletService _walletService = walletService;
+    private readonly AppStateService _appState = appState;
+    private readonly I18nService _i18n = i18n;
+    private readonly NavigationManager _nav = nav;
 
     public string PlayerName => _appState.State.CurrentPlayerName ?? "Player";
     public decimal Balance => _appState.State.WalletBalance;

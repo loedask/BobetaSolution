@@ -1,19 +1,14 @@
+using Bobeta.Client.Services;
+using Bobeta.Web.Services;
 using Microsoft.AspNetCore.Components;
 
 namespace Bobeta.Web.ViewModels.Wallet;
 
-public class WithdrawViewModel : ViewModelBase
+public class WithdrawViewModel(WalletService walletService, AppStateService appState, NavigationManager nav) : ViewModelBase
 {
-    private readonly WalletService _walletService;
-    private readonly AppStateService _appState;
-    private readonly NavigationManager _nav;
-
-    public WithdrawViewModel(WalletService walletService, AppStateService appState, NavigationManager nav)
-    {
-        _walletService = walletService;
-        _appState = appState;
-        _nav = nav;
-    }
+    private readonly WalletService _walletService = walletService;
+    private readonly AppStateService _appState = appState;
+    private readonly NavigationManager _nav = nav;
 
     public string Amount { get; set; } = "";
     public string MomoNumber { get; set; } = "6XXXXXXXX";
