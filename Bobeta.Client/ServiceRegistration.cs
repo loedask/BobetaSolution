@@ -31,7 +31,10 @@ public static class ServiceRegistration
         });
 
         if (useBearerToken)
+        {
+            services.AddScoped<BearerTokenHandler>();
             httpClientBuilder.AddHttpMessageHandler<BearerTokenHandler>();
+        }
 
         services.AddScoped<IGameService>(sp => new GameService(
             sp.GetRequiredService<IClient>(),
