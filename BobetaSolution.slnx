@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/API/">
+    <Project Path="Bobeta.API/Bobeta.API.csproj" />
+  </Folder>
+  <Folder Name="/src/Core/">
+    <Project Path="Bobeta.Application/Bobeta.Application.csproj" />
+    <Project Path="Bobeta.Domain/Bobeta.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Infrastructure/">
+    <Project Path="Bobeta.Identity/Bobeta.Identity.csproj" />
+    <Project Path="Bobeta.Infrastructure/Bobeta.Infrastructure.csproj" />
+    <Project Path="Bobeta.Persistence/Bobeta.Persistence.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,13 @@
+.vs/
+Bobeta.Persistence/bin/
+Bobeta.Persistence/obj/
+Bobeta.Infrastructure/bin/
+Bobeta.Infrastructure/obj/
+Bobeta.Identity/bin/
+Bobeta.Identity/obj/
+Bobeta.Domain/obj/
+Bobeta.Domain/bin/
+Bobeta.Application/bin/
+Bobeta.Application/obj/
+Bobeta.API/bin/
+Bobeta.API/obj/
