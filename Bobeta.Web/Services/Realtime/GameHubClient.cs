@@ -108,9 +108,10 @@ public class GameHubClient
         await TryReconnectAndRejoinAsync();
     }
 
-    private void OnReconnecting(Exception? ex)
+    private Task OnReconnecting(Exception? ex)
     {
         OnConnectionStateChanged?.Invoke(HubConnectionState.Reconnecting);
+        return Task.CompletedTask;
     }
 
     private async Task OnReconnectedAsync(string? arg)
