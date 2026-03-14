@@ -1,0 +1,68 @@
+@page "/join"
+@inject NavigationManager Nav
+@inject IGameService GameService
+@inject AppStateService AppState
+@inject I18nService I18n
+
+<div class="min-h-screen bg-background pb-24">
+    <div class="flex items-center gap-3 px-5 pt-6 pb-4">
+        <a href="/dashboard" class="flex h-10 w-10 items-center justify-center rounded-xl bg-card">
+            <svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        </a>
+        <h1 class="font-display text-xl font-bold text-foreground">@I18n.T("join_game")</h1>
+        <div class="ml-auto flex items-center gap-1 rounded-lg bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">
+            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            @_openGames.Count @I18n.T("live")
+        </div>
+    </div>
+
+    <div class="space-y-3 px-5">
+        <div class="flex items-center justify-between">
+            <p class="text-sm text-muted-foreground">@I18n.T("open_game_sessions")</p>
+            <button type="button" class="flex items-center gap-1 text-xs text-primary hover:underline" @onclick="LoadGames">
+                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                @I18n.T("refresh")
+            </button>
+        </div>
+
+        @foreach (var game in _openGames)
+        {
+            var g = game;
+            <GameSessionCard PlayerName="Player" BetAmount="(decimal)g.BetAmount" OnJoin="() => DoJoinGame(g.Id)" />
+        }
+        @if (_openGames.Count == 0 && !_loading)
+        {
+            <p class="text-sm text-muted-foreground py-4">No open games. Create one from the dashboard.</p>
+        }
+    </div>
+</div>
+
+@code {
+    private List<GameSessionViewModel> _openGames = new();
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync() => await LoadGames();
+
+    private async Task LoadGames()
+    {
+        _loading = true;
+        try
+        {
+            var res = await GameService.GetOpenGamesAsync();
+            if (res.IsSuccess && res.Data != null)
+                _openGames = res.Data.Where(x => x.OpponentPlayerId == null).ToList();
+        }
+        finally { _loading = false; StateHasChanged(); }
+    }
+
+    private async Task DoJoinGame(Guid gameId)
+    {
+        var res = await GameService.JoinGameAsync(new JoinGameRequest { GameId = gameId });
+        if (res.IsSuccess && res.Data != null)
+        {
+            AppState.State.ActiveGameSessionId = res.Data.Id;
+            await AppState.SaveAsync();
+            Nav.NavigateTo("/dashboard");
+        }
+    }
+}

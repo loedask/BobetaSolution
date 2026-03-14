@@ -1,0 +1,17 @@
+@inject I18nService I18n
+
+<div class="flex items-center gap-3 px-5 pt-6 pb-4">
+    @if (ShowBack)
+    {
+        <a href="@BackHref" class="flex h-9 w-9 items-center justify-center rounded-xl bg-card">
+            <svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        </a>
+    }
+    <h1 class="font-display text-xl font-bold text-foreground">@Title</h1>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public bool ShowBack { get; set; }
+    [Parameter] public string BackHref { get; set; } = "/dashboard";
+}

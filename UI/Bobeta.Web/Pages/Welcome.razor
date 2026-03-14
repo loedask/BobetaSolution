@@ -1,0 +1,39 @@
+@page "/"
+@layout AuthLayout
+@inject NavigationManager Nav
+@inject I18nService I18n
+
+<div class="relative flex min-h-screen flex-col">
+    <div class="relative z-10 flex flex-1 flex-col items-center justify-between px-6 py-12">
+        <div class="flex flex-1 flex-col items-center justify-center text-center">
+            <h1 class="gold-text mb-3 font-display text-6xl font-bold tracking-tight">@I18n.T("app_name")</h1>
+            <p class="mb-2 text-lg text-foreground/80">@I18n.T("tagline")</p>
+            <div class="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
+                <svg class="h-4 w-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                <span>@I18n.T("secure_momo")</span>
+            </div>
+            <div class="mb-6 flex w-full max-w-xs flex-col items-center">
+                <p class="mb-2 text-xs font-medium text-muted-foreground">@I18n.T("choose_language")</p>
+                <LanguageSelector />
+            </div>
+            <PrimaryButton OnClick="GoToLogin" CssClass="w-full max-w-xs">
+                @I18n.T("get_started")
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </PrimaryButton>
+        </div>
+        <div class="mt-8 flex items-center gap-4 text-xs text-muted-foreground">
+            <div class="flex items-center gap-1">
+                <svg class="h-3 w-3 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                <span>@I18n.T("secure")</span>
+            </div>
+            <span>•</span>
+            <span>@I18n.T("fair_randomized")</span>
+            <span>•</span>
+            <span>@I18n.T("instant_payouts")</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    private void GoToLogin() => Nav.NavigateTo("/login");
+}

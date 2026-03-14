@@ -1,0 +1,20 @@
+<div class="w-full @CssClass">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <label class="block text-sm font-medium text-foreground mb-2">@Label</label>
+    }
+    <input type="@Type" value="@Value" placeholder="@Placeholder" maxlength="@MaxLength" disabled="@Disabled"
+           class="w-full rounded-xl border border-border bg-card px-4 py-3 text-lg text-foreground outline-none placeholder:text-muted-foreground/50 focus:border-primary/50 transition-all"
+           @oninput="OnInput" />
+</div>
+
+@code {
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public string Type { get; set; } = "text";
+    [Parameter] public int? MaxLength { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter] public EventCallback<ChangeEventArgs> OnInput { get; set; }
+}

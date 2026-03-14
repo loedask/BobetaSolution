@@ -1,0 +1,62 @@
+@page "/history"
+@using Bobeta.Client.Services.Base
+@inject NavigationManager Nav
+@inject HistoryService HistoryService
+@inject I18nService I18n
+
+<div class="min-h-screen bg-background pb-24">
+    <div class="flex items-center gap-3 px-5 pt-6 pb-4">
+        <a href="/dashboard" class="flex h-10 w-10 items-center justify-center rounded-xl bg-card">
+            <svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        </a>
+        <h1 class="font-display text-xl font-bold text-foreground">@I18n.T("game_history")</h1>
+    </div>
+
+    <div class="space-y-2 px-5">
+        @if (_items.Count == 0 && !_loading)
+        {
+            <p class="text-sm text-muted-foreground py-4">No game history yet.</p>
+        }
+        @foreach (var item in _items)
+        {
+            <div class="flex items-center justify-between rounded-xl bg-card p-4">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg @(item.WonAmount > 0 ? "bg-accent/10" : "bg-destructive/10")">
+                        @if (item.WonAmount > 0)
+                        {
+                            <svg class="h-5 w-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                        }
+                        else
+                        {
+                            <svg class="h-5 w-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+                        }
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold text-foreground">@(item.WonAmount > 0 ? I18n.T("won") : I18n.T("lost")) — @item.BetAmount FCFA</div>
+                        <div class="text-xs text-muted-foreground">@item.CreatedAt.ToString("g")</div>
+                    </div>
+                </div>
+                <div class="font-display font-bold @(item.WonAmount > 0 ? "text-accent" : "text-destructive")">
+                    @(item.WonAmount > 0 ? "+" : "")@(((decimal)(item.WonAmount ?? 0)).ToString("N0"))
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<GameHistoryItemDto> _items = new();
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        try
+        {
+            var res = await HistoryService.GetGameHistoryAsync(0, 50);
+            if (res.IsSuccess && res.Data != null)
+                _items = res.Data.ToList();
+        }
+        finally { _loading = false; StateHasChanged(); }
+    }
+}

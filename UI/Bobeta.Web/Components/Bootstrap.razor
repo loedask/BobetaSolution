@@ -1,0 +1,17 @@
+@inject AppStateService AppState
+
+@if (_loaded)
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    private bool _loaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AppState.LoadAsync();
+        _loaded = true;
+    }
+}

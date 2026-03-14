@@ -1,0 +1,27 @@
+@inject I18nService I18n
+
+<div class="card-surface glow-gold rounded-2xl p-6">
+    <div class="mb-1 flex items-center gap-2 text-sm text-muted-foreground">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+        <span>@I18n.T("wallet_balance")</span>
+    </div>
+    <div class="mb-5">
+        <span class="gold-text font-display text-4xl font-bold">@Balance.ToString("N0") <span class="text-xl">FCFA</span></span>
+    </div>
+    <div class="flex gap-3">
+        <button type="button" class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]" @onclick="OnDeposit">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+            @I18n.T("deposit")
+        </button>
+        <button type="button" class="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-secondary py-3 font-semibold text-secondary-foreground transition-all hover:bg-secondary/80 active:scale-[0.98]" @onclick="OnWithdraw">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+            @I18n.T("withdraw")
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public decimal Balance { get; set; }
+    [Parameter] public EventCallback OnDeposit { get; set; }
+    [Parameter] public EventCallback OnWithdraw { get; set; }
+}
