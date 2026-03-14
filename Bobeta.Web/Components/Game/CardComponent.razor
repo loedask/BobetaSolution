@@ -21,13 +21,11 @@
     {
         if (Card == null || Disabled) return;
         e.DataTransfer.EffectAllowed = "move";
-        e.DataTransfer.SetData("text/plain", Card.DisplayValue);
         _ = OnDragStart.InvokeAsync(Card.DisplayValue);
     }
 
     private void HandleDragEnd(DragEventArgs e)
     {
-        e.DataTransfer.ClearData();
         _ = OnDragEnd.InvokeAsync();
     }
 }
