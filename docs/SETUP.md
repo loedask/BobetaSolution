@@ -118,6 +118,7 @@ Add or update the `MoMo` section in **Bobeta.API/appsettings.json** (use **User 
     "CollectionPrimaryKey": "your-collection-primary-key",
     "DisbursementPrimaryKey": "your-disbursement-primary-key",
     "CallbackUrl": "https://your-api-host/api/payments/momo/callback",
+    "CallbackSubscriptionKey": "your-collection-or-callback-subscription-key",
     "TargetEnvironment": "mtuganda",
     "Currency": "UGX",
     "UseSandbox": true
@@ -126,7 +127,8 @@ Add or update the `MoMo` section in **Bobeta.API/appsettings.json** (use **User 
 ```
 
 - **CallbackUrl**: Must be a publicly reachable URL where MTN will send payment status callbacks. For local testing you can use a tunnel (e.g. ngrok) and set this to your tunnel URL plus `/api/payments/momo/callback`.
-- **TargetEnvironment**: Use the value for your country/sandbox (e.g. `mtuganda` for Uganda sandbox).
+- **CallbackSubscriptionKey**: Used to validate incoming callbacks: the request header `Ocp-Apim-Subscription-Key` must match this value (e.g. use your Collection primary key). Callbacks that do not match return 401.
+- **TargetEnvironment**: Use the value for your country/sandbox (e.g. `mtuganda` for Uganda sandbox). Incoming callbacks must send the same value in `X-Target-Environment`.
 - For **production**, set `BaseUrl` and `TargetEnvironment` to the production values and `UseSandbox` to `false`.
 
 ### 5. Apply migrations

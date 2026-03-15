@@ -1,21 +1,26 @@
 using Bobeta.Application.DTOs.Payment;
 using Bobeta.Application.Interfaces;
+using Bobeta.Infrastructure.MoMo;
 using Bobeta.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bobeta.API.Controllers;
 
-/// <summary>API for MoMo payments: deposit (request-to-pay), withdrawal (disbursement), status. Callback is unauthenticated.</summary>
+/// <summary>API for MoMo payments: deposit (request-to-pay), withdrawal (disbursement), status. Callback validates headers and is unauthenticated.</summary>
 [ApiController]
 [Route("api/[controller]")]
 public class PaymentsController : ControllerBase
 {
     private readonly IPaymentService _paymentService;
+    private readonly MoMoSettings _moMoSettings;
+    private readonly ILogger<PaymentsController> _logger;
 
-    public PaymentsController(IPaymentService paymentService)
+    public PaymentsController(IPaymentService paymentService, Microsoft.Extensions.Options.IOptions<MoMoSettings> moMoSettings, ILogger<PaymentsController> logger)
     {
         _paymentService = paymentService;
+        _moMoSettings = moMoSettings.Value;
+        _logger = logger;
     }
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
@@ -71,15 +76,45 @@ public class PaymentsController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>MoMo callback endpoint. Called by MTN when payment status changes. Requires X-Reference-Id; rejects if transaction does not exist. Idempotent for duplicate callbacks.</summary>
+    /// <summary>MoMo callback endpoint. Called by MTN when payment status changes. Validates X-Reference-Id, X-Target-Environment, Ocp-Apim-Subscription-Key; returns 401 if validation fails. Idempotent for duplicate callbacks.</summary>
     [HttpPost("momo/callback")]
     [AllowAnonymous]
     public async Task<IActionResult> MoMoCallback(CancellationToken cancellationToken)
     {
-        // Part 1 — Callback security: require X-Reference-Id header
+        // Log callback headers and reference id (sanitize subscription key: do not log full value)
         string? referenceId = Request.Headers["X-Reference-Id"].FirstOrDefault();
+        string? targetEnv = Request.Headers["X-Target-Environment"].FirstOrDefault();
+        string? subscriptionKeyHeader = Request.Headers["Ocp-Apim-Subscription-Key"].FirstOrDefault();
+        bool subscriptionKeyPresent = !string.IsNullOrEmpty(subscriptionKeyHeader);
+        string subscriptionKeyHint = subscriptionKeyPresent && subscriptionKeyHeader!.Length >= 4
+            ? "***" + subscriptionKeyHeader[^4..]
+            : (subscriptionKeyPresent ? "***" : "missing");
+        _logger.LogInformation(
+            "MoMo callback received: X-Reference-Id={ReferenceId}, X-Target-Environment={TargetEnvironment}, Ocp-Apim-Subscription-Key={SubscriptionKeyHint}",
+            referenceId ?? "(missing)",
+            targetEnv ?? "(missing)",
+            subscriptionKeyHint);
+
+        // Validation 1: X-Reference-Id must exist
         if (string.IsNullOrWhiteSpace(referenceId))
-            return BadRequest(new { error = "X-Reference-Id header is required." });
+        {
+            _logger.LogWarning("MoMo callback rejected: X-Reference-Id header missing.");
+            return Unauthorized(new { error = "Callback validation failed." });
+        }
+
+        // Validation 2: X-Target-Environment must match configuration
+        if (string.IsNullOrEmpty(_moMoSettings.TargetEnvironment) || !string.Equals(targetEnv, _moMoSettings.TargetEnvironment, StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning("MoMo callback rejected: X-Target-Environment mismatch. Expected={Expected}, Received={Received}.", _moMoSettings.TargetEnvironment, targetEnv ?? "(missing)");
+            return Unauthorized(new { error = "Callback validation failed." });
+        }
+
+        // Validation 3: Ocp-Apim-Subscription-Key must match configured key
+        if (string.IsNullOrEmpty(_moMoSettings.CallbackSubscriptionKey) || !string.Equals(subscriptionKeyHeader, _moMoSettings.CallbackSubscriptionKey, StringComparison.Ordinal))
+        {
+            _logger.LogWarning("MoMo callback rejected: Ocp-Apim-Subscription-Key mismatch for ReferenceId={ReferenceId}.", referenceId);
+            return Unauthorized(new { error = "Callback validation failed." });
+        }
 
         MoMoCallbackRequest model;
         try
