@@ -22,6 +22,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IGameResultRepository, GameResultRepository>();
         services.AddScoped<IOtpRepository, OtpRepository>();
         services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
+        services.AddScoped<ISmsMessageRepository, SmsMessageRepository>();
         return services;
     }
 }

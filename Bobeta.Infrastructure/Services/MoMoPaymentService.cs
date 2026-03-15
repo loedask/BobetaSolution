@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Bobeta.Application.Common;
 using Bobeta.Application.DTOs.Payment;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
@@ -54,7 +55,7 @@ public class MoMoPaymentService : IPaymentService
     /// <inheritdoc />
     public async Task<PaymentTransactionDto> RequestDepositAsync(Guid playerId, string phoneNumber, decimal amount, CancellationToken cancellationToken = default)
     {
-        NormalizePhone(ref phoneNumber);
+        phoneNumber = PhoneNumberHelper.Normalize(phoneNumber);
         var id = Guid.NewGuid();
         var externalRef = id.ToString("D");
         var transaction = new PaymentTransaction
@@ -114,7 +115,7 @@ public class MoMoPaymentService : IPaymentService
     /// <inheritdoc />
     public async Task<PaymentTransactionDto> RequestWithdrawalAsync(Guid playerId, string phoneNumber, decimal amount, CancellationToken cancellationToken = default)
     {
-        NormalizePhone(ref phoneNumber);
+        phoneNumber = PhoneNumberHelper.Normalize(phoneNumber);
         var balance = await _walletService.GetBalanceAsync(playerId, cancellationToken);
         if (balance.Balance < amount)
             throw new InvalidOperationException("Insufficient balance.");
@@ -368,17 +369,6 @@ public class MoMoPaymentService : IPaymentService
                     throw new MoMoApiException("Request timed out. Check status later.", statusCode, errorBody);
                 throw new MoMoApiException(message, statusCode, errorBody);
         }
-    }
-
-    private static void NormalizePhone(ref string phone)
-    {
-        phone = phone.Trim();
-        if (phone.StartsWith("0"))
-            phone = "256" + phone.TrimStart('0');
-        else if (!phone.StartsWith("+") && !phone.StartsWith("256"))
-            phone = "256" + phone;
-        if (phone.StartsWith("+"))
-            phone = phone.TrimStart('+');
     }
 
     private static PaymentTransactionDto Map(PaymentTransaction t) =>

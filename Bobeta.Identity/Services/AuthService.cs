@@ -1,3 +1,4 @@
+using Bobeta.Application.Common;
 using Bobeta.Application.DTOs.Auth;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
@@ -8,28 +9,36 @@ namespace Bobeta.Identity.Services;
 /// <summary>Implements phone-based auth: send OTP, verify OTP, register player (create player + wallet, issue JWT).</summary>
 public class AuthService : IAuthService
 {
+    private const string OtpMessageFormat = "Your Bobeta verification code is {0}. Do not share this code.";
+
     private readonly OtpService _otpService;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IPlayerRepository _playerRepository;
     private readonly IWalletRepository _walletRepository;
+    private readonly ISmsService? _smsService;
 
     public AuthService(
         OtpService otpService,
         IJwtTokenService jwtTokenService,
         IPlayerRepository playerRepository,
-        IWalletRepository walletRepository)
+        IWalletRepository walletRepository,
+        ISmsService? smsService = null)
     {
         _otpService = otpService;
         _jwtTokenService = jwtTokenService;
         _playerRepository = playerRepository;
         _walletRepository = walletRepository;
+        _smsService = smsService;
     }
 
     /// <inheritdoc />
     public async Task SendOtpAsync(string phoneNumber, CancellationToken cancellationToken = default)
     {
         var code = await _otpService.GenerateAndStoreOtpAsync(phoneNumber, cancellationToken);
-        // In production: send code via SMS gateway. Here we do not send (no demo).
+        var normalized = PhoneNumberHelper.Normalize(phoneNumber);
+        var message = string.Format(OtpMessageFormat, code);
+        if (_smsService != null)
+            await _smsService.SendOtpAsync(normalized, message, cancellationToken);
     }
 
     /// <inheritdoc />

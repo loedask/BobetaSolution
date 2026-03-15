@@ -144,4 +144,48 @@ After configuration, the API will accept deposit and withdrawal requests via `/a
 
 ---
 
+## SMS Gateway Setup (SendSMSGate)
+
+To send OTP and notification SMS (e.g. for phone verification) via SendSMSGate:
+
+### 1. Create account at SendSMSGate
+
+1. Go to [https://sendsmsgate.com](https://sendsmsgate.com).
+2. Sign up or sign in and obtain your API credentials (user/login and password).
+
+### 2. Generate API credentials
+
+1. In your SendSMSGate account, note your **user** (login) and **password** for the HTTP API.
+2. Configure a **Sender ID** (alphanumeric, max 11 characters, or digital up to 15) that will appear as the SMS sender.
+
+### 3. Configure SmsGatewaySettings
+
+Add or update the `SmsGatewaySettings` section in **Bobeta.API/appsettings.json** (use **User Secrets** or environment variables in production; do not commit real credentials):
+
+```json
+{
+  "SmsGatewaySettings": {
+    "BaseUrl": "https://cloud.sendsmsgate.com",
+    "Username": "your-sendsmsgate-login",
+    "Password": "your-sendsmsgate-password",
+    "SenderId": "Bobeta",
+    "DeliveryReportUrl": "https://your-api-host/api/sms/dlr"
+  }
+}
+```
+
+- **BaseUrl**: SendSMSGate API base (default `https://cloud.sendsmsgate.com`).
+- **Username** / **Password**: Your SendSMSGate HTTP API credentials.
+- **SenderId**: Sender name/number shown on SMS (must pass moderation on SendSMSGate).
+- **DeliveryReportUrl**: Public URL where SendSMSGate will send delivery reports (DLR). Must be reachable from the internet (e.g. your deployed API URL + `/api/sms/dlr`). For local testing you can use a tunnel (e.g. ngrok) and set this to your tunnel URL plus `/api/sms/dlr`.
+
+### 4. Configure Delivery Report (DLR) endpoint
+
+1. In your SendSMSGate account, set the DLR callback URL to the same value as **DeliveryReportUrl** (e.g. `https://your-api-host/api/sms/dlr`).
+2. The API accepts both GET and POST at `/api/sms/dlr` with parameters `smsid` (provider message ID) and `status` (`send`, `deliver`, `not_deliver`, `expired`). When SendSMSGate calls this URL, the platform updates the corresponding SMS record status.
+
+After configuration, OTP messages (e.g. for login) are sent via SendSMSGate, and delivery status is updated when DLR callbacks are received.
+
+---
+
 For API details (e.g. Swagger), open the API base URL in the browser (e.g. `https://localhost:5001/swagger`).

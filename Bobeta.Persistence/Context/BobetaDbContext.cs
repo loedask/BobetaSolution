@@ -31,6 +31,9 @@ public class BobetaDbContext(DbContextOptions<BobetaDbContext> options) : DbCont
     /// <summary>MoMo payment transactions (deposit/withdrawal).</summary>
     public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
 
+    /// <summary>SMS messages sent via gateway (for DLR tracking).</summary>
+    public DbSet<SmsMessage> SmsMessages => Set<SmsMessage>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

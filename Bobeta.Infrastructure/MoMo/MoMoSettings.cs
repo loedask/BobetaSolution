@@ -26,14 +26,14 @@ public class MoMoSettings
     /// <summary>Callback URL for payment notifications (e.g. https://yourapi.com/api/payments/momo/callback).</summary>
     public string CallbackUrl { get; set; } = string.Empty;
 
-    /// <summary>Target environment (e.g. mtuganda for Uganda sandbox). Validated on callback via X-Target-Environment header.</summary>
-    public string TargetEnvironment { get; set; } = "mtuganda";
+    /// <summary>Target environment (e.g. mtncongo for Republic of the Congo). Validated on callback via X-Target-Environment header.</summary>
+    public string TargetEnvironment { get; set; } = "mtncongo";
 
     /// <summary>Subscription key to validate on callback (Ocp-Apim-Subscription-Key header). Set to the key MTN uses when calling your callback (e.g. same as Collection primary key).</summary>
     public string CallbackSubscriptionKey { get; set; } = string.Empty;
 
-    /// <summary>Default currency for requests (e.g. UGX).</summary>
-    public string Currency { get; set; } = "UGX";
+    /// <summary>Default currency for requests (e.g. XAF for Republic of the Congo).</summary>
+    public string Currency { get; set; } = "XAF";
 
     /// <summary>When true, use sandbox base URL and target environment.</summary>
     public bool UseSandbox { get; set; } = true;
