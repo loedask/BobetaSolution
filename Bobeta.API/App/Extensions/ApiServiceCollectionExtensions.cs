@@ -18,7 +18,7 @@ public static class ApiServiceCollectionExtensions
         services.AddBobetaPersistence(connectionString);
         services.AddBobetaApplication();
         services.AddBobetaIdentity();
-        services.AddBobetaInfrastructure();
+        services.AddBobetaInfrastructure(configuration);
 
         var key = configuration["Jwt:Key"] ?? "BobetaDefaultSecretKeyForJwtSigningThatIsLongEnough";
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

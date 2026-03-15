@@ -29,6 +29,9 @@ public class BobetaDbContext : DbContext
     /// <summary>OTP codes for phone verification.</summary>
     public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
 
+    /// <summary>MoMo payment transactions (deposit/withdrawal).</summary>
+    public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
