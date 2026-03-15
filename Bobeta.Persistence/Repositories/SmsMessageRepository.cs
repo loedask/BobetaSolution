@@ -6,11 +6,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Bobeta.Persistence.Repositories;
 
 /// <summary>Repository implementation for SmsMessage (add, get by provider ID, update).</summary>
-public class SmsMessageRepository : ISmsMessageRepository
+public class SmsMessageRepository(BobetaDbContext db) : ISmsMessageRepository
 {
-    private readonly BobetaDbContext _db;
-
-    public SmsMessageRepository(BobetaDbContext db) => _db = db;
+    private readonly BobetaDbContext _db = db;
 
     /// <inheritdoc />
     public async Task<SmsMessage> AddAsync(SmsMessage sms, CancellationToken cancellationToken = default)

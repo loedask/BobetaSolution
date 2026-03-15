@@ -5,11 +5,9 @@ using Bobeta.Persistence.Context;
 namespace Bobeta.Persistence.Repositories;
 
 /// <summary>Repository implementation for GameResult (add only, created when a game finishes).</summary>
-public class GameResultRepository : IGameResultRepository
+public class GameResultRepository(BobetaDbContext db) : IGameResultRepository
 {
-    private readonly BobetaDbContext _db;
-
-    public GameResultRepository(BobetaDbContext db) => _db = db;
+    private readonly BobetaDbContext _db = db;
 
     public async Task<GameResult> AddAsync(GameResult result, CancellationToken cancellationToken = default)
     {

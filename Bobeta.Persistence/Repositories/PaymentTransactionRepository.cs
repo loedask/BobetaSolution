@@ -7,14 +7,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Bobeta.Persistence.Repositories;
 
 /// <summary>Repository for MoMo payment transactions.</summary>
-public class PaymentTransactionRepository : IPaymentTransactionRepository
+public class PaymentTransactionRepository(BobetaDbContext context) : IPaymentTransactionRepository
 {
-    private readonly BobetaDbContext _context;
-
-    public PaymentTransactionRepository(BobetaDbContext context)
-    {
-        _context = context;
-    }
+    private readonly BobetaDbContext _context = context;
 
     /// <inheritdoc />
     public async Task<PaymentTransaction?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

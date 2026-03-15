@@ -6,11 +6,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Bobeta.Persistence.Repositories;
 
 /// <summary>Repository implementation for GameMove (add, list by session, count).</summary>
-public class GameMoveRepository : IGameMoveRepository
+public class GameMoveRepository(BobetaDbContext db) : IGameMoveRepository
 {
-    private readonly BobetaDbContext _db;
-
-    public GameMoveRepository(BobetaDbContext db) => _db = db;
+    private readonly BobetaDbContext _db = db;
 
     public async Task<GameMove> AddAsync(GameMove move, CancellationToken cancellationToken = default)
     {

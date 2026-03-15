@@ -1,6 +1,5 @@
 using Bobeta.Application.DTOs.History;
 using Bobeta.Application.Interfaces;
-using Bobeta.Domain.Enums;
 
 namespace Bobeta.Application.Services;
 

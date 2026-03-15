@@ -6,11 +6,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Bobeta.Persistence.Repositories;
 
 /// <summary>Repository implementation for WalletTransaction (append and paged history).</summary>
-public class WalletTransactionRepository : IWalletTransactionRepository
+public class WalletTransactionRepository(BobetaDbContext db) : IWalletTransactionRepository
 {
-    private readonly BobetaDbContext _db;
-
-    public WalletTransactionRepository(BobetaDbContext db) => _db = db;
+    private readonly BobetaDbContext _db = db;
 
     public async Task<WalletTransaction> AddAsync(WalletTransaction transaction, CancellationToken cancellationToken = default)
     {

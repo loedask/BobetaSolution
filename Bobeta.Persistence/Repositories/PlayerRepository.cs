@@ -6,11 +6,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Bobeta.Persistence.Repositories;
 
 /// <summary>Repository implementation for Player entities (CRUD and lookup by phone).</summary>
-public class PlayerRepository : IPlayerRepository
+public class PlayerRepository(BobetaDbContext db) : IPlayerRepository
 {
-    private readonly BobetaDbContext _db;
-
-    public PlayerRepository(BobetaDbContext db) => _db = db;
+    private readonly BobetaDbContext _db = db;
 
     public async Task<Player?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         await _db.Players.FindAsync([id], cancellationToken);
