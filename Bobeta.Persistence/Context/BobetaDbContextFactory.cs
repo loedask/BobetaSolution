@@ -10,6 +10,7 @@ public class BobetaDbContextFactory : IDesignTimeDbContextFactory<BobetaDbContex
     public BobetaDbContext CreateDbContext(string[] args)
     {
         const string connectionString = "Host=localhost;Database=Bobeta;Username=postgres;Password=postgres";
+
         var options = new DbContextOptionsBuilder<BobetaDbContext>()
             .UseNpgsql(connectionString)
             .Options;
