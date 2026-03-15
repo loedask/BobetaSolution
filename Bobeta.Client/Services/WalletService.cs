@@ -30,7 +30,7 @@ public class WalletService(IClient client, HttpClient httpClient) : BaseHttpServ
     {
         try
         {
-            var dto = await Client.DepositAsync(new DepositRequest { Amount = amount }, cancellationToken).ConfigureAwait(false);
+            var dto = await Client.Deposit2Async(new DepositRequest { Amount = amount }, cancellationToken).ConfigureAwait(false);
             return Response<WalletTransactionViewModel?>.Success(MapTransaction(dto));
         }
         catch (BaseApiException ex)
