@@ -4,10 +4,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Bobeta.Persistence.Context;
 
 /// <summary>Entity Framework Core database context for the Bobeta platform. Uses PostgreSQL.</summary>
-public class BobetaDbContext : DbContext
+/// <remarks>Creates a new context with the given options (connection string configured in DI).</remarks>
+public class BobetaDbContext(DbContextOptions<BobetaDbContext> options) : DbContext(options)
 {
-    /// <summary>Creates a new context with the given options (connection string configured in DI).</summary>
-    public BobetaDbContext(DbContextOptions<BobetaDbContext> options) : base(options) { }
 
     /// <summary>Registered players.</summary>
     public DbSet<Player> Players => Set<Player>();
