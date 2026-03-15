@@ -14,8 +14,8 @@
         <p class="mb-8 text-center text-sm text-muted-foreground">@I18n.T("send_code_desc")</p>
         <div class="mb-6 w-full">
             <div class="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 focus-within:border-primary/50 transition-all">
-                <span class="text-muted-foreground">+237</span>
-                <input type="tel" @bind="ViewModel.Phone" @bind:event="oninput" placeholder="@I18n.T("phone_placeholder")" maxlength="9"
+                <CountryCodeSelector Dial="@ViewModel.CountryDial" DialChanged="OnCountryChanged" />
+                <input type="tel" @bind="ViewModel.Phone" @bind:event="oninput" placeholder="@I18n.T("phone_placeholder")" maxlength="@ViewModel.PhoneDigits"
                        class="flex-1 bg-transparent text-lg text-foreground outline-none placeholder:text-muted-foreground/50" />
             </div>
         </div>
@@ -35,6 +35,11 @@
     public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
 
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    private void OnCountryChanged((string Dial, int Digits) value)
+    {
+        ViewModel.SetCountry(value.Dial, value.Digits);
+    }
 
     private async Task SendCode() => await ViewModel.SendOtpAsync();
 }

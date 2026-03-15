@@ -12,7 +12,21 @@ public class PhoneLoginViewModel(AuthService authService, AppStateService appSta
 
     public string Phone { get; set; } = "";
 
-    public bool CanSubmit => Phone.Length >= 9 && !IsLoading;
+    /// <summary>Selected country dial code (e.g. +237).</summary>
+    public string CountryDial { get; set; } = "+237";
+
+    /// <summary>Expected number of digits for the selected country.</summary>
+    public int PhoneDigits { get; set; } = 9;
+
+    public bool CanSubmit => Phone.Length >= PhoneDigits && !IsLoading;
+
+    public void SetCountry(string dial, int digits)
+    {
+        CountryDial = dial;
+        PhoneDigits = digits;
+        if (Phone.Length > digits)
+            Phone = Phone[..digits];
+    }
 
     public async Task SendOtpAsync()
     {
@@ -20,10 +34,11 @@ public class PhoneLoginViewModel(AuthService authService, AppStateService appSta
         SetLoading(true);
         try
         {
-            var res = await _authService.SendOtpAsync("+237" + Phone);
+            var fullNumber = CountryDial + Phone;
+            var res = await _authService.SendOtpAsync(fullNumber);
             if (res.IsSuccess)
             {
-                _appState.SetPhoneNumber("+237" + Phone);
+                _appState.SetPhoneNumber(fullNumber);
                 await _appState.PersistAsync();
                 _nav.NavigateTo("/verify");
             }
