@@ -6,7 +6,8 @@ namespace Bobeta.Application.Interfaces;
 public interface IAuthService
 {
     /// <summary>Sends an OTP to the given phone number (stored for verification; actual SMS is integration-dependent).</summary>
-    Task SendOtpAsync(string phoneNumber, CancellationToken cancellationToken = default);
+    /// <param name="clientIp">Optional client IP for rate limiting (max 10 requests per IP per hour).</param>
+    Task SendOtpAsync(string phoneNumber, CancellationToken cancellationToken = default, string? clientIp = null);
 
     /// <summary>Verifies the code for the phone number. If valid, returns a JWT token if the player already exists.</summary>
     Task<VerifyOtpResult> VerifyOtpAsync(string phoneNumber, string code, CancellationToken cancellationToken = default);

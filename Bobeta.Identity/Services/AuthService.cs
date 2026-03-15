@@ -1,42 +1,61 @@
 using Bobeta.Application.Common;
+using Bobeta.Application.Configuration;
 using Bobeta.Application.DTOs.Auth;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
+using Microsoft.Extensions.Options;
 
 namespace Bobeta.Identity.Services;
 
 /// <summary>Implements phone-based auth: send OTP, verify OTP, register player (create player + wallet, issue JWT).</summary>
 public class AuthService : IAuthService
 {
-    private const string OtpMessageFormat = "Your Bobeta verification code is {0}. Do not share this code.";
+    private const string OtpMessageFormatFallback = "Your Bobeta verification code is {0}. Do not share this code.";
 
     private readonly OtpService _otpService;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IPlayerRepository _playerRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly ISmsService? _smsService;
+    private readonly IOtpRateLimitService? _otpRateLimitService;
+    private readonly IOptions<CountrySettings>? _countrySettings;
+    private readonly ISmsTemplateProvider? _smsTemplateProvider;
 
     public AuthService(
         OtpService otpService,
         IJwtTokenService jwtTokenService,
         IPlayerRepository playerRepository,
         IWalletRepository walletRepository,
-        ISmsService? smsService = null)
+        ISmsService? smsService = null,
+        IOtpRateLimitService? otpRateLimitService = null,
+        IOptions<CountrySettings>? countrySettings = null,
+        ISmsTemplateProvider? smsTemplateProvider = null)
     {
         _otpService = otpService;
         _jwtTokenService = jwtTokenService;
         _playerRepository = playerRepository;
         _walletRepository = walletRepository;
         _smsService = smsService;
+        _otpRateLimitService = otpRateLimitService;
+        _countrySettings = countrySettings;
+        _smsTemplateProvider = smsTemplateProvider;
     }
 
     /// <inheritdoc />
-    public async Task SendOtpAsync(string phoneNumber, CancellationToken cancellationToken = default)
+    public async Task SendOtpAsync(string phoneNumber, CancellationToken cancellationToken = default, string? clientIp = null)
     {
+        if (_otpRateLimitService != null)
+        {
+            var (allowed, errorMessage) = await _otpRateLimitService.CheckAndRecordAsync(phoneNumber, clientIp, cancellationToken);
+            if (!allowed)
+                throw new InvalidOperationException(errorMessage ?? "Too many OTP requests. Please try again later.");
+        }
+
         var code = await _otpService.GenerateAndStoreOtpAsync(phoneNumber, cancellationToken);
         var normalized = PhoneNumberHelper.Normalize(phoneNumber);
-        var message = string.Format(OtpMessageFormat, code);
+        var template = _smsTemplateProvider?.GetOtpMessageTemplate(_countrySettings?.Value?.DefaultLanguage) ?? OtpMessageFormatFallback;
+        var message = string.Format(template, code);
         if (_smsService != null)
             await _smsService.SendOtpAsync(normalized, message, cancellationToken);
     }

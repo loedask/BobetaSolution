@@ -14,8 +14,16 @@ public class AuthController(IAuthService authService) : ControllerBase
     [HttpPost("send-otp")]
     public async Task<IActionResult> SendOtp([FromBody] SendOtpRequest request, CancellationToken cancellationToken)
     {
-        await _authService.SendOtpAsync(request.PhoneNumber, cancellationToken);
-        return Accepted();
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+        try
+        {
+            await _authService.SendOtpAsync(request.PhoneNumber, cancellationToken, clientIp);
+            return Accepted();
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Too many OTP", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(429, ex.Message);
+        }
     }
 
     /// <summary>Verifies the OTP code; returns a JWT if the player is already registered.</summary>

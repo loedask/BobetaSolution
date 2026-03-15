@@ -82,52 +82,99 @@ public class SmsGatewayService : ISmsService
         };
         var requestUri = new Uri(sendUrl + "?" + string.Join("&", query.Select(q => $"{Uri.EscapeDataString(q.Key)}={Uri.EscapeDataString(q.Value)}")));
 
-        try
-        {
-            var client = _httpClientFactory.CreateClient(InfrastructureServiceCollectionExtensions.SmsGatewayHttpClientName);
-            var response = await client.GetAsync(requestUri, cancellationToken);
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        const int maxAttempts = 3;
+        const int retryDelaySeconds = 3;
 
-            if (!response.IsSuccessStatusCode)
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            try
             {
-                _logger.LogWarning("SMS failure: PhoneNumber={PhoneNumber}, MessageType={MessageType}, StatusCode={StatusCode}, Response={Response}",
-                    normalizedPhone, messageType, response.StatusCode, body);
-                UpdateToFailed(smsRecord, "HTTP " + (int)response.StatusCode);
-                await _smsRepository.UpdateAsync(smsRecord, cancellationToken);
-                throw MapError(response.StatusCode, body);
-            }
+                if (attempt > 0)
+                    _logger.LogWarning("SMS retry attempt: Attempt={Attempt}, PhoneNumber={PhoneNumber}, MessageType={MessageType}", attempt + 1, normalizedPhone, messageType);
 
-            var providerId = ParseProviderMessageId(body);
-            if (string.IsNullOrEmpty(providerId))
+                var client = _httpClientFactory.CreateClient(InfrastructureServiceCollectionExtensions.SmsGatewayHttpClientName);
+                var response = await client.GetAsync(requestUri, cancellationToken);
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var isRetryable = response.StatusCode == HttpStatusCode.RequestTimeout ||
+                                      response.StatusCode == HttpStatusCode.GatewayTimeout ||
+                                      (int)response.StatusCode >= 500;
+                    if (isRetryable && attempt < maxAttempts - 1)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(retryDelaySeconds), cancellationToken);
+                        continue;
+                    }
+                    _logger.LogWarning("SMS failure: PhoneNumber={PhoneNumber}, MessageType={MessageType}, StatusCode={StatusCode}, Response={Response}",
+                        normalizedPhone, messageType, response.StatusCode, body);
+                    UpdateToFailed(smsRecord, "HTTP " + (int)response.StatusCode);
+                    await _smsRepository.UpdateAsync(smsRecord, cancellationToken);
+                    throw MapError(response.StatusCode, body);
+                }
+
+                var providerId = ParseProviderMessageId(body);
+                if (string.IsNullOrEmpty(providerId))
+                {
+                    var err = MapErrorFromBody(body);
+                    _logger.LogWarning("SMS failure: PhoneNumber={PhoneNumber}, MessageType={MessageType}, ProviderResponse={Response}",
+                        normalizedPhone, messageType, body);
+                    UpdateToFailed(smsRecord, body);
+                    await _smsRepository.UpdateAsync(smsRecord, cancellationToken);
+                    throw err;
+                }
+
+                smsRecord.ProviderMessageId = providerId;
+                smsRecord.Status = SmsMessageStatus.Sent;
+                smsRecord.UpdatedAt = DateTime.UtcNow;
+                await _smsRepository.UpdateAsync(smsRecord, cancellationToken);
+
+                _logger.LogInformation("SMS sent: PhoneNumber={PhoneNumber}, ProviderMessageId={ProviderMessageId}, MessageType={MessageType}",
+                    normalizedPhone, providerId, messageType);
+                return providerId;
+            }
+            catch (SmsGatewayException)
             {
-                var err = MapErrorFromBody(body);
-                _logger.LogWarning("SMS failure: PhoneNumber={PhoneNumber}, MessageType={MessageType}, ProviderResponse={Response}",
-                    normalizedPhone, messageType, body);
-                UpdateToFailed(smsRecord, body);
-                await _smsRepository.UpdateAsync(smsRecord, cancellationToken);
-                throw err;
+                throw;
             }
+            catch (HttpRequestException ex)
+            {
+                if (attempt < maxAttempts - 1)
+                {
+                    _logger.LogWarning(ex, "SMS retry attempt: network error, Attempt={Attempt}, PhoneNumber={PhoneNumber}, MessageType={MessageType}", attempt + 1, normalizedPhone, messageType);
+                    await Task.Delay(TimeSpan.FromSeconds(retryDelaySeconds), cancellationToken);
+                    continue;
+                }
+                _logger.LogError(ex, "SMS gateway error: PhoneNumber={PhoneNumber}, MessageType={MessageType}", normalizedPhone, messageType);
+                UpdateToFailed(smsRecord, ex.Message);
+                await _smsRepository.UpdateAsync(smsRecord, cancellationToken);
+                throw new SmsGatewayException("SMS gateway error. Please try again later.", ex);
+            }
+            catch (TaskCanceledException ex)
+            {
+                if (attempt < maxAttempts - 1)
+                {
+                    _logger.LogWarning("SMS retry attempt: timeout/cancelled, Attempt={Attempt}, PhoneNumber={PhoneNumber}, MessageType={MessageType}", attempt + 1, normalizedPhone, messageType);
+                    await Task.Delay(TimeSpan.FromSeconds(retryDelaySeconds), cancellationToken);
+                    continue;
+                }
+                _logger.LogError(ex, "SMS gateway error (timeout): PhoneNumber={PhoneNumber}, MessageType={MessageType}", normalizedPhone, messageType);
+                UpdateToFailed(smsRecord, ex.Message);
+                await _smsRepository.UpdateAsync(smsRecord, cancellationToken);
+                throw new SmsGatewayException("SMS gateway error. Please try again later.", ex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SMS gateway error: PhoneNumber={PhoneNumber}, MessageType={MessageType}", normalizedPhone, messageType);
+                UpdateToFailed(smsRecord, ex.Message);
+                await _smsRepository.UpdateAsync(smsRecord, cancellationToken);
+                throw new SmsGatewayException("SMS gateway error. Please try again later.", ex);
+            }
+        }
 
-            smsRecord.ProviderMessageId = providerId;
-            smsRecord.Status = SmsMessageStatus.Sent;
-            smsRecord.UpdatedAt = DateTime.UtcNow;
-            await _smsRepository.UpdateAsync(smsRecord, cancellationToken);
-
-            _logger.LogInformation("SMS sent: PhoneNumber={PhoneNumber}, ProviderMessageId={ProviderMessageId}, MessageType={MessageType}",
-                normalizedPhone, providerId, messageType);
-            return providerId;
-        }
-        catch (SmsGatewayException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "SMS gateway error: PhoneNumber={PhoneNumber}, MessageType={MessageType}", normalizedPhone, messageType);
-            UpdateToFailed(smsRecord, ex.Message);
-            await _smsRepository.UpdateAsync(smsRecord, cancellationToken);
-            throw new SmsGatewayException("SMS gateway error. Please try again later.", ex);
-        }
+        UpdateToFailed(smsRecord, "Max retries exceeded");
+        await _smsRepository.UpdateAsync(smsRecord, cancellationToken);
+        throw new SmsGatewayException("SMS gateway error. Please try again later.");
     }
 
     private static string? ParseProviderMessageId(string body)

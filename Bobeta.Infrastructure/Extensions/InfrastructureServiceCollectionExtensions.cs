@@ -27,6 +27,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddHttpClient(MoMoPaymentService.MoMoHttpClientName);
         services.AddHttpClient(SmsGatewayHttpClientName);
 
+        services.AddMemoryCache();
+        services.AddScoped<IOtpRateLimitService, OtpRateLimitService>();
+        services.AddScoped<ISmsTemplateProvider, SmsTemplateProvider>();
+
         services.AddScoped<IPaymentService, MoMoPaymentService>();
         services.AddScoped<ISmsService, SmsGatewayService>();
 
