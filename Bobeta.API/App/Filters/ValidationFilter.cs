@@ -2,7 +2,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace Bobeta.API.Filters;
+namespace Bobeta.API.App.Filters;
 
 /// <summary>Runs FluentValidation on action arguments that have a registered validator; returns 400 with errors if validation fails.</summary>
 public class ValidationFilter : IAsyncActionFilter

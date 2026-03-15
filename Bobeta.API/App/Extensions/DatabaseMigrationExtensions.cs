@@ -1,10 +1,7 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Bobeta.Persistence.Context;
+using Microsoft.EntityFrameworkCore;
 
-namespace Bobeta.API.Extensions;
+namespace Bobeta.API.App.Extensions;
 
 /// <summary>
 /// Applies pending EF Core migrations at host startup (Development only).

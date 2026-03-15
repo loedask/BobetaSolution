@@ -6,7 +6,7 @@ using Bobeta.Persistence.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Bobeta.API.Extensions;
+namespace Bobeta.API.App.Extensions;
 
 /// <summary>Registers all Bobeta services (persistence, application, identity, infrastructure), JWT auth, and SignalR.</summary>
 public static class ApiServiceCollectionExtensions

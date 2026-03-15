@@ -1,6 +1,6 @@
 using Microsoft.OpenApi.Models;
 
-namespace Bobeta.API.Extensions;
+namespace Bobeta.API.App.Extensions;
 
 /// <summary>
 /// Centralizes Swagger/OpenAPI registration and pipeline setup for the Bobeta API.
