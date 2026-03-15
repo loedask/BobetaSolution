@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
 using Microsoft.Extensions.Configuration;
@@ -5,11 +7,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Bobeta.Identity.Services;
 
-/// <summary>Generates and validates OTP codes for phone-based authentication. OTPs expire after 5 minutes and are single-use.</summary>
+/// <summary>Generates and validates OTP codes for phone-based authentication. OTPs expire after 5 minutes and are single-use. Codes are stored as SHA256 hashes; brute-force protection locks after 5 incorrect attempts.</summary>
 public class OtpService
 {
     /// <summary>OTP codes expire after this many minutes. Validation rejects expired codes.</summary>
     public const int ExpirationMinutes = 5;
+
+    /// <summary>Maximum incorrect verification attempts before locking the OTP.</summary>
+    public const int MaxFailedAttempts = 5;
+
+    /// <summary>Lockout duration in minutes when max failed attempts exceeded.</summary>
+    public const int LockoutMinutes = 10;
 
     private readonly IOtpRepository _otpRepository;
     private readonly IConfiguration _configuration;
@@ -22,25 +30,28 @@ public class OtpService
         _logger = logger;
     }
 
-    /// <summary>Generates a 6-digit OTP, stores it for the phone number with expiration (5 minutes), and returns the code (for sending via SMS in production).</summary>
+    /// <summary>Generates a 6-digit OTP, hashes it with SHA256, stores the hash with expiration (5 minutes), and returns the plain code (for sending via SMS).</summary>
     public async Task<string> GenerateAndStoreOtpAsync(string phoneNumber, CancellationToken cancellationToken = default)
     {
         var code = GenerateOtpCode();
+        var codeHash = HashCode(code);
         var otp = new OtpCode
         {
             Id = Guid.NewGuid(),
             PhoneNumber = phoneNumber,
-            Code = code,
+            Code = codeHash,
             ExpiresAt = DateTime.UtcNow.AddMinutes(ExpirationMinutes),
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            FailedAttemptCount = 0,
+            LockedUntil = null
         };
         await _otpRepository.AddAsync(otp, cancellationToken);
         _logger.LogInformation("OTP generated: PhoneNumber={PhoneNumber}, ExpiresAt={ExpiresAt}", phoneNumber, otp.ExpiresAt);
         return code;
     }
 
-    /// <summary>Validates the code for the phone number. Rejects expired or already-used codes. Returns true only if valid and not expired.</summary>
-    public async Task<bool> ValidateOtpAsync(string phoneNumber, string code, CancellationToken cancellationToken = default)
+    /// <summary>Validates the code for the phone number. Rejects expired, locked, or already-used codes. Compares SHA256 hash of input with stored hash. Returns (valid, errorMessage); errorMessage is set for brute-force lockout.</summary>
+    public async Task<(bool Valid, string? ErrorMessage)> ValidateOtpAsync(string phoneNumber, string code, CancellationToken cancellationToken = default)
     {
         var otp = await _otpRepository.GetLatestByPhoneAsync(phoneNumber, cancellationToken);
         var now = DateTime.UtcNow;
@@ -48,27 +59,50 @@ public class OtpService
         if (otp == null)
         {
             _logger.LogWarning("OTP validation failed: no code for PhoneNumber={PhoneNumber}", phoneNumber);
-            return false;
+            return (false, null);
         }
         if (otp.IsUsed)
         {
             _logger.LogWarning("OTP validation failed: already used for PhoneNumber={PhoneNumber}", phoneNumber);
-            return false;
+            return (false, null);
         }
         if (otp.ExpiresAt < now)
         {
             _logger.LogWarning("OTP expired: PhoneNumber={PhoneNumber}, ExpiredAt={ExpiresAt}", phoneNumber, otp.ExpiresAt);
-            return false;
+            return (false, null);
         }
-        if (otp.Code != code)
+        if (otp.LockedUntil.HasValue && otp.LockedUntil.Value > now)
         {
+            _logger.LogWarning("OTP validation failed: locked until {LockedUntil}, PhoneNumber={PhoneNumber}", otp.LockedUntil, phoneNumber);
+            return (false, "Too many incorrect verification attempts.");
+        }
+
+        var inputHash = HashCode(code);
+        if (otp.Code != inputHash)
+        {
+            otp.FailedAttemptCount++;
+            if (otp.FailedAttemptCount >= MaxFailedAttempts)
+            {
+                otp.LockedUntil = now.AddMinutes(LockoutMinutes);
+                await _otpRepository.UpdateAsync(otp, cancellationToken);
+                _logger.LogWarning("OTP brute force detected: PhoneNumber={PhoneNumber}, AttemptCount={AttemptCount}", phoneNumber, otp.FailedAttemptCount);
+                return (false, "Too many incorrect verification attempts.");
+            }
+            await _otpRepository.UpdateAsync(otp, cancellationToken);
             _logger.LogWarning("OTP validation failed: wrong code for PhoneNumber={PhoneNumber}", phoneNumber);
-            return false;
+            return (false, null);
         }
 
         await _otpRepository.InvalidateAsync(otp, cancellationToken);
         _logger.LogInformation("OTP validated: PhoneNumber={PhoneNumber}", phoneNumber);
-        return true;
+        return (true, null);
+    }
+
+    private static string HashCode(string code)
+    {
+        var bytes = Encoding.UTF8.GetBytes(code ?? "");
+        var hash = SHA256.HashData(bytes);
+        return Convert.ToHexString(hash);
     }
 
     private static string GenerateOtpCode()

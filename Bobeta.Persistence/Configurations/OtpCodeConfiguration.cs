@@ -13,7 +13,9 @@ public class OtpCodeConfiguration : IEntityTypeConfiguration<OtpCode>
         builder.ToTable("OtpCodes");
         builder.HasKey(o => o.Id);
         builder.Property(o => o.PhoneNumber).HasMaxLength(20).IsRequired();
-        builder.Property(o => o.Code).HasMaxLength(10).IsRequired();
+        builder.Property(o => o.Code).HasMaxLength(64).IsRequired(); // SHA256 hex
+        builder.Property(o => o.FailedAttemptCount);
+        builder.Property(o => o.LockedUntil);
         builder.HasIndex(o => new { o.PhoneNumber, o.CreatedAt });
     }
 }

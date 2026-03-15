@@ -13,4 +13,7 @@ public interface IOtpRepository
 
     /// <summary>Marks an OTP as used so it cannot be reused.</summary>
     Task InvalidateAsync(OtpCode otp, CancellationToken cancellationToken = default);
+
+    /// <summary>Updates an existing OTP (e.g. failed attempt count, locked until).</summary>
+    Task UpdateAsync(OtpCode otp, CancellationToken cancellationToken = default);
 }

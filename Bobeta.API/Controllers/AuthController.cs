@@ -31,7 +31,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request, CancellationToken cancellationToken)
     {
         var result = await _authService.VerifyOtpAsync(request.PhoneNumber, request.Code, cancellationToken);
-        if (!result.Valid) return BadRequest("Invalid or expired OTP.");
+        if (!result.Valid) return BadRequest(result.ErrorMessage ?? "Invalid or expired OTP.");
         return Ok(new { Token = result.Token });
     }
 

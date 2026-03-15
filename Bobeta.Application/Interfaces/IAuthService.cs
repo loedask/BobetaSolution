@@ -19,4 +19,5 @@ public interface IAuthService
 /// <summary>Result of OTP verification: whether the code was valid and an optional JWT if the player exists.</summary>
 /// <param name="Valid">True if the OTP matched and was not expired.</param>
 /// <param name="Token">JWT token if the player is already registered; null otherwise.</param>
-public record VerifyOtpResult(bool Valid, string? Token);
+/// <param name="ErrorMessage">Optional message when validation fails (e.g. "Too many incorrect verification attempts.").</param>
+public record VerifyOtpResult(bool Valid, string? Token, string? ErrorMessage = null);

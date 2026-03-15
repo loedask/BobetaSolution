@@ -31,4 +31,10 @@ public class OtpRepository : IOtpRepository
         _db.OtpCodes.Update(otp);
         await _db.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task UpdateAsync(OtpCode otp, CancellationToken cancellationToken = default)
+    {
+        _db.OtpCodes.Update(otp);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
 }
