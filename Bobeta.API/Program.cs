@@ -22,4 +22,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<GameHub>("/hubs/game"); // SignalR game hub for real-time gameplay.
 
+if (app.Environment.IsDevelopment())
+    await app.ApplyMigrationsAsync();
+
 app.Run();
