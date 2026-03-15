@@ -80,4 +80,66 @@ If no second player joins, the app can simulate an AI opponent for local testing
 
 ---
 
+## MTN MoMo Setup
+
+To enable production-ready Mobile Money (MoMo) payments (deposits and withdrawals) via MTN:
+
+### 1. Create account at MoMo Developer Portal
+
+1. Go to [https://momodeveloper.mtn.com](https://momodeveloper.mtn.com).
+2. Sign up or sign in to the developer portal.
+3. Use the **Sandbox** for testing; switch to **Production** when going live.
+
+### 2. Create API User
+
+1. In the portal, create an **API User** under your product (Collection and/or Disbursement).
+2. Note the **API User ID** (e.g. a UUID).
+3. **Generate API Key** for that user and store it securely (it is shown only once).
+
+### 3. Create Collection and Disbursement subscriptions
+
+1. Subscribe to **Collection** (for request-to-pay / deposits) and **Disbursement** (for transfers / withdrawals).
+2. For each product, create a **Subscription** and note the **Primary Key** (subscription key).
+3. You will need:
+   - **Collection Primary Key** — for deposit (request-to-pay) API calls.
+   - **Disbursement Primary Key** — for withdrawal (transfer) API calls.
+
+### 4. Configure appsettings.json
+
+Add or update the `MoMo` section in **Bobeta.API/appsettings.json** (use **User Secrets** or environment variables in production; do not commit real keys):
+
+```json
+{
+  "MoMo": {
+    "BaseUrl": "https://sandbox.momodeveloper.mtn.com",
+    "SubscriptionKey": "your-subscription-key",
+    "ApiUser": "your-api-user-id",
+    "ApiKey": "your-api-key",
+    "CollectionPrimaryKey": "your-collection-primary-key",
+    "DisbursementPrimaryKey": "your-disbursement-primary-key",
+    "CallbackUrl": "https://your-api-host/api/payments/momo/callback",
+    "TargetEnvironment": "mtuganda",
+    "Currency": "UGX",
+    "UseSandbox": true
+  }
+}
+```
+
+- **CallbackUrl**: Must be a publicly reachable URL where MTN will send payment status callbacks. For local testing you can use a tunnel (e.g. ngrok) and set this to your tunnel URL plus `/api/payments/momo/callback`.
+- **TargetEnvironment**: Use the value for your country/sandbox (e.g. `mtuganda` for Uganda sandbox).
+- For **production**, set `BaseUrl` and `TargetEnvironment` to the production values and `UseSandbox` to `false`.
+
+### 5. Apply migrations
+
+Ensure the **PaymentTransactions** table exists (from the MoMo integration migration):
+
+```bash
+cd Bobeta.API
+dotnet ef database update
+```
+
+After configuration, the API will accept deposit and withdrawal requests via `/api/payments/deposit` and `/api/payments/withdraw`, and the **PaymentStatusWorker** will poll pending payments every 60 seconds so that completed payments update the wallet even if a callback is missed.
+
+---
+
 For API details (e.g. Swagger), open the API base URL in the browser (e.g. `https://localhost:5001/swagger`).

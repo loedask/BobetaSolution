@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -6,18 +7,30 @@ using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
 using Bobeta.Infrastructure.MoMo;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Polly;
 
 namespace Bobeta.Infrastructure.Services;
 
 /// <summary>MTN MoMo implementation of IPaymentService: request-to-pay (deposit), disbursement (withdrawal), status check, and callback handling.</summary>
 public class MoMoPaymentService : IPaymentService
 {
+    /// <summary>Named HttpClient key for MoMo API (with Polly retry policy).</summary>
+    public const string MoMoHttpClientName = "MoMo";
+
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly MoMoSettings _settings;
     private readonly IPaymentTransactionRepository _paymentRepository;
     private readonly IWalletService _walletService;
+    private readonly ILogger<MoMoPaymentService> _logger;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    /// <summary>Part 4 — Retry: up to 3 times for network/transient failures.</summary>
+    private static readonly IAsyncPolicy<HttpResponseMessage> RetryPolicy = Policy
+        .Handle<HttpRequestException>()
+        .Or<TaskCanceledException>()
+        .OrResult<HttpResponseMessage>(r => (int)r.StatusCode >= 500 || r.StatusCode == HttpStatusCode.RequestTimeout || r.StatusCode == HttpStatusCode.GatewayTimeout)
+        .WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)));
     private string? _collectionToken;
     private DateTime _collectionTokenExpiry = DateTime.MinValue;
     private string? _disbursementToken;
@@ -28,12 +41,14 @@ public class MoMoPaymentService : IPaymentService
         IHttpClientFactory httpClientFactory,
         IOptions<MoMoSettings> settings,
         IPaymentTransactionRepository paymentRepository,
-        IWalletService walletService)
+        IWalletService walletService,
+        ILogger<MoMoPaymentService> logger)
     {
         _httpClientFactory = httpClientFactory;
         _settings = settings.Value;
         _paymentRepository = paymentRepository;
         _walletService = walletService;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -56,6 +71,8 @@ public class MoMoPaymentService : IPaymentService
             UpdatedAt = DateTime.UtcNow
         };
         await _paymentRepository.AddAsync(transaction, cancellationToken);
+        _logger.LogInformation("Payment created: {TransactionId}, PlayerId={PlayerId}, Type=Deposit, Amount={Amount}, ExternalReference={ExternalReference}",
+            transaction.Id, playerId, amount, externalRef);
 
         var token = await GetCollectionTokenAsync(cancellationToken);
         var baseUrl = _settings.BaseUrl.TrimEnd('/');
@@ -68,7 +85,7 @@ public class MoMoPaymentService : IPaymentService
             PayerMessage = "Bobeta deposit",
             PayeeNote = "Deposit to Bobeta wallet"
         };
-        using var client = _httpClientFactory.CreateClient();
+        using var client = _httpClientFactory.CreateClient(MoMoHttpClientName);
         var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/collection/v1_0/requesttopay")
         {
             Content = new StringContent(JsonSerializer.Serialize(requestBody, _jsonOptions), Encoding.UTF8, "application/json")
@@ -79,7 +96,9 @@ public class MoMoPaymentService : IPaymentService
         if (!string.IsNullOrEmpty(_settings.CallbackUrl))
             request.Headers.Add("X-Callback-Url", _settings.CallbackUrl);
 
-        var response = await client.SendAsync(request, cancellationToken);
+        _logger.LogInformation("MoMo request sent: RequestToPay, TransactionId={TransactionId}, ExternalReference={ExternalReference}, Amount={Amount}",
+            transaction.Id, externalRef, amount);
+        var response = await RetryPolicy.ExecuteAsync(ct => client.SendAsync(request, ct), cancellationToken);
         if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.Accepted)
         {
             var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -116,6 +135,8 @@ public class MoMoPaymentService : IPaymentService
             UpdatedAt = DateTime.UtcNow
         };
         await _paymentRepository.AddAsync(transaction, cancellationToken);
+        _logger.LogInformation("Payment created: {TransactionId}, PlayerId={PlayerId}, Type=Withdrawal, Amount={Amount}, ExternalReference={ExternalReference}",
+            transaction.Id, playerId, amount, externalRef);
 
         var token = await GetDisbursementTokenAsync(cancellationToken);
         var baseUrl = _settings.BaseUrl.TrimEnd('/');
@@ -128,7 +149,7 @@ public class MoMoPaymentService : IPaymentService
             PayerMessage = "Bobeta withdrawal",
             PayeeNote = "Withdrawal from Bobeta wallet"
         };
-        using var client = _httpClientFactory.CreateClient();
+        using var client = _httpClientFactory.CreateClient(MoMoHttpClientName);
         var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/disbursement/v1_0/transfer")
         {
             Content = new StringContent(JsonSerializer.Serialize(requestBody, _jsonOptions), Encoding.UTF8, "application/json")
@@ -139,7 +160,9 @@ public class MoMoPaymentService : IPaymentService
         if (!string.IsNullOrEmpty(_settings.CallbackUrl))
             request.Headers.Add("X-Callback-Url", _settings.CallbackUrl);
 
-        var response = await client.SendAsync(request, cancellationToken);
+        _logger.LogInformation("MoMo request sent: Transfer, TransactionId={TransactionId}, ExternalReference={ExternalReference}, Amount={Amount}",
+            transaction.Id, externalRef, amount);
+        var response = await RetryPolicy.ExecuteAsync(ct => client.SendAsync(request, ct), cancellationToken);
         if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.Accepted)
         {
             var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -176,10 +199,14 @@ public class MoMoPaymentService : IPaymentService
             if (transaction.Type == PaymentTransactionType.Deposit && transaction.Status == PaymentTransactionStatus.Success)
             {
                 await _walletService.DepositAsync(transaction.PlayerId, transaction.Amount, cancellationToken);
+                _logger.LogInformation("Wallet updated: Deposit, TransactionId={TransactionId}, PlayerId={PlayerId}, Amount={Amount}",
+                    transaction.Id, transaction.PlayerId, transaction.Amount);
             }
             if (transaction.Type == PaymentTransactionType.Withdrawal && transaction.Status == PaymentTransactionStatus.Success)
             {
                 await _walletService.WithdrawAsync(transaction.PlayerId, transaction.Amount, cancellationToken);
+                _logger.LogInformation("Wallet updated: Withdrawal, TransactionId={TransactionId}, PlayerId={PlayerId}, Amount={Amount}",
+                    transaction.Id, transaction.PlayerId, transaction.Amount);
             }
             transaction.UpdatedAt = DateTime.UtcNow;
             await _paymentRepository.UpdateAsync(transaction, cancellationToken);
@@ -188,13 +215,21 @@ public class MoMoPaymentService : IPaymentService
     }
 
     /// <inheritdoc />
-    public async Task HandleMoMoCallbackAsync(MoMoCallbackRequest callbackData, CancellationToken cancellationToken = default)
+    public async Task<CallbackHandleResult> HandleMoMoCallbackAsync(MoMoCallbackRequest callbackData, CancellationToken cancellationToken = default)
     {
         if (callbackData == null || string.IsNullOrEmpty(callbackData.ReferenceId))
-            return;
+            return CallbackHandleResult.NotFound;
         var transaction = await _paymentRepository.GetByExternalReferenceAsync(callbackData.ReferenceId, cancellationToken);
-        if (transaction == null) return;
-        if (transaction.Status != PaymentTransactionStatus.Pending) return;
+        if (transaction == null)
+        {
+            _logger.LogWarning("Callback received: transaction not found for ReferenceId={ReferenceId}", callbackData.ReferenceId);
+            return CallbackHandleResult.NotFound;
+        }
+        _logger.LogInformation("Callback received: ReferenceId={ReferenceId}, TransactionId={TransactionId}, Status={Status}",
+            callbackData.ReferenceId, transaction.Id, callbackData.Status ?? "null");
+        // Part 2 — Idempotency: if not Pending, return success without processing again
+        if (transaction.Status != PaymentTransactionStatus.Pending)
+            return CallbackHandleResult.AlreadyProcessed;
 
         var status = callbackData.Status ?? "PENDING";
         transaction.Status = MapMoMoStatus(status);
@@ -205,11 +240,16 @@ public class MoMoPaymentService : IPaymentService
         if (transaction.Type == PaymentTransactionType.Deposit && transaction.Status == PaymentTransactionStatus.Success)
         {
             await _walletService.DepositAsync(transaction.PlayerId, transaction.Amount, cancellationToken);
+            _logger.LogInformation("Wallet updated: Deposit (callback), TransactionId={TransactionId}, PlayerId={PlayerId}, Amount={Amount}",
+                transaction.Id, transaction.PlayerId, transaction.Amount);
         }
         if (transaction.Type == PaymentTransactionType.Withdrawal && transaction.Status == PaymentTransactionStatus.Success)
         {
             await _walletService.WithdrawAsync(transaction.PlayerId, transaction.Amount, cancellationToken);
+            _logger.LogInformation("Wallet updated: Withdrawal (callback), TransactionId={TransactionId}, PlayerId={PlayerId}, Amount={Amount}",
+                transaction.Id, transaction.PlayerId, transaction.Amount);
         }
+        return CallbackHandleResult.Processed;
     }
 
     private async Task<string> GetCollectionTokenAsync(CancellationToken cancellationToken)
@@ -248,11 +288,11 @@ public class MoMoPaymentService : IPaymentService
     {
         var baseUrl = _settings.BaseUrl.TrimEnd('/');
         var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_settings.ApiUser}:{_settings.ApiKey}"));
-        using var client = _httpClientFactory.CreateClient();
+        using var client = _httpClientFactory.CreateClient(MoMoHttpClientName);
         var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/{product}/token/");
         request.Headers.Authorization = new AuthenticationHeaderValue("Basic", credentials);
         request.Headers.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
-        var response = await client.SendAsync(request, cancellationToken);
+        var response = await RetryPolicy.ExecuteAsync(ct => client.SendAsync(request, ct), cancellationToken);
         response.EnsureSuccessStatusCode();
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
         var tokenResponse = JsonSerializer.Deserialize<MoMoTokenResponse>(json, _jsonOptions)
@@ -263,11 +303,11 @@ public class MoMoPaymentService : IPaymentService
     private async Task<string?> GetRequestToPayStatusAsync(string referenceId, string token, CancellationToken cancellationToken)
     {
         var baseUrl = _settings.BaseUrl.TrimEnd('/');
-        using var client = _httpClientFactory.CreateClient();
+        using var client = _httpClientFactory.CreateClient(MoMoHttpClientName);
         var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/collection/v1_0/requesttopay/{referenceId}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         request.Headers.Add("X-Target-Environment", _settings.TargetEnvironment);
-        var response = await client.SendAsync(request, cancellationToken);
+        var response = await RetryPolicy.ExecuteAsync(ct => client.SendAsync(request, ct), cancellationToken);
         if (!response.IsSuccessStatusCode) return null;
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
         var result = JsonSerializer.Deserialize<MoMoRequestToPayResult>(json, _jsonOptions);
@@ -277,11 +317,11 @@ public class MoMoPaymentService : IPaymentService
     private async Task<string?> GetTransferStatusAsync(string referenceId, string token, CancellationToken cancellationToken)
     {
         var baseUrl = _settings.BaseUrl.TrimEnd('/');
-        using var client = _httpClientFactory.CreateClient();
+        using var client = _httpClientFactory.CreateClient(MoMoHttpClientName);
         var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/disbursement/v1_0/transfer/{referenceId}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         request.Headers.Add("X-Target-Environment", _settings.TargetEnvironment);
-        var response = await client.SendAsync(request, cancellationToken);
+        var response = await RetryPolicy.ExecuteAsync(ct => client.SendAsync(request, ct), cancellationToken);
         if (!response.IsSuccessStatusCode) return null;
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
         var result = JsonSerializer.Deserialize<MoMoTransferResult>(json, _jsonOptions);

@@ -1,5 +1,6 @@
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
+using Bobeta.Domain.Enums;
 using Bobeta.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,5 +43,14 @@ public class PaymentTransactionRepository : IPaymentTransactionRepository
     {
         _context.PaymentTransactions.Update(transaction);
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Guid>> GetPendingTransactionIdsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.PaymentTransactions
+            .Where(p => p.Status == PaymentTransactionStatus.Pending)
+            .Select(p => p.Id)
+            .ToListAsync(cancellationToken);
     }
 }

@@ -16,4 +16,7 @@ public interface IPaymentTransactionRepository
 
     /// <summary>Updates an existing payment transaction.</summary>
     Task UpdateAsync(PaymentTransaction transaction, CancellationToken cancellationToken = default);
+
+    /// <summary>Gets ids of all payment transactions that are still Pending (for status polling worker).</summary>
+    Task<IReadOnlyList<Guid>> GetPendingTransactionIdsAsync(CancellationToken cancellationToken = default);
 }

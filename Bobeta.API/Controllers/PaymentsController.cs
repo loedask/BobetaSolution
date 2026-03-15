@@ -71,12 +71,16 @@ public class PaymentsController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>MoMo callback endpoint. Called by MTN when payment status changes. Do not require authentication.</summary>
+    /// <summary>MoMo callback endpoint. Called by MTN when payment status changes. Requires X-Reference-Id; rejects if transaction does not exist. Idempotent for duplicate callbacks.</summary>
     [HttpPost("momo/callback")]
     [AllowAnonymous]
     public async Task<IActionResult> MoMoCallback(CancellationToken cancellationToken)
     {
+        // Part 1 — Callback security: require X-Reference-Id header
         string? referenceId = Request.Headers["X-Reference-Id"].FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(referenceId))
+            return BadRequest(new { error = "X-Reference-Id header is required." });
+
         MoMoCallbackRequest model;
         try
         {
@@ -85,8 +89,6 @@ public class PaymentsController : ControllerBase
             var body = await reader.ReadToEndAsync(cancellationToken);
             if (string.IsNullOrWhiteSpace(body))
             {
-                if (string.IsNullOrEmpty(referenceId))
-                    return Ok();
                 model = new MoMoCallbackRequest { ReferenceId = referenceId };
             }
             else
@@ -108,14 +110,13 @@ public class PaymentsController : ControllerBase
         catch
         {
             model = new MoMoCallbackRequest { ReferenceId = referenceId };
-            if (string.IsNullOrEmpty(referenceId))
-                return BadRequest();
         }
 
-        if (string.IsNullOrEmpty(model.ReferenceId))
-            return Ok();
-
-        await _paymentService.HandleMoMoCallbackAsync(model, cancellationToken);
+        var result = await _paymentService.HandleMoMoCallbackAsync(model, cancellationToken);
+        // Reject if transaction does not exist (validation: confirm PaymentTransaction with that reference exists)
+        if (result == CallbackHandleResult.NotFound)
+            return NotFound(new { error = "Payment transaction not found for the given reference." });
+        // Part 2 — Idempotency: AlreadyProcessed and Processed both return success
         return Ok();
     }
 }

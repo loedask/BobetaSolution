@@ -14,6 +14,6 @@ public interface IPaymentService
     /// <summary>Checks the status of a payment transaction (by our transaction id) and optionally refreshes from MoMo.</summary>
     Task<PaymentTransactionDto?> CheckTransactionStatusAsync(Guid transactionId, CancellationToken cancellationToken = default);
 
-    /// <summary>Handles MoMo callback notification: updates payment transaction and on successful deposit/withdrawal updates the wallet.</summary>
-    Task HandleMoMoCallbackAsync(MoMoCallbackRequest callbackData, CancellationToken cancellationToken = default);
+    /// <summary>Handles MoMo callback notification: updates payment transaction and on successful deposit/withdrawal updates the wallet. Returns NotFound if no transaction exists; AlreadyProcessed if already completed (idempotency); Processed if updated.</summary>
+    Task<CallbackHandleResult> HandleMoMoCallbackAsync(MoMoCallbackRequest callbackData, CancellationToken cancellationToken = default);
 }
