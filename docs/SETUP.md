@@ -53,15 +53,34 @@ Navigate to:
 
 **http://localhost:5002**
 
-## 6. Test flow
+## 6. Demo test accounts (Development / Staging)
 
-1. **Login** — use the auth flow (e.g. phone + OTP).
-2. **Create player** — if required for first-time setup.
+These accounts are for **local or non-production** environments only. Demo seeding and static OTP are **disabled in Production** (`DemoEnvironmentHelper`).
+
+| Item | Value |
+|------|--------|
+| **Demo phone 1** | `+242700000001` (in the app: country **+242**, national **`700000001`**) |
+| **Demo phone 2** | `+242700000002` (national **`700000002`**) |
+| **Static OTP** (when enabled) | `123456` — see **`DemoAuth`** in `Bobeta.API/appsettings.Development.json` and `appsettings.Staging.json` |
+| **Wallet** | Each seeded player gets **100,000** balance (see `DemoAccountsSeeder`) |
+
+**How it works**
+
+1. On startup, the API runs migrations and **`DemoAccountsSeeder`** (Development / Staging only) and creates the two players if missing.
+2. **`OtpService`** accepts the configured **`DemoAuth:StaticOtp`** for numbers listed in **`DemoAuth:PhoneNumbers`** only when `EnableStaticOtp` is true and the host is Development or Staging.
+3. Source of truth for phone constants: `Bobeta.Persistence/Seeding/DemoAccountsSeeder.cs`.
+
+For any **new** number (not seeded), you still use a real SMS OTP unless you add that number to `DemoAuth:PhoneNumbers` (non-production only).
+
+## 7. Test flow
+
+1. **Login** — e.g. demo phone **+242** / **700000001** and OTP **123456** in Development, or your real SMS flow.
+2. **Create player** — skipped for seeded demos (already registered); required for new numbers.
 3. **Deposit** — add balance from the wallet/dashboard.
 4. **Join game** — create or join a game from the dashboard.
 5. Open the game page: **/game/{sessionId}** (you can get the session ID from the join/create response or dashboard).
 
-## 7. Multiplayer testing
+## 8. Multiplayer testing
 
 To test real-time multiplayer:
 
@@ -80,7 +99,7 @@ If no second player joins, the app can simulate an AI opponent for local testing
 
 ---
 
-## MTN MoMo Setup
+## 9. MTN MoMo Setup
 
 To enable production-ready Mobile Money (MoMo) payments (deposits and withdrawals) via MTN:
 
@@ -144,7 +163,7 @@ After configuration, the API will accept deposit and withdrawal requests via `/a
 
 ---
 
-## SMS Gateway Setup (SendSMSGate)
+## 10. SMS Gateway Setup (SendSMSGate)
 
 To send OTP and notification SMS (e.g. for phone verification) via SendSMSGate:
 
