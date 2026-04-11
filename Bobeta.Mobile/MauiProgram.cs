@@ -23,9 +23,18 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
 
         var assembly = Assembly.GetExecutingAssembly();
-        using var cfgStream = assembly.GetManifestResourceStream("Bobeta.Mobile.appsettings.json");
-        if (cfgStream != null)
-            builder.Configuration.AddJsonStream(cfgStream);
+        AddConfigJsonStream(assembly, builder, "Bobeta.Mobile.appsettings.json");
+#if !DEBUG
+        // Release / store builds: overrides ApiBaseUrl (and any other keys) from appsettings.Production.json.
+        AddConfigJsonStream(assembly, builder, "Bobeta.Mobile.appsettings.Production.json");
+#endif
+
+        static void AddConfigJsonStream(Assembly asm, MauiAppBuilder b, string manifestName)
+        {
+            using var stream = asm.GetManifestResourceStream(manifestName);
+            if (stream != null)
+                b.Configuration.AddJsonStream(stream);
+        }
 
         builder
             .UseMauiApp<App>()

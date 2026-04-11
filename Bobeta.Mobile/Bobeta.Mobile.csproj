@@ -51,6 +51,8 @@
 
 	<ItemGroup>
 		<EmbeddedResource Include="appsettings.json" />
+		<!-- Merged after appsettings.json on Release builds only (see MauiProgram). Replace URL before store publish. -->
+		<EmbeddedResource Include="appsettings.Production.json" Condition="'$(Configuration)' == 'Release'" />
 	</ItemGroup>
 
 	<ItemGroup>
