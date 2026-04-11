@@ -18,11 +18,17 @@ public class AuthController(IAuthService authService) : ControllerBase
         try
         {
             await _authService.SendOtpAsync(request.PhoneNumber, cancellationToken, clientIp);
-            return Accepted();
+            // Must be 200 OK: the generated API client (NSwag) only treats 200 as success for this operation.
+            return Ok();
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("Too many OTP", StringComparison.OrdinalIgnoreCase))
         {
             return StatusCode(429, ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // e.g. SMS gateway failures (SmsGatewayException)
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, ex.Message);
         }
     }
 

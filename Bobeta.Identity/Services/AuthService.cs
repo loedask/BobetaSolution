@@ -4,6 +4,9 @@ using Bobeta.Application.DTOs.Auth;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Bobeta.Identity.Services;
@@ -21,12 +24,18 @@ public class AuthService : IAuthService
     private readonly IOtpRateLimitService? _otpRateLimitService;
     private readonly IOptions<CountrySettings>? _countrySettings;
     private readonly ISmsTemplateProvider? _smsTemplateProvider;
+    private readonly IHostEnvironment _hostEnvironment;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         OtpService otpService,
         IJwtTokenService jwtTokenService,
         IPlayerRepository playerRepository,
         IWalletRepository walletRepository,
+        IHostEnvironment hostEnvironment,
+        IConfiguration configuration,
+        ILogger<AuthService> logger,
         ISmsService? smsService = null,
         IOtpRateLimitService? otpRateLimitService = null,
         IOptions<CountrySettings>? countrySettings = null,
@@ -36,6 +45,9 @@ public class AuthService : IAuthService
         _jwtTokenService = jwtTokenService;
         _playerRepository = playerRepository;
         _walletRepository = walletRepository;
+        _hostEnvironment = hostEnvironment;
+        _configuration = configuration;
+        _logger = logger;
         _smsService = smsService;
         _otpRateLimitService = otpRateLimitService;
         _countrySettings = countrySettings;
@@ -54,10 +66,36 @@ public class AuthService : IAuthService
 
         var code = await _otpService.GenerateAndStoreOtpAsync(phoneNumber, cancellationToken);
         var normalized = PhoneNumberHelper.Normalize(phoneNumber);
+        if (ShouldSkipSmsForConfiguredDemoNumber(normalized))
+        {
+            _logger.LogInformation("Skipping SMS for demo number (use DemoAuth static OTP). Phone={Phone}", normalized);
+            return;
+        }
+
         var template = _smsTemplateProvider?.GetOtpMessageTemplate(_countrySettings?.Value?.DefaultLanguage) ?? OtpMessageFormatFallback;
         var message = string.Format(template, code);
         if (_smsService != null)
             await _smsService.SendOtpAsync(normalized, message, cancellationToken);
+    }
+
+    /// <summary>Matches <see cref="OtpService"/> demo rules: no SMS when static OTP is enabled for this number in Development/Staging.</summary>
+    private bool ShouldSkipSmsForConfiguredDemoNumber(string normalizedPhone)
+    {
+        if (!DemoEnvironmentHelper.AllowsDemoAuthFeatures(_hostEnvironment))
+            return false;
+        if (!_configuration.GetValue("DemoAuth:EnableStaticOtp", false))
+            return false;
+
+        foreach (var child in _configuration.GetSection("DemoAuth:PhoneNumbers").GetChildren())
+        {
+            var configured = child.Value;
+            if (string.IsNullOrEmpty(configured))
+                continue;
+            if (PhoneNumberHelper.Normalize(configured) == normalizedPhone)
+                return true;
+        }
+
+        return false;
     }
 
     /// <inheritdoc />

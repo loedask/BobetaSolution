@@ -1,3 +1,4 @@
+using System.Net.Http;
 using Bobeta.Client.Contracts;
 using Bobeta.Client.Models.Players;
 using Bobeta.Client.Services.Base;
@@ -17,7 +18,16 @@ public class AuthService(IClient client, HttpClient httpClient) : BaseHttpServic
         }
         catch (BaseApiException ex)
         {
-            return Response<bool>.Failure(ex.Message, ex.StatusCode);
+            var detail = !string.IsNullOrWhiteSpace(ex.Response)
+                ? ex.Response
+                : ex.Message;
+            return Response<bool>.Failure(detail.Trim(), ex.StatusCode);
+        }
+        catch (HttpRequestException ex)
+        {
+            return Response<bool>.Failure(
+                ex.Message.Length > 0 ? ex.Message : "Network error. Check your connection and API URL.",
+                0);
         }
     }
 
