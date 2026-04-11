@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Bobeta.Mobile.Pages.OtpVerificationPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="{StaticResource PageBackground}"
+    Shell.NavBarIsVisible="False">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16" VerticalOptions="Center">
+            <Label x:Name="HeaderLabel" FontSize="24" FontAttributes="Bold" TextColor="{StaticResource Foreground}" HorizontalTextAlignment="Center" />
+            <Label x:Name="PhoneHintLabel" FontSize="14" TextColor="{StaticResource MutedForeground}" HorizontalTextAlignment="Center" />
+            <Entry
+                x:Name="OtpEntry"
+                HorizontalTextAlignment="Center"
+                Keyboard="Numeric"
+                MaxLength="4"
+                FontSize="28"
+                Text="{Binding Otp, Mode=TwoWay}"
+                TextColor="{StaticResource Foreground}"
+                BackgroundColor="{StaticResource Card}"
+                Placeholder="----"
+                PlaceholderColor="{StaticResource MutedForeground}" />
+            <Label x:Name="ErrorLabel" IsVisible="False" TextColor="{StaticResource Destructive}" FontSize="13" />
+            <Button
+                x:Name="VerifyButton"
+                Clicked="OnVerify"
+                CornerRadius="14"
+                FontAttributes="Bold"
+                HeightRequest="52"
+                BackgroundColor="{StaticResource PrimaryGold}"
+                TextColor="{StaticResource PrimaryDarkText}" />
+            <Button
+                x:Name="ResendButton"
+                Clicked="OnResend"
+                BackgroundColor="Transparent"
+                TextColor="{StaticResource PrimaryGold}" />
+            <ActivityIndicator x:Name="Busy" IsRunning="False" Color="{StaticResource PrimaryGold}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

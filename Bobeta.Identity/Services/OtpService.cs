@@ -1,8 +1,10 @@
 using System.Security.Cryptography;
 using System.Text;
+using Bobeta.Application.Common;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Bobeta.Identity.Services;
@@ -21,12 +23,18 @@ public class OtpService
 
     private readonly IOtpRepository _otpRepository;
     private readonly IConfiguration _configuration;
+    private readonly IHostEnvironment _hostEnvironment;
     private readonly ILogger<OtpService> _logger;
 
-    public OtpService(IOtpRepository otpRepository, IConfiguration configuration, ILogger<OtpService> logger)
+    public OtpService(
+        IOtpRepository otpRepository,
+        IConfiguration configuration,
+        IHostEnvironment hostEnvironment,
+        ILogger<OtpService> logger)
     {
         _otpRepository = otpRepository;
         _configuration = configuration;
+        _hostEnvironment = hostEnvironment;
         _logger = logger;
     }
 
@@ -53,6 +61,12 @@ public class OtpService
     /// <summary>Validates the code for the phone number. Rejects expired, locked, or already-used codes. Compares SHA256 hash of input with stored hash. Returns (valid, errorMessage); errorMessage is set for brute-force lockout.</summary>
     public async Task<(bool Valid, string? ErrorMessage)> ValidateOtpAsync(string phoneNumber, string code, CancellationToken cancellationToken = default)
     {
+        if (TryValidateStaticDemoOtp(phoneNumber, code))
+        {
+            _logger.LogInformation("OTP validated (dev/staging demo static code): PhoneNumber={PhoneNumber}", phoneNumber);
+            return (true, null);
+        }
+
         var otp = await _otpRepository.GetLatestByPhoneAsync(phoneNumber, cancellationToken);
         var now = DateTime.UtcNow;
 
@@ -109,5 +123,30 @@ public class OtpService
     {
         var rng = new Random();
         return rng.Next(100000, 999999).ToString();
+    }
+
+    /// <summary>Allows a fixed OTP for configured demo numbers in Development or Staging only (never in Production).</summary>
+    private bool TryValidateStaticDemoOtp(string phoneNumber, string code)
+    {
+        if (!DemoEnvironmentHelper.AllowsDemoAuthFeatures(_hostEnvironment))
+            return false;
+        if (!_configuration.GetValue("DemoAuth:EnableStaticOtp", false))
+            return false;
+
+        var expected = _configuration["DemoAuth:StaticOtp"];
+        if (string.IsNullOrEmpty(expected) || code != expected)
+            return false;
+
+        var normalized = PhoneNumberHelper.Normalize(phoneNumber);
+        foreach (var child in _configuration.GetSection("DemoAuth:PhoneNumbers").GetChildren())
+        {
+            var configured = child.Value;
+            if (string.IsNullOrEmpty(configured))
+                continue;
+            if (PhoneNumberHelper.Normalize(configured) == normalized)
+                return true;
+        }
+
+        return false;
     }
 }

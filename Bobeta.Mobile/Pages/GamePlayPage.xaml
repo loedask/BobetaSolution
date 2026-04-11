@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Bobeta.Mobile.Pages.GamePlayPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="{StaticResource PageBackground}">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Padding="16" RowSpacing="12">
+        <Border Grid.Row="0" Padding="14" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 12">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label x:Name="PotTitle" FontSize="13" TextColor="{StaticResource MutedForeground}" VerticalOptions="Center" />
+                <Label
+                    Grid.Column="1"
+                    Text="{Binding PotAmount, StringFormat='{0:N0} FCFA'}"
+                    FontSize="18"
+                    FontAttributes="Bold"
+                    TextColor="{StaticResource PrimaryGold}"
+                    VerticalOptions="Center" />
+            </Grid>
+        </Border>
+
+        <VerticalStackLayout Grid.Row="1" Spacing="4">
+            <Label x:Name="LastPlayTitle" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+            <Label Text="{Binding LastPlayedDisplay}" FontSize="20" TextColor="{StaticResource Foreground}" />
+        </VerticalStackLayout>
+
+        <Label
+            x:Name="TurnLabel"
+            Grid.Row="2"
+            FontSize="14"
+            FontAttributes="Bold"
+            TextColor="{StaticResource AccentGreen}" />
+
+        <CollectionView
+            x:Name="HandView"
+            Grid.Row="3"
+            ItemsSource="{Binding PlayerCards}"
+            VerticalOptions="Fill">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Button
+                        Clicked="OnPlayCard"
+                        Text="{Binding DisplayValue}"
+                        Padding="12,16"
+                        CornerRadius="10"
+                        BackgroundColor="{StaticResource SecondaryCard}"
+                        TextColor="{StaticResource Foreground}" />
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Label x:Name="ErrorLabel" Grid.Row="4" IsVisible="False" TextColor="{StaticResource Destructive}" />
+        <ActivityIndicator x:Name="Busy" Grid.Row="4" IsRunning="False" Color="{StaticResource PrimaryGold}" />
+
+        <Border
+            x:Name="ResultOverlay"
+            Grid.Row="0"
+            Grid.RowSpan="5"
+            IsVisible="{Binding ShowGameResult}"
+            BackgroundColor="#CC12151f"
+            Padding="24"
+            StrokeThickness="0">
+            <Border
+                VerticalOptions="Center"
+                Padding="24"
+                BackgroundColor="{StaticResource Card}"
+                StrokeShape="RoundRectangle 20">
+                <VerticalStackLayout Spacing="12">
+                    <Label x:Name="ResultTitle" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" TextColor="{StaticResource Foreground}" />
+                    <Label Text="{Binding WinnerPlayerName}" FontSize="18" HorizontalTextAlignment="Center" TextColor="{StaticResource PrimaryGold}" />
+                    <Button x:Name="DoneBtn" Clicked="OnDone" CornerRadius="12" BackgroundColor="{StaticResource PrimaryGold}" TextColor="{StaticResource PrimaryDarkText}" />
+                </VerticalStackLayout>
+            </Border>
+        </Border>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Bobeta.Mobile.Pages.ProfilePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="{StaticResource PageBackground}"
+    Title="Profile">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="20">
+            <HorizontalStackLayout Spacing="16">
+                <Border WidthRequest="64" HeightRequest="64" BackgroundColor="{StaticResource PrimaryGold}" StrokeShape="RoundRectangle 16">
+                    <Label
+                        FontSize="22"
+                        FontAttributes="Bold"
+                        HorizontalOptions="Center"
+                        Text="B"
+                        TextColor="{StaticResource PrimaryDarkText}"
+                        VerticalOptions="Center" />
+                </Border>
+                <VerticalStackLayout VerticalOptions="Center" Spacing="4">
+                    <Label Text="{Binding PlayerName}" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
+                    <Label Text="{Binding PhoneNumber}" FontSize="14" TextColor="{StaticResource MutedForeground}" />
+                </VerticalStackLayout>
+            </HorizontalStackLayout>
+
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Border Padding="12" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 12">
+                    <VerticalStackLayout HorizontalOptions="Center">
+                        <Label Text="—" FontSize="18" FontAttributes="Bold" HorizontalTextAlignment="Center" TextColor="{StaticResource Foreground}" />
+                        <Label x:Name="GamesLabel" FontSize="11" HorizontalTextAlignment="Center" TextColor="{StaticResource MutedForeground}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Padding="12" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 12">
+                    <VerticalStackLayout HorizontalOptions="Center">
+                        <Label Text="—" FontSize="18" FontAttributes="Bold" HorizontalTextAlignment="Center" TextColor="{StaticResource Foreground}" />
+                        <Label x:Name="WinsLabel" FontSize="11" HorizontalTextAlignment="Center" TextColor="{StaticResource MutedForeground}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="2" Padding="12" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 12">
+                    <VerticalStackLayout HorizontalOptions="Center">
+                        <Label Text="—" FontSize="18" FontAttributes="Bold" HorizontalTextAlignment="Center" TextColor="{StaticResource Foreground}" />
+                        <Label x:Name="WinRateLabel" FontSize="11" HorizontalTextAlignment="Center" TextColor="{StaticResource MutedForeground}" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Label x:Name="LangSection" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
+            <Picker x:Name="LanguagePicker" BackgroundColor="{StaticResource Card}" TextColor="{StaticResource Foreground}" />
+
+            <Button
+                x:Name="WalletBtn"
+                Clicked="OnWallet"
+                BackgroundColor="{StaticResource Card}"
+                TextColor="{StaticResource Foreground}"
+                CornerRadius="12" />
+            <Button
+                x:Name="SignOutBtn"
+                Clicked="OnSignOut"
+                BackgroundColor="{StaticResource Card}"
+                TextColor="{StaticResource Destructive}"
+                CornerRadius="12" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

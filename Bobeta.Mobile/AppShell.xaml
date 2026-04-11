@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="Bobeta.Mobile.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:Bobeta.Mobile.Pages"
+    Shell.FlyoutBehavior="Disabled"
+    Title="Bobeta">
+
+    <ShellContent
+        Title="Welcome"
+        Route="Welcome"
+        ContentTemplate="{DataTemplate pages:WelcomePage}" />
+
+    <TabBar Route="MainTabs">
+        <ShellContent
+            Title="Home"
+            Route="Dashboard"
+            ContentTemplate="{DataTemplate pages:DashboardPage}" />
+        <ShellContent
+            Title="Create"
+            Route="CreateGame"
+            ContentTemplate="{DataTemplate pages:CreateGamePage}" />
+        <ShellContent
+            Title="Join"
+            Route="JoinGame"
+            ContentTemplate="{DataTemplate pages:JoinGamePage}" />
+        <ShellContent
+            Title="History"
+            Route="History"
+            ContentTemplate="{DataTemplate pages:GameHistoryPage}" />
+        <ShellContent
+            Title="Profile"
+            Route="Profile"
+            ContentTemplate="{DataTemplate pages:ProfilePage}" />
+    </TabBar>
+
+</Shell>

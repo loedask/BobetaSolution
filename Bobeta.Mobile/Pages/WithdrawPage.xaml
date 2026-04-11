@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Bobeta.Mobile.Pages.WithdrawPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="{StaticResource PageBackground}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <Border Padding="18" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 16">
+                <VerticalStackLayout Spacing="6">
+                    <Label x:Name="BalTitle" FontSize="13" TextColor="{StaticResource MutedForeground}" />
+                    <Label Text="{Binding AvailableBalance, StringFormat='{0:N0} FCFA'}" FontSize="28" FontAttributes="Bold" TextColor="{StaticResource PrimaryGold}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <VerticalStackLayout x:Name="FormSection" Spacing="12">
+                <Label x:Name="AmtTitle" FontSize="13" TextColor="{StaticResource Foreground}" />
+                <Entry
+                    Text="{Binding Amount, Mode=TwoWay}"
+                    Keyboard="Numeric"
+                    FontSize="22"
+                    HorizontalTextAlignment="Center"
+                    TextColor="{StaticResource Foreground}"
+                    BackgroundColor="{StaticResource Card}" />
+                <Label x:Name="MinMaxHint" FontSize="11" TextColor="{StaticResource MutedForeground}" />
+                <Label x:Name="MomoTitle" FontSize="13" TextColor="{StaticResource Foreground}" />
+                <Border Stroke="{StaticResource Border}" Padding="12" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 12">
+                    <Entry Text="{Binding MomoNumber, Mode=TwoWay}" Keyboard="Telephone" TextColor="{StaticResource Foreground}" />
+                </Border>
+                <Label x:Name="ErrorLabel" IsVisible="False" TextColor="{StaticResource Destructive}" />
+                <Button
+                    x:Name="SubmitBtn"
+                    Clicked="OnSubmit"
+                    CornerRadius="14"
+                    FontAttributes="Bold"
+                    HeightRequest="52"
+                    BackgroundColor="{StaticResource PrimaryGold}"
+                    TextColor="{StaticResource PrimaryDarkText}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout x:Name="SuccessSection" IsVisible="False" Spacing="12">
+                <Label x:Name="SuccessTitle" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" TextColor="{StaticResource Foreground}" />
+                <Label x:Name="SuccessDetail" FontSize="14" HorizontalTextAlignment="Center" TextColor="{StaticResource MutedForeground}" />
+            </VerticalStackLayout>
+
+            <ActivityIndicator x:Name="Busy" IsRunning="False" Color="{StaticResource PrimaryGold}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

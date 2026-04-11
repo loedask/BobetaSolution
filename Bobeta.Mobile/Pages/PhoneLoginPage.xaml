@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Bobeta.Mobile.Pages.PhoneLoginPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="{StaticResource PageBackground}"
+    Shell.NavBarIsVisible="False">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="16" VerticalOptions="Center">
+            <Label x:Name="HeaderLabel" FontSize="24" FontAttributes="Bold" TextColor="{StaticResource Foreground}" HorizontalTextAlignment="Center" />
+            <Label x:Name="DescLabel" FontSize="14" TextColor="{StaticResource MutedForeground}" HorizontalTextAlignment="Center" />
+            <Label Text="Country" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+            <Picker x:Name="CountryPicker" BackgroundColor="{StaticResource Card}" TextColor="{StaticResource Foreground}" />
+            <Label Text="Phone" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+            <Border Stroke="{StaticResource Border}" StrokeThickness="1" Padding="12" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 12">
+                <Entry
+                    x:Name="PhoneEntry"
+                    Keyboard="Telephone"
+                    PlaceholderColor="{StaticResource MutedForeground}"
+                    Text="{Binding Phone, Mode=TwoWay}"
+                    TextColor="{StaticResource Foreground}" />
+            </Border>
+            <Label x:Name="ErrorLabel" IsVisible="False" TextColor="{StaticResource Destructive}" FontSize="13" />
+            <Button
+                x:Name="SendButton"
+                Clicked="OnSend"
+                CornerRadius="14"
+                FontAttributes="Bold"
+                HeightRequest="52"
+                BackgroundColor="{StaticResource PrimaryGold}"
+                TextColor="{StaticResource PrimaryDarkText}" />
+            <ActivityIndicator x:Name="Busy" IsRunning="False" Color="{StaticResource PrimaryGold}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

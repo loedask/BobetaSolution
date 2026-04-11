@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Bobeta.Mobile.Pages.WelcomePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="{StaticResource PageBackground}"
+    Shell.NavBarIsVisible="False">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="28" Spacing="20" VerticalOptions="Center">
+            <Label
+                x:Name="TitleLabel"
+                FontSize="42"
+                FontAttributes="Bold"
+                HorizontalTextAlignment="Center"
+                TextColor="{StaticResource PrimaryGold}" />
+            <Label
+                x:Name="TaglineLabel"
+                FontSize="16"
+                HorizontalTextAlignment="Center"
+                TextColor="{StaticResource Foreground}" />
+            <Label
+                x:Name="SecureLabel"
+                FontSize="13"
+                HorizontalTextAlignment="Center"
+                TextColor="{StaticResource MutedForeground}" />
+            <Label
+                x:Name="LangHeader"
+                FontSize="12"
+                HorizontalTextAlignment="Center"
+                TextColor="{StaticResource MutedForeground}" />
+            <Picker
+                x:Name="LanguagePicker"
+                BackgroundColor="{StaticResource Card}"
+                TextColor="{StaticResource Foreground}"
+                TitleColor="{StaticResource MutedForeground}" />
+            <Button
+                x:Name="GetStartedButton"
+                Clicked="OnGetStarted"
+                CornerRadius="14"
+                FontAttributes="Bold"
+                HeightRequest="52"
+                TextColor="{StaticResource PrimaryDarkText}" />
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="8">
+                <Label x:Name="Footer1" FontSize="11" TextColor="{StaticResource MutedForeground}" />
+                <Label FontSize="11" Text="·" TextColor="{StaticResource MutedForeground}" />
+                <Label x:Name="Footer2" FontSize="11" TextColor="{StaticResource MutedForeground}" />
+                <Label FontSize="11" Text="·" TextColor="{StaticResource MutedForeground}" />
+                <Label x:Name="Footer3" FontSize="11" TextColor="{StaticResource MutedForeground}" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Bobeta.Mobile.Pages.JoinGamePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="{StaticResource PageBackground}"
+    Title="Join">
+
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+        <Grid ColumnDefinitions="*,Auto">
+            <Label x:Name="Subtitle" FontSize="14" TextColor="{StaticResource MutedForeground}" VerticalOptions="Center" />
+            <Button
+                x:Name="RefreshBtn"
+                Grid.Column="1"
+                Clicked="OnRefresh"
+                BackgroundColor="Transparent"
+                TextColor="{StaticResource PrimaryGold}"
+                FontSize="13" />
+        </Grid>
+        <CollectionView x:Name="GamesList" Grid.Row="1" ItemsSource="{Binding OpenGames}">
+            <CollectionView.EmptyView>
+                <Label x:Name="EmptyLabel" TextColor="{StaticResource MutedForeground}" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Margin="0,0,0,10" Padding="16" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 14">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Player" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+                                <Label Text="{Binding BetAmount, StringFormat='{0:N0} FCFA'}" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource PrimaryGold}" />
+                            </VerticalStackLayout>
+                            <Button
+                                Grid.Column="1"
+                                Clicked="OnJoinOne"
+                                Text="Join"
+                                VerticalOptions="Center"
+                                BackgroundColor="{StaticResource AccentGreen}"
+                                TextColor="{StaticResource PrimaryDarkText}"
+                                CornerRadius="10"
+                                Padding="16,8" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <Label x:Name="ErrorLabel" Grid.Row="1" IsVisible="False" TextColor="{StaticResource Destructive}" VerticalOptions="Start" />
+        <ActivityIndicator x:Name="Busy" Grid.Row="1" IsRunning="False" Color="{StaticResource PrimaryGold}" VerticalOptions="Center" HorizontalOptions="Center" />
+    </Grid>
+</ContentPage>

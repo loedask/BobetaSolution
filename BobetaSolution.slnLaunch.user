@@ -1,6 +1,6 @@
 [
   {
-    "Name": "New Profile",
+    "Name": "API + Web",
     "Projects": [
       {
         "Path": "Bobeta.API\\Bobeta.API.csproj",
@@ -8,6 +8,19 @@
       },
       {
         "Path": "Bobeta.Web\\Bobeta.Web.csproj",
+        "Action": "Start"
+      }
+    ]
+  },
+  {
+    "Name": "API + Mobile",
+    "Projects": [
+      {
+        "Path": "Bobeta.API\\Bobeta.API.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Bobeta.Mobile\\Bobeta.Mobile.csproj",
         "Action": "Start"
       }
     ]

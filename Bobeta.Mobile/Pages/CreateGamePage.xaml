@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Bobeta.Mobile.Pages.CreateGamePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="{StaticResource PageBackground}"
+    Title="Create">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <Label x:Name="HeaderLabel" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
+            <Label x:Name="DescLabel" FontSize="14" TextColor="{StaticResource MutedForeground}" />
+            <Label x:Name="BetLabel" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+            <Entry
+                Text="{Binding BetAmount, Mode=TwoWay}"
+                Keyboard="Numeric"
+                FontSize="24"
+                HorizontalTextAlignment="Center"
+                TextColor="{StaticResource Foreground}"
+                BackgroundColor="{StaticResource Card}" />
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                <Button Clicked="OnPreset" Text="500" CornerRadius="10" BackgroundColor="{StaticResource SecondaryCard}" TextColor="{StaticResource Foreground}" />
+                <Button Grid.Column="1" Clicked="OnPreset" Text="1000" CornerRadius="10" BackgroundColor="{StaticResource SecondaryCard}" TextColor="{StaticResource Foreground}" />
+                <Button Grid.Column="2" Clicked="OnPreset" Text="2000" CornerRadius="10" BackgroundColor="{StaticResource SecondaryCard}" TextColor="{StaticResource Foreground}" />
+                <Button Grid.Column="3" Clicked="OnPreset" Text="5000" CornerRadius="10" BackgroundColor="{StaticResource SecondaryCard}" TextColor="{StaticResource Foreground}" />
+            </Grid>
+            <Label x:Name="ErrorLabel" IsVisible="False" TextColor="{StaticResource Destructive}" />
+            <Button
+                x:Name="CreateBtn"
+                Clicked="OnCreate"
+                CornerRadius="14"
+                FontAttributes="Bold"
+                HeightRequest="52"
+                BackgroundColor="{StaticResource PrimaryGold}"
+                TextColor="{StaticResource PrimaryDarkText}" />
+            <ActivityIndicator x:Name="Busy" IsRunning="False" Color="{StaticResource PrimaryGold}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
