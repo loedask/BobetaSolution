@@ -28,6 +28,18 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
 
+	<!-- Default output is $(ApplicationId)-Signed.apk; keep ApplicationId stable and copy a readable alias. -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<AndroidApkFriendlyFileName>Bobeta-$(ApplicationDisplayVersion)-Signed.apk</AndroidApkFriendlyFileName>
+	</PropertyGroup>
+
+	<Target Name="CopyAndroidApkFriendlyName"
+			AfterTargets="SignAndroidPackage"
+			Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' And Exists('$(ApkFileSigned)')">
+		<Copy SourceFiles="$(ApkFileSigned)" DestinationFiles="$(OutDir)$(AndroidApkFriendlyFileName)" SkipUnchangedFiles="true" />
+		<Message Text="APK (friendly name): $(OutDir)$(AndroidApkFriendlyFileName)" Importance="high" />
+	</Target>
+
 	<ItemGroup>
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#1a1f2e" />
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#1a1f2e" BaseSize="128,128" />
