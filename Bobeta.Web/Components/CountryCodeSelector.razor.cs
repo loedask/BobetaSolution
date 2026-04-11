@@ -41,7 +41,7 @@ namespace Bobeta.Web.Components
         new("GB", "United Kingdom", "+44", 10),
     };
 
-        private const string DefaultCountryCode = "CM";
+        private const string DefaultCountryCode = "CG";
 
         [Parameter] public string Dial { get; set; } = "+242";
         [Parameter] public EventCallback<(string Dial, int Digits)> DialChanged { get; set; }

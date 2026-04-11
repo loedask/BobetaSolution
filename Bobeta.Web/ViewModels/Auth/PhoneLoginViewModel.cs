@@ -12,8 +12,8 @@ public class PhoneLoginViewModel(AuthService authService, AppStateService appSta
 
     public string Phone { get; set; } = "";
 
-    /// <summary>Selected country dial code (e.g. +237).</summary>
-    public string CountryDial { get; set; } = "+237";
+    /// <summary>Selected country dial code (e.g. +242).</summary>
+    public string CountryDial { get; set; } = "+242";
 
     /// <summary>Expected number of digits for the selected country.</summary>
     public int PhoneDigits { get; set; } = 9;

@@ -36,7 +36,7 @@ public record CountryDialOption(string CountryCode, string Name, string Dial, in
         new("GB", "United Kingdom", "+44", 10),
     ];
 
-    public const string DefaultCountryCode = "CM";
+    public const string DefaultCountryCode = "CG";
 
     public static CountryDialOption Default => All.First(c => c.CountryCode == DefaultCountryCode);
 

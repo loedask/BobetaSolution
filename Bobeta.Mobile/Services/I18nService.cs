@@ -42,7 +42,7 @@ public class I18nService(AppStateService appState)
             ["choose_language"] = "Choose Language",
             ["enter_number"] = "Enter Your Number",
             ["send_code_desc"] = "We'll send a verification code to your MoMo number",
-            ["phone_placeholder"] = "6XX XXX XXX",
+            ["phone_placeholder"] = "0XX XXX XXX",
             ["send_code"] = "Send Code",
             ["verification_code"] = "Verification Code",
             ["enter_otp_desc"] = "Enter the 4-digit code sent to",
