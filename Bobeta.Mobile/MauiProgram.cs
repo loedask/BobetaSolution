@@ -48,7 +48,7 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:5001";
+        var apiBaseUrl = (builder.Configuration["ApiBaseUrl"] ?? "https://localhost:5001").Trim();
         builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
         builder.Services.AddSingleton<PreferencesStorageService>();

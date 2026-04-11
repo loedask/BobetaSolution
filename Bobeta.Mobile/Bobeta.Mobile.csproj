@@ -31,6 +31,8 @@
 	<!-- Default output is $(ApplicationId)-Signed.apk; keep ApplicationId stable and copy a readable alias. -->
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
 		<AndroidApkFriendlyFileName>Bobeta-$(ApplicationDisplayVersion)-Signed.apk</AndroidApkFriendlyFileName>
+		<!-- Managed SocketsHttpHandler often resolves hostnames more reliably than Android's native stack on some networks. -->
+		<UseNativeHttpHandler>false</UseNativeHttpHandler>
 	</PropertyGroup>
 
 	<Target Name="CopyAndroidApkFriendlyName"
