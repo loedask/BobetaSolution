@@ -47,6 +47,13 @@ The API will listen on the configured port (e.g. `https://localhost:5001` or sim
 
 The Blazor app will typically be available at **http://localhost:5002** (or the port shown in the console).
 
+### Bobeta.Mobile — `ApiBaseUrl`
+
+`Bobeta.Mobile` reads **`ApiBaseUrl`** from embedded **`Bobeta.Mobile/appsettings.json`** at build time. **Debug and Release both use that file**; `appsettings.Production.json` is merged only in **non-DEBUG** builds.
+
+- **Phone or tablet:** `localhost` in that file points at the **device itself**, not your PC — you will see errors like *Connection refused (localhost:5001)*. Use your **deployed API HTTPS URL** (e.g. Azure App Service) or your dev machine’s **LAN IP** (e.g. `https://192.168.x.x:5001`) when the API runs only on your computer.
+- **Local API only:** set `ApiBaseUrl` in `appsettings.json` to `https://localhost:5001` for Windows targets, or use the Android emulator special IP **`10.0.2.2`** to reach the host machine.
+
 ## 5. Open the browser
 
 Navigate to:
