@@ -45,7 +45,7 @@ public class I18nService(AppStateService appState)
             ["phone_placeholder"] = "0XX XXX XXX",
             ["send_code"] = "Send Code",
             ["verification_code"] = "Verification Code",
-            ["enter_otp_desc"] = "Enter the 4-digit code sent to",
+            ["enter_otp_desc"] = "Enter the 6-digit code sent to",
             ["verify"] = "Verify",
             ["resend_code"] = "Resend Code",
             ["choose_player_name"] = "Choose Player Name",

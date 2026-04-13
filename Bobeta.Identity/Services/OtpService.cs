@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Bobeta.Application.Common;
 using Bobeta.Application.Interfaces;
+using Bobeta.Domain.Authentication;
 using Bobeta.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -38,7 +39,7 @@ public class OtpService
         _logger = logger;
     }
 
-    /// <summary>Generates a 6-digit OTP, hashes it with SHA256, stores the hash with expiration (5 minutes), and returns the plain code (for sending via SMS).</summary>
+    /// <summary>Generates an OTP of <see cref="PhoneAuthConstants.OtpDigitLength"/> digits, hashes it with SHA256, stores the hash with expiration (5 minutes), and returns the plain code (for sending via SMS).</summary>
     public async Task<string> GenerateAndStoreOtpAsync(string phoneNumber, CancellationToken cancellationToken = default)
     {
         var code = GenerateOtpCode();
@@ -121,8 +122,10 @@ public class OtpService
 
     private static string GenerateOtpCode()
     {
-        var rng = new Random();
-        return rng.Next(100000, 999999).ToString();
+        var len = PhoneAuthConstants.OtpDigitLength;
+        var min = (int)Math.Pow(10, len - 1);
+        var max = (int)Math.Pow(10, len);
+        return Random.Shared.Next(min, max).ToString();
     }
 
     /// <summary>Allows a fixed OTP for configured demo numbers in Development or Staging only (never in Production).</summary>

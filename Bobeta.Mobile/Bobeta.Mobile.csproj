@@ -33,6 +33,8 @@
 		<AndroidApkFriendlyFileName>Bobeta-$(ApplicationDisplayVersion)-Signed.apk</AndroidApkFriendlyFileName>
 		<!-- Managed SocketsHttpHandler often resolves hostnames more reliably than Android's native stack on some networks. -->
 		<UseNativeHttpHandler>false</UseNativeHttpHandler>
+		<!-- Debug: allow HTTP to local API (emulator 10.0.2.2 / LAN); Release stays HTTPS-only to production. -->
+		<AndroidUsesCleartextTraffic Condition="'$(Configuration)' == 'Debug'">true</AndroidUsesCleartextTraffic>
 	</PropertyGroup>
 
 	<Target Name="CopyAndroidApkFriendlyName"
@@ -53,7 +55,9 @@
 
 	<ItemGroup>
 		<EmbeddedResource Include="appsettings.json" />
-		<!-- Merged after appsettings.json on Release builds only (see MauiProgram). Replace URL before store publish. -->
+		<!-- Debug: local API (emulator 10.0.2.2 or edit for LAN IP / localhost). See MauiProgram merge order. -->
+		<EmbeddedResource Include="appsettings.Development.json" Condition="'$(Configuration)' == 'Debug'" />
+		<!-- Release: production / stable URL (see MauiProgram). Replace before store publish if needed. -->
 		<EmbeddedResource Include="appsettings.Production.json" Condition="'$(Configuration)' == 'Release'" />
 	</ItemGroup>
 

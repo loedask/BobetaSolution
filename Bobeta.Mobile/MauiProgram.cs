@@ -24,8 +24,12 @@ public static class MauiProgram
 
         var assembly = Assembly.GetExecutingAssembly();
         AddConfigJsonStream(assembly, builder, "Bobeta.Mobile.appsettings.json");
+#if DEBUG
+        // Debug builds: optional override (e.g. Android emulator host, LAN IP, or https://localhost:7029 for Windows).
+        AddConfigJsonStream(assembly, builder, "Bobeta.Mobile.appsettings.Development.json");
+#endif
 #if !DEBUG
-        // Release / store builds: overrides ApiBaseUrl (and any other keys) from appsettings.Production.json.
+        // Release / store: stable API URL from appsettings.Production.json.
         AddConfigJsonStream(assembly, builder, "Bobeta.Mobile.appsettings.Production.json");
 #endif
 
@@ -48,7 +52,13 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        var apiBaseUrl = (builder.Configuration["ApiBaseUrl"] ?? "https://localhost:5001").Trim();
+        var apiBaseUrl = (builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7029").Trim();
+#if DEBUG && !ANDROID
+        // appsettings.Development.json uses 10.0.2.2 for the Android emulator (host loopback alias).
+        // On Windows, iOS simulator, and Mac Catalyst that address is wrong — use the actual machine loopback.
+        if (apiBaseUrl.Contains("10.0.2.2", StringComparison.OrdinalIgnoreCase))
+            apiBaseUrl = apiBaseUrl.Replace("10.0.2.2", "localhost", StringComparison.OrdinalIgnoreCase);
+#endif
         builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
         builder.Services.AddSingleton<PreferencesStorageService>();

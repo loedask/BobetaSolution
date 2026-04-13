@@ -102,10 +102,10 @@ public class AuthService : IAuthService
     public async Task<VerifyOtpResult> VerifyOtpAsync(string phoneNumber, string code, CancellationToken cancellationToken = default)
     {
         var (valid, errorMessage) = await _otpService.ValidateOtpAsync(phoneNumber, code, cancellationToken);
-        if (!valid) return new VerifyOtpResult(false, null, errorMessage);
+        if (!valid) return new VerifyOtpResult(Valid: false, ErrorMessage: errorMessage);
         var player = await _playerRepository.GetByPhoneNumberAsync(phoneNumber, cancellationToken);
         var token = player != null ? _jwtTokenService.GenerateToken(player.Id, player.PlayerName) : null;
-        return new VerifyOtpResult(true, token);
+        return new VerifyOtpResult(Valid: true, Token: token, PlayerId: player?.Id, PlayerName: player?.PlayerName);
     }
 
     /// <inheritdoc />

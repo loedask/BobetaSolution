@@ -33,11 +33,11 @@ cd Bobeta.API
 dotnet run
 ```
 
-The API will listen on the configured port (e.g. `https://localhost:5001` or similar). Note the URL for the next step.
+The API listens on the URLs in **`Bobeta.API/Properties/launchSettings.json`**. Kestrel binds to **`0.0.0.0`** on **`https://7029`** and **`http://5163`** so **Android emulators** (`10.0.2.2`) and **phones on your LAN** can reach the host, not only `localhost`. Use **HTTPS** for browser/Web (`https://localhost:7029`); **Bobeta.Mobile** Debug defaults to **HTTP** (`http://10.0.2.2:5163`) to avoid dev-certificate trust issues on devices. Note the exact URLs in the console.
 
 ## 4. Run the Web app
 
-1. Open **Bobeta.Web/appsettings.json** (or use launch settings) and set **ApiBaseUrl** to the API base URL (e.g. `https://localhost:5001`).
+1. Open **Bobeta.Web/appsettings.json** (or use launch settings) and set **ApiBaseUrl** to the API base URL (e.g. `https://localhost:7029`).
 2. Run the Web project:
 
    ```bash
@@ -49,10 +49,19 @@ The Blazor app will typically be available at **http://localhost:5002** (or the 
 
 ### Bobeta.Mobile — `ApiBaseUrl`
 
-`Bobeta.Mobile` reads **`ApiBaseUrl`** from embedded **`Bobeta.Mobile/appsettings.json`** at build time. **Debug and Release both use that file**; `appsettings.Production.json` is merged only in **non-DEBUG** builds.
+Configuration is merged at startup in this order (later wins):
 
-- **Phone or tablet:** `localhost` in that file points at the **device itself**, not your PC — you will see errors like *Connection refused (localhost:5001)*. Use your **deployed API HTTPS URL** (e.g. Azure App Service) or your dev machine’s **LAN IP** (e.g. `https://192.168.x.x:5001`) when the API runs only on your computer.
-- **Local API only:** set `ApiBaseUrl` in `appsettings.json` to `https://localhost:5001` for Windows targets, or use the Android emulator special IP **`10.0.2.2`** to reach the host machine.
+| File | When |
+|------|------|
+| **`appsettings.json`** | Always embedded; default **`ApiBaseUrl`** in the repo is the **Azure** (or other stable) API. |
+| **`appsettings.Development.json`** | **Debug** only. Defaults to **`http://10.0.2.2:5163`** for the **Android emulator** (HTTP avoids trusting the ASP.NET dev HTTPS cert on the device). **Debug Android** sets **`AndroidUsesCleartextTraffic`** so HTTP to the local API is allowed. For a **physical phone**, use your PC’s LAN IP (e.g. `http://192.168.1.10:5163`). For **Windows MAUI** on the same PC as the API, use **`https://localhost:7029`** (or `http://localhost:5163`). |
+| **`appsettings.Production.json`** | **Release** builds only; keep your store / stable **`ApiBaseUrl`** here (often same Azure host as the base file). |
+
+- **Release** builds therefore keep **Azure** (or whatever you put in Production) without editing Development.
+- **Debug** builds default to **local API** via Development; switch back to a remote URL by temporarily changing **`appsettings.Development.json`** or building **Release** when the device cannot reach your PC.
+- If you still see **network unreachable** to `10.0.2.2`, confirm the API is running with the **`https`** (or **`http`**) profile, **Windows Firewall** allows **dotnet**/Kestrel on those ports, and you are on the **Google Android Emulator** (`10.0.2.2` does not apply the same way on every stack or on a physical device—use your LAN IP there).
+
+PostgreSQL must be running for a local API; migrations run on startup only when **`ASPNETCORE_ENVIRONMENT`** is **Development** or **Staging** — otherwise a missing database can surface as **500** on send-otp.
 
 ## 5. Open the browser
 

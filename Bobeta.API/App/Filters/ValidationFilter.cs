@@ -17,10 +17,10 @@ public class ValidationFilter : IAsyncActionFilter
             var validatorType = typeof(IValidator<>).MakeGenericType(type);
             var validator = context.HttpContext.RequestServices.GetService(validatorType);
             if (validator == null) continue;
-            var contextType = typeof(ValidationContext<>).MakeGenericType(type);
-            var validationContext = Activator.CreateInstance(contextType, value)!;
-            var method = validatorType.GetMethod("ValidateAsync", new[] { contextType, typeof(CancellationToken) })!;
-            var task = (Task)method.Invoke(validator, new[] { validationContext, context.HttpContext.RequestAborted })!;
+            // FluentValidation 12+ exposes ValidateAsync(T, CancellationToken) on IValidator<T> (not ValidationContext<T>).
+            var method = validatorType.GetMethod("ValidateAsync", new[] { type, typeof(CancellationToken) });
+            if (method == null) continue;
+            var task = (Task)method.Invoke(validator, new[] { value, context.HttpContext.RequestAborted })!;
             await task;
             var resultProperty = task.GetType().GetProperty("Result");
             var result = resultProperty?.GetValue(task) as FluentValidation.Results.ValidationResult;

@@ -1,6 +1,7 @@
 @page "/verify"
 @layout AuthLayout
 @implements IDisposable
+@using Bobeta.Domain.Authentication
 @inject OtpVerificationViewModel ViewModel
 @inject I18nService I18n
 
@@ -10,7 +11,7 @@
         <h2 class="mb-2 font-display text-2xl font-bold text-foreground">@I18n.T("verification_code")</h2>
         <p class="mb-8 text-center text-sm text-muted-foreground">@I18n.T("enter_otp_desc") @ViewModel.PhoneNumber</p>
         <div class="mb-6 flex justify-center gap-3">
-            @for (var i = 0; i < 4; i++)
+            @for (var i = 0; i < PhoneAuthConstants.OtpDigitLength; i++)
             {
                 var idx = i;
                 <input type="text" maxlength="1" value="@(ViewModel.Otp.Length > idx ? ViewModel.Otp[idx].ToString() : "")"

@@ -3,6 +3,7 @@
     x:Class="Bobeta.Mobile.Pages.OtpVerificationPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:auth="clr-namespace:Bobeta.Domain.Authentication;assembly=Bobeta.Domain"
     BackgroundColor="{StaticResource PageBackground}"
     Shell.NavBarIsVisible="False">
 
@@ -14,12 +15,12 @@
                 x:Name="OtpEntry"
                 HorizontalTextAlignment="Center"
                 Keyboard="Numeric"
-                MaxLength="4"
+                MaxLength="{x:Static auth:PhoneAuthConstants.OtpDigitLength}"
                 FontSize="28"
                 Text="{Binding Otp, Mode=TwoWay}"
                 TextColor="{StaticResource Foreground}"
                 BackgroundColor="{StaticResource Card}"
-                Placeholder="----"
+                Placeholder="------"
                 PlaceholderColor="{StaticResource MutedForeground}" />
             <Label x:Name="ErrorLabel" IsVisible="False" TextColor="{StaticResource Destructive}" FontSize="13" />
             <Button

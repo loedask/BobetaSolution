@@ -20,4 +20,11 @@ public interface IAuthService
 /// <param name="Valid">True if the OTP matched and was not expired.</param>
 /// <param name="Token">JWT token if the player is already registered; null otherwise.</param>
 /// <param name="ErrorMessage">Optional message when validation fails (e.g. "Too many incorrect verification attempts.").</param>
-public record VerifyOtpResult(bool Valid, string? Token, string? ErrorMessage = null);
+/// <param name="PlayerId">Set when <paramref name="Token"/> is returned (existing player).</param>
+/// <param name="PlayerName">Set when <paramref name="Token"/> is returned (existing player).</param>
+public record VerifyOtpResult(
+    bool Valid,
+    string? Token = null,
+    string? ErrorMessage = null,
+    Guid? PlayerId = null,
+    string? PlayerName = null);

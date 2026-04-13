@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Bobeta.Client.Services;
+using Bobeta.Domain.Authentication;
 using Bobeta.Web.Services;
 
 namespace Bobeta.Web.ViewModels.Auth;
@@ -14,12 +15,12 @@ public class OtpVerificationViewModel(AuthService authService, AppStateService a
 
     public string? PhoneNumber => _appState.State.PhoneNumber;
 
-    public bool CanVerify => Otp.Length >= 4 && !IsLoading;
+    public bool CanVerify => Otp.Length >= PhoneAuthConstants.OtpDigitLength && !IsLoading;
 
     public void UpdateOtp(int index, string value)
     {
         if (value.Length > 1) value = value[^1].ToString();
-        var arr = Otp.PadRight(4).ToCharArray();
+        var arr = Otp.PadRight(PhoneAuthConstants.OtpDigitLength).ToCharArray();
         arr[index] = value.Length > 0 ? value[0] : ' ';
         Otp = new string(arr).TrimEnd().Replace(" ", "");
         RaiseStateChanged();
@@ -32,10 +33,20 @@ public class OtpVerificationViewModel(AuthService authService, AppStateService a
         try
         {
             var res = await _authService.VerifyOtpAsync(PhoneNumber, Otp);
-            if (res.IsSuccess)
-                _nav.NavigateTo("/create-player");
-            else
+            if (!res.IsSuccess || res.Data == null)
+            {
                 SetError(res.ErrorMessage ?? "Verification failed.");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(res.Data.Token) && res.Data.PlayerId is { } playerId)
+            {
+                _appState.SetPlayer(playerId, res.Data.PlayerName, res.Data.Token);
+                await _appState.PersistAsync();
+                _nav.NavigateTo("/dashboard");
+            }
+            else
+                _nav.NavigateTo("/create-player");
         }
         catch (Exception)
         {

@@ -1,5 +1,6 @@
 using System.Net.Http;
 using Bobeta.Client.Contracts;
+using Bobeta.Client.Models.Auth;
 using Bobeta.Client.Models.Players;
 using Bobeta.Client.Services.Base;
 using BaseApiException = Bobeta.Client.Services.Base.ApiException;
@@ -31,16 +32,20 @@ public class AuthService(IClient client, HttpClient httpClient) : BaseHttpServic
         }
     }
 
-    public async Task<Response<bool>> VerifyOtpAsync(string phoneNumber, string code, CancellationToken cancellationToken = default)
+    public async Task<Response<VerifyOtpApiResponse>> VerifyOtpAsync(string phoneNumber, string code, CancellationToken cancellationToken = default)
     {
         try
         {
-            await Client.VerifyOtpAsync(new VerifyOtpRequest { PhoneNumber = phoneNumber, Code = code }, cancellationToken).ConfigureAwait(false);
-            return Response<bool>.Success(true);
+            return await PostAsync<VerifyOtpApiResponse>(
+                "api/Auth/verify-otp",
+                new VerifyOtpRequest { PhoneNumber = phoneNumber, Code = code },
+                cancellationToken).ConfigureAwait(false);
         }
-        catch (BaseApiException ex)
+        catch (HttpRequestException ex)
         {
-            return Response<bool>.Failure(ex.Message, ex.StatusCode);
+            return Response<VerifyOtpApiResponse>.Failure(
+                ex.Message.Length > 0 ? ex.Message : "Network error. Check your connection and API URL.",
+                0);
         }
     }
 
