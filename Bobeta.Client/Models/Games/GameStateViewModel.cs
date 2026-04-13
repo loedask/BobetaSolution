@@ -9,4 +9,8 @@ public class GameStateViewModel
     public Guid? CurrentTurnPlayerId { get; set; }
     public bool GameOver { get; set; }
     public Guid? WinnerPlayerId { get; set; }
+
+    public bool WaitingForGameStart { get; set; }
+
+    public decimal LobbyPotAmount { get; set; }
 }

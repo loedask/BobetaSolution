@@ -34,7 +34,7 @@ public class DashboardViewModel(WalletService walletService, AppStateService app
             var txRes = await _walletService.GetTransactionsAsync(0, 10);
             if (txRes.IsSuccess && txRes.Data != null)
                 Transactions = txRes.Data.Select(t => new TransactionItemDto(
-                    t.Type == "Deposit" ? _i18n.T("deposit_label") : t.Type == "Withdraw" ? "Withdraw" : t.Type,
+                    TransactionDescription(t.Type),
                     t.CreatedAt.ToString("g"),
                     t.Amount)).ToList();
         }
@@ -50,4 +50,15 @@ public class DashboardViewModel(WalletService walletService, AppStateService app
 
     public Task GoToDepositAsync() => _nav.ToDepositAsync();
     public Task GoToWithdrawAsync() => _nav.ToWithdrawAsync();
+
+    private string TransactionDescription(string type) => type switch
+    {
+        "Deposit" => _i18n.T("deposit_label"),
+        "Withdrawal" or "Withdraw" => _i18n.T("withdraw"),
+        "BetLock" => _i18n.T("tx_bet_lock"),
+        "BetRelease" => _i18n.T("tx_bet_release"),
+        "Win" => _i18n.T("tx_winnings"),
+        "Commission" => _i18n.T("tx_commission"),
+        _ => type
+    };
 }

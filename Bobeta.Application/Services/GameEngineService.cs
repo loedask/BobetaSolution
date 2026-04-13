@@ -131,16 +131,37 @@ public class GameEngineService(
     public async Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default)
     {
         var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
-        if (session?.GameStateJson == null)
+        if (session == null)
             return null;
+
+        var isParticipant = playerId == session.CreatorPlayerId
+            || (session.OpponentPlayerId.HasValue && session.OpponentPlayerId.Value == playerId);
+        if (!isParticipant)
+            return null;
+
+        var lobbyPot = session.BetAmount * 2m;
+
+        if (string.IsNullOrEmpty(session.GameStateJson))
+        {
+            if (session.Status == GameStatus.Waiting)
+                return new GameStateDto(sessionId, Array.Empty<string>(), null, null, false, null, true, lobbyPot);
+            // Finished games may clear serialized state after persist; still expose outcome for reload/history UIs.
+            if (session.Status == GameStatus.Finished && session.GameResult != null)
+            {
+                var w = session.GameResult.WinnerPlayerId;
+                return new GameStateDto(sessionId, Array.Empty<string>(), null, null, true, w, false, lobbyPot);
+            }
+
+            return null;
+        }
+
         var state = JsonSerializer.Deserialize<MakopaGameState>(session.GameStateJson, JsonOptions)!;
         var creatorId = session.CreatorPlayerId;
-        var opponentId = session.OpponentPlayerId;
         var myHand = playerId == creatorId ? state.CreatorHand : state.OpponentHand;
         var lastCard = state.TrickPlays.Count > 0 ? state.TrickPlays[^1].Card : null;
         var gameOver = session.Status == GameStatus.Finished;
         var winnerId = session.GameResult?.WinnerPlayerId;
-        return new GameStateDto(sessionId, myHand, lastCard, state.CurrentTurnPlayerId, gameOver, winnerId);
+        return new GameStateDto(sessionId, myHand, lastCard, state.CurrentTurnPlayerId, gameOver, winnerId, false, lobbyPot);
     }
 
     private async Task FinalizeGameAsync(GameSession session, Guid winnerId, Guid loserId, CancellationToken cancellationToken)

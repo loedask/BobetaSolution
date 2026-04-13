@@ -49,7 +49,9 @@ public class GamePlayService(IClient client, HttpClient httpClient) : BaseHttpSe
             LastPlayedCard = dto.LastPlayedCard,
             CurrentTurnPlayerId = dto.CurrentTurnPlayerId,
             GameOver = dto.GameOver,
-            WinnerPlayerId = dto.WinnerPlayerId
+            WinnerPlayerId = dto.WinnerPlayerId,
+            WaitingForGameStart = dto.WaitingForGameStart,
+            LobbyPotAmount = dto.LobbyPotAmount
         };
     }
 }

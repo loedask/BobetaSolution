@@ -63,6 +63,10 @@ public class I18nService(AppStateService appState)
             ["see_all"] = "See All",
             ["won_vs"] = "Won vs",
             ["deposit_label"] = "Deposit",
+            ["tx_bet_lock"] = "Game stake",
+            ["tx_bet_release"] = "Stake returned",
+            ["tx_winnings"] = "Winnings",
+            ["tx_commission"] = "Platform fee",
             ["bet_placed"] = "Bet placed",
             ["trust_message"] = "All transactions are secured. 75% payout guaranteed. Fair & randomized card system.",
             ["select_bet_amount"] = "Select Bet Amount",
@@ -83,6 +87,9 @@ public class I18nService(AppStateService appState)
             ["game_history"] = "Game History",
             ["won"] = "Won",
             ["lost"] = "Lost",
+            ["history_waiting"] = "Waiting for opponent",
+            ["history_in_progress"] = "In progress",
+            ["history_cancelled"] = "Cancelled",
             ["profile"] = "Profile",
             ["games"] = "Games",
             ["wins"] = "Wins",
@@ -122,6 +129,7 @@ public class I18nService(AppStateService appState)
             ["pot"] = "Pot",
             ["your_turn"] = "Your turn",
             ["opponent_turn"] = "Opponent's turn",
+            ["waiting_for_opponent"] = "Waiting for an opponent…",
             ["play_card"] = "Play card",
         };
 
@@ -139,6 +147,14 @@ public class I18nService(AppStateService appState)
             ["profile"] = "Profil",
             ["home"] = "Accueil",
             ["language"] = "Langue",
+            ["waiting_for_opponent"] = "En attente d'un adversaire…",
+            ["history_waiting"] = "En attente d'un adversaire",
+            ["history_in_progress"] = "Partie en cours",
+            ["history_cancelled"] = "Annulée",
+            ["tx_bet_lock"] = "Mise de jeu",
+            ["tx_bet_release"] = "Mise rendue",
+            ["tx_winnings"] = "Gains",
+            ["tx_commission"] = "Frais plateforme",
         };
 
         var kt = new Dictionary<string, string>(en);

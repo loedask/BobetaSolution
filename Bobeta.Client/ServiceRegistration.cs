@@ -32,7 +32,8 @@ public static class ServiceRegistration
 
         if (useBearerToken)
         {
-            services.AddScoped<BearerTokenHandler>();
+            // Transient is recommended for delegating handlers with IHttpClientFactory (avoids scoped lifetime issues outside web request scopes).
+            services.AddTransient<BearerTokenHandler>();
             httpClientBuilder.AddHttpMessageHandler<BearerTokenHandler>();
         }
 

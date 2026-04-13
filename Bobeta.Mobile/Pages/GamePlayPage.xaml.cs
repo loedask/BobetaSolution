@@ -61,7 +61,11 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         Busy.IsRunning = _vm.IsLoading && _vm.PlayerCards.Count == 0;
 
         var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
-        TurnLabel.Text = _vm.IsPlayerTurn ? i18n.T("your_turn") : i18n.T("opponent_turn");
+        TurnLabel.Text = _vm.WaitingForOpponent
+            ? i18n.T("waiting_for_opponent")
+            : _vm.IsPlayerTurn
+                ? i18n.T("your_turn")
+                : i18n.T("opponent_turn");
         TurnLabel.TextColor = _vm.IsPlayerTurn ? Color.FromArgb("#2dd48e") : Color.FromArgb("#8a93a8");
         HandView.IsEnabled = _vm.IsPlayerTurn && !_vm.ShowGameResult;
     }

@@ -37,7 +37,7 @@ The API listens on the URLs in **`Bobeta.API/Properties/launchSettings.json`**. 
 
 ## 4. Run the Web app
 
-1. Open **Bobeta.Web/appsettings.json** (or use launch settings) and set **ApiBaseUrl** to the API base URL (e.g. `https://localhost:7029`).
+1. Open **`Bobeta.Web/wwwroot/appsettings.json`** (or **`wwwroot/appsettings.Development.json`**) and set **`ApiBaseUrl`** to the API base URL (defaults to **`https://localhost:7029`** to match the API’s HTTPS profile).
 2. Run the Web project:
 
    ```bash
@@ -45,7 +45,7 @@ The API listens on the URLs in **`Bobeta.API/Properties/launchSettings.json`**. 
    dotnet run
    ```
 
-The Blazor app will typically be available at **http://localhost:5002** (or the port shown in the console).
+The Blazor app will typically be available at **http://localhost:5034** or **https://localhost:7181** (see **`Bobeta.Web/Properties/launchSettings.json`** and the console).
 
 ### Bobeta.Mobile — `ApiBaseUrl`
 
@@ -223,4 +223,4 @@ After configuration, OTP messages (e.g. for login) are sent via SendSMSGate, and
 
 ---
 
-For API details (e.g. Swagger), open the API base URL in the browser (e.g. `https://localhost:5001/swagger`).
+For API details (e.g. Swagger), open the API base URL in the browser (e.g. `https://localhost:7029/swagger` when using the API’s HTTPS profile).

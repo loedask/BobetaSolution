@@ -29,7 +29,7 @@
             <OpponentHand CardCount="@ViewModel.OpponentCards.Count" />
             <GameBoard LastPlayedCard="@ViewModel.LastPlayedCard" OnCardDropped="HandleCardDropped" />
             <PlayerHand Cards="@ViewModel.PlayerCards" IsPlayerTurn="@ViewModel.IsPlayerTurn" OnPlayCard="PlayCard" OnDragStart="HandleDragStart" OnDragEnd="HandleDragEnd" />
-            <TurnIndicator IsPlayerTurn="@ViewModel.IsPlayerTurn" />
+            <TurnIndicator IsPlayerTurn="@ViewModel.IsPlayerTurn" WaitingForOpponent="@ViewModel.WaitingForOpponent" />
         }
     </div>
 </div>

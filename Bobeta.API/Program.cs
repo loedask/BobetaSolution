@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Controllers with global validation filter (FluentValidation on request DTOs).
 builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>());
+builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddBobetaSwagger();
 
@@ -17,7 +18,10 @@ builder.Services.AddBobetaServices(builder.Configuration);
 var app = builder.Build();
 
 app.UseBobetaSwagger();
-app.UseHttpsRedirection();
+// In Development the mobile app often uses http://localhost:5163. UseHttpsRedirection would 307 to https on
+// another port; HttpClient follows but drops the Authorization header, so wallet calls return 401 after login.
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

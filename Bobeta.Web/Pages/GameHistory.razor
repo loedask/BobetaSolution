@@ -28,23 +28,27 @@
             {
                 <div class="flex items-center justify-between rounded-xl bg-card p-4">
                     <div class="flex items-center gap-3">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-lg @(item.WonAmount > 0 ? "bg-accent/10" : "bg-destructive/10")">
-                            @if (item.WonAmount > 0)
+                        <div class="flex h-10 w-10 items-center justify-center rounded-lg @RowIconBgClass(item)">
+                            @if (RowIsWin(item))
                             {
                                 <svg class="h-5 w-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
                             }
-                            else
+                            else if (RowIsLoss(item))
                             {
                                 <svg class="h-5 w-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
                             }
+                            else
+                            {
+                                <svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            }
                         </div>
                         <div>
-                            <div class="text-sm font-semibold text-foreground">@(item.WonAmount > 0 ? I18n.T("won") : I18n.T("lost")) — @item.BetAmount FCFA</div>
+                            <div class="text-sm font-semibold text-foreground">@RowTitle(item)</div>
                             <div class="text-xs text-muted-foreground">@item.CreatedAt.ToString("g")</div>
                         </div>
                     </div>
-                    <div class="font-display font-bold @(item.WonAmount > 0 ? "text-accent" : "text-destructive")">
-                        @(item.WonAmount > 0 ? "+" : "")@(((decimal)(item.WonAmount ?? 0)).ToString("N0"))
+                    <div class="font-display font-bold @RowAmountClass(item)">
+                        @RowAmountText(item)
                     </div>
                 </div>
             }
@@ -57,4 +61,31 @@
     protected override async Task OnInitializedAsync() => await ViewModel.LoadAsync();
     public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    private static bool RowIsFinished(GameHistoryItemDto item) => item.Status == GameStatus._2;
+
+    private bool RowIsWin(GameHistoryItemDto item) => RowIsFinished(item) && (item.WonAmount ?? 0) > 0;
+
+    private bool RowIsLoss(GameHistoryItemDto item) => RowIsFinished(item) && (item.WonAmount ?? 0) <= 0;
+
+    private string RowTitle(GameHistoryItemDto item) => item.Status switch
+    {
+        GameStatus._2 => $"{(RowIsWin(item) ? I18n.T("won") : I18n.T("lost"))} — {item.BetAmount} FCFA",
+        GameStatus._0 => $"{I18n.T("history_waiting")} — {item.BetAmount} FCFA",
+        GameStatus._1 => $"{I18n.T("history_in_progress")} — {item.BetAmount} FCFA",
+        GameStatus._3 => $"{I18n.T("history_cancelled")} — {item.BetAmount} FCFA",
+        _ => $"{item.BetAmount} FCFA"
+    };
+
+    private string RowIconBgClass(GameHistoryItemDto item) =>
+        RowIsWin(item) ? "bg-accent/10" : RowIsLoss(item) ? "bg-destructive/10" : "bg-muted/20";
+
+    private string RowAmountClass(GameHistoryItemDto item) =>
+        RowIsWin(item) ? "text-accent" : RowIsLoss(item) ? "text-destructive" : "text-muted-foreground";
+
+    private string RowAmountText(GameHistoryItemDto item)
+    {
+        if (!RowIsFinished(item)) return "—";
+        return RowIsWin(item) ? $"+{((decimal)item.WonAmount!.Value):N0}" : "—";
+    }
 }

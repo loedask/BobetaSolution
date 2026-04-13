@@ -1,7 +1,16 @@
-<div class="rounded-xl px-4 py-2 text-center text-sm font-medium @(IsPlayerTurn ? "gold-gradient text-primary-foreground" : "bg-secondary text-secondary-foreground")">
-    @(IsPlayerTurn ? "Your turn" : "Opponent's turn")
+<div class="rounded-xl px-4 py-2 text-center text-sm font-medium @(CssClass)">
+    @Text
 </div>
 
 @code {
     [Parameter] public bool IsPlayerTurn { get; set; }
+    [Parameter] public bool WaitingForOpponent { get; set; }
+
+    private string Text => WaitingForOpponent ? "Waiting for an opponent…" : IsPlayerTurn ? "Your turn" : "Opponent's turn";
+
+    private string CssClass => WaitingForOpponent
+        ? "bg-secondary text-secondary-foreground"
+        : IsPlayerTurn
+            ? "gold-gradient text-primary-foreground"
+            : "bg-secondary text-secondary-foreground";
 }

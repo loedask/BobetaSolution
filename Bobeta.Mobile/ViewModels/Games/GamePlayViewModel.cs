@@ -32,6 +32,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public string SessionId { get; private set; } = "";
     public bool IsPlayerTurn { get; private set; }
     public decimal PotAmount { get; private set; }
+    public bool WaitingForOpponent { get; private set; }
 
     public List<CardViewModel> PlayerCards { get; private set; } = new();
     public List<CardViewModel> OpponentCards { get; private set; } = new();
@@ -66,8 +67,10 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             }
 
             var state = res.Data;
+            WaitingForOpponent = state.WaitingForGameStart;
+            PotAmount = state.LobbyPotAmount;
             CurrentPlayerId = state.CurrentTurnPlayerId;
-            IsPlayerTurn = state.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
+            IsPlayerTurn = !WaitingForOpponent && state.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
             PlayerCards = ParseCards(state.MyCards ?? new List<string>());
             LastPlayedCard = string.IsNullOrEmpty(state.LastPlayedCard) ? null : ParseCard(state.LastPlayedCard);
             OpponentCards = new List<CardViewModel>();
@@ -123,8 +126,10 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
             if (res.Data != null)
             {
+                WaitingForOpponent = res.Data.WaitingForGameStart;
+                PotAmount = res.Data.LobbyPotAmount;
                 CurrentPlayerId = res.Data.CurrentTurnPlayerId;
-                IsPlayerTurn = res.Data.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
+                IsPlayerTurn = !WaitingForOpponent && res.Data.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
                 PlayerCards = ParseCards(res.Data.MyCards ?? new List<string>());
                 LastPlayedCard = string.IsNullOrEmpty(res.Data.LastPlayedCard) ? null : ParseCard(res.Data.LastPlayedCard);
                 if (res.Data.GameOver)
@@ -168,10 +173,12 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
     private void ApplyGameStateFromHub(GameStateViewModel state)
     {
+        WaitingForOpponent = state.WaitingForGameStart;
+        PotAmount = state.LobbyPotAmount;
         PlayerCards = ParseCards(state.MyCards ?? new List<string>());
         LastPlayedCard = string.IsNullOrEmpty(state.LastPlayedCard) ? null : ParseCard(state.LastPlayedCard);
         CurrentPlayerId = state.CurrentTurnPlayerId;
-        IsPlayerTurn = state.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
+        IsPlayerTurn = !WaitingForOpponent && state.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
         if (state.GameOver)
             HandleGameResult(state.WinnerPlayerId);
         else
@@ -193,7 +200,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     {
         _aiTriggerCts?.Cancel();
         _aiTriggerCts = new CancellationTokenSource();
-        if (ShowGameResult || IsPlayerTurn || _testService == null) return;
+        if (ShowGameResult || WaitingForOpponent || IsPlayerTurn || _testService == null) return;
         try
         {
             await Task.Delay(TimeSpan.FromSeconds(5), _aiTriggerCts.Token);
