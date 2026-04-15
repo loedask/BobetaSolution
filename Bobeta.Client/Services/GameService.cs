@@ -65,10 +65,18 @@ public class GameService(IClient client, HttpClient httpClient) : BaseHttpServic
         }
     }
 
-    /// <summary>Returns open/waiting games. No API endpoint in the current spec; returns empty list.</summary>
-    public Task<Response<IReadOnlyList<GameSessionViewModel>>> GetOpenGamesAsync(CancellationToken cancellationToken = default)
+    public async Task<Response<IReadOnlyList<GameSessionViewModel>>> GetOpenGamesAsync(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(Response<IReadOnlyList<GameSessionViewModel>>.Success(Array.Empty<GameSessionViewModel>()));
+        try
+        {
+            var list = await Client.OpenAsync(0, 100, cancellationToken).ConfigureAwait(false);
+            var vms = list?.Select(MapSession).ToList() ?? new List<GameSessionViewModel>();
+            return Response<IReadOnlyList<GameSessionViewModel>>.Success(vms);
+        }
+        catch (BaseApiException ex)
+        {
+            return Response<IReadOnlyList<GameSessionViewModel>>.Failure(ex.Message, ex.StatusCode);
+        }
     }
 
     public async Task<Response<GameStateViewModel?>> GetGameStateAsync(Guid sessionId, CancellationToken cancellationToken = default)

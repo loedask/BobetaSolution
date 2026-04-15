@@ -2409,6 +2409,12 @@ namespace Bobeta.Client.Services.Base
         [System.Text.Json.Serialization.JsonPropertyName("winnerPlayerId")]
         public System.Guid? WinnerPlayerId { get; set; }
 
+        [System.Text.Json.Serialization.JsonPropertyName("waitingForGameStart")]
+        public bool WaitingForGameStart { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("lobbyPotAmount")]
+        public double LobbyPotAmount { get; set; }
+
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.0.0 (NJsonSchema v11.6.0.0 (Newtonsoft.Json v13.0.0.0))")]

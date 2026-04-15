@@ -32,6 +32,14 @@ public class GameController(IGameSessionService gameSessionService) : Controller
         return Ok(session);
     }
 
+    /// <summary>Lists waiting games you can join (excludes games you created).</summary>
+    [HttpGet("open")]
+    public async Task<ActionResult<IReadOnlyList<GameSessionDto>>> GetOpenGames([FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
+    {
+        var list = await _gameSessionService.ListOpenJoinableGamesAsync(PlayerId, skip, take, cancellationToken);
+        return Ok(list);
+    }
+
     /// <summary>Proposes a new bet amount for the game (opponent must accept).</summary>
     [HttpPost("propose-bet")]
     public async Task<IActionResult> ProposeBet([FromBody] ProposeBetRequest request, CancellationToken cancellationToken)
