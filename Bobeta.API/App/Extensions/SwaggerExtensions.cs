@@ -1,3 +1,4 @@
+using Bobeta.API.App.Filters;
 using Microsoft.OpenApi.Models;
 
 namespace Bobeta.API.App.Extensions;
@@ -40,6 +41,8 @@ public static class SwaggerExtensions
             var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
             if (File.Exists(xmlPath))
                 options.IncludeXmlComments(xmlPath);
+
+            options.SchemaFilter<DomainEnumVarNamesSchemaFilter>();
         });
         return services;
     }

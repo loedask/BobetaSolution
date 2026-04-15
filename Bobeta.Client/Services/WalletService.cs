@@ -80,25 +80,25 @@ public class WalletService(IClient client, HttpClient httpClient) : BaseHttpServ
     }
 
     /// <summary>
-    /// NSwag names enum members <c>_0</c>, <c>_1</c>, … when OpenAPI lacks x-enum-varnames; map to domain names for UI.
+    /// Map by underlying value so this stays correct after NSwag regen whether members are named <c>_2</c> or <c>BetLock</c>.
     /// </summary>
-    private static string MapTransactionType(TransactionType type) => type switch
+    private static string MapTransactionType(TransactionType type) => (int)type switch
     {
-        TransactionType._0 => "Deposit",
-        TransactionType._1 => "Withdrawal",
-        TransactionType._2 => "BetLock",
-        TransactionType._3 => "BetRelease",
-        TransactionType._4 => "Win",
-        TransactionType._5 => "Commission",
+        0 => "Deposit",
+        1 => "Withdrawal",
+        2 => "BetLock",
+        3 => "BetRelease",
+        4 => "Win",
+        5 => "Commission",
         _ => type.ToString()
     };
 
-    private static string MapTransactionStatus(TransactionStatus status) => status switch
+    private static string MapTransactionStatus(TransactionStatus status) => (int)status switch
     {
-        TransactionStatus._0 => "Pending",
-        TransactionStatus._1 => "Completed",
-        TransactionStatus._2 => "Failed",
-        TransactionStatus._3 => "Cancelled",
+        0 => "Pending",
+        1 => "Completed",
+        2 => "Failed",
+        3 => "Cancelled",
         _ => status.ToString()
     };
 }
