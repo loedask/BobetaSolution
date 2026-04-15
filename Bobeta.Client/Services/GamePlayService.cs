@@ -51,7 +51,7 @@ public class GamePlayService(IClient client, HttpClient httpClient) : BaseHttpSe
             GameOver = dto.GameOver,
             WinnerPlayerId = dto.WinnerPlayerId,
             WaitingForGameStart = dto.WaitingForGameStart,
-            LobbyPotAmount = dto.LobbyPotAmount
+            LobbyPotAmount = (decimal)dto.LobbyPotAmount
         };
     }
 }

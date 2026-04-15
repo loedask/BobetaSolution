@@ -67,16 +67,10 @@ public class GameService(IClient client, HttpClient httpClient) : BaseHttpServic
 
     public async Task<Response<IReadOnlyList<GameSessionViewModel>>> GetOpenGamesAsync(CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var list = await Client.OpenAsync(0, 100, cancellationToken).ConfigureAwait(false);
-            var vms = list?.Select(MapSession).ToList() ?? new List<GameSessionViewModel>();
-            return Response<IReadOnlyList<GameSessionViewModel>>.Success(vms);
-        }
-        catch (BaseApiException ex)
-        {
-            return Response<IReadOnlyList<GameSessionViewModel>>.Failure(ex.Message, ex.StatusCode);
-        }
+        var res = await GetAsync<List<GameSessionDto>>("api/Game/open?skip=0&take=100", cancellationToken).ConfigureAwait(false);
+        if (!res.IsSuccess || res.Data == null)
+            return Response<IReadOnlyList<GameSessionViewModel>>.Failure(res.ErrorMessage ?? "Failed to load open games.", res.StatusCode);
+        return Response<IReadOnlyList<GameSessionViewModel>>.Success(res.Data.Select(MapSession).ToList());
     }
 
     public async Task<Response<GameStateViewModel?>> GetGameStateAsync(Guid sessionId, CancellationToken cancellationToken = default)
@@ -118,7 +112,7 @@ public class GameService(IClient client, HttpClient httpClient) : BaseHttpServic
             GameOver = dto.GameOver,
             WinnerPlayerId = dto.WinnerPlayerId,
             WaitingForGameStart = dto.WaitingForGameStart,
-            LobbyPotAmount = dto.LobbyPotAmount
+            LobbyPotAmount = (decimal)dto.LobbyPotAmount
         };
     }
 }
