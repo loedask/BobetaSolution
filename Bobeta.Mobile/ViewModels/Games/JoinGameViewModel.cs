@@ -45,7 +45,7 @@ public class JoinGameViewModel(IGameService gameService, AppStateService appStat
             {
                 _appState.SetActiveGameSession(res.Data.Id);
                 await _appState.PersistAsync();
-                await _nav.ToMainTabsAsync("Dashboard");
+                await _nav.ToGamePlayAsync(res.Data.Id);
             }
             else
                 SetError(res.ErrorMessage ?? "Failed to join game.");

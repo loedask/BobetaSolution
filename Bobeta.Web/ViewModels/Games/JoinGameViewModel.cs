@@ -46,7 +46,7 @@ public class JoinGameViewModel(IGameService gameService, AppStateService appStat
             {
                 _appState.SetActiveGameSession(res.Data.Id);
                 await _appState.PersistAsync();
-                _nav.NavigateTo("/dashboard");
+                _nav.NavigateTo($"/game/{res.Data.Id}");
             }
             else
                 SetError(res.ErrorMessage ?? "Failed to join game.");
