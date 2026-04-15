@@ -83,9 +83,15 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             if (_hubClient != null)
             {
                 await _hubClient.ConnectAsync(sessionId);
+                _hubClient.OnGameStateUpdated -= ApplyGameStateFromHub;
                 _hubClient.OnGameStateUpdated += ApplyGameStateFromHub;
+                _hubClient.OnOpponentMove -= ApplyOpponentMoveFromHub;
                 _hubClient.OnOpponentMove += ApplyOpponentMoveFromHub;
+                _hubClient.OnGameResult -= ApplyGameResultFromHub;
                 _hubClient.OnGameResult += ApplyGameResultFromHub;
+                _hubClient.OnGameStarted -= OnGameStartedReload;
+                _hubClient.OnGameStarted += OnGameStartedReload;
+                _hubClient.OnReconnected -= OnHubReconnected;
                 _hubClient.OnReconnected += OnHubReconnected;
             }
 
@@ -221,12 +227,19 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             _hubClient.OnGameStateUpdated -= ApplyGameStateFromHub;
             _hubClient.OnOpponentMove -= ApplyOpponentMoveFromHub;
             _hubClient.OnGameResult -= ApplyGameResultFromHub;
+            _hubClient.OnGameStarted -= OnGameStartedReload;
             _hubClient.OnReconnected -= OnHubReconnected;
             await _hubClient.DisconnectAsync();
         }
     }
 
     private void OnHubReconnected()
+    {
+        if (!string.IsNullOrEmpty(SessionId))
+            _ = LoadGameAsync(SessionId);
+    }
+
+    private void OnGameStartedReload()
     {
         if (!string.IsNullOrEmpty(SessionId))
             _ = LoadGameAsync(SessionId);

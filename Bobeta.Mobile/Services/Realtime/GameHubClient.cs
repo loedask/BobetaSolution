@@ -30,6 +30,8 @@ public class GameHubClient
     public event Action<HubConnectionState>? OnConnectionStateChanged;
     public event Action? OnReconnected;
 
+    public event Action? OnGameStarted;
+
     public bool IsConnected => _connection?.State == HubConnectionState.Connected;
 
     public async Task ConnectAsync(string sessionId, CancellationToken cancellationToken = default)
@@ -80,6 +82,11 @@ public class GameHubClient
         _connection.On<Guid?>("GameResult", winnerId =>
         {
             OnGameResult?.Invoke(winnerId);
+        });
+
+        _connection.On("GameStarted", () =>
+        {
+            OnGameStarted?.Invoke();
         });
 
         await StartAndJoinAsync(sessionGuid, cancellationToken);

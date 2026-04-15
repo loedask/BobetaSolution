@@ -24,7 +24,7 @@ public class GamePlayController(IGameEngineService gameEngineService, IHubContex
     public async Task<IActionResult> StartGame([FromQuery] Guid sessionId, CancellationToken cancellationToken)
     {
         await _gameEngineService.StartGameAsync(sessionId, cancellationToken);
-        return Accepted();
+        return Ok();
     }
 
     /// <summary>Plays a card in the current turn. Server validates turn and follow-suit rule, then broadcasts state and move via SignalR.</summary>

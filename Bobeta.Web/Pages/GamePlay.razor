@@ -8,7 +8,7 @@
 @inject NavigationManager Nav
 @inject GameHubClient GameHubClient
 @inject GamePlayTestService GamePlayTestService
-@implements IDisposable
+@implements IAsyncDisposable
 
 <div class="min-h-screen bg-background pb-24">
     <AppHeader Title="Game" ShowBack="true" BackHref="/dashboard" />
@@ -57,7 +57,11 @@
             await ViewModel.LoadGameAsync(SessionId);
     }
 
-    public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
+    public async ValueTask DisposeAsync()
+    {
+        ViewModel.StateChanged -= OnStateChanged;
+        await ViewModel.DisposeAsync();
+    }
 
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
 

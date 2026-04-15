@@ -1,5 +1,7 @@
 using System.Text;
+using Bobeta.API.App.Services;
 using Bobeta.Application.Extensions;
+using Bobeta.Application.Interfaces;
 using Bobeta.Identity.Extensions;
 using Bobeta.Infrastructure.Extensions;
 using Bobeta.Persistence.Extensions;
@@ -17,6 +19,7 @@ public static class ApiServiceCollectionExtensions
         var connectionString = configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=Bobeta;Username=postgres;Password=postgres";
         services.AddBobetaPersistence(connectionString);
         services.AddBobetaApplication();
+        services.AddScoped<IGameSessionNotifier, GameSessionSignalRNotifier>();
         services.AddBobetaIdentity();
         services.AddBobetaInfrastructure(configuration);
 

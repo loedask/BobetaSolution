@@ -9,11 +9,15 @@ namespace Bobeta.Application.Services;
 public class GameSessionService(
     IGameSessionRepository sessionRepository,
     IPlayerRepository playerRepository,
-    IWalletService walletService) : IGameSessionService
+    IWalletService walletService,
+    IGameEngineService gameEngine,
+    IGameSessionNotifier sessionNotifier) : IGameSessionService
 {
     private readonly IGameSessionRepository _sessionRepository = sessionRepository;
     private readonly IPlayerRepository _playerRepository = playerRepository;
     private readonly IWalletService _walletService = walletService;
+    private readonly IGameEngineService _gameEngine = gameEngine;
+    private readonly IGameSessionNotifier _sessionNotifier = sessionNotifier;
 
     public async Task<GameSessionDto> CreateGameAsync(Guid playerId, decimal betAmount, CancellationToken cancellationToken = default)
     {
@@ -41,6 +45,21 @@ public class GameSessionService(
         await _walletService.LockBetAsync(playerId, session.BetAmount, cancellationToken);
         session.OpponentPlayerId = playerId;
         await _sessionRepository.UpdateAsync(session, cancellationToken);
+
+        try
+        {
+            await _gameEngine.StartGameAsync(gameId, cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            // Already dealing / race; still return current session.
+        }
+
+        session = await _sessionRepository.GetByIdAsync(gameId, cancellationToken);
+        if (session == null)
+            return null;
+
+        await _sessionNotifier.NotifySessionAsync(gameId, cancellationToken);
         return Map(session);
     }
 

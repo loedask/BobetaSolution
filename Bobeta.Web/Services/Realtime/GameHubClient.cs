@@ -38,6 +38,9 @@ public class GameHubClient
     /// <summary>Fired after reconnecting; subscriber should reload game state.</summary>
     public event Action? OnReconnected;
 
+    /// <summary>Fired when the server signals the session changed in a way that needs a full reload (e.g. game dealt after second player joined).</summary>
+    public event Action? OnGameStarted;
+
     public bool IsConnected => _connection?.State == HubConnectionState.Connected;
 
     /// <summary>Connects to the hub (if needed), joins the session group, and subscribes to events. Automatic reconnect on disconnect.</summary>
@@ -89,6 +92,11 @@ public class GameHubClient
         _connection.On<Guid?>("GameResult", winnerId =>
         {
             OnGameResult?.Invoke(winnerId);
+        });
+
+        _connection.On("GameStarted", () =>
+        {
+            OnGameStarted?.Invoke();
         });
 
         await StartAndJoinAsync(sessionGuid, cancellationToken);

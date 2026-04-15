@@ -85,10 +85,16 @@ public class GamePlayViewModel : ViewModelBase
             if (_hubClient != null)
             {
                 await _hubClient.ConnectAsync(sessionId);
+                _hubClient.OnGameStateUpdated -= ApplyGameStateFromHub;
                 _hubClient.OnGameStateUpdated += ApplyGameStateFromHub;
+                _hubClient.OnOpponentMove -= ApplyOpponentMoveFromHub;
                 _hubClient.OnOpponentMove += ApplyOpponentMoveFromHub;
+                _hubClient.OnGameResult -= ApplyGameResultFromHub;
                 _hubClient.OnGameResult += ApplyGameResultFromHub;
-                _hubClient.OnReconnected += () => _ = LoadGameAsync(sessionId);
+                _hubClient.OnGameStarted -= OnGameStartedReload;
+                _hubClient.OnGameStarted += OnGameStartedReload;
+                _hubClient.OnReconnected -= OnHubReconnected;
+                _hubClient.OnReconnected += OnHubReconnected;
             }
 
             ScheduleAiOpponentIfNeeded(sessionGuid);
@@ -231,5 +237,31 @@ public class GamePlayViewModel : ViewModelBase
         }
         catch (OperationCanceledException) { }
         catch { /* ignore */ }
+    }
+
+    private void OnGameStartedReload()
+    {
+        if (!string.IsNullOrEmpty(SessionId))
+            _ = LoadGameAsync(SessionId);
+    }
+
+    private void OnHubReconnected()
+    {
+        if (!string.IsNullOrEmpty(SessionId))
+            _ = LoadGameAsync(SessionId);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _aiTriggerCts?.Cancel();
+        if (_hubClient != null)
+        {
+            _hubClient.OnGameStateUpdated -= ApplyGameStateFromHub;
+            _hubClient.OnOpponentMove -= ApplyOpponentMoveFromHub;
+            _hubClient.OnGameResult -= ApplyGameResultFromHub;
+            _hubClient.OnGameStarted -= OnGameStartedReload;
+            _hubClient.OnReconnected -= OnHubReconnected;
+            await _hubClient.DisconnectAsync();
+        }
     }
 }
