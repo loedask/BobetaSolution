@@ -7,11 +7,12 @@
     Shell.FlyoutBehavior="Disabled"
     Title="Bobeta">
 
+    <ShellContent
+        Title="Welcome"
+        Route="Welcome"
+        ContentTemplate="{DataTemplate pages:WelcomePage}" />
+
     <TabBar Route="MainTabs">
-        <ShellContent
-            Title="Welcome"
-            Route="Welcome"
-            ContentTemplate="{DataTemplate pages:WelcomePage}" />
         <ShellContent
             Title="Home"
             Route="Dashboard"

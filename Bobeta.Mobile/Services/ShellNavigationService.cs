@@ -11,16 +11,47 @@ public class ShellNavigationService : INavigationService
         return MainThread.InvokeOnMainThreadAsync(action);
     }
 
-    public Task ToPhoneLoginAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(PhoneLoginPage)));
+    /// <summary>Welcome is a root ShellContent (sibling of TabBar). GoToAsync to a registered route fails on some Android versions; push onto the shell navigation stack instead.</summary>
+    public Task ToPhoneLoginAsync() => RunOnMainThread(async () =>
+    {
+        if (Shell.Current?.Navigation is null)
+        {
+            if (Shell.Current is not null)
+                await Shell.Current.GoToAsync(nameof(PhoneLoginPage));
+            return;
+        }
 
-    public Task ToOtpVerificationAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(OtpVerificationPage)));
+        await Shell.Current.Navigation.PushAsync(new PhoneLoginPage());
+    });
 
-    public Task ToCreatePlayerAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(CreatePlayerPage)));
+    public Task ToOtpVerificationAsync() => RunOnMainThread(async () =>
+    {
+        if (Shell.Current?.Navigation is null)
+        {
+            if (Shell.Current is not null)
+                await Shell.Current.GoToAsync(nameof(OtpVerificationPage));
+            return;
+        }
+
+        await Shell.Current.Navigation.PushAsync(new OtpVerificationPage());
+    });
+
+    public Task ToCreatePlayerAsync() => RunOnMainThread(async () =>
+    {
+        if (Shell.Current?.Navigation is null)
+        {
+            if (Shell.Current is not null)
+                await Shell.Current.GoToAsync(nameof(CreatePlayerPage));
+            return;
+        }
+
+        await Shell.Current.Navigation.PushAsync(new CreatePlayerPage());
+    });
 
     public Task ToMainTabsAsync(string tabRoute = "Dashboard") =>
         RunOnMainThread(() => Shell.Current.GoToAsync($"//MainTabs/{tabRoute}"));
 
-    public Task ToWelcomeAsync() => RunOnMainThread(() => Shell.Current.GoToAsync("//MainTabs/Welcome"));
+    public Task ToWelcomeAsync() => RunOnMainThread(() => Shell.Current.GoToAsync("//Welcome"));
 
     public Task ToDepositAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(DepositPage)));
 
