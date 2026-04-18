@@ -1,3 +1,5 @@
+using Bobeta.Mobile.Pages;
+
 namespace Bobeta.Mobile.Services;
 
 public class ShellNavigationService : INavigationService
@@ -9,20 +11,20 @@ public class ShellNavigationService : INavigationService
         return MainThread.InvokeOnMainThreadAsync(action);
     }
 
-    public Task ToPhoneLoginAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(Pages.PhoneLoginPage)));
+    public Task ToPhoneLoginAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(PhoneLoginPage)));
 
-    public Task ToOtpVerificationAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(Pages.OtpVerificationPage)));
+    public Task ToOtpVerificationAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(OtpVerificationPage)));
 
-    public Task ToCreatePlayerAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(Pages.CreatePlayerPage)));
+    public Task ToCreatePlayerAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(CreatePlayerPage)));
 
     public Task ToMainTabsAsync(string tabRoute = "Dashboard") =>
         RunOnMainThread(() => Shell.Current.GoToAsync($"//MainTabs/{tabRoute}"));
 
-    public Task ToWelcomeAsync() => RunOnMainThread(() => Shell.Current.GoToAsync("//Welcome"));
+    public Task ToWelcomeAsync() => RunOnMainThread(() => Shell.Current.GoToAsync("//MainTabs/Welcome"));
 
-    public Task ToDepositAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(Pages.DepositPage)));
+    public Task ToDepositAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(DepositPage)));
 
-    public Task ToWithdrawAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(Pages.WithdrawPage)));
+    public Task ToWithdrawAsync() => RunOnMainThread(() => Shell.Current.GoToAsync(nameof(WithdrawPage)));
 
     public Task ToGamePlayAsync(Guid sessionId) =>
         RunOnMainThread(() => Shell.Current.GoToAsync($"GamePlay?SessionId={sessionId}"));

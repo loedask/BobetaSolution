@@ -5,7 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:auth="clr-namespace:Bobeta.Domain.Authentication;assembly=Bobeta.Domain"
     BackgroundColor="{StaticResource PageBackground}"
-    Shell.NavBarIsVisible="False">
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
 
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="16" VerticalOptions="Center">
