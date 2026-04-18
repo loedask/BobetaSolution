@@ -19,6 +19,8 @@ This guide walks you through running the Bobeta platform and Makopa game locally
    }
    ```
 
+   **Azure App Service (production):** If your portal **Connection strings** entry is named **`AZURE_POSTGRESQL_CONNECTIONSTRING`** (common for Azure Database for PostgreSQL integrations), the API uses that first, then falls back to **`DefaultConnection`** for local dev. No need to rename the Azure entry to `DefaultConnection`.
+
 3. Apply migrations from the API project directory:
 
    ```bash

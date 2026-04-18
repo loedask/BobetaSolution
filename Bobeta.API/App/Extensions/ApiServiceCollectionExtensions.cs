@@ -14,10 +14,16 @@ namespace Bobeta.API.App.Extensions;
 /// <summary>Registers all Bobeta services (persistence, application, identity, infrastructure), JWT auth, and SignalR.</summary>
 public static class ApiServiceCollectionExtensions
 {
+    /// <summary>Name used by Azure App Service flexible PostgreSQL / portal templates for the DB connection string.</summary>
+    public const string AzurePostgresConnectionStringName = "AZURE_POSTGRESQL_CONNECTIONSTRING";
+
     /// <summary>Adds persistence, application, identity, infrastructure, JWT bearer auth (including SignalR query token), and SignalR (Azure SignalR Service when <c>Azure:SignalR:ConnectionString</c> is set).</summary>
     public static IServiceCollection AddBobetaServices(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=Bobeta;Username=postgres;Password=postgres";
+        // Prefer Azure App Service connection string name so production overrides packaged appsettings.json.
+        var connectionString = configuration.GetConnectionString(AzurePostgresConnectionStringName)
+            ?? configuration.GetConnectionString("DefaultConnection")
+            ?? "Host=localhost;Database=Bobeta;Username=postgres;Password=postgres";
         services.AddBobetaPersistence(connectionString);
         services.AddBobetaApplication();
         services.AddScoped<IGameSessionNotifier, GameSessionSignalRNotifier>();
