@@ -1,3 +1,4 @@
+using Bobeta.Client.Contracts;
 using Bobeta.Client.Contracts.Interfaces;
 using Bobeta.Client.Services;
 using Bobeta.Client.Services.Base;
@@ -46,34 +47,37 @@ public static class ServiceRegistration
             httpClientBuilder.AddHttpMessageHandler<BearerTokenHandler>();
         }
 
+        IAccessTokenProvider? TokenProvider(IServiceProvider sp) =>
+            useBearerToken ? sp.GetRequiredService<IAccessTokenProvider>() : null;
+
         services.AddScoped<IGameService>(sp =>
         {
             var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName);
-            return new GameService(new ApiClient(http), http);
+            return new GameService(new ApiClient(http), http, TokenProvider(sp));
         });
 
         services.AddScoped<WalletService>(sp =>
         {
             var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName);
-            return new WalletService(new ApiClient(http), http);
+            return new WalletService(new ApiClient(http), http, TokenProvider(sp));
         });
 
         services.AddScoped<AuthService>(sp =>
         {
             var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName);
-            return new AuthService(new ApiClient(http), http);
+            return new AuthService(new ApiClient(http), http, TokenProvider(sp));
         });
 
         services.AddScoped<GamePlayService>(sp =>
         {
             var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName);
-            return new GamePlayService(new ApiClient(http), http);
+            return new GamePlayService(new ApiClient(http), http, TokenProvider(sp));
         });
 
         services.AddScoped<HistoryService>(sp =>
         {
             var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName);
-            return new HistoryService(new ApiClient(http), http);
+            return new HistoryService(new ApiClient(http), http, TokenProvider(sp));
         });
 
         return services;

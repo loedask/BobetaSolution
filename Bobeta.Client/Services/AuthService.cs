@@ -8,7 +8,8 @@ using BaseApiException = Bobeta.Client.Services.Base.ApiException;
 namespace Bobeta.Client.Services;
 
 /// <summary>Client service for auth (send OTP, verify, register) using the NSwag-generated client.</summary>
-public class AuthService(IClient client, HttpClient httpClient) : BaseHttpService(client, httpClient)
+public class AuthService(IClient client, HttpClient httpClient, IAccessTokenProvider? accessTokenProvider = null)
+    : BaseHttpService(client, httpClient, accessTokenProvider)
 {
     public async Task<Response<bool>> SendOtpAsync(string phoneNumber, CancellationToken cancellationToken = default)
     {

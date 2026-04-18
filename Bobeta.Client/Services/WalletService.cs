@@ -6,13 +6,17 @@ using BaseApiException = Bobeta.Client.Services.Base.ApiException;
 namespace Bobeta.Client.Services;
 
 /// <summary>Client service for wallet operations using the NSwag-generated client.</summary>
-public class WalletService(IClient client, HttpClient httpClient) : BaseHttpService(client, httpClient)
+public class WalletService(IClient client, HttpClient httpClient, IAccessTokenProvider? accessTokenProvider = null)
+    : BaseHttpService(client, httpClient, accessTokenProvider)
 {
     public async Task<Response<WalletBalanceViewModel?>> GetBalanceAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            var dto = await Client.BalanceAsync(cancellationToken).ConfigureAwait(false);
+            var getRes = await GetAsync<WalletBalanceDto>("api/Wallet/balance", cancellationToken).ConfigureAwait(false);
+            if (!getRes.IsSuccess || getRes.Data == null)
+                return Response<WalletBalanceViewModel?>.Failure(getRes.ErrorMessage ?? "Failed to load balance.", getRes.StatusCode);
+            var dto = getRes.Data;
             var vm = new WalletBalanceViewModel
             {
                 Balance = (decimal)dto.Balance,
@@ -56,8 +60,11 @@ public class WalletService(IClient client, HttpClient httpClient) : BaseHttpServ
     {
         try
         {
-            var list = await Client.TransactionsAsync(skip, take, cancellationToken).ConfigureAwait(false);
-            var vms = list?.Select(MapTransaction).ToList() ?? new List<WalletTransactionViewModel>();
+            var uri = $"api/Wallet/transactions?skip={skip}&take={take}";
+            var getRes = await GetAsync<List<WalletTransactionDto>>(uri, cancellationToken).ConfigureAwait(false);
+            if (!getRes.IsSuccess || getRes.Data == null)
+                return Response<IReadOnlyList<WalletTransactionViewModel>>.Failure(getRes.ErrorMessage ?? "Failed to load transactions.", getRes.StatusCode);
+            var vms = getRes.Data.Select(MapTransaction).ToList();
             return Response<IReadOnlyList<WalletTransactionViewModel>>.Success(vms);
         }
         catch (BaseApiException ex)

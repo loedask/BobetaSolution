@@ -9,7 +9,8 @@ using JoinGameRequestDto = Bobeta.Client.Services.Base.JoinGameRequest;
 namespace Bobeta.Client.Services;
 
 /// <summary>Client service for game operations (create, join, propose bet, accept bet) using the NSwag-generated client.</summary>
-public class GameService(IClient client, HttpClient httpClient) : BaseHttpService(client, httpClient), IGameService
+public class GameService(IClient client, HttpClient httpClient, IAccessTokenProvider? accessTokenProvider = null)
+    : BaseHttpService(client, httpClient, accessTokenProvider), IGameService
 {
     public async Task<Response<GameSessionViewModel?>> CreateGameAsync(Bobeta.Client.Models.Games.CreateGameRequest request, CancellationToken cancellationToken = default)
     {

@@ -5,7 +5,8 @@ using BaseApiException = Bobeta.Client.Services.Base.ApiException;
 namespace Bobeta.Client.Services;
 
 /// <summary>Client service for game history using the NSwag-generated client.</summary>
-public class HistoryService(IClient client, HttpClient httpClient) : BaseHttpService(client, httpClient)
+public class HistoryService(IClient client, HttpClient httpClient, IAccessTokenProvider? accessTokenProvider = null)
+    : BaseHttpService(client, httpClient, accessTokenProvider)
 {
     public async Task<Response<System.Collections.Generic.ICollection<GameHistoryItemDto>>> GetGameHistoryAsync(int skip = 0, int take = 20, CancellationToken cancellationToken = default)
     {

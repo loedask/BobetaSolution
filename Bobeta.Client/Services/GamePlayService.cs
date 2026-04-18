@@ -6,7 +6,8 @@ using BaseApiException = Bobeta.Client.Services.Base.ApiException;
 namespace Bobeta.Client.Services;
 
 /// <summary>Client service for gameplay (start game, play card) using the NSwag-generated client.</summary>
-public class GamePlayService(IClient client, HttpClient httpClient) : BaseHttpService(client, httpClient)
+public class GamePlayService(IClient client, HttpClient httpClient, IAccessTokenProvider? accessTokenProvider = null)
+    : BaseHttpService(client, httpClient, accessTokenProvider)
 {
     public async Task<Response<bool>> StartGameAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
