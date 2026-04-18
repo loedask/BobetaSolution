@@ -1,6 +1,9 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Configuration;
+#if ANDROID
+using Xamarin.Android.Net;
+#endif
 using Bobeta.Client.Contracts;
 using Bobeta.Client.Models.Games;
 
@@ -54,7 +57,12 @@ public class GameHubClient
         var url = $"{_hubBaseUrl}/hubs/game?access_token={Uri.EscapeDataString(token ?? "")}";
 
         _connection = new HubConnectionBuilder()
-            .WithUrl(url)
+            .WithUrl(url, options =>
+            {
+#if ANDROID
+                options.HttpMessageHandlerFactory = _ => new AndroidMessageHandler();
+#endif
+            })
             .WithAutomaticReconnect()
             .AddJsonProtocol(options => options.PayloadSerializerOptions = JsonOptions)
             .Build();

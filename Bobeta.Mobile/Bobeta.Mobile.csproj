@@ -28,13 +28,20 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+		<DebugType>portable</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+	</PropertyGroup>
+
 	<!-- Default output is $(ApplicationId)-Signed.apk; keep ApplicationId stable and copy a readable alias. -->
 	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
 		<AndroidApkFriendlyFileName>Bobeta-$(ApplicationDisplayVersion)-Signed.apk</AndroidApkFriendlyFileName>
-		<!-- Managed SocketsHttpHandler often resolves hostnames more reliably than Android's native stack on some networks. -->
-		<UseNativeHttpHandler>false</UseNativeHttpHandler>
+		<!-- Native handler uses Android DNS/connectivity; managed SocketsHttpHandler can fail with "hostname nor servname" on some emulators. -->
+		<UseNativeHttpHandler>true</UseNativeHttpHandler>
 		<!-- Debug: allow HTTP to local API (emulator 10.0.2.2 / LAN); Release stays HTTPS-only to production. -->
 		<AndroidUsesCleartextTraffic Condition="'$(Configuration)' == 'Debug'">true</AndroidUsesCleartextTraffic>
+		<!-- Required for F5 / debugger attach on Android (VS fast deploy). -->
+		<AndroidIncludeDebugSymbols Condition="'$(Configuration)' == 'Debug'">true</AndroidIncludeDebugSymbols>
 	</PropertyGroup>
 
 	<Target Name="CopyAndroidApkFriendlyName"

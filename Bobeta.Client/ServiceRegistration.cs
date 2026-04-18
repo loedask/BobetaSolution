@@ -2,6 +2,7 @@ using Bobeta.Client.Contracts.Interfaces;
 using Bobeta.Client.Services;
 using Bobeta.Client.Services.Base;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http;
 
 namespace Bobeta.Client;
 
@@ -18,7 +19,12 @@ public static class ServiceRegistration
     /// Configure the API base URL via <paramref name="configureHttpClient"/> (e.g. client.BaseAddress = new Uri(options.BaseUrl)).
     /// When <paramref name="useBearerToken"/> is true, register <see cref="Contracts.IAccessTokenProvider"/> in the host so requests include the bearer token.
     /// </summary>
-    public static IServiceCollection AddBobetaClient(this IServiceCollection services, Action<HttpClient>? configureHttpClient = null, bool useBearerToken = false)
+    /// <param name="configureHttpClientBuilder">Optional (e.g. MAUI Android): set <see cref="IHttpClientBuilder.ConfigurePrimaryHttpMessageHandler"/> so DNS/TLS use the platform stack.</param>
+    public static IServiceCollection AddBobetaClient(
+        this IServiceCollection services,
+        Action<HttpClient>? configureHttpClient = null,
+        bool useBearerToken = false,
+        Action<IHttpClientBuilder>? configureHttpClientBuilder = null)
     {
         services.AddAutoMapper(cfg =>
         {
@@ -29,6 +35,8 @@ public static class ServiceRegistration
         {
             configureHttpClient?.Invoke(client);
         });
+
+        configureHttpClientBuilder?.Invoke(httpClientBuilder);
 
         if (useBearerToken)
         {

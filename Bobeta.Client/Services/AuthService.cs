@@ -26,9 +26,15 @@ public class AuthService(IClient client, HttpClient httpClient) : BaseHttpServic
         }
         catch (HttpRequestException ex)
         {
-            return Response<bool>.Failure(
-                ex.Message.Length > 0 ? ex.Message : "Network error. Check your connection and API URL.",
-                0);
+            return Response<bool>.Failure(NetworkErrorMessage(ex), 0);
+        }
+        catch (TaskCanceledException)
+        {
+            return Response<bool>.Failure("Request timed out. Check that the API is running and the URL in appsettings.Development.json.", 0);
+        }
+        catch (Exception ex)
+        {
+            return Response<bool>.Failure(NetworkErrorMessage(ex), 0);
         }
     }
 
@@ -43,9 +49,17 @@ public class AuthService(IClient client, HttpClient httpClient) : BaseHttpServic
         }
         catch (HttpRequestException ex)
         {
+            return Response<VerifyOtpApiResponse>.Failure(NetworkErrorMessage(ex), 0);
+        }
+        catch (TaskCanceledException)
+        {
             return Response<VerifyOtpApiResponse>.Failure(
-                ex.Message.Length > 0 ? ex.Message : "Network error. Check your connection and API URL.",
+                "Request timed out. Check that the API is running and the URL in appsettings.Development.json.",
                 0);
+        }
+        catch (Exception ex)
+        {
+            return Response<VerifyOtpApiResponse>.Failure(NetworkErrorMessage(ex), 0);
         }
     }
 
@@ -65,5 +79,16 @@ public class AuthService(IClient client, HttpClient httpClient) : BaseHttpServic
         {
             return Response<AuthResponse>.Failure(ex.Message, ex.StatusCode);
         }
+    }
+
+    private static string NetworkErrorMessage(Exception ex)
+    {
+        var root = ex.GetBaseException();
+        var inner = ex.InnerException;
+        if (string.IsNullOrWhiteSpace(ex.Message))
+            return !string.IsNullOrWhiteSpace(root.Message) ? root.Message : "Network error. Check your connection and ApiBaseUrl.";
+        if (inner != null && !string.IsNullOrWhiteSpace(inner.Message) && !ex.Message.Contains(inner.Message, StringComparison.Ordinal))
+            return $"{ex.Message} ({inner.Message})";
+        return ex.Message;
     }
 }

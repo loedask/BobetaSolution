@@ -1,6 +1,9 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+#if ANDROID
+using Xamarin.Android.Net;
+#endif
 using Bobeta.Client;
 using Bobeta.Client.Contracts;
 using Bobeta.Mobile.Pages;
@@ -69,7 +72,15 @@ public static class MauiProgram
         builder.Services.AddSingleton<GameHubClient>();
         builder.Services.AddSingleton<GamePlayTestService>();
 
+#if ANDROID
+        // HttpClientFactory defaults to SocketsHttpHandler on Android; use the Java stack for reliable DNS (emulator "hostname nor servname").
+        builder.Services.AddBobetaClient(
+            http => http.BaseAddress = new Uri(apiBaseUrl),
+            useBearerToken: true,
+            b => b.ConfigurePrimaryHttpMessageHandler(() => new AndroidMessageHandler()));
+#else
         builder.Services.AddBobetaClient(http => http.BaseAddress = new Uri(apiBaseUrl), useBearerToken: true);
+#endif
 
         builder.Services.AddTransient<PhoneLoginViewModel>();
         builder.Services.AddTransient<OtpVerificationViewModel>();
