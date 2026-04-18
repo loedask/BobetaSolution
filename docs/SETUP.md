@@ -35,6 +35,14 @@ dotnet run
 
 The API listens on the URLs in **`Bobeta.API/Properties/launchSettings.json`**. Kestrel binds to **`0.0.0.0`** on **`https://7029`** and **`http://5163`** so **Android emulators** (`10.0.2.2`) and **phones on your LAN** can reach the host, not only `localhost`. Use **HTTPS** for browser/Web (`https://localhost:7029`); **Bobeta.Mobile** Debug defaults to **HTTP** (`http://10.0.2.2:5163`) to avoid dev-certificate trust issues on devices. Note the exact URLs in the console.
 
+### Azure SignalR (production scale-out)
+
+**Development / Staging (default):** Leave **`Azure:SignalR:ConnectionString`** unset. The API uses in-process SignalR on the single instance.
+
+**Production (e.g. Azure App Service with multiple instances):** Create [Azure SignalR Service](https://learn.microsoft.com/azure/azure-signalr/signalr-resource-create) in **Default** mode for this ASP.NET Core app. In App Service **Configuration**, add **`Azure__SignalR__ConnectionString`** (application setting) with the resource’s connection string. That maps to configuration key **`Azure:SignalR:ConnectionString`**. Hub URLs for clients stay **`/hubs/game`** on your API base URL.
+
+To exercise Azure SignalR on your machine only, from **`Bobeta.API`**: `dotnet user-secrets set "Azure:SignalR:ConnectionString" "<your-connection-string>"`.
+
 ## 4. Run the Web app
 
 1. Open **`Bobeta.Web/wwwroot/appsettings.json`** (or **`wwwroot/appsettings.Development.json`**) and set **`ApiBaseUrl`** to the API base URL (defaults to **`https://localhost:7029`** to match the API’s HTTPS profile).

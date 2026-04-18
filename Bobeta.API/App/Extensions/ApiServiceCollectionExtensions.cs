@@ -6,6 +6,7 @@ using Bobeta.Identity.Extensions;
 using Bobeta.Infrastructure.Extensions;
 using Bobeta.Persistence.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Azure.SignalR;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Bobeta.API.App.Extensions;
@@ -13,7 +14,7 @@ namespace Bobeta.API.App.Extensions;
 /// <summary>Registers all Bobeta services (persistence, application, identity, infrastructure), JWT auth, and SignalR.</summary>
 public static class ApiServiceCollectionExtensions
 {
-    /// <summary>Adds persistence, application, identity, infrastructure, JWT bearer auth (including SignalR query token), and SignalR.</summary>
+    /// <summary>Adds persistence, application, identity, infrastructure, JWT bearer auth (including SignalR query token), and SignalR (Azure SignalR Service when <c>Azure:SignalR:ConnectionString</c> is set).</summary>
     public static IServiceCollection AddBobetaServices(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=Bobeta;Username=postgres;Password=postgres";
@@ -51,7 +52,13 @@ public static class ApiServiceCollectionExtensions
                 };
             });
 
-        services.AddSignalR();
+        // Local dev: in-process SignalR. Production (or any host with scale-out): set Azure:SignalR:ConnectionString
+        // (e.g. App Service application setting Azure__SignalR__ConnectionString) so hubs use Azure SignalR Service.
+        var signalR = services.AddSignalR();
+        var azureSignalRConnectionString = configuration["Azure:SignalR:ConnectionString"];
+        if (!string.IsNullOrWhiteSpace(azureSignalRConnectionString))
+            signalR.AddAzureSignalR(azureSignalRConnectionString);
+
         return services;
     }
 }
