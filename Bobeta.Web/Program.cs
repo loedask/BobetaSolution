@@ -30,6 +30,7 @@ builder.Services.AddScoped<DashboardViewModel>();
 builder.Services.AddScoped<DepositViewModel>();
 builder.Services.AddScoped<WithdrawViewModel>();
 builder.Services.AddScoped<JoinGameViewModel>();
+builder.Services.AddScoped<CreateGameViewModel>();
 builder.Services.AddScoped<GameHistoryViewModel>();
 builder.Services.AddScoped<ProfileViewModel>();
 builder.Services.AddScoped<GameHubClient>();

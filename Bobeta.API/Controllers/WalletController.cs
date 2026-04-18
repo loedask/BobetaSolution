@@ -2,6 +2,7 @@ using Bobeta.Application.DTOs.Wallet;
 using Bobeta.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 
 namespace Bobeta.API.Controllers;
 
@@ -9,9 +10,14 @@ namespace Bobeta.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class WalletController(IWalletService walletService) : ControllerBase
+public class WalletController(
+    IWalletService walletService,
+    IHostEnvironment hostEnvironment,
+    IConfiguration configuration) : ControllerBase
 {
     private readonly IWalletService _walletService = walletService;
+    private readonly IHostEnvironment _hostEnvironment = hostEnvironment;
+    private readonly IConfiguration _configuration = configuration;
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
@@ -23,10 +29,34 @@ public class WalletController(IWalletService walletService) : ControllerBase
         return Ok(balance);
     }
 
-    /// <summary>Credits the player's wallet (e.g. after MoMo deposit confirmation).</summary>
+    /// <summary>
+    /// Credits the player's wallet without a payment provider. Intended for local/demo testing only;
+    /// disabled in production and unless <c>DemoAuth:EnableTestWalletDeposits</c> is true.
+    /// </summary>
     [HttpPost("deposit")]
     public async Task<ActionResult<WalletTransactionDto>> Deposit([FromBody] DepositRequest request, CancellationToken cancellationToken)
     {
+        if (_hostEnvironment.IsProduction())
+        {
+            return new ContentResult
+            {
+                StatusCode = StatusCodes.Status403Forbidden,
+                Content = "Direct wallet deposits are not enabled in production.",
+                ContentType = "text/plain; charset=utf-8"
+            };
+        }
+
+        if (!_configuration.GetValue("DemoAuth:EnableTestWalletDeposits", false))
+        {
+            return new ContentResult
+            {
+                StatusCode = StatusCodes.Status403Forbidden,
+                Content =
+                    "Direct wallet deposits are disabled. Set DemoAuth:EnableTestWalletDeposits to true in appsettings (non-production only).",
+                ContentType = "text/plain; charset=utf-8"
+            };
+        }
+
         var tx = await _walletService.DepositAsync(PlayerId, request.Amount, cancellationToken);
         return Ok(tx);
     }

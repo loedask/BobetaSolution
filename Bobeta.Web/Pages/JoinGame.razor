@@ -38,7 +38,7 @@
             }
             @if (ViewModel.OpenGames.Count == 0 && !ViewModel.IsLoading)
             {
-                <p class="text-sm text-muted-foreground py-4">No open games. Create one from the dashboard.</p>
+                <p class="text-sm text-muted-foreground py-4">No open games. <a href="/create-game" class="text-primary hover:underline">Create a game</a> to start.</p>
             }
         }
     </div>

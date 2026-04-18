@@ -21,6 +21,15 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
     protected IClient Client { get; } = client;
     protected HttpClient HttpClient { get; } = httpClient;
 
+    /// <summary>Resolves relative paths (e.g. <c>api/History/player</c>) against <see cref="HttpClient.BaseAddress"/> so WASM/browser handlers always target the API host.</summary>
+    private Uri ResolveRequestUri(string requestUri)
+    {
+        if (Uri.TryCreate(requestUri, UriKind.Absolute, out var absolute))
+            return absolute;
+        var baseUri = HttpClient.BaseAddress ?? throw new InvalidOperationException("HttpClient.BaseAddress is required for relative API paths.");
+        return new Uri(baseUri, requestUri);
+    }
+
     /// <summary>Attaches Authorization when an <see cref="IAccessTokenProvider"/> was supplied (Blazor WASM / hosts where delegating-handler token injection is unreliable).</summary>
     private async Task AttachBearerAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
@@ -35,7 +44,7 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
     {
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+            using var request = new HttpRequestMessage(HttpMethod.Get, ResolveRequestUri(requestUri));
             await AttachBearerAsync(request, cancellationToken).ConfigureAwait(false);
             using var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
@@ -53,7 +62,7 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
     {
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
+            using var request = new HttpRequestMessage(HttpMethod.Post, ResolveRequestUri(requestUri));
             if (body != null)
                 request.Content = JsonContent.Create(body, mediaType: null, options: JsonOptions);
             await AttachBearerAsync(request, cancellationToken).ConfigureAwait(false);
@@ -75,7 +84,7 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
     {
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Put, requestUri);
+            using var request = new HttpRequestMessage(HttpMethod.Put, ResolveRequestUri(requestUri));
             if (body != null)
                 request.Content = JsonContent.Create(body, mediaType: null, options: JsonOptions);
             await AttachBearerAsync(request, cancellationToken).ConfigureAwait(false);
@@ -97,7 +106,7 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
     {
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Delete, requestUri);
+            using var request = new HttpRequestMessage(HttpMethod.Delete, ResolveRequestUri(requestUri));
             await AttachBearerAsync(request, cancellationToken).ConfigureAwait(false);
             using var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)

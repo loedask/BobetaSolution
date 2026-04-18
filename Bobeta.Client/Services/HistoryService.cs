@@ -12,8 +12,13 @@ public class HistoryService(IClient client, HttpClient httpClient, IAccessTokenP
     {
         try
         {
-            var list = await Client.PlayerAsync(skip, take, cancellationToken).ConfigureAwait(false);
-            return Response<System.Collections.Generic.ICollection<GameHistoryItemDto>>.Success(list ?? new List<GameHistoryItemDto>());
+            var uri = $"api/History/player?skip={skip}&take={take}";
+            var getRes = await GetAsync<List<GameHistoryItemDto>>(uri, cancellationToken).ConfigureAwait(false);
+            if (!getRes.IsSuccess || getRes.Data == null)
+                return Response<System.Collections.Generic.ICollection<GameHistoryItemDto>>.Failure(
+                    getRes.ErrorMessage ?? "Failed to load game history.",
+                    getRes.StatusCode);
+            return Response<System.Collections.Generic.ICollection<GameHistoryItemDto>>.Success(getRes.Data);
         }
         catch (BaseApiException ex)
         {

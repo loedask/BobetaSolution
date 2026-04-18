@@ -33,7 +33,11 @@ public class DepositViewModel(WalletService walletService, AppStateService appSt
             var res = await _walletService.DepositAsync((double)value);
             if (res.IsSuccess)
             {
-                _appState.SetWalletBalance(_appState.State.WalletBalance + value, _appState.State.LockedBalance);
+                var bal = await _walletService.GetBalanceAsync();
+                if (bal.IsSuccess && bal.Data != null)
+                    _appState.SetWalletBalance(bal.Data.Balance, bal.Data.LockedBalance);
+                else
+                    _appState.SetWalletBalance(_appState.State.WalletBalance + value, _appState.State.LockedBalance);
                 await _appState.PersistAsync();
                 SuccessAmount = value;
                 Status = "success";

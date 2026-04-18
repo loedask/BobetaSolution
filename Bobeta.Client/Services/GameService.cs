@@ -17,8 +17,10 @@ public class GameService(IClient client, HttpClient httpClient, IAccessTokenProv
         try
         {
             var body = new CreateGameRequestDto { BetAmount = (double)request.BetAmount };
-            var dto = await Client.CreateAsync(body, cancellationToken).ConfigureAwait(false);
-            return Response<GameSessionViewModel?>.Success(MapSession(dto));
+            var postRes = await PostAsync<GameSessionDto>("api/Game/create", body, cancellationToken).ConfigureAwait(false);
+            if (!postRes.IsSuccess || postRes.Data == null)
+                return Response<GameSessionViewModel?>.Failure(postRes.ErrorMessage ?? "Failed to create game.", postRes.StatusCode);
+            return Response<GameSessionViewModel?>.Success(MapSession(postRes.Data));
         }
         catch (BaseApiException ex)
         {
@@ -31,8 +33,10 @@ public class GameService(IClient client, HttpClient httpClient, IAccessTokenProv
         try
         {
             var body = new JoinGameRequestDto { GameId = request.GameId };
-            var dto = await Client.JoinAsync(body, cancellationToken).ConfigureAwait(false);
-            return Response<GameSessionViewModel?>.Success(MapSession(dto));
+            var postRes = await PostAsync<GameSessionDto>("api/Game/join", body, cancellationToken).ConfigureAwait(false);
+            if (!postRes.IsSuccess || postRes.Data == null)
+                return Response<GameSessionViewModel?>.Failure(postRes.ErrorMessage ?? "Failed to join game.", postRes.StatusCode);
+            return Response<GameSessionViewModel?>.Success(MapSession(postRes.Data));
         }
         catch (BaseApiException ex)
         {

@@ -1,13 +1,21 @@
 @page "/deposit"
 @implements IDisposable
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @inject DepositViewModel ViewModel
 @inject I18nService I18n
+@inject IWebAssemblyHostEnvironment HostEnvironment
 
 <div class="min-h-screen bg-background pb-24">
     <AppHeader Title="@I18n.T("deposit")" ShowBack="true" BackHref="/dashboard" />
 
     <div class="space-y-6 px-5">
         <ErrorBanner Message="@ViewModel.ErrorMessage" />
+        @if (HostEnvironment.IsDevelopment())
+        {
+            <div class="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-100/90">
+                @I18n.T("dev_test_deposit_notice")
+            </div>
+        }
         <div class="card-surface rounded-2xl p-5">
             <div class="mb-1 flex items-center gap-2 text-sm text-muted-foreground">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>

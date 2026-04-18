@@ -34,8 +34,11 @@ public class WalletService(IClient client, HttpClient httpClient, IAccessTokenPr
     {
         try
         {
-            var dto = await Client.Deposit2Async(new DepositRequest { Amount = amount }, cancellationToken).ConfigureAwait(false);
-            return Response<WalletTransactionViewModel?>.Success(MapTransaction(dto));
+            var body = new DepositRequest { Amount = amount };
+            var postRes = await PostAsync<WalletTransactionDto>("api/Wallet/deposit", body, cancellationToken).ConfigureAwait(false);
+            if (!postRes.IsSuccess || postRes.Data == null)
+                return Response<WalletTransactionViewModel?>.Failure(postRes.ErrorMessage ?? "Deposit failed.", postRes.StatusCode);
+            return Response<WalletTransactionViewModel?>.Success(MapTransaction(postRes.Data));
         }
         catch (BaseApiException ex)
         {
@@ -47,8 +50,11 @@ public class WalletService(IClient client, HttpClient httpClient, IAccessTokenPr
     {
         try
         {
-            var dto = await Client.Withdraw2Async(new WithdrawRequest { Amount = amount }, cancellationToken).ConfigureAwait(false);
-            return Response<WalletTransactionViewModel?>.Success(MapTransaction(dto));
+            var body = new WithdrawRequest { Amount = amount };
+            var postRes = await PostAsync<WalletTransactionDto>("api/Wallet/withdraw", body, cancellationToken).ConfigureAwait(false);
+            if (!postRes.IsSuccess || postRes.Data == null)
+                return Response<WalletTransactionViewModel?>.Failure(postRes.ErrorMessage ?? "Withdraw failed.", postRes.StatusCode);
+            return Response<WalletTransactionViewModel?>.Success(MapTransaction(postRes.Data));
         }
         catch (BaseApiException ex)
         {

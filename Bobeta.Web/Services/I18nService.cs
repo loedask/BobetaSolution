@@ -121,10 +121,13 @@ public class I18nService(AppStateService appState)
             ["min_withdraw_msg"] = "Minimum withdrawal is",
             ["home"] = "Home",
             ["create"] = "Create",
+            ["loading"] = "Creating…",
+            ["bet_range_fcfa"] = "Stake must be between 200 and 500 FCFA.",
             ["language"] = "Language",
             ["confirm"] = "Confirm",
             ["not_found"] = "Oops! Page not found",
             ["return_home"] = "Return to Home",
+            ["dev_test_deposit_notice"] = "Development build: deposits are simulated test credits (no real MoMo). Use only with a non-production API where DemoAuth:EnableTestWalletDeposits is enabled.",
         };
 
         var fr = new Dictionary<string, string>(en)
@@ -148,6 +151,9 @@ public class I18nService(AppStateService appState)
             ["tx_bet_release"] = "Mise rendue",
             ["tx_winnings"] = "Gains",
             ["tx_commission"] = "Frais plateforme",
+            ["loading"] = "Création…",
+            ["bet_range_fcfa"] = "La mise doit être entre 200 et 500 FCFA.",
+            ["dev_test_deposit_notice"] = "Version de développement : les dépôts sont des crédits de test (pas de MoMo réel). À utiliser uniquement avec une API non production où DemoAuth:EnableTestWalletDeposits est activé.",
         };
 
         var kt = new Dictionary<string, string>(en);
