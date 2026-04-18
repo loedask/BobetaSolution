@@ -56,6 +56,8 @@ public static class MauiProgram
 #endif
 
         var apiBaseUrl = (builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7029").Trim();
+        // Paste/line-wrap errors can insert a space inside the host (DNS then fails with "No address associated with hostname").
+        apiBaseUrl = apiBaseUrl.Replace(" ", "").Replace("\u00A0", "");
 #if DEBUG && !ANDROID
         // appsettings.Development.json uses 10.0.2.2 for the Android emulator (host loopback alias).
         // On Windows, iOS simulator, and Mac Catalyst that address is wrong — use the actual machine loopback.

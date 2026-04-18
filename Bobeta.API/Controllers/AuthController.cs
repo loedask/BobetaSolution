@@ -17,6 +17,7 @@ public class AuthController(
     private readonly ILogger<AuthController> _logger = logger;
     private readonly IHostEnvironment _hostEnvironment = hostEnvironment;
 
+    /// <summary>Sends a one-time password (OTP) by SMS to the phone number for phone-based sign-in.</summary>
     [HttpPost("send-otp")]
     public async Task<IActionResult> SendOtp([FromBody] SendOtpRequest? request, CancellationToken cancellationToken)
     {
