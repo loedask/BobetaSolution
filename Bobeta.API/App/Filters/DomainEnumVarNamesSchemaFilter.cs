@@ -6,7 +6,7 @@ namespace Bobeta.API.App.Filters;
 
 /// <summary>
 /// Adds <c>x-enum-varnames</c> for Bobeta.Domain enums so NSwag generates readable C# enum members
-/// instead of <c>_0</c>, <c>_1</c>, … when the schema uses integer <c>enum</c>.
+/// instead of <c>_0</c>, <c>_1</c>, ... when the schema uses integer <c>enum</c>.
 /// </summary>
 public sealed class DomainEnumVarNamesSchemaFilter : ISchemaFilter
 {

@@ -22,7 +22,7 @@ public class GameHub : Hub
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupPrefix + sessionId);
     }
 
-    /// <summary>Notifies others in the session that a card was played (card string format "Suit_Rank").</summary>
+    /// <summary>Notifies others in the session that a card was played (card string format: Suit_Rank).</summary>
     public async Task PlayCard(Guid sessionId, string cardSuitRank)
     {
         await Clients.OthersInGroup(GroupPrefix + sessionId).SendAsync("NotifyOpponentMove", cardSuitRank);

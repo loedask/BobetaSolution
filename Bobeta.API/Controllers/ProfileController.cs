@@ -25,7 +25,6 @@ public class ProfileController(IPlayerRepository playerRepository) : ControllerB
     }
 
     /// <summary>Updates the player's preferred language.</summary>
-    /// <summary>Updates the player's preferred language.</summary>
     [HttpPatch("language")]
     public async Task<IActionResult> UpdateLanguage([FromBody] UpdateLanguageRequest request, CancellationToken cancellationToken)
     {

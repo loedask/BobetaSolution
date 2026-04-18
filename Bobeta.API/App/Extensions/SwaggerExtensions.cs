@@ -10,6 +10,8 @@ public static class SwaggerExtensions
 {
     private const string DocName = "v1";
     private const string DocTitle = "Bobeta API";
+    /// <summary>OpenAPI <c>info.version</c> (API release); keep a semantic-style string for strict Swagger UI / tooling.</summary>
+    private const string OpenApiApiVersion = "1.0.0";
 
     /// <summary>
     /// Adds Swagger Gen with Bearer security and optional XML comments.
@@ -18,7 +20,7 @@ public static class SwaggerExtensions
     {
         services.AddSwaggerGen(options =>
         {
-            options.SwaggerDoc(DocName, new OpenApiInfo { Title = DocTitle, Version = DocName });
+            options.SwaggerDoc(DocName, new OpenApiInfo { Title = DocTitle, Version = OpenApiApiVersion });
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",
@@ -53,7 +55,8 @@ public static class SwaggerExtensions
     public static WebApplication UseBobetaSwagger(this WebApplication app)
     {
         app.UseSwagger();
-        app.UseSwaggerUI(options => options.SwaggerEndpoint($"/swagger/{DocName}/swagger.json", $"{DocTitle} {DocName}"));
+        // Relative URL: avoids some reverse-proxy / base-path issues when fetching the spec (absolute "/swagger/..." can mis-resolve on Azure).
+        app.UseSwaggerUI(options => options.SwaggerEndpoint($"{DocName}/swagger.json", $"{DocTitle} {DocName}"));
         app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
         return app;
     }
