@@ -44,6 +44,17 @@
 		<AndroidIncludeDebugSymbols Condition="'$(Configuration)' == 'Debug'">true</AndroidIncludeDebugSymbols>
 	</PropertyGroup>
 
+	<!-- If you use http://127.0.0.1:5163 in appsettings.Development.json, this forwards emulator loopback to the PC (run API on localhost:5163). Ignored if adb/device missing. -->
+	<Target Name="BobetaAdbReverseLocalApi"
+			BeforeTargets="SignAndroidPackage"
+			Condition="'$(Configuration)' == 'Debug' AND $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' AND '$(BobetaSkipAdbReverse)' != 'true'">
+		<Exec Command="adb reverse tcp:5163 tcp:5163"
+			  IgnoreExitCode="true"
+			  ContinueOnError="true"
+			  StandardOutputImportance="low"
+			  StandardErrorImportance="low" />
+	</Target>
+
 	<Target Name="CopyAndroidApkFriendlyName"
 			AfterTargets="SignAndroidPackage"
 			Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' And Exists('$(ApkFileSigned)')">

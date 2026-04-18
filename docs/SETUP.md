@@ -57,19 +57,43 @@ To exercise Azure SignalR on your machine only, from **`Bobeta.API`**: `dotnet u
 
 The Blazor app will typically be available at **http://localhost:5034** or **https://localhost:7181** (see **`Bobeta.Web/Properties/launchSettings.json`** and the console).
 
-### Bobeta.Mobile — `ApiBaseUrl`
+### Bobeta.Mobile — `ApiBaseUrl` (pick one stable workflow)
 
 Configuration is merged at startup in this order (later wins):
 
 | File | When |
 |------|------|
-| **`appsettings.json`** | Always embedded; default **`ApiBaseUrl`** in the repo is the **Azure** (or other stable) API. |
-| **`appsettings.Development.json`** | **Debug** only. Defaults to **`http://10.0.2.2:5163`** for the **Android emulator** (HTTP avoids trusting the ASP.NET dev HTTPS cert on the device). **Debug Android** sets **`AndroidUsesCleartextTraffic`** so HTTP to the local API is allowed. For a **physical phone**, use your PC’s LAN IP (e.g. `http://192.168.1.10:5163`). For **Windows MAUI** on the same PC as the API, use **`https://localhost:7029`** (or `http://localhost:5163`). |
-| **`appsettings.Production.json`** | **Release** builds only; keep your store / stable **`ApiBaseUrl`** here (often same Azure host as the base file). |
+| **`appsettings.json`** | Always embedded; default **`ApiBaseUrl`** is your **published** API (Azure). |
+| **`appsettings.Development.json`** | **Debug** only. **Repo default matches Azure** (same URL as `appsettings.json`) so **Send code** works from the emulator **without** `adb`, firewall, or `10.0.2.2`. |
+| **`appsettings.Production.json`** | **Release** builds only; store / stable **`ApiBaseUrl`**. |
 
-- **Release** builds therefore keep **Azure** (or whatever you put in Production) without editing Development.
-- **Debug** builds default to **local API** via Development; switch back to a remote URL by temporarily changing **`appsettings.Development.json`** or building **Release** when the device cannot reach your PC.
-- If you still see **network unreachable** to `10.0.2.2`, confirm the API is running with the **`https`** (or **`http`**) profile, **Windows Firewall** allows **dotnet**/Kestrel on those ports, and you are on the **Google Android Emulator** (`10.0.2.2` does not apply the same way on every stack or on a physical device—use your LAN IP there).
+#### Option 1 — Default: **Debug mobile → published HTTPS API** (recommended)
+
+No emulator-to-PC networking. Rebuild **Debug** and run; **`appsettings.Development.json`** already points at App Service **HTTPS**.
+
+**Production note:** demo static OTP and seeded demo numbers only work when the API host is **Development** or **Staging**, not **Production**. If Azure is **Production**, use real SMS OTP (or temporarily point a staging slot / local API for demo flows).
+
+#### Option 2 — **Local API** from the Android emulator (`127.0.0.1` + `adb reverse`)
+
+`127.0.0.1` inside the emulator is **the emulator itself**, not your PC. It only reaches **Bobeta.API on your machine** if port **5163** is **reversed** to the host.
+
+1. In **`appsettings.Development.json`**, set **`ApiBaseUrl`** to **`http://127.0.0.1:5163`**.
+2. Start **Bobeta.API** on **`http://localhost:5163`**.
+3. With the emulator running, run **`.\scripts\adb-reverse-bobeta-api.ps1`** once (or `adb reverse tcp:5163 tcp:5163`). Debug Android builds also **try** this automatically before packaging (ignored if `adb` or device is missing).
+4. Rebuild/deploy **Bobeta.Mobile**.
+
+Cleartext to loopback / `10.0.2.2` is covered by **`Platforms/Android/.../network_security_config.xml`** and the manifest.
+
+**Do not** use `http://127.0.0.1:5163` without `adb reverse` — you will get **“Failed to connect to /127.0.0.1:5163”**.
+
+#### Option 3 — **Physical phone** on the same Wi‑Fi
+
+Use your PC’s **LAN IP**: `http://192.168.x.x:5163`. Add that host under **`domain-config`** in **`Platforms/Android/Resources/xml/network_security_config.xml`** if Android blocks cleartext to that IP. Allow the port in **Windows Firewall**.
+
+#### Other targets
+
+- **Windows MAUI** on the same PC as the API: **`https://localhost:7029`** or **`http://localhost:5163`** in Development (no `adb reverse`).
+- **Release** builds use Production JSON and stay on **HTTPS** to Azure (no cleartext to the host).
 
 PostgreSQL must be running for a local API; migrations run on startup only when **`ASPNETCORE_ENVIRONMENT`** is **Development** or **Staging** — otherwise a missing database can surface as **500** on send-otp.
 
