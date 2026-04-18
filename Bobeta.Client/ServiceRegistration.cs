@@ -15,7 +15,8 @@ public static class ServiceRegistration
     public const string HttpClientName = "Bobeta";
 
     /// <summary>
-    /// Registers the Bobeta API client: typed HttpClient (IClient), optional bearer token handler, AutoMapper, and feature services.
+    /// Registers the Bobeta API client: named HttpClient, NSwag <see cref="IClient"/>, optional bearer token handler, AutoMapper, and feature services.
+    /// Each feature service gets one <see cref="HttpClient"/> from the factory and the same instance backs <see cref="IClient"/> so NSwag calls and <see cref="BaseHttpService"/> helpers always share one pipeline (bearer, WASM fetch options, etc.).
     /// Configure the API base URL via <paramref name="configureHttpClient"/> (e.g. client.BaseAddress = new Uri(options.BaseUrl)).
     /// When <paramref name="useBearerToken"/> is true, register <see cref="Contracts.IAccessTokenProvider"/> in the host so requests include the bearer token.
     /// </summary>
@@ -31,7 +32,7 @@ public static class ServiceRegistration
             cfg.AddMaps(typeof(ServiceRegistration).Assembly);
         });
 
-        var httpClientBuilder = services.AddHttpClient<IClient, ApiClient>(HttpClientName, client =>
+        var httpClientBuilder = services.AddHttpClient(HttpClientName, client =>
         {
             configureHttpClient?.Invoke(client);
         });
@@ -45,25 +46,35 @@ public static class ServiceRegistration
             httpClientBuilder.AddHttpMessageHandler<BearerTokenHandler>();
         }
 
-        services.AddScoped<IGameService>(sp => new GameService(
-            sp.GetRequiredService<IClient>(),
-            sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName)));
+        services.AddScoped<IGameService>(sp =>
+        {
+            var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName);
+            return new GameService(new ApiClient(http), http);
+        });
 
-        services.AddScoped<WalletService>(sp => new WalletService(
-            sp.GetRequiredService<IClient>(),
-            sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName)));
+        services.AddScoped<WalletService>(sp =>
+        {
+            var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName);
+            return new WalletService(new ApiClient(http), http);
+        });
 
-        services.AddScoped<AuthService>(sp => new AuthService(
-            sp.GetRequiredService<IClient>(),
-            sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName)));
+        services.AddScoped<AuthService>(sp =>
+        {
+            var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName);
+            return new AuthService(new ApiClient(http), http);
+        });
 
-        services.AddScoped<GamePlayService>(sp => new GamePlayService(
-            sp.GetRequiredService<IClient>(),
-            sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName)));
+        services.AddScoped<GamePlayService>(sp =>
+        {
+            var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName);
+            return new GamePlayService(new ApiClient(http), http);
+        });
 
-        services.AddScoped<HistoryService>(sp => new HistoryService(
-            sp.GetRequiredService<IClient>(),
-            sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName)));
+        services.AddScoped<HistoryService>(sp =>
+        {
+            var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName);
+            return new HistoryService(new ApiClient(http), http);
+        });
 
         return services;
     }

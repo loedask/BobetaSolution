@@ -11,7 +11,11 @@ namespace Bobeta.Client.Services.Base;
 /// </summary>
 public abstract class BaseHttpService(IClient client, HttpClient httpClient)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true
+    };
 
     protected IClient Client { get; } = client;
     protected HttpClient HttpClient { get; } = httpClient;
