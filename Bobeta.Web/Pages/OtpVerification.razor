@@ -14,9 +14,15 @@
             @for (var i = 0; i < PhoneAuthConstants.OtpDigitLength; i++)
             {
                 var idx = i;
-                <input type="text" maxlength="1" value="@(ViewModel.Otp.Length > idx ? ViewModel.Otp[idx].ToString() : "")"
+                <input @key="idx"
+                       @ref="_otpInputs[idx]"
+                       type="text"
+                       maxlength="1"
+                       inputmode="numeric"
+                       autocomplete="@(idx == 0 ? "one-time-code" : "off")"
                        class="h-14 w-14 rounded-xl border border-border bg-card text-center font-display text-2xl font-bold text-foreground outline-none focus:border-primary transition-all"
-                       @oninput="e => ViewModel.UpdateOtp(idx, e.Value?.ToString() ?? string.Empty)" />
+                       value="@(ViewModel.Otp.Length > idx ? ViewModel.Otp[idx].ToString() : "")"
+                       @oninput="e => OnOtpInputAsync(idx, e)" />
             }
         </div>
         <PrimaryButton OnClick="Verify" Disabled="@(!ViewModel.CanVerify)" CssClass="w-full">
@@ -28,9 +34,24 @@
 </div>
 
 @code {
+    private readonly ElementReference[] _otpInputs = new ElementReference[PhoneAuthConstants.OtpDigitLength];
+
     protected override void OnInitialized() => ViewModel.StateChanged += OnStateChanged;
     public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
     private async Task Verify() => await ViewModel.VerifyAsync();
     private async Task Resend() => await ViewModel.ResendAsync();
+
+    private async Task OnOtpInputAsync(int index, ChangeEventArgs e)
+    {
+        var raw = e.Value?.ToString() ?? "";
+        ViewModel.UpdateOtp(index, raw);
+        await Task.Yield();
+
+        var hasDigit = raw.Trim().Length > 0;
+        if (hasDigit && index < PhoneAuthConstants.OtpDigitLength - 1)
+            await _otpInputs[index + 1].FocusAsync();
+        else if (!hasDigit && index > 0)
+            await _otpInputs[index - 1].FocusAsync();
+    }
 }
