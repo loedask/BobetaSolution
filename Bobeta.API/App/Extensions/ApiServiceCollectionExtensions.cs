@@ -47,6 +47,12 @@ public static class ApiServiceCollectionExtensions
                 };
                 options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
                 {
+                    OnAuthenticationFailed = ctx =>
+                    {
+                        var logger = ctx.HttpContext.RequestServices.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()?.CreateLogger("JwtBearer");
+                        logger?.LogWarning(ctx.Exception, "JWT rejected for {Method} {Path}", ctx.Request.Method, ctx.Request.Path);
+                        return Task.CompletedTask;
+                    },
                     OnMessageReceived = ctx =>
                     {
                         var accessToken = ctx.Request.Query["access_token"];

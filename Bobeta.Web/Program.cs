@@ -15,9 +15,6 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-var baseAddress = new Uri(builder.HostEnvironment.BaseAddress);
-builder.Services.AddScoped(_ => new HttpClient { BaseAddress = baseAddress });
-
 builder.Services.AddScoped<LocalStorageService>();
 builder.Services.AddScoped<AppStateService>();
 builder.Services.AddScoped<IAccessTokenProvider, WebAccessTokenProvider>();
@@ -36,11 +33,14 @@ builder.Services.AddScoped<ProfileViewModel>();
 builder.Services.AddScoped<GameHubClient>();
 builder.Services.AddScoped<GamePlayTestService>();
 
-var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? builder.HostEnvironment.BaseAddress;
+var apiBaseUrl = (builder.Configuration["ApiBaseUrl"] ?? builder.HostEnvironment.BaseAddress).TrimEnd('/');
+if (string.IsNullOrWhiteSpace(apiBaseUrl))
+    apiBaseUrl = builder.HostEnvironment.BaseAddress.TrimEnd('/');
+var apiBaseUri = new Uri(apiBaseUrl + "/", UriKind.Absolute);
 // WASM uses fetch(); GET responses can be cached without varying on Authorization, causing 401s after OTP login.
 builder.Services.AddTransient<WasmApiFetchOptionsHandler>();
 builder.Services.AddBobetaClient(
-    http => http.BaseAddress = new Uri(apiBaseUrl),
+    http => http.BaseAddress = apiBaseUri,
     useBearerToken: true,
     b => b.AddHttpMessageHandler<WasmApiFetchOptionsHandler>());
 

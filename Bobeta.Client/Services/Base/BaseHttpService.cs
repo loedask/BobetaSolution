@@ -27,7 +27,16 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
         if (Uri.TryCreate(requestUri, UriKind.Absolute, out var absolute))
             return absolute;
         var baseUri = HttpClient.BaseAddress ?? throw new InvalidOperationException("HttpClient.BaseAddress is required for relative API paths.");
+        // Relative Uri resolution is safest when the base URI ends with '/' (RFC 3986).
+        var normalizedBase = baseUri.AbsoluteUri.TrimEnd('/') + "/";
+        baseUri = new Uri(normalizedBase, UriKind.Absolute);
         return new Uri(baseUri, requestUri);
+    }
+
+    private static string WithCacheBuster(string requestUri, long ticks)
+    {
+        var sep = requestUri.Contains('?', StringComparison.Ordinal) ? '&' : '?';
+        return $"{requestUri}{sep}_={ticks}";
     }
 
     /// <summary>Attaches Authorization when an <see cref="IAccessTokenProvider"/> was supplied (Blazor WASM / hosts where delegating-handler token injection is unreliable).</summary>
@@ -47,6 +56,19 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
             using var request = new HttpRequestMessage(HttpMethod.Get, ResolveRequestUri(requestUri));
             await AttachBearerAsync(request, cancellationToken).ConfigureAwait(false);
             using var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                // Browser HTTP cache can return a stale 401 from a pre-login GET; retry once with a unique URL.
+                response.Dispose();
+                using var retry = new HttpRequestMessage(HttpMethod.Get, ResolveRequestUri(WithCacheBuster(requestUri, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())));
+                await AttachBearerAsync(retry, cancellationToken).ConfigureAwait(false);
+                using var response2 = await HttpClient.SendAsync(retry, cancellationToken).ConfigureAwait(false);
+                if (!response2.IsSuccessStatusCode)
+                    return await ToErrorResponseAsync<T>(response2, cancellationToken).ConfigureAwait(false);
+                var data2 = await response2.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken).ConfigureAwait(false);
+                return Response<T>.Success(data2!);
+            }
+
             if (!response.IsSuccessStatusCode)
                 return await ToErrorResponseAsync<T>(response, cancellationToken).ConfigureAwait(false);
             var data = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken).ConfigureAwait(false);

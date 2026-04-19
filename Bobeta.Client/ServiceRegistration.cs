@@ -38,14 +38,15 @@ public static class ServiceRegistration
             configureHttpClient?.Invoke(client);
         });
 
-        configureHttpClientBuilder?.Invoke(httpClientBuilder);
-
         if (useBearerToken)
         {
             // Transient is recommended for delegating handlers with IHttpClientFactory (avoids scoped lifetime issues outside web request scopes).
             services.AddTransient<BearerTokenHandler>();
             httpClientBuilder.AddHttpMessageHandler<BearerTokenHandler>();
         }
+
+        // Run after bearer: outer handler runs first on SendAsync (e.g. WASM no-store + cache-control before auth is applied).
+        configureHttpClientBuilder?.Invoke(httpClientBuilder);
 
         IAccessTokenProvider? TokenProvider(IServiceProvider sp) =>
             useBearerToken ? sp.GetRequiredService<IAccessTokenProvider>() : null;
