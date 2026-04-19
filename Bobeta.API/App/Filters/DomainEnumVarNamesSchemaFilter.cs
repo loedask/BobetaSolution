@@ -12,25 +12,32 @@ public sealed class DomainEnumVarNamesSchemaFilter : ISchemaFilter
 {
     public void Apply(OpenApiSchema schema, SchemaFilterContext context)
     {
-        if (!context.Type.IsEnum)
-            return;
+        try
+        {
+            if (!context.Type.IsEnum)
+                return;
 
-        if (context.Type.Namespace is null || !context.Type.Namespace.StartsWith("Bobeta.Domain", StringComparison.Ordinal))
-            return;
+            if (context.Type.Namespace is null || !context.Type.Namespace.StartsWith("Bobeta.Domain", StringComparison.Ordinal))
+                return;
 
-        if (schema.Type != "integer" || schema.Enum is null || schema.Enum.Count == 0)
-            return;
+            if (schema.Type != "integer" || schema.Enum is null || schema.Enum.Count == 0)
+                return;
 
-        var namesInValueOrder = Enum.GetValues(context.Type)
-            .Cast<object>()
-            .OrderBy(Convert.ToInt32)
-            .Select(v => Enum.GetName(context.Type, v)!)
-            .ToArray();
+            var namesInValueOrder = Enum.GetValues(context.Type)
+                .Cast<object>()
+                .OrderBy(static v => Convert.ToInt64(v))
+                .Select(v => Enum.GetName(context.Type, v)!)
+                .ToArray();
 
-        var arr = new OpenApiArray();
-        foreach (var name in namesInValueOrder)
-            arr.Add(new OpenApiString(name));
+            var arr = new OpenApiArray();
+            foreach (var name in namesInValueOrder)
+                arr.Add(new OpenApiString(name));
 
-        schema.Extensions["x-enum-varnames"] = arr;
+            schema.Extensions["x-enum-varnames"] = arr;
+        }
+        catch
+        {
+            // Avoid failing OpenAPI generation (Swagger UI would return 500 for /swagger/v1/swagger.json).
+        }
     }
 }

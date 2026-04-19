@@ -20,6 +20,8 @@ public static class SwaggerExtensions
     {
         services.AddSwaggerGen(options =>
         {
+            // Avoid Swashbuckle "Duplicate schema ids" when the same short name appears in different namespaces.
+            options.CustomSchemaIds(type => type.FullName!.Replace("+", ".", StringComparison.Ordinal));
             options.SwaggerDoc(DocName, new OpenApiInfo { Title = DocTitle, Version = OpenApiApiVersion });
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
