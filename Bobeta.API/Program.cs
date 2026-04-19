@@ -24,7 +24,8 @@ builder.Services.AddCors(options =>
             !string.IsNullOrEmpty(origin)
             && (origin.StartsWith("https://localhost:", StringComparison.OrdinalIgnoreCase)
                 || origin.StartsWith("http://localhost:", StringComparison.OrdinalIgnoreCase)
-                || origin.StartsWith("http://127.0.0.1:", StringComparison.OrdinalIgnoreCase)));
+                || origin.StartsWith("http://127.0.0.1:", StringComparison.OrdinalIgnoreCase)
+                || origin.EndsWith(".azurewebsites.net", StringComparison.OrdinalIgnoreCase)));
         policy.AllowAnyHeader();
         policy.AllowAnyMethod();
     });
