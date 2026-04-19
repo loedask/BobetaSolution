@@ -30,4 +30,18 @@
     <Content Remove="wwwroot\css\tailwind.input.css" />
   </ItemGroup>
 
+  <!-- Linux App Service serves the site root as /home/site/wwwroot (no IIS web.config rewrite).
+       Blazor publish puts static assets under publish/wwwroot/, so bare /manifest.webmanifest 404s unless
+       that folder alone is deployed — or we mirror the manifest at the publish root too. -->
+  <Target Name="MirrorPwaManifestToPublishRoot" AfterTargets="Publish">
+    <Copy SourceFiles="$(PublishDir)wwwroot\manifest.webmanifest"
+          DestinationFiles="$(PublishDir)manifest.webmanifest"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(PublishDir)wwwroot\manifest.webmanifest')" />
+    <Copy SourceFiles="$(PublishDir)wwwroot\manifest.webmanifest"
+          DestinationFiles="$(PublishDir)wwwroot\site.webmanifest"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(PublishDir)wwwroot\manifest.webmanifest')" />
+  </Target>
+
 </Project>

@@ -5,6 +5,7 @@ using Bobeta.Application.Common;
 
 // Build the web application and configure services.
 var builder = WebApplication.CreateBuilder(args);
+var configuredCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
 
 // Controllers with global validation filter (FluentValidation on request DTOs).
 builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>());
@@ -20,12 +21,17 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.SetIsOriginAllowed(static origin =>
-            !string.IsNullOrEmpty(origin)
-            && (origin.StartsWith("https://localhost:", StringComparison.OrdinalIgnoreCase)
-                || origin.StartsWith("http://localhost:", StringComparison.OrdinalIgnoreCase)
-                || origin.StartsWith("http://127.0.0.1:", StringComparison.OrdinalIgnoreCase)
-                || origin.EndsWith(".azurewebsites.net", StringComparison.OrdinalIgnoreCase)));
+        policy.SetIsOriginAllowed(origin =>
+        {
+            if (string.IsNullOrEmpty(origin)) return false;
+            if (configuredCorsOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase)) return true;
+            if (origin.StartsWith("https://localhost:", StringComparison.OrdinalIgnoreCase)) return true;
+            if (origin.StartsWith("http://localhost:", StringComparison.OrdinalIgnoreCase)) return true;
+            if (origin.StartsWith("http://127.0.0.1:", StringComparison.OrdinalIgnoreCase)) return true;
+            // Azure App Service (global + regional hosts like *.southafricanorth-01.azurewebsites.net).
+            return Uri.TryCreate(origin, UriKind.Absolute, out var uri)
+                && uri.Host.EndsWith(".azurewebsites.net", StringComparison.OrdinalIgnoreCase);
+        });
         policy.AllowAnyHeader();
         policy.AllowAnyMethod();
     });
@@ -33,8 +39,9 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-app.UseBobetaSwagger();
+// Must run early so OPTIONS preflight gets Access-Control-* headers before auth/endpoints (see browser CORS errors).
 app.UseCors();
+app.UseBobetaSwagger();
 // In Development the mobile app often uses http://localhost:5163. UseHttpsRedirection would 307 to https on
 // another port; HttpClient follows but drops the Authorization header, so wallet calls return 401 after login.
 if (!app.Environment.IsDevelopment())
