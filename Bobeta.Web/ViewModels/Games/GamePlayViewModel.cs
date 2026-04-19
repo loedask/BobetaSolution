@@ -64,6 +64,8 @@ public class GamePlayViewModel : ViewModelBase
             var res = await _gameService.GetGameStateAsync(sessionGuid);
             if (!res.IsSuccess || res.Data == null)
             {
+                if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
+                    return;
                 SetError(res.ErrorMessage ?? "Failed to load game.");
                 return;
             }
@@ -128,6 +130,8 @@ public class GamePlayViewModel : ViewModelBase
             var res = await _gamePlayService.PlayCardAsync(sessionGuid, request);
             if (!res.IsSuccess)
             {
+                if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
+                    return;
                 SetError(res.ErrorMessage ?? "Failed to play card.");
                 return;
             }

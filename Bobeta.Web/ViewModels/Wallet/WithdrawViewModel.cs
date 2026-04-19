@@ -33,6 +33,8 @@ public class WithdrawViewModel(WalletService walletService, AppStateService appS
             if (res.IsSuccess)
             {
                 var bal = await _walletService.GetBalanceAsync();
+                if (await _appState.HandleUnauthorizedAsync(bal.StatusCode, _nav))
+                    return;
                 if (bal.IsSuccess && bal.Data != null)
                     _appState.SetWalletBalance(bal.Data.Balance, bal.Data.LockedBalance);
                 else
@@ -45,7 +47,11 @@ public class WithdrawViewModel(WalletService walletService, AppStateService appS
                 _nav.NavigateTo("/dashboard");
             }
             else
+            {
+                if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
+                    return;
                 SetError(res.ErrorMessage ?? "Withdrawal failed.");
+            }
         }
         catch (Exception)
         {

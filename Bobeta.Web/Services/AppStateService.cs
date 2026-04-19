@@ -1,4 +1,5 @@
 using Bobeta.Web.State;
+using Microsoft.AspNetCore.Components;
 
 namespace Bobeta.Web.Services;
 
@@ -80,6 +81,23 @@ public class AppStateService(LocalStorageService storage)
     }
 
     public void ClearAuth() => ClearSession();
+
+    /// <summary>
+    /// When the API returns 401 (expired or invalid JWT, or session cleared server-side), clears local auth
+    /// and navigates to login instead of leaving the user on a half-broken screen.
+    /// </summary>
+    public async Task<bool> HandleUnauthorizedAsync(int? statusCode, NavigationManager navigation, CancellationToken ct = default)
+    {
+        if (statusCode != 401)
+            return false;
+
+        ClearSession();
+        State.WalletBalance = 0;
+        State.LockedBalance = 0;
+        await PersistAsync(ct).ConfigureAwait(false);
+        navigation.NavigateTo("/login", replace: true);
+        return true;
+    }
 
     private void RaiseStateChanged() => StateChanged?.Invoke();
 }

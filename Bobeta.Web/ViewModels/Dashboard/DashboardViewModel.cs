@@ -30,9 +30,15 @@ public class DashboardViewModel(WalletService walletService, AppStateService app
                 await _appState.PersistAsync();
             }
             else if (!balanceRes.IsSuccess)
+            {
+                if (await _appState.HandleUnauthorizedAsync(balanceRes.StatusCode, _nav))
+                    return;
                 SetError(balanceRes.ErrorMessage ?? "Failed to load balance.");
+            }
 
             var txRes = await _walletService.GetTransactionsAsync(0, 10);
+            if (!txRes.IsSuccess && await _appState.HandleUnauthorizedAsync(txRes.StatusCode, _nav))
+                return;
             if (txRes.IsSuccess && txRes.Data != null)
                 Transactions = txRes.Data.Select(t => new TransactionItemDto(
                     TransactionDescription(t.Type),

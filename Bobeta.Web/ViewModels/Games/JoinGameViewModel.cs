@@ -23,7 +23,11 @@ public class JoinGameViewModel(IGameService gameService, AppStateService appStat
             if (res.IsSuccess && res.Data != null)
                 OpenGames = res.Data.Where(x => x.OpponentPlayerId == null).ToList();
             else if (!res.IsSuccess)
+            {
+                if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
+                    return;
                 SetError(res.ErrorMessage ?? "Failed to load games.");
+            }
         }
         catch (Exception)
         {
@@ -49,7 +53,11 @@ public class JoinGameViewModel(IGameService gameService, AppStateService appStat
                 _nav.NavigateTo($"/game/{res.Data.Id}");
             }
             else
+            {
+                if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
+                    return;
                 SetError(res.ErrorMessage ?? "Failed to join game.");
+            }
         }
         catch (Exception)
         {

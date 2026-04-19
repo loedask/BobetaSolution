@@ -40,7 +40,11 @@ public class CreateGameViewModel(IGameService gameService, AppStateService appSt
                 _nav.NavigateTo($"/game/{res.Data.Id}");
             }
             else
+            {
+                if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
+                    return;
                 SetError(res.ErrorMessage ?? "Failed to create game.");
+            }
         }
         catch (Exception)
         {

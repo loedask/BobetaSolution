@@ -34,6 +34,8 @@ public class DepositViewModel(WalletService walletService, AppStateService appSt
             if (res.IsSuccess)
             {
                 var bal = await _walletService.GetBalanceAsync();
+                if (await _appState.HandleUnauthorizedAsync(bal.StatusCode, _nav))
+                    return;
                 if (bal.IsSuccess && bal.Data != null)
                     _appState.SetWalletBalance(bal.Data.Balance, bal.Data.LockedBalance);
                 else
@@ -46,7 +48,11 @@ public class DepositViewModel(WalletService walletService, AppStateService appSt
                 _nav.NavigateTo("/dashboard");
             }
             else
+            {
+                if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
+                    return;
                 SetError(res.ErrorMessage ?? "Deposit failed.");
+            }
         }
         catch (Exception)
         {

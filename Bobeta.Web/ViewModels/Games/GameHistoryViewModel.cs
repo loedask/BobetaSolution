@@ -1,11 +1,15 @@
 using Bobeta.Client.Services;
 using Bobeta.Client.Services.Base;
+using Bobeta.Web.Services;
+using Microsoft.AspNetCore.Components;
 
 namespace Bobeta.Web.ViewModels.Games;
 
-public class GameHistoryViewModel(HistoryService historyService) : ViewModelBase
+public class GameHistoryViewModel(HistoryService historyService, AppStateService appState, NavigationManager nav) : ViewModelBase
 {
     private readonly HistoryService _historyService = historyService;
+    private readonly AppStateService _appState = appState;
+    private readonly NavigationManager _nav = nav;
 
     public List<GameHistoryItemDto> Items { get; private set; } = new();
 
@@ -19,7 +23,11 @@ public class GameHistoryViewModel(HistoryService historyService) : ViewModelBase
             if (res.IsSuccess && res.Data != null)
                 Items = res.Data.ToList();
             else if (!res.IsSuccess)
+            {
+                if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
+                    return;
                 SetError(res.ErrorMessage ?? "Failed to load history.");
+            }
         }
         catch (Exception)
         {
