@@ -19,17 +19,31 @@ public class GameController(IGameSessionService gameSessionService) : Controller
     [HttpPost("create")]
     public async Task<ActionResult<GameSessionDto>> CreateGame([FromBody] CreateGameRequest request, CancellationToken cancellationToken)
     {
-        var session = await _gameSessionService.CreateGameAsync(PlayerId, request.BetAmount, cancellationToken);
-        return Ok(session);
+        try
+        {
+            var session = await _gameSessionService.CreateGameAsync(PlayerId, request.BetAmount, cancellationToken);
+            return Ok(session);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     /// <summary>Joins an existing waiting game by id.</summary>
     [HttpPost("join")]
     public async Task<ActionResult<GameSessionDto>> JoinGame([FromBody] JoinGameRequest request, CancellationToken cancellationToken)
     {
-        var session = await _gameSessionService.JoinGameAsync(PlayerId, request.GameId, cancellationToken);
-        if (session == null) return BadRequest("Game not available to join.");
-        return Ok(session);
+        try
+        {
+            var session = await _gameSessionService.JoinGameAsync(PlayerId, request.GameId, cancellationToken);
+            if (session == null) return BadRequest("Game not available to join.");
+            return Ok(session);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     /// <summary>Lists waiting games you can join (excludes games you created).</summary>

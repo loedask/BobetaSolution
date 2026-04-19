@@ -10,6 +10,8 @@ public class JoinGameViewModel(IGameService gameService, AppStateService appStat
     private readonly AppStateService _appState = appState;
     private readonly INavigationService _nav = nav;
 
+    private bool _joinBusy;
+
     public List<GameSessionViewModel> OpenGames { get; private set; } = new();
 
     public async Task LoadGamesAsync()
@@ -36,7 +38,8 @@ public class JoinGameViewModel(IGameService gameService, AppStateService appStat
 
     public async Task JoinGameAsync(Guid gameId)
     {
-        if (IsLoading) return;
+        if (_joinBusy) return;
+        _joinBusy = true;
         SetLoading(true);
         try
         {
@@ -56,6 +59,7 @@ public class JoinGameViewModel(IGameService gameService, AppStateService appStat
         }
         finally
         {
+            _joinBusy = false;
             SetLoading(false);
         }
     }
