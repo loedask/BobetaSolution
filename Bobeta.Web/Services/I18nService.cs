@@ -128,6 +128,10 @@ public class I18nService(AppStateService appState)
             ["create"] = "Create",
             ["loading"] = "Creating…",
             ["bet_range_fcfa"] = "Stake must be between 200 and 500 FCFA.",
+            ["pot_table"] = "Table pot",
+            ["pot_seats"] = "Head-to-head",
+            ["pot_activity_hint"] = "Activity lists only your seat (−{0} FCFA). This line is both stacks combined.",
+            ["pot_chip_title"] = "{0} FCFA from each player · 2 seats",
             ["language"] = "Language",
             ["confirm"] = "Confirm",
             ["not_found"] = "Oops! Page not found",
@@ -163,6 +167,10 @@ public class I18nService(AppStateService appState)
             ["tx_commission"] = "Frais plateforme",
             ["loading"] = "Création…",
             ["bet_range_fcfa"] = "La mise doit être entre 200 et 500 FCFA.",
+            ["pot_table"] = "Pot (table)",
+            ["pot_seats"] = "Duel",
+            ["pot_activity_hint"] = "L'activité n'affiche que votre place (−{0} FCFA). Ici = les deux piles réunies.",
+            ["pot_chip_title"] = "{0} FCFA par joueur · 2 places",
             ["dev_test_deposit_notice"] = "Version de développement : les dépôts sont des crédits de test (pas de MoMo réel). À utiliser uniquement avec une API non production où DemoAuth:EnableTestWalletDeposits est activé.",
         };
 

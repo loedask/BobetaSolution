@@ -29,7 +29,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
 
         var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
         Title = i18n.T("game");
-        PotTitle.Text = i18n.T("pot");
+        PotTableLabel.Text = i18n.T("pot_table");
+        PotSeatsLabel.Text = i18n.T("pot_seats");
         LastPlayTitle.Text = "Last played";
         ResultTitle.Text = "Game over";
         DoneBtn.Text = i18n.T("return_home");
@@ -68,6 +69,13 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
                 : i18n.T("opponent_turn");
         TurnLabel.TextColor = _vm.IsPlayerTurn ? Color.FromArgb("#2dd48e") : Color.FromArgb("#8a93a8");
         HandView.IsEnabled = _vm.IsPlayerTurn && !_vm.ShowGameResult;
+
+        var half = _vm.PotAmount > 0 ? _vm.PotAmount / 2m : 0m;
+        var halfStr = half.ToString("N0");
+        PotTotalLabel.Text = $"{_vm.PotAmount:N0} FCFA";
+        ChipLeftText.Text = halfStr;
+        ChipRightText.Text = halfStr;
+        PotHintLabel.Text = string.Format(i18n.T("pot_activity_hint"), halfStr);
     }
 
     private async void OnHandCardTapped(object? sender, TappedEventArgs e)

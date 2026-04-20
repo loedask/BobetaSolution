@@ -132,6 +132,10 @@ public class I18nService(AppStateService appState)
             ["return_home"] = "Return to Home",
             ["game"] = "Game",
             ["pot"] = "Pot",
+            ["pot_table"] = "Table pot",
+            ["pot_seats"] = "Head-to-head",
+            ["pot_activity_hint"] = "Activity lists only your seat (−{0} FCFA). This total is both stacks combined.",
+            ["pot_chip_title"] = "{0} FCFA from each player · 2 seats",
             ["your_turn"] = "Your turn",
             ["opponent_turn"] = "Opponent's turn",
             ["waiting_for_opponent"] = "Waiting for an opponent…",
@@ -165,6 +169,10 @@ public class I18nService(AppStateService appState)
             ["tx_bet_release"] = "Mise rendue",
             ["tx_winnings"] = "Gains",
             ["tx_commission"] = "Frais plateforme",
+            ["pot_table"] = "Pot (table)",
+            ["pot_seats"] = "Duel",
+            ["pot_activity_hint"] = "L'activité n'affiche que votre place (−{0} FCFA). Ici = les deux piles réunies.",
+            ["pot_chip_title"] = "{0} FCFA par joueur · 2 places",
         };
 
         var kt = new Dictionary<string, string>(en);

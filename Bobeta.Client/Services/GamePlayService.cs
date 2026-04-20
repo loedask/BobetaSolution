@@ -35,16 +35,14 @@ public class GamePlayService(IClient client, HttpClient httpClient, IAccessToken
                 Rank = (CardRank)request.Rank
             };
             var body = new PlayCardRequest { SessionId = sessionId, Card = card };
-            var dto = await Client.PlayCardAsync(body, cancellationToken).ConfigureAwait(false);
-            return Response<GameStateViewModel?>.Success(MapState(dto));
+            var res = await PostAsync<GameStateDto>("api/GamePlay/play-card", body, cancellationToken).ConfigureAwait(false);
+            if (!res.IsSuccess || res.Data == null)
+                return Response<GameStateViewModel?>.Failure(res.ErrorMessage ?? "Failed to play card.", res.StatusCode);
+            return Response<GameStateViewModel?>.Success(MapState(res.Data));
         }
         catch (FormatException ex)
         {
             return Response<GameStateViewModel?>.Failure(ex.Message, null);
-        }
-        catch (BaseApiException ex)
-        {
-            return Response<GameStateViewModel?>.Failure(ex.Message, ex.StatusCode);
         }
     }
 
