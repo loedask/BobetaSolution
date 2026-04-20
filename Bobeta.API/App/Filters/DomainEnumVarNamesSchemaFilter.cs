@@ -1,5 +1,5 @@
-using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Models;
+using System.Text.Json.Nodes;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Bobeta.API.App.Filters;
@@ -10,17 +10,20 @@ namespace Bobeta.API.App.Filters;
 /// </summary>
 public sealed class DomainEnumVarNamesSchemaFilter : ISchemaFilter
 {
-    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+    public void Apply(IOpenApiSchema schema, SchemaFilterContext context)
     {
         try
         {
+            if (schema is not OpenApiSchema openApiSchema)
+                return;
+
             if (!context.Type.IsEnum)
                 return;
 
             if (context.Type.Namespace is null || !context.Type.Namespace.StartsWith("Bobeta.Domain", StringComparison.Ordinal))
                 return;
 
-            if (schema.Type != "integer" || schema.Enum is null || schema.Enum.Count == 0)
+            if (openApiSchema.Type != JsonSchemaType.Integer || openApiSchema.Enum is null || openApiSchema.Enum.Count == 0)
                 return;
 
             var namesInValueOrder = Enum.GetValues(context.Type)
@@ -29,11 +32,11 @@ public sealed class DomainEnumVarNamesSchemaFilter : ISchemaFilter
                 .Select(v => Enum.GetName(context.Type, v)!)
                 .ToArray();
 
-            var arr = new OpenApiArray();
+            var arr = new JsonArray();
             foreach (var name in namesInValueOrder)
-                arr.Add(new OpenApiString(name));
+                arr.Add(name);
 
-            schema.Extensions["x-enum-varnames"] = arr;
+            openApiSchema.Extensions["x-enum-varnames"] = new JsonNodeExtension(arr);
         }
         catch
         {
