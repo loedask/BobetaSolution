@@ -38,7 +38,8 @@ public class GamePlayController(IGameEngineService gameEngineService, IHubContex
         var groupName = GameHub.GroupPrefix + request.SessionId;
         var cardSuitRank = $"{request.Card.Suit}_{(int)request.Card.Rank}";
 
-        await _hubContext.Clients.Group(groupName).SendAsync("NotifyOpponentMove", cardSuitRank);
+        // Include mover id so WASM/mobile clients can ignore their own play (IHubContext has no "caller" for OthersInGroup).
+        await _hubContext.Clients.Group(groupName).SendAsync("NotifyOpponentMove", PlayerId, cardSuitRank);
         await _hubContext.Clients.Group(groupName).SendAsync("GameState", state);
 
         if (state.GameOver)

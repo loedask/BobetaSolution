@@ -220,11 +220,13 @@ public class GamePlayViewModel : ViewModelBase
         RaiseStateChanged();
     }
 
-    private void ApplyOpponentMoveFromHub(string cardSuitRank)
+    private void ApplyOpponentMoveFromHub(Guid moverPlayerId, string cardSuitRank)
     {
+        if (moverPlayerId == _appState.State.CurrentPlayerId)
+            return;
         _aiTriggerCts?.Cancel();
         LastPlayedCard = ParseCard(cardSuitRank);
-        IsPlayerTurn = true;
+        // Turn / hand remain authoritative from GameState or the play-card HTTP response.
         RaiseStateChanged();
     }
 

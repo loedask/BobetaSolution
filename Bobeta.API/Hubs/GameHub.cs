@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -22,10 +23,18 @@ public class GameHub : Hub
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupPrefix + sessionId);
     }
 
-    /// <summary>Notifies others in the session that a card was played (card string format: Suit_Rank).</summary>
+    /// <summary>Notifies others in the session that a card was played (same payload shape as HTTP play-card).</summary>
     public async Task PlayCard(Guid sessionId, string cardSuitRank)
     {
-        await Clients.OthersInGroup(GroupPrefix + sessionId).SendAsync("NotifyOpponentMove", cardSuitRank);
+        var moverId = GetPlayerId(Context);
+        await Clients.OthersInGroup(GroupPrefix + sessionId).SendAsync("NotifyOpponentMove", moverId, cardSuitRank);
+    }
+
+    private static Guid GetPlayerId(HubCallerContext context)
+    {
+        var v = context.User?.FindFirst("playerId")?.Value
+            ?? context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return v == null ? throw new HubException("Missing player id.") : Guid.Parse(v);
     }
 
     /// <summary>Broadcasts the current game state to all connections in the session.</summary>

@@ -190,11 +190,12 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         RaiseStateChanged();
     }
 
-    private void ApplyOpponentMoveFromHub(string cardSuitRank)
+    private void ApplyOpponentMoveFromHub(Guid moverPlayerId, string cardSuitRank)
     {
+        if (moverPlayerId == _appState.State.CurrentPlayerId)
+            return;
         _aiTriggerCts?.Cancel();
         LastPlayedCard = ParseCard(cardSuitRank);
-        IsPlayerTurn = true;
         RaiseStateChanged();
     }
 

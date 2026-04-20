@@ -28,7 +28,7 @@ public class GameHubClient
     }
 
     public event Action<GameStateViewModel>? OnGameStateUpdated;
-    public event Action<string>? OnOpponentMove;
+    public event Action<Guid, string>? OnOpponentMove;
     public event Action<Guid?>? OnGameResult;
     public event Action<HubConnectionState>? OnConnectionStateChanged;
     public event Action? OnReconnected;
@@ -82,9 +82,9 @@ public class GameHubClient
             catch { /* ignore */ }
         });
 
-        _connection.On<string>("NotifyOpponentMove", cardSuitRank =>
+        _connection.On<Guid, string>("NotifyOpponentMove", (moverPlayerId, cardSuitRank) =>
         {
-            OnOpponentMove?.Invoke(cardSuitRank);
+            OnOpponentMove?.Invoke(moverPlayerId, cardSuitRank);
         });
 
         _connection.On<Guid?>("GameResult", winnerId =>

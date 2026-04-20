@@ -26,8 +26,8 @@ public class GameHubClient
     /// <summary>Fired when the server broadcasts full game state (e.g. after reconnect).</summary>
     public event Action<GameStateViewModel>? OnGameStateUpdated;
 
-    /// <summary>Fired when the opponent plays a card (card string e.g. "Heart_2").</summary>
-    public event Action<string>? OnOpponentMove;
+    /// <summary>Fired when another player plays a card (mover id + card string e.g. "Heart_2").</summary>
+    public event Action<Guid, string>? OnOpponentMove;
 
     /// <summary>Fired when the game ends (winner player id).</summary>
     public event Action<Guid?>? OnGameResult;
@@ -84,9 +84,9 @@ public class GameHubClient
             catch { /* ignore */ }
         });
 
-        _connection.On<string>("NotifyOpponentMove", cardSuitRank =>
+        _connection.On<Guid, string>("NotifyOpponentMove", (moverPlayerId, cardSuitRank) =>
         {
-            OnOpponentMove?.Invoke(cardSuitRank);
+            OnOpponentMove?.Invoke(moverPlayerId, cardSuitRank);
         });
 
         _connection.On<Guid?>("GameResult", winnerId =>
