@@ -36,6 +36,9 @@ public sealed class DomainEnumVarNamesSchemaFilter : ISchemaFilter
             foreach (var name in namesInValueOrder)
                 arr.Add(name);
 
+            if (openApiSchema.Extensions is null)
+                return;
+
             openApiSchema.Extensions["x-enum-varnames"] = new JsonNodeExtension(arr);
         }
         catch
