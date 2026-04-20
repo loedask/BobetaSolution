@@ -39,8 +39,6 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
     public CardViewModel? LastPlayedCard { get; private set; }
 
-    public string LastPlayedDisplay => LastPlayedCard?.DisplayValue ?? "—";
-
     public string? WinnerPlayerName { get; private set; }
     public bool ShowGameResult { get; private set; }
 

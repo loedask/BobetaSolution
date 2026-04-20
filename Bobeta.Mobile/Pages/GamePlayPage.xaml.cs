@@ -70,9 +70,10 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         HandView.IsEnabled = _vm.IsPlayerTurn && !_vm.ShowGameResult;
     }
 
-    private async void OnPlayCard(object? sender, EventArgs e)
+    private async void OnHandCardTapped(object? sender, TappedEventArgs e)
     {
-        if (_vm == null || sender is not Button { BindingContext: CardViewModel card }) return;
+        if (_vm == null || !_vm.IsPlayerTurn || _vm.ShowGameResult) return;
+        if (sender is not Border { BindingContext: CardViewModel card }) return;
         await _vm.PlayCardAsync(card);
     }
 

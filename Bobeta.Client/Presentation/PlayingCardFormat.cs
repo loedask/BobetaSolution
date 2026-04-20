@@ -1,18 +1,13 @@
-using Bobeta.Web.ViewModels.Games;
+namespace Bobeta.Client.Presentation;
 
-namespace Bobeta.Web.Components.Game;
-
-/// <summary>Maps API card strings (e.g. <c>Spade_3</c>, <c>Heart_14</c>) to display labels and suit symbols for the UI.</summary>
+/// <summary>Maps API card suit/rank (e.g. <c>Spade</c> + <c>3</c>, or numeric suit <c>0</c>–<c>3</c>) for UI labels.</summary>
 public static class PlayingCardFormat
 {
     /// <summary>Returns rank corner label, center suit symbol, and whether the suit uses red ink.</summary>
-    public static (string RankLabel, string SuitSymbol, bool IsRed) Resolve(CardViewModel? card)
+    public static (string RankLabel, string SuitSymbol, bool IsRed) Resolve(string? suit, string? rank)
     {
-        if (card == null)
-            return ("?", "?", false);
-
-        var symbol = SuitSymbol(card.Suit, out var isRed);
-        return (RankLabel(card.Rank), symbol, isRed);
+        var symbol = SuitSymbol(suit, out var isRed);
+        return (RankLabel(rank ?? ""), symbol, isRed);
     }
 
     public static string RankLabel(string rank)
@@ -32,7 +27,7 @@ public static class PlayingCardFormat
         return string.IsNullOrEmpty(rank) ? "?" : rank.Trim();
     }
 
-    public static string SuitSymbol(string suit, out bool isRed)
+    public static string SuitSymbol(string? suit, out bool isRed)
     {
         isRed = false;
         if (string.IsNullOrWhiteSpace(suit))

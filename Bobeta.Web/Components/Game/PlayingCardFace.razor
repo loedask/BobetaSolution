@@ -1,7 +1,7 @@
 @* Shared face layout for hand cards and board (no click/drag). *@
 @if (Card != null)
 {
-    var (rank, suit, red) = PlayingCardFormat.Resolve(Card);
+    var (rank, suit, red) = PlayingCardFormat.Resolve(Card.Suit, Card.Rank);
     <div class="playing-card-face @CssClass @(red ? "playing-card-face--red" : "playing-card-face--black")">
         <div class="playing-card-face__corner playing-card-face__corner-tl">
             <span class="playing-card-face__rank">@rank</span>
