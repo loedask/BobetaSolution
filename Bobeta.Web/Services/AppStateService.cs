@@ -95,7 +95,7 @@ public class AppStateService(LocalStorageService storage)
 
         ClearSession();
         await PersistAsync(ct).ConfigureAwait(false);
-        navigation.NavigateTo("/login", replace: true);
+        navigation.NavigateTo("/login?reason=session-expired", replace: true);
         return true;
     }
 

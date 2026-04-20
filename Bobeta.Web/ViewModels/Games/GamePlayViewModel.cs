@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Bobeta.Client.Contracts.Interfaces;
 using Bobeta.Client.Models.Games;
+using Bobeta.Client.Utilities;
 using Bobeta.Web.Services;
 using Bobeta.Web.Services.Realtime;
 using Bobeta.Client.Services;
@@ -117,6 +118,13 @@ public class GamePlayViewModel : ViewModelBase
     {
         if (IsLoading || !IsPlayerTurn || string.IsNullOrEmpty(SessionId)) return;
         if (!Guid.TryParse(SessionId, out var sessionGuid)) return;
+
+        if (string.IsNullOrWhiteSpace(_appState.State.AccessToken) ||
+            JwtPayloadReader.IsExpired(_appState.State.AccessToken, DateTimeOffset.UtcNow))
+        {
+            await _appState.HandleUnauthorizedAsync(401, _nav);
+            return;
+        }
 
         SetLoading(true);
         ClearError();

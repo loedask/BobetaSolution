@@ -89,6 +89,22 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
                 request.Content = JsonContent.Create(body, mediaType: null, options: JsonOptions);
             await AttachBearerAsync(request, cancellationToken).ConfigureAwait(false);
             using var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                response.Dispose();
+                using var retry = new HttpRequestMessage(HttpMethod.Post, ResolveRequestUri(WithCacheBuster(requestUri, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())));
+                if (body != null)
+                    retry.Content = JsonContent.Create(body, mediaType: null, options: JsonOptions);
+                await AttachBearerAsync(retry, cancellationToken).ConfigureAwait(false);
+                using var response2 = await HttpClient.SendAsync(retry, cancellationToken).ConfigureAwait(false);
+                if (!response2.IsSuccessStatusCode)
+                    return await ToErrorResponseAsync<T>(response2, cancellationToken).ConfigureAwait(false);
+                var data2 = response2.StatusCode == HttpStatusCode.NoContent
+                    ? default
+                    : await response2.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken).ConfigureAwait(false);
+                return Response<T>.Success(data2!);
+            }
+
             if (!response.IsSuccessStatusCode)
                 return await ToErrorResponseAsync<T>(response, cancellationToken).ConfigureAwait(false);
             var data = response.StatusCode == HttpStatusCode.NoContent
@@ -111,6 +127,22 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
                 request.Content = JsonContent.Create(body, mediaType: null, options: JsonOptions);
             await AttachBearerAsync(request, cancellationToken).ConfigureAwait(false);
             using var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                response.Dispose();
+                using var retry = new HttpRequestMessage(HttpMethod.Put, ResolveRequestUri(WithCacheBuster(requestUri, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())));
+                if (body != null)
+                    retry.Content = JsonContent.Create(body, mediaType: null, options: JsonOptions);
+                await AttachBearerAsync(retry, cancellationToken).ConfigureAwait(false);
+                using var response2 = await HttpClient.SendAsync(retry, cancellationToken).ConfigureAwait(false);
+                if (!response2.IsSuccessStatusCode)
+                    return await ToErrorResponseAsync<T>(response2, cancellationToken).ConfigureAwait(false);
+                var data2 = response2.StatusCode == HttpStatusCode.NoContent
+                    ? default
+                    : await response2.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken).ConfigureAwait(false);
+                return Response<T>.Success(data2!);
+            }
+
             if (!response.IsSuccessStatusCode)
                 return await ToErrorResponseAsync<T>(response, cancellationToken).ConfigureAwait(false);
             var data = response.StatusCode == HttpStatusCode.NoContent
