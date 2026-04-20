@@ -21,3 +21,5 @@ Bobeta.Web/obj/
 Bobeta.Mobile/obj/
 Bobeta.Mobile/bin/
 Bobeta.Web/node_modules/
+Bobeta.Web/publish-out/
+Bobeta.Web/publish-out2/

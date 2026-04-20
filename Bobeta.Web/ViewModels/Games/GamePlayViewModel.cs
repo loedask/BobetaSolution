@@ -193,7 +193,7 @@ public class GamePlayViewModel : ViewModelBase
             Suit = suit,
             Rank = rank,
             DisplayValue = value,
-            CssClass = "rounded-lg border border-border bg-card p-2 text-foreground"
+            CssClass = ""
         };
     }
 

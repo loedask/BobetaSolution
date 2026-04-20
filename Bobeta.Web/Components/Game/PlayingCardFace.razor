@@ -1,0 +1,22 @@
+@* Shared face layout for hand cards and board (no click/drag). *@
+@if (Card != null)
+{
+    var (rank, suit, red) = PlayingCardFormat.Resolve(Card);
+    <div class="playing-card-face @CssClass @(red ? "playing-card-face--red" : "playing-card-face--black")">
+        <div class="playing-card-face__corner playing-card-face__corner-tl">
+            <span class="playing-card-face__rank">@rank</span>
+            <span class="playing-card-face__suit-sm" aria-hidden="true">@suit</span>
+        </div>
+        <div class="playing-card-face__center" aria-hidden="true">@suit</div>
+        <div class="playing-card-face__corner playing-card-face__corner-br">
+            <span class="playing-card-face__rank">@rank</span>
+            <span class="playing-card-face__suit-sm" aria-hidden="true">@suit</span>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public CardViewModel? Card { get; set; }
+    /// <summary>Extra classes on the outer face (e.g. size variant).</summary>
+    [Parameter] public string? CssClass { get; set; }
+}

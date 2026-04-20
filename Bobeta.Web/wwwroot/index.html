@@ -12,26 +12,8 @@
     <link rel="stylesheet" href="css/tailwind.css" />
     <!-- If you add any scoped CSS files, uncomment the following to load them
     <link href="Bobeta.Web.styles.css" rel="stylesheet" /> -->
-    <!-- Manifest path varies when Azure deploy uses publish root vs publish/wwwroot contents only; probe common URLs. -->
-    <script>
-        (function () {
-            var paths = ['/manifest.webmanifest', '/wwwroot/manifest.webmanifest'];
-            function tryNext(i) {
-                if (i >= paths.length) return;
-                var p = paths[i];
-                var url = location.origin + p;
-                fetch(url, { method: 'GET', cache: 'no-store' }).then(function (r) {
-                    if (r.ok) {
-                        var lnk = document.createElement('link');
-                        lnk.rel = 'manifest';
-                        lnk.href = p;
-                        document.head.appendChild(lnk);
-                    } else tryNext(i + 1);
-                }).catch(function () { tryNext(i + 1); });
-            }
-            tryNext(0);
-        })();
-    </script>
+    <!-- Root-absolute path: works for any client route when <base href="/" /> is set. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
     <script type="importmap"></script>
@@ -54,7 +36,7 @@
     <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
     <script>
         if (!location.hostname.includes('localhost') && !location.hostname.startsWith('127.'))
-            navigator.serviceWorker.register('service-worker.js?v=3', { updateViaCache: 'none' });
+            navigator.serviceWorker.register('service-worker.js?v=4', { updateViaCache: 'none' });
     </script>
 </body>
 

@@ -49,6 +49,6 @@
     protected override async Task OnInitializedAsync() => await ViewModel.LoadGamesAsync();
     public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
-    private async Task LoadGames() => await ViewModel.LoadGamesAsync();
+    private async Task LoadGames() => await ViewModel.LoadGamesAsync(forceRefresh: true);
     private async Task DoJoin(Guid gameId) => await ViewModel.JoinGameAsync(gameId);
 }

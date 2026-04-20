@@ -6,8 +6,8 @@
      @ondrop:preventDefault>
     @if (LastPlayedCard != null)
     {
-        <div class="rounded-lg border border-primary/50 bg-card-surface px-4 py-3 card-play-animation">
-            <span class="font-display text-lg font-bold text-foreground">@LastPlayedCard.DisplayValue</span>
+        <div class="playing-card playing-card--board rounded-xl border-2 border-primary/60 bg-card-surface/80 p-1 shadow-lg card-play-animation">
+            <PlayingCardFace Card="@LastPlayedCard" CssClass="playing-card-face--lg" />
         </div>
     }
     else

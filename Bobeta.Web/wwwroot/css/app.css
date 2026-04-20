@@ -145,6 +145,136 @@ code { color: #c02d76; }
   cursor: grab;
 }
 
+/* Playing cards (Makopa) — cream face, rank corners, Unicode suits; red hearts/diamonds */
+.playing-card-face {
+  position: relative;
+  aspect-ratio: 5 / 7;
+  width: 100%;
+  min-height: 3.75rem;
+  border-radius: 0.45rem;
+  background: linear-gradient(165deg, #fdfcfa 0%, #f3eee6 42%, #e9e3da 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.12);
+  font-family: Georgia, "Times New Roman", Times, serif;
+  overflow: hidden;
+}
+
+.playing-card-face--lg {
+  min-height: 5.5rem;
+}
+
+.playing-card-face--red .playing-card-face__rank,
+.playing-card-face--red .playing-card-face__suit-sm,
+.playing-card-face--red .playing-card-face__center {
+  color: #b91c1c;
+}
+
+.playing-card-face--black .playing-card-face__rank,
+.playing-card-face--black .playing-card-face__suit-sm,
+.playing-card-face--black .playing-card-face__center {
+  color: #0f172a;
+}
+
+.playing-card-face__corner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  z-index: 2;
+}
+
+.playing-card-face__corner-tl {
+  top: 0.2rem;
+  left: 0.28rem;
+}
+
+.playing-card-face__corner-br {
+  bottom: 0.2rem;
+  right: 0.28rem;
+  transform: rotate(180deg);
+}
+
+.playing-card-face__rank {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.playing-card-face__suit-sm {
+  font-size: 0.52rem;
+  margin-top: 0.06rem;
+  line-height: 1;
+}
+
+.playing-card-face__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.65rem;
+  line-height: 1;
+  z-index: 1;
+  opacity: 0.92;
+}
+
+.playing-card-face--lg .playing-card-face__center {
+  font-size: 2.15rem;
+}
+
+.playing-card-face--lg .playing-card-face__rank {
+  font-size: 0.85rem;
+}
+
+.playing-card-face--lg .playing-card-face__suit-sm {
+  font-size: 0.62rem;
+}
+
+button.playing-card.playing-card--btn {
+  display: inline-flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 0.18rem;
+  width: 3.5rem;
+  min-width: 3.5rem;
+  border-radius: 0.55rem;
+  border: 1px solid hsl(var(--border));
+  background: linear-gradient(180deg, hsl(var(--muted) / 0.55), hsl(var(--card)));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+button.playing-card.playing-card--btn:hover:not(:disabled) {
+  border-color: hsl(var(--primary) / 0.55);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+button.playing-card.playing-card--btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.playing-card--board {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+}
+
+.playing-card-back {
+  background:
+    repeating-linear-gradient(
+      125deg,
+      hsl(var(--secondary)) 0px,
+      hsl(var(--secondary)) 3px,
+      hsl(var(--muted)) 3px,
+      hsl(var(--muted)) 6px
+    );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
 /* Win celebration */
 @keyframes win-pulse {
   0%, 100% { box-shadow: 0 0 40px 20px hsl(45 90% 55% / 0.3); transform: scale(1); }
