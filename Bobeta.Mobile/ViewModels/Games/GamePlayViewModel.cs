@@ -1,5 +1,6 @@
 using Bobeta.Client.Contracts.Interfaces;
 using Bobeta.Client.Models.Games;
+using Bobeta.Client.Presentation;
 using Bobeta.Client.Services;
 using Bobeta.Mobile.Services;
 using Bobeta.Mobile.Services.Realtime;
@@ -13,18 +14,21 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     private readonly AppStateService _appState;
     private readonly GameHubClient? _hubClient;
     private readonly GamePlayTestService? _testService;
+    private readonly I18nService _i18n;
     private CancellationTokenSource? _aiTriggerCts;
 
     public GamePlayViewModel(
         GamePlayService gamePlayService,
         IGameService gameService,
         AppStateService appState,
+        I18nService i18n,
         GameHubClient? hubClient = null,
         GamePlayTestService? testService = null)
     {
         _gamePlayService = gamePlayService;
         _gameService = gameService;
         _appState = appState;
+        _i18n = i18n;
         _hubClient = hubClient;
         _testService = testService;
     }
@@ -78,6 +82,8 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             else
                 ShowGameResult = false;
 
+            RefreshHandPlayability();
+
             if (_hubClient != null)
             {
                 await _hubClient.ConnectAsync(sessionId);
@@ -112,6 +118,14 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         if (IsLoading || !IsPlayerTurn || string.IsNullOrEmpty(SessionId)) return;
         if (!Guid.TryParse(SessionId, out var sessionGuid)) return;
 
+        var handStr = PlayerCards.Select(c => c.DisplayValue).ToList();
+        if (MakopaFollowSuit.RulesApply(IsPlayerTurn, WaitingForOpponent, ShowGameResult) &&
+            !MakopaFollowSuit.IsLegalPlay(card.DisplayValue, LastPlayedCard?.DisplayValue, handStr))
+        {
+            SetError(_i18n.T("invalid_move_follow_suit"));
+            return;
+        }
+
         SetLoading(true);
         ClearError();
         try
@@ -124,7 +138,10 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             var res = await _gamePlayService.PlayCardAsync(sessionGuid, request);
             if (!res.IsSuccess)
             {
-                SetError(res.ErrorMessage ?? "Failed to play card.");
+                if (res.StatusCode == 400)
+                    SetError(_i18n.T("invalid_move_follow_suit"));
+                else
+                    SetError(res.ErrorMessage ?? "Failed to play card.");
                 return;
             }
 
@@ -140,6 +157,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
                     HandleGameResult(res.Data.WinnerPlayerId);
             }
 
+            RefreshHandPlayability();
             RaiseStateChanged();
         }
         catch (Exception)
@@ -156,6 +174,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     {
         ShowGameResult = true;
         WinnerPlayerName = winnerPlayerId == _appState.State.CurrentPlayerId ? "You" : "Opponent";
+        RefreshHandPlayability();
         RaiseStateChanged();
     }
 
@@ -187,6 +206,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             HandleGameResult(state.WinnerPlayerId);
         else
             ShowGameResult = false;
+        RefreshHandPlayability();
         RaiseStateChanged();
     }
 
@@ -196,7 +216,17 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             return;
         _aiTriggerCts?.Cancel();
         LastPlayedCard = ParseCard(cardSuitRank);
+        RefreshHandPlayability();
         RaiseStateChanged();
+    }
+
+    private void RefreshHandPlayability()
+    {
+        var rules = MakopaFollowSuit.RulesApply(IsPlayerTurn, WaitingForOpponent, ShowGameResult);
+        var last = LastPlayedCard?.DisplayValue;
+        var hand = PlayerCards.Select(c => c.DisplayValue).ToList();
+        foreach (var c in PlayerCards)
+            c.IsPlayable = !rules || MakopaFollowSuit.IsLegalPlay(c.DisplayValue, last, hand);
     }
 
     private void ApplyGameResultFromHub(Guid? winnerPlayerId) => HandleGameResult(winnerPlayerId);

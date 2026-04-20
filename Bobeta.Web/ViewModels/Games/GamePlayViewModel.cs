@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Bobeta.Client.Contracts.Interfaces;
 using Bobeta.Client.Models.Games;
+using Bobeta.Client.Presentation;
 using Bobeta.Client.Utilities;
 using Bobeta.Web.Services;
 using Bobeta.Web.Services.Realtime;
@@ -16,6 +17,7 @@ public class GamePlayViewModel : ViewModelBase
     private readonly NavigationManager _nav;
     private readonly GameHubClient? _hubClient;
     private readonly GamePlayTestService? _testService;
+    private readonly I18nService? _i18n;
     private CancellationTokenSource? _aiTriggerCts;
 
     public GamePlayViewModel(
@@ -24,7 +26,8 @@ public class GamePlayViewModel : ViewModelBase
         AppStateService appState,
         NavigationManager nav,
         GameHubClient? hubClient = null,
-        GamePlayTestService? testService = null)
+        GamePlayTestService? testService = null,
+        I18nService? i18n = null)
     {
         _gamePlayService = gamePlayService;
         _gameService = gameService;
@@ -32,6 +35,7 @@ public class GamePlayViewModel : ViewModelBase
         _nav = nav;
         _hubClient = hubClient;
         _testService = testService;
+        _i18n = i18n;
     }
 
     public string SessionId { get; private set; } = "";
@@ -85,6 +89,8 @@ public class GamePlayViewModel : ViewModelBase
             else
                 ShowGameResult = false;
 
+            RefreshHandPlayability();
+
             if (_hubClient != null)
             {
                 await _hubClient.ConnectAsync(sessionId);
@@ -126,6 +132,14 @@ public class GamePlayViewModel : ViewModelBase
             return;
         }
 
+        var handStr = PlayerCards.Select(c => c.DisplayValue).ToList();
+        if (MakopaFollowSuit.RulesApply(IsPlayerTurn, WaitingForOpponent, ShowGameResult) &&
+            !MakopaFollowSuit.IsLegalPlay(card.DisplayValue, LastPlayedCard?.DisplayValue, handStr))
+        {
+            SetError(_i18n?.T("invalid_move_follow_suit") ?? "You must follow the led suit when you can.");
+            return;
+        }
+
         SetLoading(true);
         ClearError();
         try
@@ -140,7 +154,10 @@ public class GamePlayViewModel : ViewModelBase
             {
                 if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
                     return;
-                SetError(res.ErrorMessage ?? "Failed to play card.");
+                if (res.StatusCode == 400)
+                    SetError(_i18n?.T("invalid_move_follow_suit") ?? res.ErrorMessage ?? "Invalid move.");
+                else
+                    SetError(res.ErrorMessage ?? "Failed to play card.");
                 return;
             }
 
@@ -156,6 +173,7 @@ public class GamePlayViewModel : ViewModelBase
                     HandleGameResult(res.Data.WinnerPlayerId);
             }
 
+            RefreshHandPlayability();
             RaiseStateChanged();
         }
         catch (Exception)
@@ -176,6 +194,7 @@ public class GamePlayViewModel : ViewModelBase
             LastPlayedCard = ParseCard(lastPlayedCard);
         if (gameOver)
             HandleGameResult(winnerPlayerId);
+        RefreshHandPlayability();
         RaiseStateChanged();
     }
 
@@ -183,6 +202,7 @@ public class GamePlayViewModel : ViewModelBase
     {
         ShowGameResult = true;
         WinnerPlayerName = winnerPlayerId == _appState.State.CurrentPlayerId ? "You" : "Opponent";
+        RefreshHandPlayability();
         RaiseStateChanged();
     }
 
@@ -217,6 +237,7 @@ public class GamePlayViewModel : ViewModelBase
             HandleGameResult(state.WinnerPlayerId);
         else
             ShowGameResult = false;
+        RefreshHandPlayability();
         RaiseStateChanged();
     }
 
@@ -227,7 +248,17 @@ public class GamePlayViewModel : ViewModelBase
         _aiTriggerCts?.Cancel();
         LastPlayedCard = ParseCard(cardSuitRank);
         // Turn / hand remain authoritative from GameState or the play-card HTTP response.
+        RefreshHandPlayability();
         RaiseStateChanged();
+    }
+
+    private void RefreshHandPlayability()
+    {
+        var rules = MakopaFollowSuit.RulesApply(IsPlayerTurn, WaitingForOpponent, ShowGameResult);
+        var last = LastPlayedCard?.DisplayValue;
+        var hand = PlayerCards.Select(c => c.DisplayValue).ToList();
+        foreach (var c in PlayerCards)
+            c.IsPlayable = !rules || MakopaFollowSuit.IsLegalPlay(c.DisplayValue, last, hand);
     }
 
     private void ApplyGameResultFromHub(Guid? winnerPlayerId)

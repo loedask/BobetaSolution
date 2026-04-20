@@ -138,6 +138,7 @@ public class I18nService(AppStateService appState)
             ["pot_chip_title"] = "{0} FCFA from each player · 2 seats",
             ["your_turn"] = "Your turn",
             ["opponent_turn"] = "Opponent's turn",
+            ["invalid_move_follow_suit"] = "You must follow the led suit when you have a card in that suit. Choose a highlighted card.",
             ["waiting_for_opponent"] = "Waiting for an opponent…",
             ["play_card"] = "Play card",
         };
@@ -173,6 +174,7 @@ public class I18nService(AppStateService appState)
             ["pot_seats"] = "Duel",
             ["pot_activity_hint"] = "L'activité n'affiche que votre place (−{0} FCFA). Ici = les deux piles réunies.",
             ["pot_chip_title"] = "{0} FCFA par joueur · 2 places",
+            ["invalid_move_follow_suit"] = "Vous devez suivre la couleur demandée si vous en avez. Choisissez une carte mise en évidence.",
         };
 
         var kt = new Dictionary<string, string>(en);

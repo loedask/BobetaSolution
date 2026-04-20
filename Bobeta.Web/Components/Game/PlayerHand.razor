@@ -2,7 +2,7 @@
     @foreach (var card in Cards)
     {
         var c = card;
-        <CardComponent Card="@c" Disabled="@(!IsPlayerTurn)" OnClick="() => OnPlayCard.InvokeAsync(c)" OnDragStart="OnDragStart" OnDragEnd="OnDragEnd" />
+        <CardComponent Card="@c" Disabled="@(!IsPlayerTurn || !c.IsPlayable)" OnClick="() => OnPlayCard.InvokeAsync(c)" OnDragStart="OnDragStart" OnDragEnd="OnDragEnd" />
     }
 </div>
 

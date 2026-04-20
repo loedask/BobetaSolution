@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Bobeta.Client.Presentation;
 using Bobeta.Mobile.ViewModels.Games;
 
@@ -12,12 +13,22 @@ public partial class PlayingCardView : ContentView
         default(CardViewModel?),
         propertyChanged: OnCardPropertyChanged);
 
-    private static void OnCardPropertyChanged(BindableObject bindable, object oldValue, object newValue) =>
-        ((PlayingCardView)bindable).ApplyCard();
+    private CardViewModel? _subscribedCard;
+
+    private static void OnCardPropertyChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        var view = (PlayingCardView)bindable;
+        view.DetachCardSubscription();
+        view._subscribedCard = view.Card;
+        if (view._subscribedCard != null)
+            view._subscribedCard.PropertyChanged += view.OnBoundCardPropertyChanged;
+        view.ApplyCard();
+    }
 
     public PlayingCardView()
     {
         InitializeComponent();
+        Unloaded += (_, _) => DetachCardSubscription();
         ApplyCard();
     }
 
@@ -27,6 +38,28 @@ public partial class PlayingCardView : ContentView
         set => SetValue(CardProperty, value);
     }
 
+    private void DetachCardSubscription()
+    {
+        if (_subscribedCard != null)
+        {
+            _subscribedCard.PropertyChanged -= OnBoundCardPropertyChanged;
+            _subscribedCard = null;
+        }
+    }
+
+    private void OnBoundCardPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(CardViewModel.IsPlayable))
+            return;
+        MainThread.BeginInvokeOnMainThread(ApplyPlayableOpacity);
+    }
+
+    private void ApplyPlayableOpacity()
+    {
+        if (Card == null) return;
+        Chrome.Opacity = Card.IsPlayable ? 1 : 0.38;
+    }
+
     private void ApplyCard()
     {
         var c = Card;
@@ -34,6 +67,7 @@ public partial class PlayingCardView : ContentView
         {
             FaceGrid.IsVisible = false;
             EmptyLabel.IsVisible = true;
+            Chrome.Opacity = 1;
             return;
         }
 
@@ -54,5 +88,6 @@ public partial class PlayingCardView : ContentView
 
         FaceGrid.IsVisible = true;
         EmptyLabel.IsVisible = false;
+        ApplyPlayableOpacity();
     }
 }

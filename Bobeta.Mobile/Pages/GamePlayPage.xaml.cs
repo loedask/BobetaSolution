@@ -82,6 +82,7 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
     {
         if (_vm == null || !_vm.IsPlayerTurn || _vm.ShowGameResult) return;
         if (sender is not Border { BindingContext: CardViewModel card }) return;
+        if (!card.IsPlayable) return;
         await _vm.PlayCardAsync(card);
     }
 

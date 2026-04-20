@@ -8,6 +8,7 @@
 @inject NavigationManager Nav
 @inject GameHubClient GameHubClient
 @inject GamePlayTestService GamePlayTestService
+@inject I18nService I18n
 @implements IAsyncDisposable
 
 <div class="min-h-screen bg-background pb-24">
@@ -47,7 +48,7 @@
 
     protected override void OnInitialized()
     {
-        ViewModel = new GamePlayViewModel(GamePlayService, GameService, AppState, Nav, GameHubClient, GamePlayTestService);
+        ViewModel = new GamePlayViewModel(GamePlayService, GameService, AppState, Nav, GameHubClient, GamePlayTestService, I18n);
         ViewModel.StateChanged += OnStateChanged;
     }
 
