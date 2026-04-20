@@ -2,15 +2,29 @@ using Bobeta.Client.Services;
 using Bobeta.Client.Services.Base;
 using Bobeta.Mobile.Services;
 using GameStatusDto = Bobeta.Client.Services.Base.GameStatus;
+using Microsoft.Maui.Controls;
 
 namespace Bobeta.Mobile.ViewModels.Games;
 
-public class GameHistoryViewModel(HistoryService historyService, I18nService i18n) : ViewModelBase
+public class GameHistoryViewModel : ViewModelBase
 {
-    private readonly HistoryService _historyService = historyService;
-    private readonly I18nService _i18n = i18n;
+    private readonly HistoryService _historyService;
+    private readonly I18nService _i18n;
+    private readonly INavigationService _navigation;
+
+    public GameHistoryViewModel(HistoryService historyService, I18nService i18n, INavigationService navigation)
+    {
+        _historyService = historyService;
+        _i18n = i18n;
+        _navigation = navigation;
+        ContinueGameCommand = new Command<Guid>(id => _ = _navigation.ToGamePlayAsync(id));
+    }
 
     public List<GameHistoryRow> Rows { get; private set; } = new();
+
+    public Command<Guid> ContinueGameCommand { get; }
+
+    public string ContinueButtonText => _i18n.T("history_continue");
 
     public async Task LoadAsync()
     {
@@ -39,6 +53,9 @@ public class GameHistoryViewModel(HistoryService historyService, I18nService i18
     private GameHistoryRow MapRow(GameHistoryItemDto item)
     {
         var muted = Color.FromArgb("#8a93a8");
+        var sid = item.GameSessionId;
+        var role = item.IsCreator ? _i18n.T("history_you_hosted") : _i18n.T("history_you_joined");
+
         switch (item.Status)
         {
             case GameStatusDto._2:
@@ -48,12 +65,22 @@ public class GameHistoryViewModel(HistoryService historyService, I18nService i18
                 var amt = (decimal)(item.WonAmount ?? 0);
                 var amountText = $"{(won ? "+" : "")}{amt:N0}";
                 var color = won ? Color.FromArgb("#2dd48e") : Color.FromArgb("#e85d5d");
-                return new GameHistoryRow { Title = title, Time = item.CreatedAt.ToString("g"), AmountText = amountText, AmountColor = color };
+                return new GameHistoryRow
+                {
+                    SessionId = sid,
+                    Title = title,
+                    Subtitle = role,
+                    Time = item.CreatedAt.ToString("g"),
+                    AmountText = amountText,
+                    AmountColor = color
+                };
             }
             case GameStatusDto._0:
                 return new GameHistoryRow
                 {
+                    SessionId = sid,
                     Title = $"{_i18n.T("history_waiting")} — {item.BetAmount:N0} FCFA",
+                    Subtitle = role,
                     Time = item.CreatedAt.ToString("g"),
                     AmountText = "—",
                     AmountColor = muted
@@ -61,15 +88,20 @@ public class GameHistoryViewModel(HistoryService historyService, I18nService i18
             case GameStatusDto._1:
                 return new GameHistoryRow
                 {
-                    Title = $"{_i18n.T("history_in_progress")} — {item.BetAmount:N0} FCFA",
+                    SessionId = sid,
+                    Title = $"{_i18n.T("history_live_game")} — {item.BetAmount:N0} FCFA",
+                    Subtitle = $"{role}. {_i18n.T("history_live_hint")}",
                     Time = item.CreatedAt.ToString("g"),
                     AmountText = "—",
-                    AmountColor = muted
+                    AmountColor = muted,
+                    ShowContinue = true
                 };
             case GameStatusDto._3:
                 return new GameHistoryRow
                 {
+                    SessionId = sid,
                     Title = $"{_i18n.T("history_cancelled")} — {item.BetAmount:N0} FCFA",
+                    Subtitle = role,
                     Time = item.CreatedAt.ToString("g"),
                     AmountText = "—",
                     AmountColor = muted
@@ -77,6 +109,7 @@ public class GameHistoryViewModel(HistoryService historyService, I18nService i18
             default:
                 return new GameHistoryRow
                 {
+                    SessionId = sid,
                     Title = $"{item.BetAmount:N0} FCFA",
                     Time = item.CreatedAt.ToString("g"),
                     AmountText = "—",

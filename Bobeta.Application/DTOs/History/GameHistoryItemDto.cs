@@ -3,6 +3,7 @@ using Bobeta.Domain.Enums;
 namespace Bobeta.Application.DTOs.History;
 
 /// <summary>Single game session entry in a player's history list.</summary>
+/// <param name="IsCreator">True when this player created the session (hosted the lobby).</param>
 public record GameHistoryItemDto(
     Guid GameSessionId,
     decimal BetAmount,
@@ -10,4 +11,5 @@ public record GameHistoryItemDto(
     Guid? OpponentPlayerId,
     Guid? WinnerPlayerId,
     decimal? WonAmount,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    bool IsCreator);

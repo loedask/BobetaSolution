@@ -2,7 +2,13 @@
 @inject I18nService I18n
 
 @{
-    var path = Nav.Uri.Replace(Nav.BaseUri, "").TrimStart('/').Split('/')[0] ?? "";
+    // ToBaseRelativePath avoids BaseUri string mismatches (trailing slash, casing) that left the wrong segment and highlighted the wrong tab.
+    var relative = Nav.ToBaseRelativePath(Nav.Uri);
+    var q = relative.IndexOf('?', StringComparison.Ordinal);
+    if (q >= 0) relative = relative[..q];
+    var hash = relative.IndexOf('#', StringComparison.Ordinal);
+    if (hash >= 0) relative = relative[..hash];
+    var path = relative.Split('/', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
     var hide = path is "" or "login" or "verify" or "create-player";
 }
 
