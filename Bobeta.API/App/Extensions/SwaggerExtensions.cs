@@ -52,7 +52,7 @@ public static class SwaggerExtensions
     {
         app.UseSwagger();
         // Relative URL: avoids some reverse-proxy / base-path issues when fetching the spec (absolute "/swagger/..." can mis-resolve on Azure).
-        app.UseSwaggerUI(options => options.SwaggerEndpoint($"{DocName}/swagger.json", $"{DocTitle} {DocName}"));
+        app.UseSwaggerUI(options => options.SwaggerEndpoint($"/swagger/{DocName}/swagger.json", $"{DocTitle} {DocName}"));
         app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
         return app;
     }
