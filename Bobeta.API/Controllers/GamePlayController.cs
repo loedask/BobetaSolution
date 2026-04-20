@@ -1,6 +1,7 @@
 using Bobeta.Application.DTOs.Game;
 using Bobeta.Application.Interfaces;
 using Bobeta.API.Hubs;
+using Bobeta.Domain.Entities;
 using Bobeta.Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,14 @@ namespace Bobeta.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class GamePlayController(IGameEngineService gameEngineService, IHubContext<GameHub> hubContext) : ControllerBase
+public class GamePlayController(
+    IGameEngineService gameEngineService,
+    IHubContext<GameHub> hubContext,
+    IGameSessionRepository sessionRepository) : ControllerBase
 {
     private readonly IGameEngineService _gameEngineService = gameEngineService;
     private readonly IHubContext<GameHub> _hubContext = hubContext;
+    private readonly IGameSessionRepository _sessionRepository = sessionRepository;
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
@@ -40,12 +45,37 @@ public class GamePlayController(IGameEngineService gameEngineService, IHubContex
 
         // Include mover id so WASM/mobile clients can ignore their own play (IHubContext has no "caller" for OthersInGroup).
         await _hubContext.Clients.Group(groupName).SendAsync("NotifyOpponentMove", PlayerId, cardSuitRank);
-        await _hubContext.Clients.Group(groupName).SendAsync("GameState", state);
+
+        // GameStateDto is per-viewer (myCards, opponent name). Broadcasting the mover's DTO to the whole group
+        // overwrote the other client's hand and could desync turn UI — send each seat their own state via JWT user id.
+        var sessionRow = await _sessionRepository.GetByIdAsync(request.SessionId, cancellationToken);
+        await PushGameStateToParticipantsAsync(sessionRow, request.SessionId, state, cancellationToken);
 
         if (state.GameOver)
             await _hubContext.Clients.Group(groupName).SendAsync("GameResult", state.WinnerPlayerId);
 
         return Ok(state);
+    }
+
+    private async Task PushGameStateToParticipantsAsync(
+        GameSession? session,
+        Guid sessionId,
+        GameStateDto moverFallbackState,
+        CancellationToken cancellationToken)
+    {
+        if (session?.OpponentPlayerId is { } opponentId)
+        {
+            var creatorState = await _gameEngineService.GetGameStateAsync(session.CreatorPlayerId, sessionId, cancellationToken);
+            var opponentState = await _gameEngineService.GetGameStateAsync(opponentId, sessionId, cancellationToken);
+            if (creatorState != null)
+                await _hubContext.Clients.User(session.CreatorPlayerId.ToString()).SendAsync("GameState", creatorState, cancellationToken);
+            if (opponentState != null)
+                await _hubContext.Clients.User(opponentId.ToString()).SendAsync("GameState", opponentState, cancellationToken);
+            return;
+        }
+
+        var groupName = GameHub.GroupPrefix + sessionId;
+        await _hubContext.Clients.Group(groupName).SendAsync("GameState", moverFallbackState, cancellationToken);
     }
 
     /// <summary>Gets the current game state for the authenticated player (hand, last card, whose turn, game over, winner).</summary>
