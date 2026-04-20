@@ -136,6 +136,7 @@ public class I18nService(AppStateService appState)
             ["pot_seats"] = "Head-to-head",
             ["pot_activity_hint"] = "Activity lists only your seat (−{0} FCFA). This total is both stacks combined.",
             ["pot_chip_title"] = "{0} FCFA from each player · 2 seats",
+            ["pot_opponent_lane"] = "Across from you",
             ["your_turn"] = "Your turn",
             ["opponent_turn"] = "Opponent's turn",
             ["invalid_move_follow_suit"] = "You must follow the led suit when you have a card in that suit. Choose a highlighted card.",
@@ -174,6 +175,7 @@ public class I18nService(AppStateService appState)
             ["pot_seats"] = "Duel",
             ["pot_activity_hint"] = "L'activité n'affiche que votre place (−{0} FCFA). Ici = les deux piles réunies.",
             ["pot_chip_title"] = "{0} FCFA par joueur · 2 places",
+            ["pot_opponent_lane"] = "En face",
             ["invalid_move_follow_suit"] = "Vous devez suivre la couleur demandée si vous en avez. Choisissez une carte mise en évidence.",
         };
 

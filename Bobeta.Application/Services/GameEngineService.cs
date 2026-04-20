@@ -18,7 +18,8 @@ public class GameEngineService(
     IGameSessionRepository sessionRepository,
     IGameMoveRepository moveRepository,
     IGameResultRepository resultRepository,
-    IWalletService walletService) : IGameEngineService
+    IWalletService walletService,
+    IPlayerRepository playerRepository) : IGameEngineService
 {
     private const decimal CommissionRate = 0.25m;
     private const int DeckSize = 52;
@@ -29,6 +30,7 @@ public class GameEngineService(
     private readonly IGameMoveRepository _moveRepository = moveRepository;
     private readonly IGameResultRepository _resultRepository = resultRepository;
     private readonly IWalletService _walletService = walletService;
+    private readonly IPlayerRepository _playerRepository = playerRepository;
 
     public async Task StartGameAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
@@ -140,16 +142,17 @@ public class GameEngineService(
             return null;
 
         var lobbyPot = session.BetAmount * 2m;
+        var opponentName = await ResolveOpponentDisplayNameAsync(playerId, session, cancellationToken).ConfigureAwait(false);
 
         if (string.IsNullOrEmpty(session.GameStateJson))
         {
             if (session.Status == GameStatus.Waiting)
-                return new GameStateDto(sessionId, Array.Empty<string>(), null, null, false, null, true, lobbyPot);
+                return new GameStateDto(sessionId, Array.Empty<string>(), null, null, false, null, true, lobbyPot, opponentName);
             // Finished games may clear serialized state after persist; still expose outcome for reload/history UIs.
             if (session.Status == GameStatus.Finished && session.GameResult != null)
             {
                 var w = session.GameResult.WinnerPlayerId;
-                return new GameStateDto(sessionId, Array.Empty<string>(), null, null, true, w, false, lobbyPot);
+                return new GameStateDto(sessionId, Array.Empty<string>(), null, null, true, w, false, lobbyPot, opponentName);
             }
 
             return null;
@@ -161,7 +164,21 @@ public class GameEngineService(
         var lastCard = state.TrickPlays.Count > 0 ? state.TrickPlays[^1].Card : null;
         var gameOver = session.Status == GameStatus.Finished;
         var winnerId = session.GameResult?.WinnerPlayerId;
-        return new GameStateDto(sessionId, myHand, lastCard, state.CurrentTurnPlayerId, gameOver, winnerId, false, lobbyPot);
+        return new GameStateDto(sessionId, myHand, lastCard, state.CurrentTurnPlayerId, gameOver, winnerId, false, lobbyPot, opponentName);
+    }
+
+    private async Task<string?> ResolveOpponentDisplayNameAsync(Guid viewerPlayerId, GameSession session, CancellationToken cancellationToken)
+    {
+        Guid? opponentId = viewerPlayerId == session.CreatorPlayerId
+            ? session.OpponentPlayerId
+            : session.OpponentPlayerId.HasValue && session.OpponentPlayerId.Value == viewerPlayerId
+                ? session.CreatorPlayerId
+                : null;
+        if (opponentId == null)
+            return null;
+        var opponent = await _playerRepository.GetByIdAsync(opponentId.Value, cancellationToken).ConfigureAwait(false);
+        var name = opponent?.PlayerName?.Trim();
+        return string.IsNullOrEmpty(name) ? null : name;
     }
 
     private async Task FinalizeGameAsync(GameSession session, Guid winnerId, Guid loserId, CancellationToken cancellationToken)

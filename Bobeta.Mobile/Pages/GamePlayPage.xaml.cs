@@ -31,6 +31,7 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         Title = i18n.T("game");
         PotTableLabel.Text = i18n.T("pot_table");
         PotSeatsLabel.Text = i18n.T("pot_seats");
+        PotOpponentLaneLabel.Text = i18n.T("pot_opponent_lane");
         LastPlayTitle.Text = "Last played";
         ResultTitle.Text = "Game over";
         DoneBtn.Text = i18n.T("return_home");
@@ -76,6 +77,27 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         ChipLeftText.Text = halfStr;
         ChipRightText.Text = halfStr;
         PotHintLabel.Text = string.Format(i18n.T("pot_activity_hint"), halfStr);
+
+        var opp = _vm.OpponentDisplayName;
+        if (string.IsNullOrWhiteSpace(opp))
+        {
+            PotOpponentBadge.IsVisible = false;
+        }
+        else
+        {
+            PotOpponentBadge.IsVisible = true;
+            PotOpponentNameLabel.Text = opp.Trim();
+            PotOpponentInitialsLabel.Text = InitialsFromName(opp);
+        }
+    }
+
+    private static string InitialsFromName(string name)
+    {
+        var t = name.Trim();
+        var parts = t.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+            return string.Concat(char.ToUpperInvariant(parts[0][0]), char.ToUpperInvariant(parts[1][0]));
+        return t.Length >= 2 ? t[..2].ToUpperInvariant() : char.ToUpperInvariant(t[0]).ToString();
     }
 
     private async void OnHandCardTapped(object? sender, TappedEventArgs e)

@@ -13,4 +13,7 @@ public class GameStateViewModel
     public bool WaitingForGameStart { get; set; }
 
     public decimal LobbyPotAmount { get; set; }
+
+    /// <summary>Other player's display name when the table has two seats; null while waiting for an opponent.</summary>
+    public string? OpponentDisplayName { get; set; }
 }

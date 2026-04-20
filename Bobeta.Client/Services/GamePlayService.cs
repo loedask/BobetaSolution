@@ -75,7 +75,8 @@ public class GamePlayService(IClient client, HttpClient httpClient, IAccessToken
             GameOver = dto.GameOver,
             WinnerPlayerId = dto.WinnerPlayerId,
             WaitingForGameStart = dto.WaitingForGameStart,
-            LobbyPotAmount = (decimal)dto.LobbyPotAmount
+            LobbyPotAmount = (decimal)dto.LobbyPotAmount,
+            OpponentDisplayName = string.IsNullOrEmpty(dto.OpponentDisplayName) ? null : dto.OpponentDisplayName
         };
     }
 }

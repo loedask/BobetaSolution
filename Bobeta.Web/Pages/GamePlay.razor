@@ -26,7 +26,7 @@
         }
         else
         {
-            <PotDisplay PotAmount="@ViewModel.PotAmount" />
+            <PotDisplay PotAmount="@ViewModel.PotAmount" OpponentDisplayName="@ViewModel.OpponentDisplayName" />
             <OpponentHand CardCount="@ViewModel.OpponentCards.Count" />
             <GameBoard LastPlayedCard="@ViewModel.LastPlayedCard" OnCardDropped="HandleCardDropped" />
             <PlayerHand Cards="@ViewModel.PlayerCards" IsPlayerTurn="@ViewModel.IsPlayerTurn" OnPlayCard="PlayCard" OnDragStart="HandleDragStart" OnDragEnd="HandleDragEnd" />

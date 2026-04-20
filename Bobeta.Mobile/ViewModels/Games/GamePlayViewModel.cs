@@ -36,6 +36,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public string SessionId { get; private set; } = "";
     public bool IsPlayerTurn { get; private set; }
     public decimal PotAmount { get; private set; }
+    public string? OpponentDisplayName { get; private set; }
     public bool WaitingForOpponent { get; private set; }
 
     public List<CardViewModel> PlayerCards { get; private set; } = new();
@@ -71,6 +72,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             var state = res.Data;
             WaitingForOpponent = state.WaitingForGameStart;
             PotAmount = state.LobbyPotAmount;
+            OpponentDisplayName = state.OpponentDisplayName;
             CurrentPlayerId = state.CurrentTurnPlayerId;
             IsPlayerTurn = !WaitingForOpponent && state.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
             PlayerCards = ParseCards(state.MyCards ?? new List<string>());
@@ -149,6 +151,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             {
                 WaitingForOpponent = res.Data.WaitingForGameStart;
                 PotAmount = res.Data.LobbyPotAmount;
+                OpponentDisplayName = res.Data.OpponentDisplayName;
                 CurrentPlayerId = res.Data.CurrentTurnPlayerId;
                 IsPlayerTurn = !WaitingForOpponent && res.Data.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
                 PlayerCards = ParseCards(res.Data.MyCards ?? new List<string>());
@@ -198,6 +201,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     {
         WaitingForOpponent = state.WaitingForGameStart;
         PotAmount = state.LobbyPotAmount;
+        OpponentDisplayName = state.OpponentDisplayName;
         PlayerCards = ParseCards(state.MyCards ?? new List<string>());
         LastPlayedCard = string.IsNullOrEmpty(state.LastPlayedCard) ? null : ParseCard(state.LastPlayedCard);
         CurrentPlayerId = state.CurrentTurnPlayerId;

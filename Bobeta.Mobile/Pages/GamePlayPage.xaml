@@ -24,6 +24,46 @@
                         HorizontalOptions="End"
                         VerticalOptions="Start">
                         <Label x:Name="PotSeatsLabel" FontSize="9" TextColor="{StaticResource MutedForeground}" HorizontalTextAlignment="End" />
+                        <Border
+                            x:Name="PotOpponentBadge"
+                            Padding="8,6"
+                            IsVisible="False"
+                            HorizontalOptions="End"
+                            BackgroundColor="#14EAB308"
+                            Stroke="{StaticResource PrimaryGold}"
+                            StrokeThickness="1"
+                            StrokeShape="RoundRectangle 12">
+                            <HorizontalStackLayout Spacing="8" HorizontalOptions="End">
+                                <VerticalStackLayout Spacing="0" VerticalOptions="Center" HorizontalOptions="End">
+                                    <Label x:Name="PotOpponentLaneLabel" FontSize="8" TextColor="{StaticResource PrimaryGold}" HorizontalTextAlignment="End" />
+                                    <Label
+                                        x:Name="PotOpponentNameLabel"
+                                        FontSize="11"
+                                        FontAttributes="Bold"
+                                        TextColor="{StaticResource Foreground}"
+                                        LineBreakMode="TailTruncation"
+                                        MaxLines="1"
+                                        WidthRequest="118"
+                                        HorizontalTextAlignment="End" />
+                                </VerticalStackLayout>
+                                <Border
+                                    WidthRequest="36"
+                                    HeightRequest="36"
+                                    StrokeShape="RoundRectangle 18"
+                                    BackgroundColor="#33EAB308"
+                                    Stroke="{StaticResource PrimaryGold}"
+                                    StrokeThickness="1"
+                                    VerticalOptions="Center">
+                                    <Label
+                                        x:Name="PotOpponentInitialsLabel"
+                                        FontSize="11"
+                                        FontAttributes="Bold"
+                                        TextColor="{StaticResource PrimaryGold}"
+                                        HorizontalTextAlignment="Center"
+                                        VerticalTextAlignment="Center" />
+                                </Border>
+                            </HorizontalStackLayout>
+                        </Border>
                         <HorizontalStackLayout Spacing="6" HorizontalOptions="End">
                             <Border
                                 Padding="10,5"

@@ -134,6 +134,7 @@ public class I18nService(AppStateService appState)
             ["pot_seats"] = "Head-to-head",
             ["pot_activity_hint"] = "Activity lists only your seat (−{0} FCFA). This line is both stacks combined.",
             ["pot_chip_title"] = "{0} FCFA from each player · 2 seats",
+            ["pot_opponent_lane"] = "Across from you",
             ["language"] = "Language",
             ["confirm"] = "Confirm",
             ["not_found"] = "Oops! Page not found",
@@ -175,6 +176,7 @@ public class I18nService(AppStateService appState)
             ["pot_seats"] = "Duel",
             ["pot_activity_hint"] = "L'activité n'affiche que votre place (−{0} FCFA). Ici = les deux piles réunies.",
             ["pot_chip_title"] = "{0} FCFA par joueur · 2 places",
+            ["pot_opponent_lane"] = "En face",
             ["dev_test_deposit_notice"] = "Version de développement : les dépôts sont des crédits de test (pas de MoMo réel). À utiliser uniquement avec une API non production où DemoAuth:EnableTestWalletDeposits est activé.",
         };
 
