@@ -1,12 +1,14 @@
 using Bobeta.Web.Services;
+using Bobeta.Web.Services.Realtime;
 using Microsoft.AspNetCore.Components;
 
 namespace Bobeta.Web.ViewModels.Profile;
 
-public class ProfileViewModel(AppStateService appState, NavigationManager nav) : ViewModelBase
+public class ProfileViewModel(AppStateService appState, NavigationManager nav, GameHubClient hub) : ViewModelBase
 {
     private readonly AppStateService _appState = appState;
     private readonly NavigationManager _nav = nav;
+    private readonly GameHubClient _hub = hub;
 
     public string PlayerName => _appState.State.CurrentPlayerName ?? "Player";
     public string? PhoneNumber => _appState.State.PhoneNumber ?? "—";
@@ -17,10 +19,19 @@ public class ProfileViewModel(AppStateService appState, NavigationManager nav) :
 
     public async Task SignOutAsync()
     {
+        try
+        {
+            await _hub.DisconnectAsync();
+        }
+        catch
+        {
+            /* best-effort: still clear local session */
+        }
+
         _appState.ClearSession();
         await _appState.PersistAsync();
         ShowSignOutModal = false;
-        _nav.NavigateTo("/");
+        _nav.NavigateTo("/", replace: true);
         RaiseStateChanged();
     }
 }

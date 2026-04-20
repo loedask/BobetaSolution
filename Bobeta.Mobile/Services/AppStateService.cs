@@ -73,6 +73,8 @@ public class AppStateService(PreferencesStorageService storage)
         State.CurrentPlayerName = null;
         State.PhoneNumber = null;
         State.ActiveGameSessionId = null;
+        State.WalletBalance = 0;
+        State.LockedBalance = 0;
         RaiseStateChanged();
     }
 

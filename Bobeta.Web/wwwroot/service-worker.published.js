@@ -39,19 +39,49 @@ async function onActivate(event) {
         .map(key => caches.delete(key)));
 }
 
-async function onFetch(event) {
-    let cachedResponse = null;
-    if (event.request.method === 'GET') {
-        // For all navigation requests, try to serve index.html from cache,
-        // unless that request is for an offline resource.
-        // If you need some URLs to be server-rendered, edit the following check to exclude those URLs
-        const shouldServeIndexHtml = event.request.mode === 'navigate'
-            && !manifestUrlList.some(url => url === event.request.url);
+function isOfflineStaticPath(pathname) {
+    const p = pathname.toLowerCase();
+    return p.startsWith('/_framework/') ||
+        p.startsWith('/_content/') ||
+        p.startsWith('/css/') ||
+        p.startsWith('/service-worker') ||
+        /\.(wasm|dll|pdb|json|css|js|map|png|jpg|jpeg|gif|svg|webp|ico|woff2?|blat|dat|html|webmanifest)$/i.test(pathname);
+}
 
-        const request = shouldServeIndexHtml ? 'index.html' : event.request;
-        const cache = await caches.open(cacheName);
-        cachedResponse = await cache.match(request);
+async function onFetch(event) {
+    if (event.request.method !== 'GET') {
+        return fetch(event.request);
     }
 
-    return cachedResponse || fetch(event.request);
+    const url = new URL(event.request.url);
+    if (url.origin !== self.location.origin) {
+        return fetch(event.request);
+    }
+
+    const cache = await caches.open(cacheName);
+    let cachedResponse = await cache.match(event.request);
+    if (cachedResponse) {
+        return cachedResponse;
+    }
+
+    // Blazor client routes (/game/{id}, /login, …) are not real files. The stock template only treated
+    // mode === "navigate" as SPA shell; other GETs (prefetch, Sec-Fetch-Mode variants) hit fetch(/game/...)
+    // and fail with "TypeError: Failed to fetch" under the service worker. Serve index.html instead.
+    const wantsSpaShell =
+        !isOfflineStaticPath(url.pathname) &&
+        !manifestUrlList.some(u => u === event.request.url) &&
+        !url.pathname.toLowerCase().startsWith('/api/');
+
+    const indexHref = new URL('index.html', self.location.origin).href;
+    if (wantsSpaShell) {
+        cachedResponse = await cache.match(indexHref)
+            || await cache.match('index.html')
+            || await cache.match(new URL('/index.html', self.location.origin).href);
+        if (cachedResponse) {
+            return cachedResponse;
+        }
+        return fetch(new Request(indexHref, { cache: 'reload', credentials: 'same-origin' }));
+    }
+
+    return fetch(event.request);
 }

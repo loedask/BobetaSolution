@@ -77,6 +77,8 @@ public class AppStateService(LocalStorageService storage)
         State.CurrentPlayerName = null;
         State.PhoneNumber = null;
         State.ActiveGameSessionId = null;
+        State.WalletBalance = 0;
+        State.LockedBalance = 0;
         RaiseStateChanged();
     }
 
@@ -92,8 +94,6 @@ public class AppStateService(LocalStorageService storage)
             return false;
 
         ClearSession();
-        State.WalletBalance = 0;
-        State.LockedBalance = 0;
         await PersistAsync(ct).ConfigureAwait(false);
         navigation.NavigateTo("/login", replace: true);
         return true;
