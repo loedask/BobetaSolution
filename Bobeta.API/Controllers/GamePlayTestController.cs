@@ -38,11 +38,19 @@ public class GamePlayTestController(
         var cardStr = hand[random.Next(hand.Count)];
         if (!TryParseCard(cardStr, out var card) || card == null)
             return BadRequest("Could not parse card.");
-        await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-        var newState = await _gameEngineService.PlayCardAsync(opponentId, sessionId, card!, cancellationToken);
-        if (newState == null)
-            return BadRequest("Invalid move.");
-        return Ok(newState);
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            var newState = await _gameEngineService.PlayCardAsync(opponentId, sessionId, card!, cancellationToken);
+            if (newState == null)
+                return BadRequest("Invalid move.");
+            return Ok(newState);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Client disconnected or aborted the request (e.g. Blazor navigation) during the delay or play.
+            return StatusCode(StatusCodes.Status499ClientClosedRequest);
+        }
     }
 
     private static bool TryParseCard(string value, out Card? card)
