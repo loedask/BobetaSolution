@@ -1,5 +1,6 @@
 using Bobeta.Application.DTOs.Game;
 using Bobeta.Application.Interfaces;
+using Bobeta.API.App.Services;
 using Bobeta.API.Hubs;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.ValueObjects;
@@ -16,11 +17,13 @@ namespace Bobeta.API.Controllers;
 public class GamePlayController(
     IGameEngineService gameEngineService,
     IHubContext<GameHub> hubContext,
-    IGameSessionRepository sessionRepository) : ControllerBase
+    IGameSessionRepository sessionRepository,
+    IGameSessionConnectionTracker sessionConnectionTracker) : ControllerBase
 {
     private readonly IGameEngineService _gameEngineService = gameEngineService;
     private readonly IHubContext<GameHub> _hubContext = hubContext;
     private readonly IGameSessionRepository _sessionRepository = sessionRepository;
+    private readonly IGameSessionConnectionTracker _sessionConnectionTracker = sessionConnectionTracker;
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
@@ -67,15 +70,33 @@ public class GamePlayController(
         {
             var creatorState = await _gameEngineService.GetGameStateAsync(session.CreatorPlayerId, sessionId, cancellationToken);
             var opponentState = await _gameEngineService.GetGameStateAsync(opponentId, sessionId, cancellationToken);
-            if (creatorState != null)
-                await _hubContext.Clients.User(session.CreatorPlayerId.ToString()).SendAsync("GameState", creatorState, cancellationToken);
-            if (opponentState != null)
-                await _hubContext.Clients.User(opponentId.ToString()).SendAsync("GameState", opponentState, cancellationToken);
+            await SendGameStateToSeatAsync(sessionId, session.CreatorPlayerId, creatorState, cancellationToken);
+            await SendGameStateToSeatAsync(sessionId, opponentId, opponentState, cancellationToken);
             return;
         }
 
         var groupName = GameHub.GroupPrefix + sessionId;
         await _hubContext.Clients.Group(groupName).SendAsync("GameState", moverFallbackState, cancellationToken);
+    }
+
+    /// <summary>Delivers seat-specific state to connections that joined the session hub; falls back to <see cref="IHubClients{T}.User(string)"/> if none are registered yet.</summary>
+    private async Task SendGameStateToSeatAsync(
+        Guid sessionId,
+        Guid playerId,
+        GameStateDto? state,
+        CancellationToken cancellationToken)
+    {
+        if (state == null)
+            return;
+        var connectionIds = _sessionConnectionTracker.GetConnectionIds(sessionId, playerId);
+        if (connectionIds.Count > 0)
+        {
+            foreach (var connectionId in connectionIds)
+                await _hubContext.Clients.Client(connectionId).SendAsync("GameState", state, cancellationToken);
+            return;
+        }
+
+        await _hubContext.Clients.User(playerId.ToString()).SendAsync("GameState", state, cancellationToken);
     }
 
     /// <summary>Gets the current game state for the authenticated player (hand, last card, whose turn, game over, winner).</summary>
