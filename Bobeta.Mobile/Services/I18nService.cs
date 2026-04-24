@@ -140,6 +140,8 @@ public class I18nService(AppStateService appState)
             ["your_turn"] = "Your turn",
             ["opponent_turn"] = "Opponent's turn",
             ["invalid_move_follow_suit"] = "You must follow the led suit when you have a card in that suit. Choose a highlighted card.",
+            ["trick_outcome_you"] = "You took this trick.",
+            ["trick_outcome_opponent"] = "Opponent took this trick.",
             ["waiting_for_opponent"] = "Waiting for an opponent…",
             ["play_card"] = "Play card",
         };
@@ -177,6 +179,8 @@ public class I18nService(AppStateService appState)
             ["pot_chip_title"] = "{0} FCFA par joueur · 2 places",
             ["pot_opponent_lane"] = "En face",
             ["invalid_move_follow_suit"] = "Vous devez suivre la couleur demandée si vous en avez. Choisissez une carte mise en évidence.",
+            ["trick_outcome_you"] = "Vous remportez ce pli.",
+            ["trick_outcome_opponent"] = "L'adversaire remporte ce pli.",
         };
 
         var kt = new Dictionary<string, string>(en);

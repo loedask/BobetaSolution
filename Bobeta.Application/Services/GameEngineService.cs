@@ -10,7 +10,7 @@ namespace Bobeta.Application.Services;
 
 /// <summary>
 /// Makopa card game engine. Server-authoritative and deterministic.
-/// Rules: 52-card deck; 4 cards per player; must follow suit if possible; if no matching suit, opponent (second player) takes the trick;
+/// Rules: 52-card deck; 4 cards per player; must follow suit if possible; if the follower has no led suit, they win the trick;
 /// same suit = higher rank wins; winner leads next round; cards removed after each trick;
 /// game ends when a player has one card left and it is their turn (that player wins).
 /// </summary>
@@ -83,6 +83,10 @@ public class GameEngineService(
                 return null;
         }
 
+        // Drop prior trick result once a new trick begins (first card on an empty trick).
+        if (state.TrickPlays.Count == 0)
+            state.LastTrickWinnerPlayerId = null;
+
         hand.Remove(cardStr);
         state.TrickPlays.Add(new PlayedInTrick { PlayerId = playerId, Card = cardStr });
         state.TrickSuit ??= cardStr.Split('_')[0];
@@ -102,6 +106,7 @@ public class GameEngineService(
         if (state.TrickPlays.Count == 2)
         {
             var winner = ResolveTrick(state.TrickPlays[0], state.TrickPlays[1], state.TrickSuit!);
+            state.LastTrickWinnerPlayerId = winner;
             state.LeadPlayerId = winner;
             state.CurrentTurnPlayerId = winner;
             state.TrickSuit = null;
@@ -164,7 +169,7 @@ public class GameEngineService(
         var lastCard = state.TrickPlays.Count > 0 ? state.TrickPlays[^1].Card : null;
         var gameOver = session.Status == GameStatus.Finished;
         var winnerId = session.GameResult?.WinnerPlayerId;
-        return new GameStateDto(sessionId, myHand, lastCard, state.CurrentTurnPlayerId, gameOver, winnerId, false, lobbyPot, opponentName);
+        return new GameStateDto(sessionId, myHand, lastCard, state.CurrentTurnPlayerId, gameOver, winnerId, false, lobbyPot, opponentName, state.LastTrickWinnerPlayerId);
     }
 
     private async Task<string?> ResolveOpponentDisplayNameAsync(Guid viewerPlayerId, GameSession session, CancellationToken cancellationToken)
@@ -200,15 +205,15 @@ public class GameEngineService(
         }, cancellationToken);
     }
 
-    /// <summary>Resolves trick: must follow suit; if second cannot follow, opponent (second) takes the card. Same suit = higher rank wins.</summary>
+    /// <summary>Resolves trick: if the follower has no led suit they play any card and win the trick; if both follow led suit, higher rank wins; lead wins ties.</summary>
     private static Guid ResolveTrick(PlayedInTrick first, PlayedInTrick second, string leadSuit)
     {
-        var s2 = second.Card.Split('_');
+        var s2 = second.Card.Split('_', 2, StringSplitOptions.None);
         var suit2 = s2[0];
         var rank2 = int.Parse(s2[1]);
-        // If second player did not follow suit, opponent (second player) takes the card.
-        if (suit2 != leadSuit) return second.PlayerId;
-        var s1 = first.Card.Split('_');
+        if (!string.Equals(suit2, leadSuit, StringComparison.Ordinal))
+            return second.PlayerId;
+        var s1 = first.Card.Split('_', 2, StringSplitOptions.None);
         var rank1 = int.Parse(s1[1]);
         return rank1 >= rank2 ? first.PlayerId : second.PlayerId;
     }

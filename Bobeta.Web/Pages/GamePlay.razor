@@ -27,6 +27,10 @@
         else
         {
             <PotDisplay PotAmount="@ViewModel.PotAmount" OpponentDisplayName="@ViewModel.OpponentDisplayName" />
+            @if (!string.IsNullOrEmpty(ViewModel.TrickOutcomeMessage))
+            {
+                <p class="rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-center text-sm text-foreground">@ViewModel.TrickOutcomeMessage</p>
+            }
             <OpponentHand CardCount="@ViewModel.OpponentCards.Count" />
             <GameBoard LastPlayedCard="@ViewModel.LastPlayedCard" OnCardDropped="HandleCardDropped" />
             <PlayerHand Cards="@ViewModel.PlayerCards" IsPlayerTurn="@ViewModel.IsPlayerTurn" OnPlayCard="PlayCard" OnDragStart="HandleDragStart" OnDragEnd="HandleDragEnd" />

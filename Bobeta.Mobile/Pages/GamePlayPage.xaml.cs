@@ -71,6 +71,16 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         TurnLabel.TextColor = _vm.IsPlayerTurn ? Color.FromArgb("#2dd48e") : Color.FromArgb("#8a93a8");
         HandView.IsEnabled = _vm.IsPlayerTurn && !_vm.ShowGameResult;
 
+        if (!string.IsNullOrEmpty(_vm.TrickOutcomeMessage))
+        {
+            TrickOutcomeLabel.Text = _vm.TrickOutcomeMessage;
+            TrickOutcomeLabel.IsVisible = true;
+        }
+        else
+        {
+            TrickOutcomeLabel.IsVisible = false;
+        }
+
         var half = _vm.PotAmount > 0 ? _vm.PotAmount / 2m : 0m;
         var halfStr = half.ToString("N0");
         PotTotalLabel.Text = $"{_vm.PotAmount:N0} FCFA";

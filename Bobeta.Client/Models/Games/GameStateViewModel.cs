@@ -16,4 +16,7 @@ public class GameStateViewModel
 
     /// <summary>Other player's display name when the table has two seats; null while waiting for an opponent.</summary>
     public string? OpponentDisplayName { get; set; }
+
+    /// <summary>Winner of the last resolved trick (e.g. follower with no led suit); null after the next trick begins.</summary>
+    public Guid? LastTrickWinnerPlayerId { get; set; }
 }

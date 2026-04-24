@@ -23,6 +23,9 @@ public class MakopaGameState
 
     /// <summary>Cards played in the current trick (0, 1, or 2 entries).</summary>
     public List<PlayedInTrick> TrickPlays { get; set; } = new();
+
+    /// <summary>After a trick is resolved, set to the winner until the next trick begins (first card of next trick clears this).</summary>
+    public Guid? LastTrickWinnerPlayerId { get; set; }
 }
 
 /// <summary>A single card play within the current trick (player and card string).</summary>

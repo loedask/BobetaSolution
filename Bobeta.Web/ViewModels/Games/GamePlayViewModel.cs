@@ -54,6 +54,9 @@ public class GamePlayViewModel : ViewModelBase
 
     public Guid? CurrentPlayerId { get; private set; }
 
+    /// <summary>Shown after a trick resolves (e.g. follower with no led suit wins); cleared when the next trick starts.</summary>
+    public string? TrickOutcomeMessage { get; private set; }
+
     public async Task LoadGameAsync(string sessionId)
     {
         SessionId = sessionId;
@@ -91,6 +94,7 @@ public class GamePlayViewModel : ViewModelBase
             else
                 ShowGameResult = false;
 
+            ApplyTrickOutcomeMessage(state.LastTrickWinnerPlayerId);
             RefreshHandPlayability();
 
             if (_hubClient != null)
@@ -174,6 +178,7 @@ public class GamePlayViewModel : ViewModelBase
                 LastPlayedCard = string.IsNullOrEmpty(res.Data.LastPlayedCard) ? null : ParseCard(res.Data.LastPlayedCard);
                 if (res.Data.GameOver)
                     HandleGameResult(res.Data.WinnerPlayerId);
+                ApplyTrickOutcomeMessage(res.Data.LastTrickWinnerPlayerId);
             }
 
             RefreshHandPlayability();
@@ -187,6 +192,16 @@ public class GamePlayViewModel : ViewModelBase
         {
             SetLoading(false);
         }
+    }
+
+    private void ApplyTrickOutcomeMessage(Guid? lastTrickWinnerPlayerId)
+    {
+        if (lastTrickWinnerPlayerId == null)
+            TrickOutcomeMessage = null;
+        else if (lastTrickWinnerPlayerId == _appState.State.CurrentPlayerId)
+            TrickOutcomeMessage = _i18n?.T("trick_outcome_you") ?? "You took this trick.";
+        else
+            TrickOutcomeMessage = _i18n?.T("trick_outcome_opponent") ?? "Opponent took this trick.";
     }
 
     public void HandleOpponentMove(Guid? currentTurnPlayerId, string? lastPlayedCard, bool gameOver, Guid? winnerPlayerId)
@@ -241,6 +256,7 @@ public class GamePlayViewModel : ViewModelBase
             HandleGameResult(state.WinnerPlayerId);
         else
             ShowGameResult = false;
+        ApplyTrickOutcomeMessage(state.LastTrickWinnerPlayerId);
         RefreshHandPlayability();
         RaiseStateChanged();
     }
