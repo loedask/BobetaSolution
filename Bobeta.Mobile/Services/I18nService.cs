@@ -130,6 +130,7 @@ public class I18nService(AppStateService appState)
             ["confirm"] = "Confirm",
             ["not_found"] = "Oops! Page not found",
             ["return_home"] = "Return to Home",
+            ["done_short"] = "Done",
             ["game"] = "Game",
             ["pot"] = "Pot",
             ["pot_table"] = "Table pot",
@@ -144,7 +145,7 @@ public class I18nService(AppStateService appState)
             ["trick_outcome_opponent"] = "Opponent took this trick.",
             ["waiting_for_opponent"] = "Waiting for an opponent…",
             ["play_card"] = "Play card",
-            ["take_card"] = "Take the card",
+            ["take_card"] = "Take",
             ["take_card_hint_disabled"] = "Play a highlighted card first.",
             ["take_card_hint_enabled"] = "No legal card. Take the card.",
         };
@@ -158,6 +159,7 @@ public class I18nService(AppStateService appState)
             ["send_code"] = "Envoyer le code",
             ["verify"] = "Vérifier",
             ["cancel"] = "Annuler",
+            ["done_short"] = "Terminer",
             ["deposit"] = "Dépôt",
             ["withdraw"] = "Retrait",
             ["profile"] = "Profil",
@@ -184,7 +186,7 @@ public class I18nService(AppStateService appState)
             ["invalid_move_follow_suit"] = "Vous devez suivre la couleur demandée si vous en avez. Choisissez une carte mise en évidence.",
             ["trick_outcome_you"] = "Vous remportez ce pli.",
             ["trick_outcome_opponent"] = "L'adversaire remporte ce pli.",
-            ["take_card"] = "Prendre la carte",
+            ["take_card"] = "Prendre",
             ["take_card_hint_disabled"] = "Jouez d'abord une carte surlignee.",
             ["take_card_hint_enabled"] = "Aucune carte valide. Prenez la carte.",
         };

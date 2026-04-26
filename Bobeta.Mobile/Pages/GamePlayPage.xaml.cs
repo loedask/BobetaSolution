@@ -34,7 +34,7 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         PotOpponentLaneLabel.Text = i18n.T("pot_opponent_lane");
         LastPlayTitle.Text = "Last played";
         ResultTitle.Text = "Game over";
-        DoneBtn.Text = i18n.T("return_home");
+        DoneBtn.Text = i18n.T("done_short");
         TakeCardButton.Text = i18n.T("take_card");
 
         if (!string.IsNullOrEmpty(_sessionId))
