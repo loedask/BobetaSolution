@@ -56,6 +56,7 @@ public class GamePlayViewModel : ViewModelBase
 
     /// <summary>Shown after a trick resolves (e.g. follower with no led suit wins); cleared when the next trick starts.</summary>
     public string? TrickOutcomeMessage { get; private set; }
+    public bool CanTakeCard { get; private set; }
 
     public async Task LoadGameAsync(string sessionId)
     {
@@ -126,7 +127,22 @@ public class GamePlayViewModel : ViewModelBase
         }
     }
 
-    public async Task PlayCardAsync(CardViewModel card)
+    public async Task PlayCardAsync(CardViewModel card) =>
+        await SubmitCardAsync(card, enforceLocalFollowSuitValidation: true);
+
+    public async Task TakeCardAsync()
+    {
+        if (!CanTakeCard)
+            return;
+
+        var fallbackCard = PlayerCards.FirstOrDefault();
+        if (fallbackCard == null)
+            return;
+
+        await SubmitCardAsync(fallbackCard, enforceLocalFollowSuitValidation: false);
+    }
+
+    private async Task SubmitCardAsync(CardViewModel card, bool enforceLocalFollowSuitValidation)
     {
         if (IsLoading || !IsPlayerTurn || string.IsNullOrEmpty(SessionId)) return;
         if (!Guid.TryParse(SessionId, out var sessionGuid)) return;
@@ -139,7 +155,8 @@ public class GamePlayViewModel : ViewModelBase
         }
 
         var handStr = PlayerCards.Select(c => c.DisplayValue).ToList();
-        if (MakopaFollowSuit.RulesApply(IsPlayerTurn, WaitingForOpponent, ShowGameResult) &&
+        if (enforceLocalFollowSuitValidation &&
+            MakopaFollowSuit.RulesApply(IsPlayerTurn, WaitingForOpponent, ShowGameResult) &&
             !MakopaFollowSuit.IsLegalPlay(card.DisplayValue, LastPlayedCard?.DisplayValue, handStr))
         {
             SetError(_i18n?.T("invalid_move_follow_suit") ?? "You must follow the led suit when you can.");
@@ -279,6 +296,7 @@ public class GamePlayViewModel : ViewModelBase
         var hand = PlayerCards.Select(c => c.DisplayValue).ToList();
         foreach (var c in PlayerCards)
             c.IsPlayable = !rules || MakopaFollowSuit.IsLegalPlay(c.DisplayValue, last, hand);
+        CanTakeCard = rules && PlayerCards.Count > 0 && PlayerCards.All(c => !c.IsPlayable);
     }
 
     private void ApplyGameResultFromHub(Guid? winnerPlayerId)

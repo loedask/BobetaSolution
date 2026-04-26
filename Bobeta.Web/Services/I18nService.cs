@@ -141,6 +141,9 @@ public class I18nService(AppStateService appState)
             ["confirm"] = "Confirm",
             ["not_found"] = "Oops! Page not found",
             ["return_home"] = "Return to Home",
+            ["take_card"] = "Take",
+            ["take_card_hint_disabled"] = "Play a highlighted card first.",
+            ["take_card_hint_enabled"] = "No legal card. Take the card.",
             ["dev_test_deposit_notice"] = "Development build: deposits are simulated test credits (no real MoMo). Use only with a non-production API where DemoAuth:EnableTestWalletDeposits is enabled.",
         };
 
@@ -181,6 +184,9 @@ public class I18nService(AppStateService appState)
             ["pot_activity_hint"] = "L'activité n'affiche que votre place (−{0} FCFA). Ici = les deux piles réunies.",
             ["pot_chip_title"] = "{0} FCFA par joueur · 2 places",
             ["pot_opponent_lane"] = "En face",
+            ["take_card"] = "Prendre",
+            ["take_card_hint_disabled"] = "Jouez d'abord une carte surlignee.",
+            ["take_card_hint_enabled"] = "Aucune carte valide. Prenez la carte.",
             ["dev_test_deposit_notice"] = "Version de développement : les dépôts sont des crédits de test (pas de MoMo réel). À utiliser uniquement avec une API non production où DemoAuth:EnableTestWalletDeposits est activé.",
         };
 

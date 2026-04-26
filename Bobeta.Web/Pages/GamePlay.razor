@@ -34,6 +34,15 @@
             <OpponentHand CardCount="@ViewModel.OpponentCards.Count" />
             <GameBoard LastPlayedCard="@ViewModel.LastPlayedCard" OnCardDropped="HandleCardDropped" />
             <PlayerHand Cards="@ViewModel.PlayerCards" IsPlayerTurn="@ViewModel.IsPlayerTurn" OnPlayCard="PlayCard" OnDragStart="HandleDragStart" OnDragEnd="HandleDragEnd" />
+            <button type="button"
+                    class="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-55"
+                    disabled="@(!ViewModel.CanTakeCard || ViewModel.IsLoading)"
+                    @onclick="TakeCard">
+                @I18n.T("take_card")
+            </button>
+            <p class="text-center text-xs text-muted-foreground">
+                @(ViewModel.CanTakeCard ? I18n.T("take_card_hint_enabled") : I18n.T("take_card_hint_disabled"))
+            </p>
             <TurnIndicator IsPlayerTurn="@ViewModel.IsPlayerTurn" WaitingForOpponent="@ViewModel.WaitingForOpponent" />
         }
     </div>
@@ -78,6 +87,7 @@
     }
 
     private async Task PlayCard(CardViewModel card) => await ViewModel.PlayCardAsync(card);
+    private async Task TakeCard() => await ViewModel.TakeCardAsync();
 
     private string? _draggedCardDisplayValue;
 
