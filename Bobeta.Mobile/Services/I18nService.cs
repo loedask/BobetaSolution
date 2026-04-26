@@ -144,6 +144,7 @@ public class I18nService(AppStateService appState)
             ["trick_outcome_opponent"] = "Opponent took this trick.",
             ["waiting_for_opponent"] = "Waiting for an opponent…",
             ["play_card"] = "Play card",
+            ["take_card"] = "Take the card",
         };
 
         var fr = new Dictionary<string, string>(en)
@@ -181,6 +182,7 @@ public class I18nService(AppStateService appState)
             ["invalid_move_follow_suit"] = "Vous devez suivre la couleur demandée si vous en avez. Choisissez une carte mise en évidence.",
             ["trick_outcome_you"] = "Vous remportez ce pli.",
             ["trick_outcome_opponent"] = "L'adversaire remporte ce pli.",
+            ["take_card"] = "Prendre la carte",
         };
 
         var kt = new Dictionary<string, string>(en);

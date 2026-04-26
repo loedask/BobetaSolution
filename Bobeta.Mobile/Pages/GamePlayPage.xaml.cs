@@ -35,6 +35,7 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         LastPlayTitle.Text = "Last played";
         ResultTitle.Text = "Game over";
         DoneBtn.Text = i18n.T("return_home");
+        TakeCardButton.Text = i18n.T("take_card");
 
         if (!string.IsNullOrEmpty(_sessionId))
             await _vm.LoadGameAsync(_sessionId);
@@ -70,6 +71,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
                 : i18n.T("opponent_turn");
         TurnLabel.TextColor = _vm.IsPlayerTurn ? Color.FromArgb("#2dd48e") : Color.FromArgb("#8a93a8");
         HandView.IsEnabled = _vm.IsPlayerTurn && !_vm.ShowGameResult;
+        TakeCardButton.IsEnabled = _vm.CanTakeCard && !_vm.IsLoading;
+        TakeCardButton.Opacity = TakeCardButton.IsEnabled ? 1.0 : 0.55;
 
         if (!string.IsNullOrEmpty(_vm.TrickOutcomeMessage))
         {
@@ -120,4 +123,12 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
 
     private async void OnDone(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync("//MainTabs/Dashboard");
+
+    private async void OnTakeCardTapped(object? sender, EventArgs e)
+    {
+        if (_vm == null)
+            return;
+
+        await _vm.TakeCardAsync();
+    }
 }

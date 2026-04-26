@@ -266,8 +266,8 @@ public class GamePlayViewModel : ViewModelBase
         if (moverPlayerId == _appState.State.CurrentPlayerId)
             return;
         _aiTriggerCts?.Cancel();
-        LastPlayedCard = ParseCard(cardSuitRank);
-        // Turn / hand remain authoritative from GameState or the play-card HTTP response.
+        // Turn/trick state is authoritative from GameState or the play-card HTTP response.
+        // Ignoring raw move events here prevents stale out-of-order updates from corrupting local hand playability.
         RefreshHandPlayability();
         RaiseStateChanged();
     }
