@@ -138,6 +138,15 @@
             TextColor="{StaticResource Foreground}"
             IsEnabled="False" />
 
+        <Label
+            x:Name="TakeCardHintLabel"
+            Grid.Row="4"
+            Margin="0,50,0,0"
+            FontSize="11"
+            TextColor="{StaticResource MutedForeground}"
+            HorizontalTextAlignment="Center"
+            LineBreakMode="WordWrap" />
+
         <Label x:Name="ErrorLabel" Grid.Row="5" IsVisible="False" TextColor="{StaticResource Destructive}" />
         <ActivityIndicator x:Name="Busy" Grid.Row="5" IsRunning="False" Color="{StaticResource PrimaryGold}" />
 

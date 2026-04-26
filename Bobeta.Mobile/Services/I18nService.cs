@@ -145,6 +145,8 @@ public class I18nService(AppStateService appState)
             ["waiting_for_opponent"] = "Waiting for an opponent…",
             ["play_card"] = "Play card",
             ["take_card"] = "Take the card",
+            ["take_card_hint_disabled"] = "Play a highlighted card first.",
+            ["take_card_hint_enabled"] = "No legal card. Take the card.",
         };
 
         var fr = new Dictionary<string, string>(en)
@@ -183,6 +185,8 @@ public class I18nService(AppStateService appState)
             ["trick_outcome_you"] = "Vous remportez ce pli.",
             ["trick_outcome_opponent"] = "L'adversaire remporte ce pli.",
             ["take_card"] = "Prendre la carte",
+            ["take_card_hint_disabled"] = "Jouez d'abord une carte surlignee.",
+            ["take_card_hint_enabled"] = "Aucune carte valide. Prenez la carte.",
         };
 
         var kt = new Dictionary<string, string>(en);

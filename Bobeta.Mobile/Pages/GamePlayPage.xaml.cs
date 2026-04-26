@@ -73,6 +73,9 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         HandView.IsEnabled = _vm.IsPlayerTurn && !_vm.ShowGameResult;
         TakeCardButton.IsEnabled = _vm.CanTakeCard && !_vm.IsLoading;
         TakeCardButton.Opacity = TakeCardButton.IsEnabled ? 1.0 : 0.55;
+        TakeCardHintLabel.Text = _vm.CanTakeCard
+            ? i18n.T("take_card_hint_enabled")
+            : i18n.T("take_card_hint_disabled");
 
         if (!string.IsNullOrEmpty(_vm.TrickOutcomeMessage))
         {
