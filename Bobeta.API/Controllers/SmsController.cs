@@ -7,16 +7,10 @@ namespace Bobeta.API.Controllers;
 /// <summary>SMS delivery report (DLR) webhook and status. SendSMSGate calls POST /api/sms/dlr with provider message ID and status.</summary>
 [ApiController]
 [Route("api/[controller]")]
-public class SmsController : ControllerBase
+public class SmsController(ISmsMessageRepository smsRepository, ILogger<SmsController> logger) : ControllerBase
 {
-    private readonly ISmsMessageRepository _smsRepository;
-    private readonly ILogger<SmsController> _logger;
-
-    public SmsController(ISmsMessageRepository smsRepository, ILogger<SmsController> logger)
-    {
-        _smsRepository = smsRepository;
-        _logger = logger;
-    }
+    private readonly ISmsMessageRepository _smsRepository = smsRepository;
+    private readonly ILogger<SmsController> _logger = logger;
 
     /// <summary>Receives delivery report from SendSMSGate. Updates SmsMessage status. Supports GET (query) or POST (body) with smsid and status (send, deliver, not_deliver, expired).</summary>
     [AcceptVerbs("GET", "POST")]
