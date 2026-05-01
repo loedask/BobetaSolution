@@ -10,18 +10,11 @@ namespace Bobeta.API.Controllers;
 /// <summary>API for MoMo payments: deposit (request-to-pay), withdrawal (disbursement), status. Callback validates headers and is unauthenticated.</summary>
 [ApiController]
 [Route("api/[controller]")]
-public class PaymentsController : ControllerBase
+public class PaymentsController(IPaymentService paymentService, Microsoft.Extensions.Options.IOptions<MoMoSettings> moMoSettings, ILogger<PaymentsController> logger) : ControllerBase
 {
-    private readonly IPaymentService _paymentService;
-    private readonly MoMoSettings _moMoSettings;
-    private readonly ILogger<PaymentsController> _logger;
-
-    public PaymentsController(IPaymentService paymentService, Microsoft.Extensions.Options.IOptions<MoMoSettings> moMoSettings, ILogger<PaymentsController> logger)
-    {
-        _paymentService = paymentService;
-        _moMoSettings = moMoSettings.Value;
-        _logger = logger;
-    }
+    private readonly IPaymentService _paymentService = paymentService;
+    private readonly MoMoSettings _moMoSettings = moMoSettings.Value;
+    private readonly ILogger<PaymentsController> _logger = logger;
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
