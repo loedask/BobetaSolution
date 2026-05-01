@@ -54,9 +54,16 @@ public class GamePlayViewModel : ViewModelBase
 
     public Guid? CurrentPlayerId { get; private set; }
 
-    /// <summary>Shown after a trick resolves (e.g. follower with no led suit wins); cleared when the next trick starts.</summary>
+    /// <summary>Shown after a trick resolves; cleared when the next trick starts.</summary>
     public string? TrickOutcomeMessage { get; private set; }
     public bool CanTakeCard { get; private set; }
+
+    /// <summary>Hands won in the match from this seat (API), for display alongside opponent.</summary>
+    public int MyRoundWins { get; private set; }
+    public int OpponentRoundWins { get; private set; }
+
+    /// <summary>Localized “Hands won …” line during play.</summary>
+    public string? MatchRoundScoreText { get; private set; }
 
     public async Task LoadGameAsync(string sessionId)
     {
@@ -96,6 +103,7 @@ public class GamePlayViewModel : ViewModelBase
                 ShowGameResult = false;
 
             ApplyTrickOutcomeMessage(state.LastTrickWinnerPlayerId);
+            ApplyMatchRoundScore(state);
             RefreshHandPlayability();
 
             if (_hubClient != null)
@@ -196,6 +204,7 @@ public class GamePlayViewModel : ViewModelBase
                 if (res.Data.GameOver)
                     HandleGameResult(res.Data.WinnerPlayerId);
                 ApplyTrickOutcomeMessage(res.Data.LastTrickWinnerPlayerId);
+                ApplyMatchRoundScore(res.Data);
             }
 
             RefreshHandPlayability();
@@ -209,6 +218,22 @@ public class GamePlayViewModel : ViewModelBase
         {
             SetLoading(false);
         }
+    }
+
+    private void ApplyMatchRoundScore(GameStateViewModel? state)
+    {
+        if (state == null || state.WaitingForGameStart)
+        {
+            MyRoundWins = OpponentRoundWins = 0;
+            MatchRoundScoreText = null;
+            return;
+        }
+
+        MyRoundWins = state.MyRoundWins;
+        OpponentRoundWins = state.OpponentRoundWins;
+        MatchRoundScoreText = _i18n != null
+            ? string.Format(_i18n.T("makopa_round_score"), MyRoundWins, OpponentRoundWins)
+            : $"Hands won: {MyRoundWins}\u2013{OpponentRoundWins} (first to 2 wins the match)";
     }
 
     private void ApplyTrickOutcomeMessage(Guid? lastTrickWinnerPlayerId)
@@ -274,6 +299,7 @@ public class GamePlayViewModel : ViewModelBase
         else
             ShowGameResult = false;
         ApplyTrickOutcomeMessage(state.LastTrickWinnerPlayerId);
+        ApplyMatchRoundScore(state);
         RefreshHandPlayability();
         RaiseStateChanged();
     }

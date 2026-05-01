@@ -52,6 +52,9 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public string? TrickOutcomeMessage { get; private set; }
     public bool CanTakeCard { get; private set; }
 
+    public int MyRoundWins { get; private set; }
+    public int OpponentRoundWins { get; private set; }
+
     public async Task LoadGameAsync(string sessionId)
     {
         SessionId = sessionId;
@@ -88,6 +91,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
                 ShowGameResult = false;
 
             ApplyTrickOutcomeMessage(state.LastTrickWinnerPlayerId);
+            ApplyMatchRoundScore(state);
             RefreshHandPlayability();
 
             if (_hubClient != null)
@@ -179,6 +183,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
                 if (res.Data.GameOver)
                     HandleGameResult(res.Data.WinnerPlayerId);
                 ApplyTrickOutcomeMessage(res.Data.LastTrickWinnerPlayerId);
+                ApplyMatchRoundScore(res.Data);
             }
 
             RefreshHandPlayability();
@@ -192,6 +197,18 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         {
             SetLoading(false);
         }
+    }
+
+    private void ApplyMatchRoundScore(GameStateViewModel state)
+    {
+        if (state.WaitingForGameStart)
+        {
+            MyRoundWins = OpponentRoundWins = 0;
+            return;
+        }
+
+        MyRoundWins = state.MyRoundWins;
+        OpponentRoundWins = state.OpponentRoundWins;
     }
 
     private void ApplyTrickOutcomeMessage(Guid? lastTrickWinnerPlayerId)
@@ -242,6 +259,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         else
             ShowGameResult = false;
         ApplyTrickOutcomeMessage(state.LastTrickWinnerPlayerId);
+        ApplyMatchRoundScore(state);
         RefreshHandPlayability();
         RaiseStateChanged();
     }

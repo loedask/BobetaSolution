@@ -27,6 +27,14 @@
         else
         {
             <PotDisplay PotAmount="@ViewModel.PotAmount" OpponentDisplayName="@ViewModel.OpponentDisplayName" />
+            @if (!string.IsNullOrEmpty(ViewModel.MatchRoundScoreText))
+            {
+                <p class="text-center text-xs text-muted-foreground">@ViewModel.MatchRoundScoreText</p>
+            }
+            <details class="rounded-xl border border-border bg-card/60 px-4 py-3 text-sm text-foreground">
+                <summary class="cursor-pointer select-none font-semibold">@I18n.T("makopa_how_to_play_title")</summary>
+                <div class="mt-2 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">@I18n.T("makopa_rules_body")</div>
+            </details>
             @if (!string.IsNullOrEmpty(ViewModel.TrickOutcomeMessage))
             {
                 <p class="rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-center text-sm text-foreground">@ViewModel.TrickOutcomeMessage</p>

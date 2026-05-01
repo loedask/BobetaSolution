@@ -91,6 +91,25 @@
         </Border>
 
         <VerticalStackLayout Grid.Row="1" Spacing="8">
+            <HorizontalStackLayout Spacing="12" HorizontalOptions="Fill">
+                <Label
+                    x:Name="RoundScoreLabel"
+                    FontSize="12"
+                    FontAttributes="Bold"
+                    TextColor="{StaticResource AccentGreen}"
+                    HorizontalOptions="FillAndExpand"
+                    LineBreakMode="WordWrap" />
+                <Label
+                    x:Name="RulesLink"
+                    FontSize="12"
+                    TextDecorations="Underline"
+                    TextColor="{StaticResource PrimaryGold}"
+                    VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnRulesTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </HorizontalStackLayout>
             <Label x:Name="LastPlayTitle" FontSize="12" TextColor="{StaticResource MutedForeground}" />
             <Label
                 x:Name="TrickOutcomeLabel"

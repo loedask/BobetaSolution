@@ -1,6 +1,6 @@
 namespace Bobeta.Client.Presentation;
 
-/// <summary>Mirrors <see cref="Bobeta.Application.Services.GameEngineService.PlayCardAsync"/> follow-suit rule so the UI does not offer illegal plays.</summary>
+/// <summary>Mirrors server follow-suit: must match led suit when your hand contains that suit; otherwise any card.</summary>
 public static class MakopaFollowSuit
 {
     /// <summary>True when this card may be submitted while responding to a lead (same rule as server).</summary>

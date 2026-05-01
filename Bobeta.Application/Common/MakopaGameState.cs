@@ -26,6 +26,12 @@ public class MakopaGameState
 
     /// <summary>After a trick is resolved, set to the winner until the next trick begins (first card of next trick clears this).</summary>
     public Guid? LastTrickWinnerPlayerId { get; set; }
+
+    /// <summary>Hands (rounds) won by the creator in this match.</summary>
+    public int CreatorRoundWins { get; set; }
+
+    /// <summary>Hands (rounds) won by the opponent in this match.</summary>
+    public int OpponentRoundWins { get; set; }
 }
 
 /// <summary>A single card play within the current trick (player and card string).</summary>

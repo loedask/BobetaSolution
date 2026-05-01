@@ -36,6 +36,7 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         ResultTitle.Text = "Game over";
         DoneBtn.Text = i18n.T("done_short");
         TakeCardButton.Text = i18n.T("take_card");
+        RulesLink.Text = i18n.T("makopa_rules_link");
 
         if (!string.IsNullOrEmpty(_sessionId))
             await _vm.LoadGameAsync(_sessionId);
@@ -76,6 +77,20 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         TakeCardHintLabel.Text = _vm.CanTakeCard
             ? i18n.T("take_card_hint_enabled")
             : i18n.T("take_card_hint_disabled");
+
+        if (_vm.WaitingForOpponent)
+        {
+            RoundScoreLabel.Text = "";
+            RoundScoreLabel.IsVisible = false;
+            RulesLink.IsVisible = false;
+        }
+        else
+        {
+            RoundScoreLabel.IsVisible = true;
+            RulesLink.IsVisible = true;
+            RulesLink.Text = i18n.T("makopa_rules_link");
+            RoundScoreLabel.Text = string.Format(i18n.T("makopa_round_score"), _vm.MyRoundWins, _vm.OpponentRoundWins);
+        }
 
         if (!string.IsNullOrEmpty(_vm.TrickOutcomeMessage))
         {
@@ -133,5 +148,11 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
             return;
 
         await _vm.TakeCardAsync();
+    }
+
+    private async void OnRulesTapped(object? sender, TappedEventArgs e)
+    {
+        var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
+        await DisplayAlert(i18n.T("makopa_how_to_play_title"), i18n.T("makopa_rules_body"), i18n.T("done_short"));
     }
 }

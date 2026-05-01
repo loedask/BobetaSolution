@@ -117,7 +117,9 @@ public class GameService(IClient client, HttpClient httpClient, IAccessTokenProv
             WaitingForGameStart = dto.WaitingForGameStart,
             LobbyPotAmount = (decimal)dto.LobbyPotAmount,
             OpponentDisplayName = string.IsNullOrEmpty(dto.OpponentDisplayName) ? null : dto.OpponentDisplayName,
-            LastTrickWinnerPlayerId = dto.LastTrickWinnerPlayerId
+            LastTrickWinnerPlayerId = dto.LastTrickWinnerPlayerId,
+            MyRoundWins = dto.MyRoundWins,
+            OpponentRoundWins = dto.OpponentRoundWins
         };
     }
 }

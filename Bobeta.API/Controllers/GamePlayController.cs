@@ -27,7 +27,7 @@ public class GamePlayController(
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
-    /// <summary>Starts the game: deals 4 cards to each player. Session must have two players.</summary>
+    /// <summary>Starts the match: deals cards and begins hand 1 (best-of-3 hands).</summary>
     [HttpPost("start")]
     public async Task<IActionResult> StartGame([FromQuery] Guid sessionId, CancellationToken cancellationToken)
     {

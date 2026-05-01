@@ -144,6 +144,11 @@ public class I18nService(AppStateService appState)
             ["take_card"] = "Take",
             ["take_card_hint_disabled"] = "Play a highlighted card first.",
             ["take_card_hint_enabled"] = "No legal card. Take the card.",
+            ["makopa_how_to_play_title"] = "How to play Makopa",
+            ["makopa_rules_body"] =
+                "\u2022 Two players; each hand you get 6 cards.\n\u2022 The match is best of 3 hands (first to 2 wins the pot).\n\u2022 If you have any card of the suit that was led, you must play one of those cards.\n\u2022 If you have no cards in the led suit, you may play any card; only cards of the led suit decide who wins the trick.\n\u2022 Highest card of the led suit wins; if tied on rank, whoever led wins.\n\u2022 Winner of each hand plays first in the next hand; who leads hand 1 is chosen at random for this session.",
+            ["makopa_round_score"] = "Hands won: {0}\u2013{1} (first to 2 wins the match)",
+            ["makopa_rules_link"] = "Rules",
             ["dev_test_deposit_notice"] = "Development build: deposits are simulated test credits (no real MoMo). Use only with a non-production API where DemoAuth:EnableTestWalletDeposits is enabled.",
         };
 
@@ -187,6 +192,11 @@ public class I18nService(AppStateService appState)
             ["take_card"] = "Prendre",
             ["take_card_hint_disabled"] = "Jouez d'abord une carte surlignee.",
             ["take_card_hint_enabled"] = "Aucune carte valide. Prenez la carte.",
+            ["makopa_how_to_play_title"] = "Comment jouer (Makopa)",
+            ["makopa_rules_body"] =
+                "\u2022 Deux joueurs ; 6 cartes par main.\n\u2022 Match en 2 mains gagnantes sur 3 (premier à 2 remporte le pot).\n\u2022 Suivez la couleur lorsque vous pouvez.\n\u2022 Sans carte de la couleur demandée, jouez une carte quelconque ; seules les cartes de la couleur de tête décident.\n\u2022 La meilleure carte de la couleur de tête remporte la levée ; en cas d'égalité, le joueur ayant amené garde.\n\u2022 Le vainqueur d'une main entame la première levée suivante ; le joueur qui amène la première main est tiré au sort pour cette table.",
+            ["makopa_round_score"] = "Mains gagnées : {0}\u2013{1} (2 pour gagner)",
+            ["makopa_rules_link"] = "Règles",
             ["dev_test_deposit_notice"] = "Version de développement : les dépôts sont des crédits de test (pas de MoMo réel). À utiliser uniquement avec une API non production où DemoAuth:EnableTestWalletDeposits est activé.",
         };
 

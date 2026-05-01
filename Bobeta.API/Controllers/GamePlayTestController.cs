@@ -1,3 +1,4 @@
+using Bobeta.Application.Common;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Enums;
 using Bobeta.Domain.ValueObjects;
@@ -34,8 +35,11 @@ public class GamePlayTestController(
         if (state.CurrentTurnPlayerId != opponentId)
             return BadRequest("Not opponent's turn.");
         var hand = state.MyCards.ToList();
+        var lead = state.LastPlayedCard;
+        var legal = hand.Where(c => MakopaRules.IsLegalPlay(c, lead, hand)).ToList();
+        var pickFrom = legal.Count > 0 ? legal : hand;
         var random = new Random();
-        var cardStr = hand[random.Next(hand.Count)];
+        var cardStr = pickFrom[random.Next(pickFrom.Count)];
         if (!TryParseCard(cardStr, out var card) || card == null)
             return BadRequest("Could not parse card.");
         try

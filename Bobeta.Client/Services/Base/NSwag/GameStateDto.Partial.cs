@@ -7,4 +7,10 @@ public partial class GameStateDto
     /// <summary>Winner of the most recently completed trick; omitted once the next trick starts.</summary>
     [JsonPropertyName("lastTrickWinnerPlayerId")]
     public Guid? LastTrickWinnerPlayerId { get; set; }
+
+    [JsonPropertyName("myRoundWins")]
+    public int MyRoundWins { get; set; }
+
+    [JsonPropertyName("opponentRoundWins")]
+    public int OpponentRoundWins { get; set; }
 }
