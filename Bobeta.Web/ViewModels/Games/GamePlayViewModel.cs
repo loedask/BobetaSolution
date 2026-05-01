@@ -140,14 +140,55 @@ public class GamePlayViewModel : ViewModelBase
 
     public async Task TakeCardAsync()
     {
-        if (!CanTakeCard)
+        if (!CanTakeCard || string.IsNullOrEmpty(SessionId) || !Guid.TryParse(SessionId, out var sessionGuid))
             return;
 
-        var fallbackCard = PlayerCards.FirstOrDefault();
-        if (fallbackCard == null)
+        if (string.IsNullOrWhiteSpace(_appState.State.AccessToken) ||
+            JwtPayloadReader.IsExpired(_appState.State.AccessToken, DateTimeOffset.UtcNow))
+        {
+            await _appState.HandleUnauthorizedAsync(401, _nav);
             return;
+        }
 
-        await SubmitCardAsync(fallbackCard, enforceLocalFollowSuitValidation: false);
+        SetLoading(true);
+        ClearError();
+        try
+        {
+            var res = await _gamePlayService.VoidFollowDrawAsync(sessionGuid);
+            if (!res.IsSuccess)
+            {
+                if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
+                    return;
+                SetError(res.ErrorMessage ?? "Could not draw.");
+                return;
+            }
+
+            if (res.Data != null)
+            {
+                WaitingForOpponent = res.Data.WaitingForGameStart;
+                PotAmount = res.Data.LobbyPotAmount;
+                OpponentDisplayName = res.Data.OpponentDisplayName;
+                CurrentPlayerId = res.Data.CurrentTurnPlayerId;
+                IsPlayerTurn = !WaitingForOpponent && res.Data.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
+                PlayerCards = ParseCards(res.Data.MyCards ?? new List<string>());
+                LastPlayedCard = string.IsNullOrEmpty(res.Data.LastPlayedCard) ? null : ParseCard(res.Data.LastPlayedCard);
+                if (res.Data.GameOver)
+                    HandleGameResult(res.Data.WinnerPlayerId);
+                ApplyTrickOutcomeMessage(res.Data.LastTrickWinnerPlayerId);
+                ApplyMatchRoundScore(res.Data);
+            }
+
+            RefreshHandPlayability();
+            RaiseStateChanged();
+        }
+        catch (Exception)
+        {
+            SetError("Something went wrong. Please try again.");
+        }
+        finally
+        {
+            SetLoading(false);
+        }
     }
 
     private async Task SubmitCardAsync(CardViewModel card, bool enforceLocalFollowSuitValidation)
@@ -231,6 +272,12 @@ public class GamePlayViewModel : ViewModelBase
 
         MyRoundWins = state.MyRoundWins;
         OpponentRoundWins = state.OpponentRoundWins;
+        if (MyRoundWins == 0 && OpponentRoundWins == 0)
+        {
+            MatchRoundScoreText = null;
+            return;
+        }
+
         MatchRoundScoreText = _i18n != null
             ? string.Format(_i18n.T("makopa_round_score"), MyRoundWins, OpponentRoundWins)
             : $"Hands won: {MyRoundWins}\u2013{OpponentRoundWins} (first to 2 wins the match)";
@@ -320,9 +367,18 @@ public class GamePlayViewModel : ViewModelBase
         var rules = MakopaFollowSuit.RulesApply(IsPlayerTurn, WaitingForOpponent, ShowGameResult);
         var last = LastPlayedCard?.DisplayValue;
         var hand = PlayerCards.Select(c => c.DisplayValue).ToList();
+        var needsVoid = rules && MakopaFollowSuit.ResponderNeedsVoidFollow(last, hand);
         foreach (var c in PlayerCards)
-            c.IsPlayable = !rules || MakopaFollowSuit.IsLegalPlay(c.DisplayValue, last, hand);
-        CanTakeCard = rules && PlayerCards.Count > 0 && PlayerCards.All(c => !c.IsPlayable);
+        {
+            if (!rules)
+                c.IsPlayable = true;
+            else if (needsVoid)
+                c.IsPlayable = false;
+            else
+                c.IsPlayable = MakopaFollowSuit.IsLegalPlay(c.DisplayValue, last, hand);
+        }
+
+        CanTakeCard = needsVoid;
     }
 
     private void ApplyGameResultFromHub(Guid? winnerPlayerId)

@@ -27,7 +27,7 @@ public class GamePlayController(
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
-    /// <summary>Starts the match: deals cards and begins hand 1 (best-of-3 hands).</summary>
+    /// <summary>Starts a match: deals 4 cards each plus stock pile; random first leader.</summary>
     [HttpPost("start")]
     public async Task<IActionResult> StartGame([FromQuery] Guid sessionId, CancellationToken cancellationToken)
     {
@@ -56,6 +56,25 @@ public class GamePlayController(
 
         if (state.GameOver)
             await _hubContext.Clients.Group(groupName).SendAsync("GameResult", state.WinnerPlayerId);
+
+        return Ok(state);
+    }
+
+    /// <summary>Responder holds no cards of the led suit: leader&apos;s card is returned, responder draws stock, leader opens again.</summary>
+    [HttpPost("void-follow")]
+    public async Task<ActionResult<GameStateDto>> VoidFollowDraw([FromQuery] Guid sessionId, CancellationToken cancellationToken)
+    {
+        var state = await _gameEngineService.VoidFollowDrawAsync(PlayerId, sessionId, cancellationToken);
+        if (state == null) return BadRequest("Invalid move or game state.");
+
+        var sessionRow = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        await PushGameStateToParticipantsAsync(sessionRow, sessionId, state, cancellationToken);
+
+        if (state.GameOver)
+        {
+            var groupName = GameHub.GroupPrefix + sessionId;
+            await _hubContext.Clients.Group(groupName).SendAsync("GameResult", state.WinnerPlayerId);
+        }
 
         return Ok(state);
     }

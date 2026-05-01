@@ -1,0 +1,1629 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Bobeta API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/Auth/send-otp": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Sends a one-time password (OTP) by SMS to the phone number for phone-based sign-in.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Auth.SendOtpRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Auth.SendOtpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Auth.SendOtpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Auth/verify-otp": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Verifies the OTP code; returns a JWT if the player is already registered.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Auth.VerifyOtpRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Auth.VerifyOtpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Auth.VerifyOtpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Registers a new player (phone + name) and returns JWT and profile.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Auth.RegisterPlayerRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Auth.RegisterPlayerRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Auth.RegisterPlayerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Auth.AuthResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Auth.AuthResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Auth.AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Game/create": {
+      "post": {
+        "tags": [
+          "Game"
+        ],
+        "summary": "Creates a new game with the specified bet amount (validated 200–500).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.CreateGameRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.CreateGameRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.CreateGameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameSessionDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameSessionDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameSessionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Game/join": {
+      "post": {
+        "tags": [
+          "Game"
+        ],
+        "summary": "Joins an existing waiting game by id.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.JoinGameRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.JoinGameRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.JoinGameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameSessionDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameSessionDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameSessionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Game/open": {
+      "get": {
+        "tags": [
+          "Game"
+        ],
+        "summary": "Lists waiting games you can join (excludes games you created).",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameSessionDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameSessionDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameSessionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Game/propose-bet": {
+      "post": {
+        "tags": [
+          "Game"
+        ],
+        "summary": "Proposes a new bet amount for the game (opponent must accept).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.ProposeBetRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.ProposeBetRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.ProposeBetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Game/accept-bet": {
+      "post": {
+        "tags": [
+          "Game"
+        ],
+        "summary": "Accepts a pending bet change for the game.",
+        "parameters": [
+          {
+            "name": "gameId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/GamePlay/start": {
+      "post": {
+        "tags": [
+          "GamePlay"
+        ],
+        "summary": "Starts a match: deals 4 cards each plus stock pile; random first leader.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/GamePlay/play-card": {
+      "post": {
+        "tags": [
+          "GamePlay"
+        ],
+        "summary": "Plays a card in the current turn. Server validates turn and follow-suit rule, then broadcasts state and move via SignalR.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.PlayCardRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.PlayCardRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.PlayCardRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameStateDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameStateDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameStateDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/GamePlay/void-follow": {
+      "post": {
+        "tags": [
+          "GamePlay"
+        ],
+        "summary": "Responder holds no cards of the led suit: leader's card is returned, responder draws stock, leader opens again.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameStateDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameStateDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameStateDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/GamePlay/state": {
+      "get": {
+        "tags": [
+          "GamePlay"
+        ],
+        "summary": "Gets the current game state for the authenticated player (hand, last card, whose turn, game over, winner).",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameStateDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameStateDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.GameStateDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/GamePlayTest/simulate-ai": {
+      "post": {
+        "tags": [
+          "GamePlayTest"
+        ],
+        "summary": "If it is the opponent's turn, plays a random valid card for the opponent after a 1s delay. For local testing when no second browser is available.",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/History/player": {
+      "get": {
+        "tags": [
+          "History"
+        ],
+        "summary": "Returns paginated game history for the authenticated player.",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bobeta.Application.DTOs.History.GameHistoryItemDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bobeta.Application.DTOs.History.GameHistoryItemDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bobeta.Application.DTOs.History.GameHistoryItemDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Payments/deposit": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Initiates a deposit (request-to-pay). Returns pending payment transaction; user confirms on their phone. Wallet is credited on callback when successful.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentDepositRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentDepositRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentDepositRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentTransactionDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentTransactionDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentTransactionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Payments/withdraw": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Initiates a withdrawal (disbursement). Validates wallet balance and creates pending transaction; wallet is debited only when MoMo confirms success.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentWithdrawRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentWithdrawRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentWithdrawRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentTransactionDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentTransactionDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentTransactionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Payments/status/{id}": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Gets the status of a payment transaction by id. May poll MoMo and update wallet on success.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentTransactionDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentTransactionDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Payment.PaymentTransactionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Payments/momo/callback": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "MoMo callback endpoint. Called by MTN when payment status changes. Validates X-Reference-Id, X-Target-Environment, Ocp-Apim-Subscription-Key; returns 401 if validation fails. Idempotent for duplicate callbacks.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Profile": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Gets the authenticated player's profile.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Profile.PlayerProfileDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Profile.PlayerProfileDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Profile.PlayerProfileDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Profile/language": {
+      "patch": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Updates the player's preferred language.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Profile.UpdateLanguageRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Profile.UpdateLanguageRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Profile.UpdateLanguageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Sms/dlr": {
+      "get": {
+        "tags": [
+          "Sms"
+        ],
+        "summary": "Receives delivery report from SendSMSGate. Updates SmsMessage status. Supports GET (query) or POST (body) with smsid and status (send, deliver, not_deliver, expired).",
+        "parameters": [
+          {
+            "name": "smsid",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.API.Controllers.DlrRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.API.Controllers.DlrRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.API.Controllers.DlrRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Sms"
+        ],
+        "summary": "Receives delivery report from SendSMSGate. Updates SmsMessage status. Supports GET (query) or POST (body) with smsid and status (send, deliver, not_deliver, expired).",
+        "parameters": [
+          {
+            "name": "smsid",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.API.Controllers.DlrRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.API.Controllers.DlrRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.API.Controllers.DlrRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Wallet/balance": {
+      "get": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Gets the current balance and locked balance for the authenticated player.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WalletBalanceDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WalletBalanceDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WalletBalanceDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Wallet/deposit": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Credits the player's wallet without a payment provider. Intended for local/demo testing only;\r\ndisabled in production and unless `DemoAuth:EnableTestWalletDeposits` is true.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.DepositRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.DepositRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.DepositRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WalletTransactionDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WalletTransactionDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WalletTransactionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Wallet/withdraw": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Withdraws the specified amount from the player's wallet.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WithdrawRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WithdrawRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WithdrawRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WalletTransactionDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WalletTransactionDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WalletTransactionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Wallet/transactions": {
+      "get": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Returns paginated transaction history for the authenticated player.",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WalletTransactionDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WalletTransactionDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bobeta.Application.DTOs.Wallet.WalletTransactionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Bobeta.API.Controllers.DlrRequest": {
+        "type": "object",
+        "properties": {
+          "smsId": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request body for DLR webhook (when SendSMSGate sends POST with JSON)."
+      },
+      "Bobeta.Application.DTOs.Auth.AuthResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "nullable": true
+          },
+          "playerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "playerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "isNewUser": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Auth.RegisterPlayerRequest": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "playerName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Auth.SendOtpRequest": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Auth.VerifyOtpRequest": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Game.CardPlayDto": {
+        "type": "object",
+        "properties": {
+          "suit": {
+            "$ref": "#/components/schemas/Bobeta.Domain.Enums.CardSuit"
+          },
+          "rank": {
+            "$ref": "#/components/schemas/Bobeta.Domain.Enums.CardRank"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Game.CreateGameRequest": {
+        "type": "object",
+        "properties": {
+          "betAmount": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Game.GameSessionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "creatorPlayerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "opponentPlayerId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "betAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Bobeta.Domain.Enums.GameStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Game.GameStateDto": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "myCards": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "lastPlayedCard": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentTurnPlayerId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "gameOver": {
+            "type": "boolean"
+          },
+          "winnerPlayerId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "waitingForGameStart": {
+            "type": "boolean"
+          },
+          "lobbyPotAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "opponentDisplayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastTrickWinnerPlayerId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "myRoundWins": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "opponentRoundWins": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Game.JoinGameRequest": {
+        "type": "object",
+        "properties": {
+          "gameId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Game.PlayCardRequest": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "card": {
+            "$ref": "#/components/schemas/Bobeta.Application.DTOs.Game.CardPlayDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Game.ProposeBetRequest": {
+        "type": "object",
+        "properties": {
+          "gameId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.History.GameHistoryItemDto": {
+        "type": "object",
+        "properties": {
+          "gameSessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "betAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Bobeta.Domain.Enums.GameStatus"
+          },
+          "opponentPlayerId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "winnerPlayerId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "wonAmount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isCreator": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Payment.PaymentDepositRequest": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Payment.PaymentTransactionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "playerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "externalReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "moMoTransactionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/Bobeta.Domain.Enums.PaymentTransactionType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Bobeta.Domain.Enums.PaymentTransactionStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Payment.PaymentWithdrawRequest": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Profile.PlayerProfileDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "playerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "language": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isVerified": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Profile.UpdateLanguageRequest": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Wallet.DepositRequest": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Wallet.WalletBalanceDto": {
+        "type": "object",
+        "properties": {
+          "balance": {
+            "type": "number",
+            "format": "double"
+          },
+          "lockedBalance": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Wallet.WalletTransactionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Bobeta.Domain.Enums.TransactionType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Bobeta.Domain.Enums.TransactionStatus"
+          },
+          "reference": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Application.DTOs.Wallet.WithdrawRequest": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Bobeta.Domain.Enums.CardRank": {
+        "enum": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Bobeta.Domain.Enums.CardSuit": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Bobeta.Domain.Enums.GameStatus": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Bobeta.Domain.Enums.PaymentTransactionStatus": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Bobeta.Domain.Enums.PaymentTransactionType": {
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Bobeta.Domain.Enums.TransactionStatus": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Bobeta.Domain.Enums.TransactionType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "type": "integer",
+        "format": "int32"
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "JWT Bearer token for Bobeta API.",
+        "scheme": "Bearer"
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Game"
+    },
+    {
+      "name": "GamePlay"
+    },
+    {
+      "name": "GamePlayTest"
+    },
+    {
+      "name": "History"
+    },
+    {
+      "name": "Payments"
+    },
+    {
+      "name": "Profile"
+    },
+    {
+      "name": "Sms"
+    },
+    {
+      "name": "Wallet"
+    }
+  ]
+}

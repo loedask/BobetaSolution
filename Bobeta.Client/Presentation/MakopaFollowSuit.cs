@@ -1,18 +1,28 @@
 namespace Bobeta.Client.Presentation;
 
-/// <summary>Mirrors server follow-suit: must match led suit when your hand contains that suit; otherwise any card.</summary>
+/// <summary>Mirrors server: follow suit if you hold that suit; if you cannot follow, tap Draw instead of playing a card.</summary>
 public static class MakopaFollowSuit
 {
+    /// <summary>You have no cards of the led suit — UI should offer void-follow instead of enabling any play.</summary>
+    public static bool ResponderNeedsVoidFollow(string? lastPlayedCard, IReadOnlyList<string> myHandDisplayValues)
+    {
+        if (string.IsNullOrEmpty(lastPlayedCard))
+            return false;
+        var leadSuit = SuitPrefix(lastPlayedCard);
+        if (string.IsNullOrEmpty(leadSuit))
+            return false;
+        return !myHandDisplayValues.Any(c => c.StartsWith(leadSuit, StringComparison.Ordinal));
+    }
+
     /// <summary>True when this card may be submitted while responding to a lead (same rule as server).</summary>
     public static bool IsLegalPlay(string cardToPlay, string? lastPlayedCard, IReadOnlyList<string> myHandDisplayValues)
     {
+        if (ResponderNeedsVoidFollow(lastPlayedCard, myHandDisplayValues))
+            return false;
         if (string.IsNullOrEmpty(lastPlayedCard))
             return true;
         var leadSuit = SuitPrefix(lastPlayedCard);
         if (string.IsNullOrEmpty(leadSuit))
-            return true;
-        var hasLeadSuit = myHandDisplayValues.Any(c => c.StartsWith(leadSuit, StringComparison.Ordinal));
-        if (!hasLeadSuit)
             return true;
         return cardToPlay.StartsWith(leadSuit, StringComparison.Ordinal);
     }

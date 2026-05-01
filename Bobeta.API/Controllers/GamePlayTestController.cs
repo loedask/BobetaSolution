@@ -36,15 +36,28 @@ public class GamePlayTestController(
             return BadRequest("Not opponent's turn.");
         var hand = state.MyCards.ToList();
         var lead = state.LastPlayedCard;
-        var legal = hand.Where(c => MakopaRules.IsLegalPlay(c, lead, hand)).ToList();
-        var pickFrom = legal.Count > 0 ? legal : hand;
-        var random = new Random();
-        var cardStr = pickFrom[random.Next(pickFrom.Count)];
-        if (!TryParseCard(cardStr, out var card) || card == null)
-            return BadRequest("Could not parse card.");
         try
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            if (!string.IsNullOrEmpty(lead) && MakopaRules.ResponderNeedsVoidFollow(lead, hand))
+            {
+                var voidState = await _gameEngineService.VoidFollowDrawAsync(opponentId, sessionId, cancellationToken);
+                if (voidState == null)
+                    return BadRequest("Invalid void-follow.");
+                return Ok(voidState);
+            }
+
+            var trickSuit = SuitPrefixFromCard(lead);
+            var legal = string.IsNullOrEmpty(trickSuit)
+                ? hand
+                : hand.Where(c => c.StartsWith(trickSuit, StringComparison.Ordinal)).ToList();
+            if (legal.Count == 0)
+                return BadRequest("No playable card.");
+
+            var random = new Random();
+            var cardStr = legal[random.Next(legal.Count)];
+            if (!TryParseCard(cardStr, out var card) || card == null)
+                return BadRequest("Could not parse card.");
             var newState = await _gameEngineService.PlayCardAsync(opponentId, sessionId, card!, cancellationToken);
             if (newState == null)
                 return BadRequest("Invalid move.");
@@ -55,6 +68,14 @@ public class GamePlayTestController(
             // Client disconnected or aborted the request (e.g. Blazor navigation) during the delay or play.
             return StatusCode(StatusCodes.Status499ClientClosedRequest);
         }
+    }
+
+    private static string? SuitPrefixFromCard(string? card)
+    {
+        if (string.IsNullOrEmpty(card))
+            return null;
+        var sep = card.IndexOf('_', StringComparison.Ordinal);
+        return sep <= 0 ? null : card[..sep];
     }
 
     private static bool TryParseCard(string value, out Card? card)

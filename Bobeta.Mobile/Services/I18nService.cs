@@ -146,11 +146,11 @@ public class I18nService(AppStateService appState)
             ["waiting_for_opponent"] = "Waiting for an opponent…",
             ["play_card"] = "Play card",
             ["take_card"] = "Take",
-            ["take_card_hint_disabled"] = "Play a highlighted card first.",
-            ["take_card_hint_enabled"] = "No legal card. Take the card.",
+            ["take_card_hint_disabled"] = "Play a card of the led suit if you hold one.",
+            ["take_card_hint_enabled"] = "No led suit — tap Take so the opponent gets their card back and you draw from stock.",
             ["makopa_how_to_play_title"] = "How to play Makopa",
             ["makopa_rules_body"] =
-                "\u2022 Two players; each hand you get 6 cards.\n\u2022 The match is best of 3 hands (first to 2 wins the pot).\n\u2022 If you have any card of the suit that was led, you must play one of those cards.\n\u2022 If you have no cards in the led suit, you may play any card; only cards of the led suit decide who wins the trick.\n\u2022 Highest card of the led suit wins; if tied on rank, whoever led wins.\n\u2022 Winner of each hand plays first in the next hand; who leads hand 1 is chosen at random for this session.",
+                "\u2022 Two players start with 4 cards each; the rest of the deck is a fair stock pile.\n\u2022 First leader is chosen at random for that game.\n\u2022 You must follow the led suit whenever you hold a card in that suit.\n\u2022 If you cannot follow, tap Take: the other's lead goes back into their hand, you draw one from stock if any, they lead again.\n\u2022 When both suits match, higher rank wins the trick (ties favour the leader).\n\u2022 After winning a trick, if only one card is left it's your win when you lead.\n\u2022 If the other holds a single card and you play that suit, you lose.",
             ["makopa_round_score"] = "Hands won: {0}\u2013{1} (first to 2 wins the match)",
             ["makopa_rules_link"] = "Rules",
         };
@@ -192,8 +192,8 @@ public class I18nService(AppStateService appState)
             ["trick_outcome_you"] = "Vous remportez ce pli.",
             ["trick_outcome_opponent"] = "L'adversaire remporte ce pli.",
             ["take_card"] = "Prendre",
-            ["take_card_hint_disabled"] = "Jouez d'abord une carte surlignee.",
-            ["take_card_hint_enabled"] = "Aucune carte valide. Prenez la carte.",
+            ["take_card_hint_disabled"] = "Jouez une carte de la couleur demandée si vous en avez.",
+            ["take_card_hint_enabled"] = "Sans la couleur : Prenez pour rendre la carte à l'autre joueur et piocher.",
             ["makopa_how_to_play_title"] = "Comment jouer (Makopa)",
             ["makopa_rules_body"] =
                 "\u2022 Deux joueurs ; 6 cartes par main.\n\u2022 Match en 2 mains gagnantes sur 3 (premier à 2 remporte le pot).\n\u2022 Suivez la couleur lorsque vous pouvez.\n\u2022 Sans carte de la couleur demandée, jouez une carte quelconque ; seules les cartes de la couleur de tête décident.\n\u2022 La meilleure carte de la couleur de tête remporte la levée ; en cas d'égalité, le joueur ayant amené garde.\n\u2022 Le vainqueur d'une main entame la première levée suivante ; le joueur qui amène la première main est tiré au sort pour cette table.",

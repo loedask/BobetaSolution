@@ -86,10 +86,11 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         }
         else
         {
-            RoundScoreLabel.IsVisible = true;
             RulesLink.IsVisible = true;
             RulesLink.Text = i18n.T("makopa_rules_link");
-            RoundScoreLabel.Text = string.Format(i18n.T("makopa_round_score"), _vm.MyRoundWins, _vm.OpponentRoundWins);
+            var rounds = _vm.MyRoundWins + _vm.OpponentRoundWins > 0;
+            RoundScoreLabel.IsVisible = rounds;
+            RoundScoreLabel.Text = rounds ? string.Format(i18n.T("makopa_round_score"), _vm.MyRoundWins, _vm.OpponentRoundWins) : "";
         }
 
         if (!string.IsNullOrEmpty(_vm.TrickOutcomeMessage))

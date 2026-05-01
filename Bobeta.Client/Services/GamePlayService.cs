@@ -23,6 +23,19 @@ public class GamePlayService(IClient client, HttpClient httpClient, IAccessToken
         }
     }
 
+    public async Task<Response<GameStateViewModel?>> VoidFollowDrawAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var dto = await Client.VoidFollowAsync(sessionId, cancellationToken).ConfigureAwait(false);
+            return Response<GameStateViewModel?>.Success(MapState(dto));
+        }
+        catch (BaseApiException ex)
+        {
+            return Response<GameStateViewModel?>.Failure(ex.Message, ex.StatusCode);
+        }
+    }
+
     public async Task<Response<GameStateViewModel?>> PlayCardAsync(Guid sessionId, GameMoveRequest request, CancellationToken cancellationToken = default)
     {
         try

@@ -9,10 +9,11 @@ using Bobeta.Domain.ValueObjects;
 namespace Bobeta.Application.Services;
 
 /// <summary>
-/// Makopa card game engine. Server-authoritative and deterministic.
-/// Rules: 52-card deck; 6 cards each; best-of-3 hands per match (first to 2 hand wins settles the stakes);
-/// follow suit if possible; if follower cannot match suit they may discard and the trick goes to whoever played the highest card of the led suit (discard cannot win);
-/// ties on rank go to the lead; shuffle is seeded per hand for fairness; random first leader each hand via session/hand index seed.
+/// Makopa: 4 cards each + deterministic stock pile; single-hand match. Follow suit if possible.
+/// Void on follow → lead card returned to leader, responder draws top stock card (if stock not empty); leader opens again.
+/// Both same suit on a completed trick → higher rank wins, winner leads next; ties go to whoever led this trick.
+/// Win: after winning a trick your hand count is exactly 1 (singleton lead next).
+/// If you respond while the other player holds exactly one card and you match that lone card suit, you lose instantly.
 /// </summary>
 public class GameEngineService(
     IGameSessionRepository sessionRepository,
@@ -23,8 +24,9 @@ public class GameEngineService(
 {
     private const decimal CommissionRate = 0.25m;
     private const int DeckSize = 52;
-    private const int CardsPerPlayer = 6;
-    private const int RoundsToWinMatch = 2;
+    private const int CardsPerPlayer = 4;
+
+    internal const string VoidFollowMoveMarker = "VoidFollow_Draw";
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     private readonly IGameSessionRepository _sessionRepository = sessionRepository;
@@ -41,25 +43,96 @@ public class GameEngineService(
             throw new InvalidOperationException("Game is not ready to start.");
         var creatorId = session.CreatorPlayerId;
         var opponentId = session.OpponentPlayerId.Value;
+        var deck = BuildDeck();
+        if (deck.Count != DeckSize)
+            throw new InvalidOperationException($"Deck must have {DeckSize} cards.");
+        Shuffle(deck, sessionId, 0);
+        var creatorHand = deck.Take(CardsPerPlayer).Select(c => CardToString(c.Suit, c.Rank)).ToList();
+        var opponentHand = deck.Skip(CardsPerPlayer).Take(CardsPerPlayer).Select(c => CardToString(c.Suit, c.Rank)).ToList();
+        var reserve = deck.Skip(CardsPerPlayer * 2).Select(c => CardToString(c.Suit, c.Rank)).ToList();
         var state = new MakopaGameState
         {
+            CreatorHand = creatorHand,
+            OpponentHand = opponentHand,
+            ReserveDeck = reserve,
+            TrickPlays = new List<PlayedInTrick>(),
+            TrickSuit = null,
+            LastTrickWinnerPlayerId = null,
             CreatorRoundWins = 0,
             OpponentRoundWins = 0
         };
-        BeginHand(state, creatorId, opponentId, sessionId, completedHandsPrior: 0);
+        var firstLeader = PickFirstLeader(sessionId, creatorId, opponentId);
+        state.LeadPlayerId = firstLeader;
+        state.CurrentTurnPlayerId = firstLeader;
         session.GameStateJson = JsonSerializer.Serialize(state, JsonOptions);
         session.Status = GameStatus.InProgress;
         session.StartedAt = DateTime.UtcNow;
         await _sessionRepository.UpdateAsync(session, cancellationToken);
     }
 
-    /// <summary>Server-authoritative play: validates turn, card in hand, and follow-suit rule before applying move.</summary>
+    public async Task<GameStateDto?> VoidFollowDrawAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        if (session?.GameStateJson == null || session.Status != GameStatus.InProgress)
+            return null;
+        var state = JsonSerializer.Deserialize<MakopaGameState>(session.GameStateJson, JsonOptions)!;
+        state.ReserveDeck ??= new List<string>();
+        var creatorId = session.CreatorPlayerId;
+        var opponentId = session.OpponentPlayerId!.Value;
+        if (state.CurrentTurnPlayerId != playerId)
+            return null;
+        if (state.TrickPlays.Count != 1 || state.TrickSuit == null)
+            return null;
+
+        var lead = state.TrickPlays[0];
+        var leaderId = lead.PlayerId;
+        if (playerId == leaderId)
+            return null;
+
+        var responderHand = playerId == creatorId ? state.CreatorHand : state.OpponentHand;
+        if (MakopaRules.HandContainsLedSuit(state.TrickSuit, responderHand))
+            return null;
+
+        var leaderHand = leaderId == creatorId ? state.CreatorHand : state.OpponentHand;
+        leaderHand.Add(lead.Card);
+        state.TrickPlays.Clear();
+        state.TrickSuit = null;
+        state.LastTrickWinnerPlayerId = null;
+
+        if (state.ReserveDeck.Count > 0)
+        {
+            var drawn = state.ReserveDeck[0];
+            state.ReserveDeck.RemoveAt(0);
+            responderHand.Add(drawn);
+        }
+
+        state.LeadPlayerId = leaderId;
+        state.CurrentTurnPlayerId = leaderId;
+
+        var moveOrder = await _moveRepository.GetCountByGameSessionIdAsync(sessionId, cancellationToken);
+        await _moveRepository.AddAsync(new GameMove
+        {
+            Id = Guid.NewGuid(),
+            GameSessionId = sessionId,
+            PlayerId = playerId,
+            CardSuitRank = VoidFollowMoveMarker,
+            MoveOrder = moveOrder,
+            CreatedAt = DateTime.UtcNow
+        }, cancellationToken);
+
+        session.GameStateJson = JsonSerializer.Serialize(state, JsonOptions);
+        await _sessionRepository.UpdateAsync(session, cancellationToken);
+
+        return await GetGameStateAsync(playerId, sessionId, cancellationToken);
+    }
+
     public async Task<GameStateDto?> PlayCardAsync(Guid playerId, Guid sessionId, Card card, CancellationToken cancellationToken = default)
     {
         var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
         if (session?.GameStateJson == null || session.Status != GameStatus.InProgress)
             return null;
         var state = JsonSerializer.Deserialize<MakopaGameState>(session.GameStateJson, JsonOptions)!;
+        state.ReserveDeck ??= new List<string>();
         var creatorId = session.CreatorPlayerId;
         var opponentId = session.OpponentPlayerId!.Value;
         var hand = playerId == creatorId ? state.CreatorHand : state.OpponentHand;
@@ -71,9 +144,42 @@ public class GameEngineService(
         if (!MakopaRules.IsLegalFollowSuit(cardStr, state.TrickSuit, hand))
             return null;
 
-        // Drop prior trick result once a new trick begins (first card on an empty trick).
         if (state.TrickPlays.Count == 0)
             state.LastTrickWinnerPlayerId = null;
+
+        // Responder cannot play a concrete card without the led suit; use void-follow draw instead.
+        if (state.TrickPlays.Count == 1
+            && !string.IsNullOrEmpty(state.TrickSuit)
+            && !MakopaRules.HandContainsLedSuit(state.TrickSuit!, hand))
+            return null;
+
+        if (state.TrickPlays.Count == 1 && TrySingletonResponderPenalty(
+                playerId, creatorId, opponentId, state, cardStr,
+                out var penaltyWinnerId, out var penaltyLoserId))
+        {
+            hand.Remove(cardStr);
+            var mo = await _moveRepository.GetCountByGameSessionIdAsync(sessionId, cancellationToken);
+            await _moveRepository.AddAsync(new GameMove
+            {
+                Id = Guid.NewGuid(),
+                GameSessionId = sessionId,
+                PlayerId = playerId,
+                CardSuitRank = cardStr,
+                MoveOrder = mo,
+                CreatedAt = DateTime.UtcNow
+            }, cancellationToken);
+
+            ReturnPendingLeadCardToLeaderHand(state.TrickPlays, creatorId, state);
+            state.TrickPlays.Clear();
+            state.TrickSuit = null;
+            state.LastTrickWinnerPlayerId = null;
+            await FinalizeGameAsync(session, penaltyWinnerId, penaltyLoserId, cancellationToken);
+            session.GameStateJson = null;
+            session.Status = GameStatus.Finished;
+            session.FinishedAt = DateTime.UtcNow;
+            await _sessionRepository.UpdateAsync(session, cancellationToken);
+            return await GetGameStateAsync(playerId, sessionId, cancellationToken);
+        }
 
         hand.Remove(cardStr);
         state.TrickPlays.Add(new PlayedInTrick { PlayerId = playerId, Card = cardStr });
@@ -94,32 +200,20 @@ public class GameEngineService(
         {
             var winner = ResolveTrick(state.TrickPlays[0], state.TrickPlays[1], state.TrickSuit!);
             state.LastTrickWinnerPlayerId = winner;
+            state.TrickPlays.Clear();
+            state.TrickSuit = null;
+
             state.LeadPlayerId = winner;
             state.CurrentTurnPlayerId = winner;
-            state.TrickSuit = null;
-            state.TrickPlays.Clear();
+
             var winnerHandCount = winner == creatorId ? state.CreatorHand.Count : state.OpponentHand.Count;
-
-            // Hand ends when trick winner emptied their hand; match ends at first-to-2 hand wins.
-            if (winnerHandCount == 0)
+            if (winnerHandCount == 1)
             {
-                if (winner == creatorId)
-                    state.CreatorRoundWins++;
-                else
-                    state.OpponentRoundWins++;
-
-                if (state.CreatorRoundWins >= RoundsToWinMatch || state.OpponentRoundWins >= RoundsToWinMatch)
-                {
-                    var (winnerId, loserId) = state.CreatorRoundWins >= RoundsToWinMatch ? (creatorId, opponentId) : (opponentId, creatorId);
-                    await FinalizeGameAsync(session, winnerId, loserId, cancellationToken);
-                    session.GameStateJson = null;
-                    session.Status = GameStatus.Finished;
-                    session.FinishedAt = DateTime.UtcNow;
-                }
-                else
-                {
-                    BeginHand(state, creatorId, opponentId, sessionId, state.CreatorRoundWins + state.OpponentRoundWins);
-                }
+                var loserId = winner == creatorId ? opponentId : creatorId;
+                await FinalizeGameAsync(session, winner, loserId, cancellationToken);
+                session.GameStateJson = null;
+                session.Status = GameStatus.Finished;
+                session.FinishedAt = DateTime.UtcNow;
             }
         }
         else
@@ -129,6 +223,7 @@ public class GameEngineService(
             session.GameStateJson = null;
         else
             session.GameStateJson = JsonSerializer.Serialize(state, JsonOptions);
+
         await _sessionRepository.UpdateAsync(session, cancellationToken);
 
         return await GetGameStateAsync(playerId, sessionId, cancellationToken);
@@ -162,34 +257,66 @@ public class GameEngineService(
         }
 
         var state = JsonSerializer.Deserialize<MakopaGameState>(session.GameStateJson, JsonOptions)!;
+        state.ReserveDeck ??= new List<string>();
         var creatorId = session.CreatorPlayerId;
         var myHand = playerId == creatorId ? state.CreatorHand : state.OpponentHand;
         var lastCard = state.TrickPlays.Count > 0 ? state.TrickPlays[^1].Card : null;
         var gameOver = session.Status == GameStatus.Finished;
         var winnerId = session.GameResult?.WinnerPlayerId;
 
-        var (myRounds, opponentRounds) = playerId == creatorId
-            ? (state.CreatorRoundWins, state.OpponentRoundWins)
-            : (state.OpponentRoundWins, state.CreatorRoundWins);
+        var (myRounds, opponentRounds) = (0, 0);
 
         return new GameStateDto(sessionId, myHand, lastCard, state.CurrentTurnPlayerId, gameOver, winnerId, false, lobbyPot, opponentName, state.LastTrickWinnerPlayerId, myRounds, opponentRounds);
     }
 
-    /// <summary>Deals cards and assigns first leader deterministically.</summary>
-    private static void BeginHand(MakopaGameState state, Guid creatorId, Guid opponentId, Guid sessionId, int completedHandsPrior)
+    /// <summary>Singleton holder loses if responder plays a suit matching holder&apos;s only card.</summary>
+    private static bool TrySingletonResponderPenalty(
+        Guid responderId,
+        Guid creatorId,
+        Guid opponentId,
+        MakopaGameState state,
+        string responderCardStr,
+        out Guid winnerPid,
+        out Guid loserPid)
     {
-        var deck = BuildDeck();
-        if (deck.Count != DeckSize)
-            throw new InvalidOperationException($"Deck must have {DeckSize} cards.");
-        Shuffle(deck, sessionId, completedHandsPrior);
-        state.CreatorHand = deck.Take(CardsPerPlayer).Select(CardToString).ToList();
-        state.OpponentHand = deck.Skip(CardsPerPlayer).Take(CardsPerPlayer).Select(CardToString).ToList();
-        state.TrickPlays = new List<PlayedInTrick>();
-        state.TrickSuit = null;
-        state.LastTrickWinnerPlayerId = null;
-        var firstLeader = PickFirstLeader(sessionId, completedHandsPrior, creatorId, opponentId);
-        state.LeadPlayerId = firstLeader;
-        state.CurrentTurnPlayerId = firstLeader;
+        winnerPid = loserPid = Guid.Empty;
+        Guid? soloOwnerId = null;
+        string soloSuit = "";
+        foreach (var (pid, cards) in new[] { (creatorId, state.CreatorHand), (opponentId, state.OpponentHand) })
+        {
+            if (cards.Count != 1)
+                continue;
+            if (soloOwnerId.HasValue)
+                return false;
+            soloOwnerId = pid;
+            soloSuit = SuitPrefix(cards[0]) ?? "";
+            if (string.IsNullOrEmpty(soloSuit))
+                return false;
+        }
+
+        if (soloOwnerId == null || soloOwnerId == responderId)
+            return false;
+        var playedSuit = SuitPrefix(responderCardStr);
+        if (!string.Equals(playedSuit, soloSuit, StringComparison.Ordinal))
+            return false;
+        winnerPid = soloOwnerId.Value;
+        loserPid = responderId;
+        return true;
+    }
+
+    private static string? SuitPrefix(string card)
+    {
+        var sep = card.IndexOf('_');
+        return sep <= 0 ? null : card[..sep];
+    }
+
+    private static void ReturnPendingLeadCardToLeaderHand(List<PlayedInTrick> trickPlays, Guid creatorId, MakopaGameState state)
+    {
+        if (trickPlays.Count < 1)
+            return;
+        var pending = trickPlays[0];
+        var lh = pending.PlayerId == creatorId ? state.CreatorHand : state.OpponentHand;
+        lh.Add(pending.Card);
     }
 
     private async Task<string?> ResolveOpponentDisplayNameAsync(Guid viewerPlayerId, GameSession session, CancellationToken cancellationToken)
@@ -225,17 +352,16 @@ public class GameEngineService(
         }, cancellationToken);
     }
 
-    /// <summary>Highest ranking card played of the led suit wins; follower who lacks the suit counts as lowest (effective rank 0 on lead).</summary>
     private static Guid ResolveTrick(PlayedInTrick first, PlayedInTrick second, string leadSuit)
     {
         var s1 = first.Card.Split('_', 2, StringSplitOptions.None);
         var s2 = second.Card.Split('_', 2, StringSplitOptions.None);
-        var r1OnLead = GetEffectiveRankOfPlay(s1, leadSuit);
-        var r2OnLead = GetEffectiveRankOfPlay(s2, leadSuit);
-        return r1OnLead >= r2OnLead ? first.PlayerId : second.PlayerId;
+        var r1 = RankOnLeadCard(s1, leadSuit);
+        var r2 = RankOnLeadCard(s2, leadSuit);
+        return r1 >= r2 ? first.PlayerId : second.PlayerId;
     }
 
-    private static int GetEffectiveRankOfPlay(string[] suitRankParts, string leadSuit)
+    private static int RankOnLeadCard(string[] suitRankParts, string leadSuit)
     {
         if (suitRankParts.Length < 2)
             return 0;
@@ -253,7 +379,7 @@ public class GameEngineService(
         return deck;
     }
 
-    private static int MixSeed(Guid sessionId, int handSequence)
+    private static int MixSeed(Guid sessionId, int salt)
     {
         Span<byte> buf = stackalloc byte[16];
         sessionId.TryWriteBytes(buf);
@@ -261,14 +387,13 @@ public class GameEngineService(
         var lo = BitConverter.ToInt32(buf.Slice(4, 4));
         unchecked
         {
-            return hi ^ lo ^ handSequence * 0x5851F42D ^ (handSequence + 41) * 0x27D4EB4D;
+            return hi ^ lo ^ salt * 0x5851F42D ^ (salt + 41) * 0x27D4EB4D;
         }
     }
 
-    private static void Shuffle<T>(IList<T> list, Guid sessionId, int handSequence)
+    private static void Shuffle<T>(IList<T> list, Guid sessionId, int salt)
     {
-        var seed = MixSeed(sessionId, handSequence);
-        var rng = new Random(seed);
+        var rng = new Random(MixSeed(sessionId, salt));
         for (var i = list.Count - 1; i > 0; i--)
         {
             var j = rng.Next(i + 1);
@@ -276,9 +401,8 @@ public class GameEngineService(
         }
     }
 
-    private static Guid PickFirstLeader(Guid sessionId, int handSequence, Guid creatorId, Guid opponentId)
-        => new Random(MixSeed(sessionId, unchecked(handSequence * 31 + 7))).Next(2) == 0 ? creatorId : opponentId;
+    private static Guid PickFirstLeader(Guid sessionId, Guid creatorId, Guid opponentId)
+        => new Random(MixSeed(sessionId, 7)).Next(2) == 0 ? creatorId : opponentId;
 
     private static string CardToString(CardSuit s, CardRank r) => $"{s}_{(int)r}";
-    private static string CardToString((CardSuit Suit, CardRank Rank) c) => CardToString(c.Suit, c.Rank);
 }
