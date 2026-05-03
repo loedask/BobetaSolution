@@ -147,11 +147,11 @@ public class I18nService(AppStateService appState)
             ["play_card"] = "Play card",
             ["take_card"] = "Take",
             ["take_card_hint_disabled"] = "Play a card of the led suit if you hold one.",
-            ["take_card_hint_enabled"] = "No led suit — tap Take so the opponent gets their card back and you draw from stock.",
+            ["take_card_hint_enabled"] = "No led suit — tap Take: you take the lead card into your hand; the leader opens again.",
             ["makopa_how_to_play_title"] = "How to play Makopa",
             ["makopa_rules_body"] =
-                "\u2022 Two players start with 4 cards each; the rest of the deck is a fair stock pile.\n\u2022 First leader is chosen at random for that game.\n\u2022 You must follow the led suit whenever you hold a card in that suit.\n\u2022 If you cannot follow, tap Take: the other's lead goes back into their hand, you draw one from stock if any, they lead again.\n\u2022 When both suits match, higher rank wins the trick (ties favour the leader).\n\u2022 After winning a trick, if only one card is left it's your win when you lead.\n\u2022 If the other holds a single card and you play that suit, you lose.",
-            ["makopa_round_score"] = "Hands won: {0}\u2013{1} (first to 2 wins the match)",
+                "\u2022 52 cards are shuffled; each player is dealt 4 cards; the rest is a face-down stock.\n\u2022 Who opens first is chosen at random.\n\u2022 Follow suit by name: if a heart is led, play a heart when you have one — same for spades, clubs, and diamonds.\n\u2022 If you have several cards in the led suit, you choose which one to play.\n\u2022 If you cannot follow, tap Take: the leader's lead card is added to your hand and the leader opens the next trick.\n\u2022 When both cards match the led suit, the higher rank wins the trick; the winner leads next (ties favour whoever led). Those cards are then played out from both hands.\n\u2022 You win if, after winning a trick, you have exactly one card left — it is then your turn to lead with that card.\n\u2022 If the other player has only one card left and you play a card of the same suit as that card, you lose immediately.",
+            ["makopa_round_score"] = "Hands won: {0}\u2013{1}",
             ["makopa_rules_link"] = "Rules",
         };
 
@@ -193,11 +193,11 @@ public class I18nService(AppStateService appState)
             ["trick_outcome_opponent"] = "L'adversaire remporte ce pli.",
             ["take_card"] = "Prendre",
             ["take_card_hint_disabled"] = "Jouez une carte de la couleur demandée si vous en avez.",
-            ["take_card_hint_enabled"] = "Sans la couleur : Prenez pour rendre la carte à l'autre joueur et piocher.",
+            ["take_card_hint_enabled"] = "Sans la couleur menée — touchez Prendre : la carte d'entame est ajoutée à votre main ; le joueur qui a mené entame à nouveau.",
             ["makopa_how_to_play_title"] = "Comment jouer (Makopa)",
             ["makopa_rules_body"] =
-                "\u2022 Deux joueurs ; 6 cartes par main.\n\u2022 Match en 2 mains gagnantes sur 3 (premier à 2 remporte le pot).\n\u2022 Suivez la couleur lorsque vous pouvez.\n\u2022 Sans carte de la couleur demandée, jouez une carte quelconque ; seules les cartes de la couleur de tête décident.\n\u2022 La meilleure carte de la couleur de tête remporte la levée ; en cas d'égalité, le joueur ayant amené garde.\n\u2022 Le vainqueur d'une main entame la première levée suivante ; le joueur qui amène la première main est tiré au sort pour cette table.",
-            ["makopa_round_score"] = "Mains gagnées : {0}\u2013{1} (2 pour gagner)",
+                "\u2022 52 cartes mélangées ; chaque joueur reçoit 4 cartes ; le reste forme une pioche face cachée.\n\u2022 Le joueur qui commence est tiré au sort.\n\u2022 Suivre la couleur : cœur sur cœur, pique sur pique, trèfle sur trèfle, carreau sur carreau, si vous en avez.\n\u2022 Si vous avez plusieurs cartes dans la couleur demandée, vous choisissez laquelle jouer.\n\u2022 Si vous n'avez pas la couleur menée, touchez Prendre : la carte d'entame est ajoutée à votre main et le joueur qui a mené entame à nouveau.\n\u2022 Quand les deux cartes suivent la couleur menée, la plus forte remporte le pli ; le gagnant entame le suivant (égalité : le joueur qui a mené). Les deux cartes du pli sont jouées.\n\u2022 Vous gagnez si, après avoir remporté un pli, il ne vous reste qu'une seule carte — c'est alors votre tour d'entamer avec cette carte.\n\u2022 Si l'autre joueur n'a plus qu'une carte et que vous jouez une carte de la même couleur que cette carte, vous perdez immédiatement.",
+            ["makopa_round_score"] = "Mains gagnées : {0}\u2013{1}",
             ["makopa_rules_link"] = "Règles",
         };
 

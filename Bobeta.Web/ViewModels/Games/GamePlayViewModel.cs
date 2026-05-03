@@ -280,7 +280,7 @@ public class GamePlayViewModel : ViewModelBase
 
         MatchRoundScoreText = _i18n != null
             ? string.Format(_i18n.T("makopa_round_score"), MyRoundWins, OpponentRoundWins)
-            : $"Hands won: {MyRoundWins}\u2013{OpponentRoundWins} (first to 2 wins the match)";
+            : $"Hands won: {MyRoundWins}\u2013{OpponentRoundWins}";
     }
 
     private void ApplyTrickOutcomeMessage(Guid? lastTrickWinnerPlayerId)

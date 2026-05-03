@@ -10,7 +10,7 @@ namespace Bobeta.Application.Services;
 
 /// <summary>
 /// Makopa: 4 cards each + deterministic stock pile; single-hand match. Follow suit if possible.
-/// Void on follow → lead card returned to leader, responder draws top stock card (if stock not empty); leader opens again.
+/// Void on follow → lead card is added to responder's hand; leader opens again (no stock draw).
 /// Both same suit on a completed trick → higher rank wins, winner leads next; ties go to whoever led this trick.
 /// Win: after winning a trick your hand count is exactly 1 (singleton lead next).
 /// If you respond while the other player holds exactly one card and you match that lone card suit, you lose instantly.
@@ -93,18 +93,10 @@ public class GameEngineService(
         if (MakopaRules.HandContainsLedSuit(state.TrickSuit, responderHand))
             return null;
 
-        var leaderHand = leaderId == creatorId ? state.CreatorHand : state.OpponentHand;
-        leaderHand.Add(lead.Card);
+        responderHand.Add(lead.Card);
         state.TrickPlays.Clear();
         state.TrickSuit = null;
         state.LastTrickWinnerPlayerId = null;
-
-        if (state.ReserveDeck.Count > 0)
-        {
-            var drawn = state.ReserveDeck[0];
-            state.ReserveDeck.RemoveAt(0);
-            responderHand.Add(drawn);
-        }
 
         state.LeadPlayerId = leaderId;
         state.CurrentTurnPlayerId = leaderId;

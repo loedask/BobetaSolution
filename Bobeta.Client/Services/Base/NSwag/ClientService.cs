@@ -110,7 +110,7 @@ namespace Bobeta.Client.Services.Base
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <summary>
-        /// Responder holds no cards of the led suit: leader's card is returned, responder draws stock, leader opens again.
+        /// Responder holds no cards of the led suit: the lead card is added to the responder's hand; the leader opens again.
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
@@ -1035,7 +1035,7 @@ namespace Bobeta.Client.Services.Base
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <summary>
-        /// Responder holds no cards of the led suit: leader's card is returned, responder draws stock, leader opens again.
+        /// Responder holds no cards of the led suit: the lead card is added to the responder's hand; the leader opens again.
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>

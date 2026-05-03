@@ -29,7 +29,7 @@ public static class MakopaRules
         return cardToPlay.StartsWith(trickLeadSuit, StringComparison.Ordinal);
     }
 
-    /// <summary>True if trick is waiting on a follower and follower has zero cards of the led suit → must draw void-follow.</summary>
+    /// <summary>True if trick is waiting on a follower and follower has zero cards of the led suit → must use void-follow (Take).</summary>
     public static bool ResponderNeedsVoidFollow(string? lastPlayedLeadCardDisplay, IReadOnlyList<string> myHandCardStrings)
     {
         if (string.IsNullOrEmpty(lastPlayedLeadCardDisplay))

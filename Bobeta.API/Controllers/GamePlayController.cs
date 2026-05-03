@@ -60,7 +60,7 @@ public class GamePlayController(
         return Ok(state);
     }
 
-    /// <summary>Responder holds no cards of the led suit: leader&apos;s card is returned, responder draws stock, leader opens again.</summary>
+    /// <summary>Responder holds no cards of the led suit: the lead card is added to the responder&apos;s hand; the leader opens again.</summary>
     [HttpPost("void-follow")]
     public async Task<ActionResult<GameStateDto>> VoidFollowDraw([FromQuery] Guid sessionId, CancellationToken cancellationToken)
     {
