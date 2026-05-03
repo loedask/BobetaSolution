@@ -32,9 +32,6 @@ public class MakopaGameState
 
     /// <summary>Hands (rounds) won by the opponent in this match.</summary>
     public int OpponentRoundWins { get; set; }
-
-    /// <summary>Remaining stock (deterministic order). Drawing when void on follow restores lead and adds one stock card to responder.</summary>
-    public List<string> ReserveDeck { get; set; } = new();
 }
 
 /// <summary>A single card play within the current trick (player and card string).</summary>

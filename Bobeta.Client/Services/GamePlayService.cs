@@ -23,17 +23,17 @@ public class GamePlayService(IClient client, HttpClient httpClient, IAccessToken
         }
     }
 
+    /// <summary>
+    /// Void-follow (Take). Uses <see cref="BaseHttpService.PostAsync{T}"/> like <see cref="PlayCardAsync"/> so Blazor WASM gets the same
+    /// bearer attachment + 401 retry with cache-buster (avoids stale fetch() 401s). NSwag <c>VoidFollowAsync</c> skipped that pipeline.
+    /// </summary>
     public async Task<Response<GameStateViewModel?>> VoidFollowDrawAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var dto = await Client.VoidFollowAsync(sessionId, cancellationToken).ConfigureAwait(false);
-            return Response<GameStateViewModel?>.Success(MapState(dto));
-        }
-        catch (BaseApiException ex)
-        {
-            return Response<GameStateViewModel?>.Failure(ex.Message, ex.StatusCode);
-        }
+        var uri = $"api/GamePlay/void-follow?sessionId={sessionId:D}";
+        var res = await PostAsync<GameStateDto>(uri, null, cancellationToken).ConfigureAwait(false);
+        if (!res.IsSuccess || res.Data == null)
+            return Response<GameStateViewModel?>.Failure(res.ErrorMessage ?? "Could not take.", res.StatusCode);
+        return Response<GameStateViewModel?>.Success(MapState(res.Data));
     }
 
     public async Task<Response<GameStateViewModel?>> PlayCardAsync(Guid sessionId, GameMoveRequest request, CancellationToken cancellationToken = default)

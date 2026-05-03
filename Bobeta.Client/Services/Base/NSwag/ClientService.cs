@@ -94,7 +94,7 @@ namespace Bobeta.Client.Services.Base
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <summary>
-        /// Starts a match: deals 4 cards each plus stock pile; random first leader.
+        /// Starts a match: deals 4 cards each from shuffled 52; unused cards stay out of play; random first leader.
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
@@ -882,7 +882,7 @@ namespace Bobeta.Client.Services.Base
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <summary>
-        /// Starts a match: deals 4 cards each plus stock pile; random first leader.
+        /// Starts a match: deals 4 cards each from shuffled 52; unused cards stay out of play; random first leader.
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>

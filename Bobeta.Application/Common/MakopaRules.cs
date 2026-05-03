@@ -1,6 +1,6 @@
 namespace Bobeta.Application.Common;
 
-/// <summary>Makopa trick-taking rules shared by server engine and helpers (e.g. test AI).</summary>
+/// <summary>Makopa trick-taking: follow led suit when possible; void requires Take (no card play).</summary>
 public static class MakopaRules
 {
     /// <summary>Follow-suit constraint: must play led suit when the hand contains at least one such card.</summary>

@@ -335,7 +335,7 @@
         "tags": [
           "GamePlay"
         ],
-        "summary": "Starts a match: deals 4 cards each plus stock pile; random first leader.",
+        "summary": "Starts a match: deals 4 cards each from shuffled 52; unused cards stay out of play; random first leader.",
         "parameters": [
           {
             "name": "sessionId",

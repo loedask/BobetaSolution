@@ -27,7 +27,7 @@ public class GamePlayController(
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
-    /// <summary>Starts a match: deals 4 cards each plus stock pile; random first leader.</summary>
+    /// <summary>Starts a match: deals 4 cards each from shuffled 52; unused cards stay out of play; random first leader.</summary>
     [HttpPost("start")]
     public async Task<IActionResult> StartGame([FromQuery] Guid sessionId, CancellationToken cancellationToken)
     {

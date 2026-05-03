@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Components;
 using Bobeta.Client.Contracts.Interfaces;
 using Bobeta.Client.Models.Games;
 using Bobeta.Client.Presentation;
-using Bobeta.Client.Utilities;
 using Bobeta.Web.Services;
 using Bobeta.Web.Services.Realtime;
 using Bobeta.Client.Services;
@@ -108,17 +107,24 @@ public class GamePlayViewModel : ViewModelBase
 
             if (_hubClient != null)
             {
-                await _hubClient.ConnectAsync(sessionId);
-                _hubClient.OnGameStateUpdated -= ApplyGameStateFromHub;
-                _hubClient.OnGameStateUpdated += ApplyGameStateFromHub;
-                _hubClient.OnOpponentMove -= ApplyOpponentMoveFromHub;
-                _hubClient.OnOpponentMove += ApplyOpponentMoveFromHub;
-                _hubClient.OnGameResult -= ApplyGameResultFromHub;
-                _hubClient.OnGameResult += ApplyGameResultFromHub;
-                _hubClient.OnGameStarted -= OnGameStartedReload;
-                _hubClient.OnGameStarted += OnGameStartedReload;
-                _hubClient.OnReconnected -= OnHubReconnected;
-                _hubClient.OnReconnected += OnHubReconnected;
+                try
+                {
+                    await _hubClient.ConnectAsync(sessionId);
+                    _hubClient.OnGameStateUpdated -= ApplyGameStateFromHub;
+                    _hubClient.OnGameStateUpdated += ApplyGameStateFromHub;
+                    _hubClient.OnOpponentMove -= ApplyOpponentMoveFromHub;
+                    _hubClient.OnOpponentMove += ApplyOpponentMoveFromHub;
+                    _hubClient.OnGameResult -= ApplyGameResultFromHub;
+                    _hubClient.OnGameResult += ApplyGameResultFromHub;
+                    _hubClient.OnGameStarted -= OnGameStartedReload;
+                    _hubClient.OnGameStarted += OnGameStartedReload;
+                    _hubClient.OnReconnected -= OnHubReconnected;
+                    _hubClient.OnReconnected += OnHubReconnected;
+                }
+                catch
+                {
+                    // REST game state already loaded — realtime is optional. SignalR negotiate/CORS issues must not blank the table.
+                }
             }
 
             ScheduleAiOpponentIfNeeded(sessionGuid);
@@ -142,13 +148,6 @@ public class GamePlayViewModel : ViewModelBase
     {
         if (!CanTakeCard || string.IsNullOrEmpty(SessionId) || !Guid.TryParse(SessionId, out var sessionGuid))
             return;
-
-        if (string.IsNullOrWhiteSpace(_appState.State.AccessToken) ||
-            JwtPayloadReader.IsExpired(_appState.State.AccessToken, DateTimeOffset.UtcNow))
-        {
-            await _appState.HandleUnauthorizedAsync(401, _nav);
-            return;
-        }
 
         SetLoading(true);
         ClearError();
@@ -195,13 +194,6 @@ public class GamePlayViewModel : ViewModelBase
     {
         if (IsLoading || !IsPlayerTurn || string.IsNullOrEmpty(SessionId)) return;
         if (!Guid.TryParse(SessionId, out var sessionGuid)) return;
-
-        if (string.IsNullOrWhiteSpace(_appState.State.AccessToken) ||
-            JwtPayloadReader.IsExpired(_appState.State.AccessToken, DateTimeOffset.UtcNow))
-        {
-            await _appState.HandleUnauthorizedAsync(401, _nav);
-            return;
-        }
 
         var handStr = PlayerCards.Select(c => c.DisplayValue).ToList();
         if (enforceLocalFollowSuitValidation &&

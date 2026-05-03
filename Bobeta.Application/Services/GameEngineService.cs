@@ -9,11 +9,11 @@ using Bobeta.Domain.ValueObjects;
 namespace Bobeta.Application.Services;
 
 /// <summary>
-/// Makopa: 4 cards each + deterministic stock pile; single-hand match. Follow suit if possible.
-/// Void on follow → lead card is added to responder's hand; leader opens again (no stock draw).
-/// Both same suit on a completed trick → higher rank wins, winner leads next; ties go to whoever led this trick.
-/// Win: after winning a trick your hand count is exactly 1 (singleton lead next).
-/// If you respond while the other player holds exactly one card and you match that lone card suit, you lose instantly.
+/// Makopa (authoritative rules): 2 players, 4 cards each from a shuffled 52-card deck; remaining cards are unused (no drawing ever).
+/// Trick = lead + response. Follow suit when possible; void → Take only (lead card to responder's hand; leader leads again; Take is not a card play).
+/// Completed trick: compare led suit only; higher rank wins; ties → leader wins; both cards leave play; winner leads next.
+/// Win: after winning a trick, winner has exactly 1 card and leads next.
+/// Instant loss (before trick resolution): responder plays a suit matching the other player's only card while that player holds exactly one card.
 /// </summary>
 public class GameEngineService(
     IGameSessionRepository sessionRepository,
@@ -49,12 +49,11 @@ public class GameEngineService(
         Shuffle(deck, sessionId, 0);
         var creatorHand = deck.Take(CardsPerPlayer).Select(c => CardToString(c.Suit, c.Rank)).ToList();
         var opponentHand = deck.Skip(CardsPerPlayer).Take(CardsPerPlayer).Select(c => CardToString(c.Suit, c.Rank)).ToList();
-        var reserve = deck.Skip(CardsPerPlayer * 2).Select(c => CardToString(c.Suit, c.Rank)).ToList();
+        // Remaining cards are never used — Makopa does not draw from a stock.
         var state = new MakopaGameState
         {
             CreatorHand = creatorHand,
             OpponentHand = opponentHand,
-            ReserveDeck = reserve,
             TrickPlays = new List<PlayedInTrick>(),
             TrickSuit = null,
             LastTrickWinnerPlayerId = null,
@@ -76,9 +75,9 @@ public class GameEngineService(
         if (session?.GameStateJson == null || session.Status != GameStatus.InProgress)
             return null;
         var state = JsonSerializer.Deserialize<MakopaGameState>(session.GameStateJson, JsonOptions)!;
-        state.ReserveDeck ??= new List<string>();
         var creatorId = session.CreatorPlayerId;
         var opponentId = session.OpponentPlayerId!.Value;
+        // Take is not playing a card; turn stays with leader after this (they lead again).
         if (state.CurrentTurnPlayerId != playerId)
             return null;
         if (state.TrickPlays.Count != 1 || state.TrickSuit == null)
@@ -124,7 +123,6 @@ public class GameEngineService(
         if (session?.GameStateJson == null || session.Status != GameStatus.InProgress)
             return null;
         var state = JsonSerializer.Deserialize<MakopaGameState>(session.GameStateJson, JsonOptions)!;
-        state.ReserveDeck ??= new List<string>();
         var creatorId = session.CreatorPlayerId;
         var opponentId = session.OpponentPlayerId!.Value;
         var hand = playerId == creatorId ? state.CreatorHand : state.OpponentHand;
@@ -136,16 +134,14 @@ public class GameEngineService(
         if (!MakopaRules.IsLegalFollowSuit(cardStr, state.TrickSuit, hand))
             return null;
 
-        if (state.TrickPlays.Count == 0)
-            state.LastTrickWinnerPlayerId = null;
-
-        // Responder cannot play a concrete card without the led suit; use void-follow draw instead.
+        // Void: responder has no card in the led suit — must use Take (VoidFollow), not play a card.
         if (state.TrickPlays.Count == 1
             && !string.IsNullOrEmpty(state.TrickSuit)
             && !MakopaRules.HandContainsLedSuit(state.TrickSuit!, hand))
             return null;
 
-        if (state.TrickPlays.Count == 1 && TrySingletonResponderPenalty(
+        // Instant loss (evaluated before trick resolution): singleton holder wins if responder matches their suit.
+        if (state.TrickPlays.Count == 1 && TryInstantLossSingletonSuit(
                 playerId, creatorId, opponentId, state, cardStr,
                 out var penaltyWinnerId, out var penaltyLoserId))
         {
@@ -173,9 +169,14 @@ public class GameEngineService(
             return await GetGameStateAsync(playerId, sessionId, cancellationToken);
         }
 
+        if (state.TrickPlays.Count == 0)
+            state.LastTrickWinnerPlayerId = null;
+
         hand.Remove(cardStr);
         state.TrickPlays.Add(new PlayedInTrick { PlayerId = playerId, Card = cardStr });
         state.TrickSuit ??= cardStr.Split('_')[0];
+        if (state.TrickPlays.Count == 1)
+            state.LeadPlayerId = playerId;
 
         var moveOrder = await _moveRepository.GetCountByGameSessionIdAsync(sessionId, cancellationToken);
         await _moveRepository.AddAsync(new GameMove
@@ -190,6 +191,7 @@ public class GameEngineService(
 
         if (state.TrickPlays.Count == 2)
         {
+            // Completed trick only: both cards leave hands; compare led suit; tie → leader (first play) wins.
             var winner = ResolveTrick(state.TrickPlays[0], state.TrickPlays[1], state.TrickSuit!);
             state.LastTrickWinnerPlayerId = winner;
             state.TrickPlays.Clear();
@@ -199,6 +201,7 @@ public class GameEngineService(
             state.CurrentTurnPlayerId = winner;
 
             var winnerHandCount = winner == creatorId ? state.CreatorHand.Count : state.OpponentHand.Count;
+            // Win: took this trick, exactly one card left, and it is winner's turn to lead next.
             if (winnerHandCount == 1)
             {
                 var loserId = winner == creatorId ? opponentId : creatorId;
@@ -209,7 +212,10 @@ public class GameEngineService(
             }
         }
         else
+        {
+            // After lead only: switch turn to responder (no switch after Take — that path never reaches PlayCard).
             state.CurrentTurnPlayerId = playerId == creatorId ? opponentId : creatorId;
+        }
 
         if (session.Status == GameStatus.Finished)
             session.GameStateJson = null;
@@ -249,7 +255,6 @@ public class GameEngineService(
         }
 
         var state = JsonSerializer.Deserialize<MakopaGameState>(session.GameStateJson, JsonOptions)!;
-        state.ReserveDeck ??= new List<string>();
         var creatorId = session.CreatorPlayerId;
         var myHand = playerId == creatorId ? state.CreatorHand : state.OpponentHand;
         var lastCard = state.TrickPlays.Count > 0 ? state.TrickPlays[^1].Card : null;
@@ -261,8 +266,8 @@ public class GameEngineService(
         return new GameStateDto(sessionId, myHand, lastCard, state.CurrentTurnPlayerId, gameOver, winnerId, false, lobbyPot, opponentName, state.LastTrickWinnerPlayerId, myRounds, opponentRounds);
     }
 
-    /// <summary>Singleton holder loses if responder plays a suit matching holder&apos;s only card.</summary>
-    private static bool TrySingletonResponderPenalty(
+    /// <summary>Instant loss: exactly one player has a singleton; they are not the responder; responder&apos;s card suit matches that singleton.</summary>
+    private static bool TryInstantLossSingletonSuit(
         Guid responderId,
         Guid creatorId,
         Guid opponentId,
@@ -344,6 +349,7 @@ public class GameEngineService(
         }, cancellationToken);
     }
 
+    /// <summary>Winning seat: higher rank on <paramref name="leadSuit"/>; equal ranks → leader (<paramref name="first"/>).</summary>
     private static Guid ResolveTrick(PlayedInTrick first, PlayedInTrick second, string leadSuit)
     {
         var s1 = first.Card.Split('_', 2, StringSplitOptions.None);

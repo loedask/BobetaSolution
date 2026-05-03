@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.SignalR.Client;
 using Bobeta.Client.Contracts;
 using Bobeta.Client.Models.Games;
@@ -17,10 +18,14 @@ public class GameHubClient
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-    public GameHubClient(IAccessTokenProvider tokenProvider, IConfiguration configuration)
+    public GameHubClient(IAccessTokenProvider tokenProvider, IConfiguration configuration, IWebAssemblyHostEnvironment hostEnvironment)
     {
         _tokenProvider = tokenProvider;
-        _hubBaseUrl = (configuration["ApiBaseUrl"] ?? "").TrimEnd('/');
+        // Match Program.cs: same API host as HttpClient (avoid empty relative hub URL when ApiBaseUrl key is missing).
+        var api = configuration["ApiBaseUrl"] ?? hostEnvironment.BaseAddress;
+        if (string.IsNullOrWhiteSpace(api))
+            api = hostEnvironment.BaseAddress;
+        _hubBaseUrl = api.Trim().TrimEnd('/');
     }
 
     /// <summary>Fired when the server broadcasts full game state (e.g. after reconnect).</summary>
@@ -56,7 +61,7 @@ public class GameHubClient
         if (_connection != null)
         {
             await _connection.StopAsync(CancellationToken.None);
-            _connection.DisposeAsync();
+            await _connection.DisposeAsync();
             _connection = null;
         }
 
