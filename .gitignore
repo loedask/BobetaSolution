@@ -25,3 +25,5 @@ Bobeta.Web/publish-out/
 Bobeta.Web/publish-out2/
 _pubtest/
 _b/
+Bobeta.Application.Tests/obj/
+Bobeta.Application.Tests/bin/
