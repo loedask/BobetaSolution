@@ -12,7 +12,7 @@ namespace Bobeta.Application.Services;
 /// Makopa (authoritative rules): 2 players, 4 cards each from a shuffled 52-card deck; remaining cards are unused (no drawing ever).
 /// Trick = lead + response. Follow suit when possible; void → Take only (lead card to responder's hand; leader leads again; Take is not a card play).
 /// Completed trick: compare led suit only; higher rank wins; ties → leader wins; both cards leave play; winner leads next.
-/// Win: after winning a trick, winner has exactly 1 card and leads next.
+/// Win: after winning a trick, winner has at most one card (one left to lead, or won with last card).
 /// Instant loss (before trick resolution): responder plays a suit matching the other player's only card while that player holds exactly one card.
 /// </summary>
 public class GameEngineService(
@@ -201,8 +201,8 @@ public class GameEngineService(
             state.CurrentTurnPlayerId = winner;
 
             var winnerHandCount = winner == creatorId ? state.CreatorHand.Count : state.OpponentHand.Count;
-            // Win: took this trick, exactly one card left, and it is winner's turn to lead next.
-            if (winnerHandCount == 1)
+            // Win: took this trick and have at most one card (one left to lead, or took the last trick with the last card).
+            if (winnerHandCount <= 1)
             {
                 var loserId = winner == creatorId ? opponentId : creatorId;
                 await FinalizeGameAsync(session, winner, loserId, cancellationToken);
@@ -263,7 +263,11 @@ public class GameEngineService(
 
         var (myRounds, opponentRounds) = (0, 0);
 
-        return new GameStateDto(sessionId, myHand, lastCard, state.CurrentTurnPlayerId, gameOver, winnerId, false, lobbyPot, opponentName, state.LastTrickWinnerPlayerId, myRounds, opponentRounds);
+        var mustFollowLedSuit = state.TrickPlays.Count == 1
+            && state.TrickPlays[0].PlayerId != playerId
+            && state.CurrentTurnPlayerId == playerId;
+
+        return new GameStateDto(sessionId, myHand, lastCard, state.CurrentTurnPlayerId, gameOver, winnerId, false, lobbyPot, opponentName, state.LastTrickWinnerPlayerId, myRounds, opponentRounds, mustFollowLedSuit);
     }
 
     /// <summary>Instant loss: exactly one player has a singleton; they are not the responder; responder&apos;s card suit matches that singleton.</summary>

@@ -92,7 +92,8 @@ public class GamePlayService(IClient client, HttpClient httpClient, IAccessToken
             OpponentDisplayName = string.IsNullOrEmpty(dto.OpponentDisplayName) ? null : dto.OpponentDisplayName,
             LastTrickWinnerPlayerId = dto.LastTrickWinnerPlayerId,
             MyRoundWins = dto.MyRoundWins,
-            OpponentRoundWins = dto.OpponentRoundWins
+            OpponentRoundWins = dto.OpponentRoundWins,
+            MustFollowLedSuit = dto.MustFollowLedSuit
         };
     }
 }

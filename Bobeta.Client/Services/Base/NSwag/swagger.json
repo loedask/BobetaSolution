@@ -1252,6 +1252,9 @@
           "opponentRoundWins": {
             "type": "integer",
             "format": "int32"
+          },
+          "mustFollowLedSuit": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false

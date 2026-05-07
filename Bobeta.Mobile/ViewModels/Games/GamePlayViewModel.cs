@@ -55,6 +55,8 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public int MyRoundWins { get; private set; }
     public int OpponentRoundWins { get; private set; }
 
+    public bool MustFollowLedSuit { get; private set; }
+
     public async Task LoadGameAsync(string sessionId)
     {
         SessionId = sessionId;
@@ -84,6 +86,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             PlayerCards = ParseCards(state.MyCards ?? new List<string>());
             LastPlayedCard = string.IsNullOrEmpty(state.LastPlayedCard) ? null : ParseCard(state.LastPlayedCard);
             OpponentCards = new List<CardViewModel>();
+            MustFollowLedSuit = state.MustFollowLedSuit;
 
             if (state.GameOver)
                 HandleGameResult(state.WinnerPlayerId);
@@ -161,6 +164,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
                 IsPlayerTurn = !WaitingForOpponent && res.Data.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
                 PlayerCards = ParseCards(res.Data.MyCards ?? new List<string>());
                 LastPlayedCard = string.IsNullOrEmpty(res.Data.LastPlayedCard) ? null : ParseCard(res.Data.LastPlayedCard);
+                MustFollowLedSuit = res.Data.MustFollowLedSuit;
                 if (res.Data.GameOver)
                     HandleGameResult(res.Data.WinnerPlayerId);
                 ApplyTrickOutcomeMessage(res.Data.LastTrickWinnerPlayerId);
@@ -187,7 +191,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
         var handStr = PlayerCards.Select(c => c.DisplayValue).ToList();
         if (enforceLocalFollowSuitValidation &&
-            MakopaFollowSuit.RulesApply(IsPlayerTurn, WaitingForOpponent, ShowGameResult) &&
+            MustFollowLedSuit &&
             !MakopaFollowSuit.IsLegalPlay(card.DisplayValue, LastPlayedCard?.DisplayValue, handStr))
         {
             SetError(_i18n.T("invalid_move_follow_suit"));
@@ -222,6 +226,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
                 IsPlayerTurn = !WaitingForOpponent && res.Data.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
                 PlayerCards = ParseCards(res.Data.MyCards ?? new List<string>());
                 LastPlayedCard = string.IsNullOrEmpty(res.Data.LastPlayedCard) ? null : ParseCard(res.Data.LastPlayedCard);
+                MustFollowLedSuit = res.Data.MustFollowLedSuit;
                 if (res.Data.GameOver)
                     HandleGameResult(res.Data.WinnerPlayerId);
                 ApplyTrickOutcomeMessage(res.Data.LastTrickWinnerPlayerId);
@@ -294,6 +299,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         OpponentDisplayName = state.OpponentDisplayName;
         PlayerCards = ParseCards(state.MyCards ?? new List<string>());
         LastPlayedCard = string.IsNullOrEmpty(state.LastPlayedCard) ? null : ParseCard(state.LastPlayedCard);
+        MustFollowLedSuit = state.MustFollowLedSuit;
         CurrentPlayerId = state.CurrentTurnPlayerId;
         IsPlayerTurn = !WaitingForOpponent && state.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
         if (state.GameOver)
@@ -319,18 +325,21 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
     private void RefreshHandPlayability()
     {
-        var rules = MakopaFollowSuit.RulesApply(IsPlayerTurn, WaitingForOpponent, ShowGameResult);
+        var canInteract = IsPlayerTurn && !WaitingForOpponent && !ShowGameResult;
+        var enforceFollow = MustFollowLedSuit;
         var last = LastPlayedCard?.DisplayValue;
         var hand = PlayerCards.Select(c => c.DisplayValue).ToList();
-        var needsVoid = rules && MakopaFollowSuit.ResponderNeedsVoidFollow(last, hand);
+        var needsVoid = canInteract && enforceFollow && MakopaFollowSuit.ResponderNeedsVoidFollow(last, hand);
         foreach (var c in PlayerCards)
         {
-            if (!rules)
+            if (!canInteract)
                 c.IsPlayable = true;
             else if (needsVoid)
                 c.IsPlayable = false;
-            else
+            else if (enforceFollow)
                 c.IsPlayable = MakopaFollowSuit.IsLegalPlay(c.DisplayValue, last, hand);
+            else
+                c.IsPlayable = true;
         }
 
         CanTakeCard = needsVoid;

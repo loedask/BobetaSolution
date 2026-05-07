@@ -22,4 +22,7 @@ public class GameStateViewModel
 
     public int MyRoundWins { get; set; }
     public int OpponentRoundWins { get; set; }
+
+    /// <summary>From server: we are responding to opponent&apos;s lead and must follow suit (or Take if void).</summary>
+    public bool MustFollowLedSuit { get; set; }
 }
