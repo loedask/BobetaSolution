@@ -5,6 +5,7 @@ using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
 using Bobeta.Domain.ValueObjects;
+using Microsoft.Extensions.Logging;
 
 namespace Bobeta.Application.Services;
 
@@ -12,7 +13,7 @@ namespace Bobeta.Application.Services;
 /// Makopa (authoritative rules): 2 players, 4 cards each from a shuffled 52-card deck; remaining cards are unused (no drawing ever).
 /// Trick = lead + response. Follow suit when possible; void → Take only (lead card to responder's hand; leader leads again; Take is not a card play).
 /// Completed trick: compare led suit only; higher rank wins; ties → leader wins; both cards leave play; winner leads next.
-/// Win: after winning a trick, winner has at most one card (one left to lead, or won with last card).
+/// Win (strict): player wins instantly when they have exactly one card and they are the current leader (their turn).
 /// Instant loss (before trick resolution): responder plays a suit matching the other player's only card while that player holds exactly one card.
 /// </summary>
 public class GameEngineService(
@@ -20,7 +21,8 @@ public class GameEngineService(
     IGameMoveRepository moveRepository,
     IGameResultRepository resultRepository,
     IWalletService walletService,
-    IPlayerRepository playerRepository) : IGameEngineService
+    IPlayerRepository playerRepository,
+    ILogger<GameEngineService> logger) : IGameEngineService
 {
     private const decimal CommissionRate = 0.25m;
     private const int DeckSize = 52;
@@ -34,6 +36,7 @@ public class GameEngineService(
     private readonly IGameResultRepository _resultRepository = resultRepository;
     private readonly IWalletService _walletService = walletService;
     private readonly IPlayerRepository _playerRepository = playerRepository;
+    private readonly ILogger<GameEngineService> _logger = logger;
 
     public async Task StartGameAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
@@ -111,7 +114,13 @@ public class GameEngineService(
             CreatedAt = DateTime.UtcNow
         }, cancellationToken);
 
-        session.GameStateJson = JsonSerializer.Serialize(state, JsonOptions);
+        await TryFinalizeLeaderWinAsync(
+            session, state, creatorId, opponentId, cancellationToken,
+            context: "void-follow", logTrickEndSnapshot: true);
+
+        session.GameStateJson = session.Status == GameStatus.Finished
+            ? null
+            : JsonSerializer.Serialize(state, JsonOptions);
         await _sessionRepository.UpdateAsync(session, cancellationToken);
 
         return await GetGameStateAsync(playerId, sessionId, cancellationToken);
@@ -200,21 +209,17 @@ public class GameEngineService(
             state.LeadPlayerId = winner;
             state.CurrentTurnPlayerId = winner;
 
-            var winnerHandCount = winner == creatorId ? state.CreatorHand.Count : state.OpponentHand.Count;
-            // Win: took this trick and have at most one card (one left to lead, or took the last trick with the last card).
-            if (winnerHandCount <= 1)
-            {
-                var loserId = winner == creatorId ? opponentId : creatorId;
-                await FinalizeGameAsync(session, winner, loserId, cancellationToken);
-                session.GameStateJson = null;
-                session.Status = GameStatus.Finished;
-                session.FinishedAt = DateTime.UtcNow;
-            }
+            await TryFinalizeLeaderWinAsync(
+                session, state, creatorId, opponentId, cancellationToken,
+                context: "trick-resolved", logTrickEndSnapshot: true);
         }
         else
         {
             // After lead only: switch turn to responder (no switch after Take — that path never reaches PlayCard).
             state.CurrentTurnPlayerId = playerId == creatorId ? opponentId : creatorId;
+            await TryFinalizeLeaderWinAsync(
+                session, state, creatorId, opponentId, cancellationToken,
+                context: "lead-card-played");
         }
 
         if (session.Status == GameStatus.Finished)
@@ -351,6 +356,53 @@ public class GameEngineService(
             PlatformCommission = commission,
             CreatedAt = DateTime.UtcNow
         }, cancellationToken);
+    }
+
+    /// <summary>
+    /// Strict win condition (engine-authoritative): leader wins instantly when they have exactly one card and it is their turn.
+    /// Must be called after every state-changing action and after leader/turn assignments are finalized.
+    /// </summary>
+    private async Task TryFinalizeLeaderWinAsync(
+        GameSession session,
+        MakopaGameState state,
+        Guid creatorId,
+        Guid opponentId,
+        CancellationToken cancellationToken,
+        string context,
+        bool logTrickEndSnapshot = false)
+    {
+        if (session.Status == GameStatus.Finished)
+            return;
+
+        var leaderId = state.LeadPlayerId;
+        var currentTurn = state.CurrentTurnPlayerId;
+        if (!leaderId.HasValue || !currentTurn.HasValue || leaderId.Value != currentTurn.Value)
+            return;
+
+        var leaderIsCreator = leaderId.Value == creatorId;
+        var leaderHandCount = leaderIsCreator ? state.CreatorHand.Count : state.OpponentHand.Count;
+        var opponentHandCount = leaderIsCreator ? state.OpponentHand.Count : state.CreatorHand.Count;
+        var triggered = leaderHandCount == 1;
+
+        if (logTrickEndSnapshot)
+        {
+            _logger.LogInformation(
+                "Makopa trick end | context={Context} | leader={LeaderId} | leaderHand={LeaderHandCount} | opponentHand={OpponentHandCount} | winTriggered={WinTriggered}",
+                context, leaderId.Value, leaderHandCount, opponentHandCount, triggered);
+        }
+
+        if (!triggered)
+            return;
+
+        var loserId = leaderIsCreator ? opponentId : creatorId;
+        await FinalizeGameAsync(session, leaderId.Value, loserId, cancellationToken);
+        session.GameStateJson = null;
+        session.Status = GameStatus.Finished;
+        session.FinishedAt = DateTime.UtcNow;
+
+        _logger.LogInformation(
+            "Makopa win finalized immediately | context={Context} | winner={WinnerId} | loser={LoserId} | winnerHand={WinnerHandCount}",
+            context, leaderId.Value, loserId, leaderHandCount);
     }
 
     /// <summary>Winning seat: higher rank on <paramref name="leadSuit"/>; equal ranks → leader (<paramref name="first"/>).</summary>
