@@ -85,14 +85,7 @@
         await ViewModel.DisposeAsync();
     }
 
-    private void OnStateChanged()
-    {
-        _ = InvokeAsync(() =>
-        {
-            StateHasChanged();
-            return Task.CompletedTask;
-        });
-    }
+    private void OnStateChanged() => _ = InvokeAsync(StateHasChanged);
 
     private async Task PlayCard(CardViewModel card) => await ViewModel.PlayCardAsync(card);
     private async Task TakeCard() => await ViewModel.TakeCardAsync();

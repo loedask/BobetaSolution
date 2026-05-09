@@ -1,11 +1,13 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 #if ANDROID
 using Xamarin.Android.Net;
 #endif
 using Bobeta.Client.Contracts;
 using Bobeta.Client.Models.Games;
+using Bobeta.Client.Serialization;
 
 namespace Bobeta.Mobile.Services.Realtime;
 
@@ -16,14 +18,21 @@ public class GameHubClient
     private string? _currentSessionId;
     private readonly IAccessTokenProvider _tokenProvider;
     private readonly string _hubBaseUrl;
+    private readonly ILogger<GameHubClient>? _logger;
     private CancellationTokenSource? _reconnectCts;
     private bool _disposed;
+    private long _gameStateReceivedVersion;
 
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private static readonly JsonSerializerOptions JsonProtocolOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
-    public GameHubClient(IAccessTokenProvider tokenProvider, IConfiguration configuration)
+    public GameHubClient(IAccessTokenProvider tokenProvider, IConfiguration configuration, ILogger<GameHubClient>? logger = null)
     {
         _tokenProvider = tokenProvider;
+        _logger = logger;
         _hubBaseUrl = (configuration["ApiBaseUrl"] ?? "").TrimEnd('/');
     }
 
@@ -64,7 +73,7 @@ public class GameHubClient
 #endif
             })
             .WithAutomaticReconnect()
-            .AddJsonProtocol(options => options.PayloadSerializerOptions = JsonOptions)
+            .AddJsonProtocol(options => options.PayloadSerializerOptions = JsonProtocolOptions)
             .Build();
 
         _connection.Closed += OnClosedAsync;
@@ -75,20 +84,34 @@ public class GameHubClient
         {
             try
             {
-                var state = JsonSerializer.Deserialize<GameStateViewModel>(payload.GetRawText(), JsonOptions);
-                if (state != null)
-                    OnGameStateUpdated?.Invoke(state);
+                var state = JsonSerializer.Deserialize(payload, GameStateSignalRJsonContext.Default.GameStateViewModel);
+                if (state == null)
+                {
+                    _logger?.LogWarning("GameState payload deserialized to null.");
+                    return;
+                }
+
+                var ver = Interlocked.Increment(ref _gameStateReceivedVersion);
+                _logger?.LogDebug(
+                    "GameState received v={Version} session={SessionId} turn={Turn} last={Last} gameOver={GameOver} utc={Utc:o}",
+                    ver, state.SessionId, state.CurrentTurnPlayerId, state.LastPlayedCard ?? "(none)", state.GameOver, DateTime.UtcNow);
+                OnGameStateUpdated?.Invoke(state);
             }
-            catch { /* ignore */ }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "GameState deserialize failed (raw length {Length}).", payload.GetRawText().Length);
+            }
         });
 
         _connection.On<Guid, string>("NotifyOpponentMove", (moverPlayerId, cardSuitRank) =>
         {
+            _logger?.LogDebug("NotifyOpponentMove mover={MoverId} card={Card} utc={Utc:o}", moverPlayerId, cardSuitRank, DateTime.UtcNow);
             OnOpponentMove?.Invoke(moverPlayerId, cardSuitRank);
         });
 
         _connection.On<Guid?>("GameResult", winnerId =>
         {
+            _logger?.LogDebug("GameResult winner={WinnerId} utc={Utc:o}", winnerId, DateTime.UtcNow);
             OnGameResult?.Invoke(winnerId);
         });
 

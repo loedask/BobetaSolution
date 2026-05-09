@@ -4,7 +4,8 @@ namespace Bobeta.Client.Models.Games;
 public class GameStateViewModel
 {
     public Guid SessionId { get; set; }
-    public IReadOnlyList<string> MyCards { get; set; } = Array.Empty<string>();
+    /// <summary>Seat hand from API/SignalR. List for reliable System.Text.Json deserialization (incl. WASM/AOT).</summary>
+    public List<string> MyCards { get; set; } = new();
     public string? LastPlayedCard { get; set; }
     public Guid? CurrentTurnPlayerId { get; set; }
     public bool GameOver { get; set; }
