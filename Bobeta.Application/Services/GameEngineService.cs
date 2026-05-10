@@ -13,7 +13,7 @@ namespace Bobeta.Application.Services;
 /// Makopa (authoritative rules): 2 players, 4 cards each from a shuffled 52-card deck; remaining cards are unused (no drawing ever).
 /// Trick = lead + response. Follow suit when possible; void → Take only (lead card to responder's hand; leader leads again; Take is not a card play).
 /// Completed trick: compare led suit only; higher rank wins; ties → leader wins; both cards leave play; winner leads next.
-/// Win (strict): player wins instantly when they have exactly one card and they are the current leader (their turn).
+/// Win (strict): after a completed trick, the trick winner becomes next leader; if their hand is empty, they win immediately.
 /// Instant loss (before trick resolution): responder plays a suit matching the other player's only card while that player holds exactly one card.
 /// </summary>
 public class GameEngineService(
@@ -114,10 +114,6 @@ public class GameEngineService(
             CreatedAt = DateTime.UtcNow
         }, cancellationToken);
 
-        await TryFinalizeLeaderWinAsync(
-            session, state, creatorId, opponentId, cancellationToken,
-            context: "void-follow", logTrickEndSnapshot: true);
-
         session.GameStateJson = session.Status == GameStatus.Finished
             ? null
             : JsonSerializer.Serialize(state, JsonOptions);
@@ -209,17 +205,18 @@ public class GameEngineService(
             state.LeadPlayerId = winner;
             state.CurrentTurnPlayerId = winner;
 
-            await TryFinalizeLeaderWinAsync(
-                session, state, creatorId, opponentId, cancellationToken,
-                context: "trick-resolved", logTrickEndSnapshot: true);
+            await TryFinalizeWinIfNextLeaderOutOfCardsAsync(
+                session,
+                state,
+                creatorId,
+                opponentId,
+                trickWinnerId: winner,
+                cancellationToken);
         }
         else
         {
             // After lead only: switch turn to responder (no switch after Take — that path never reaches PlayCard).
             state.CurrentTurnPlayerId = playerId == creatorId ? opponentId : creatorId;
-            await TryFinalizeLeaderWinAsync(
-                session, state, creatorId, opponentId, cancellationToken,
-                context: "lead-card-played");
         }
 
         if (session.Status == GameStatus.Finished)
@@ -359,50 +356,50 @@ public class GameEngineService(
     }
 
     /// <summary>
-    /// Strict win condition (engine-authoritative): leader wins instantly when they have exactly one card and it is their turn.
-    /// Must be called after every state-changing action and after leader/turn assignments are finalized.
+    /// Win condition (engine-authoritative): after trick resolution, the trick winner is next leader.
+    /// If their hand is empty, they win immediately. Must run after card removal and leader/turn assignment.
     /// </summary>
-    private async Task TryFinalizeLeaderWinAsync(
+    private async Task TryFinalizeWinIfNextLeaderOutOfCardsAsync(
         GameSession session,
         MakopaGameState state,
         Guid creatorId,
         Guid opponentId,
-        CancellationToken cancellationToken,
-        string context,
-        bool logTrickEndSnapshot = false)
+        Guid trickWinnerId,
+        CancellationToken cancellationToken)
     {
         if (session.Status == GameStatus.Finished)
             return;
 
-        var leaderId = state.LeadPlayerId;
+        var nextLeaderId = state.LeadPlayerId;
         var currentTurn = state.CurrentTurnPlayerId;
-        if (!leaderId.HasValue || !currentTurn.HasValue || leaderId.Value != currentTurn.Value)
+        if (!nextLeaderId.HasValue || !currentTurn.HasValue || nextLeaderId.Value != currentTurn.Value)
             return;
 
-        var leaderIsCreator = leaderId.Value == creatorId;
-        var leaderHandCount = leaderIsCreator ? state.CreatorHand.Count : state.OpponentHand.Count;
-        var opponentHandCount = leaderIsCreator ? state.OpponentHand.Count : state.CreatorHand.Count;
-        var triggered = leaderHandCount == 1;
+        if (nextLeaderId.Value != trickWinnerId)
+            return;
 
-        if (logTrickEndSnapshot)
-        {
-            _logger.LogInformation(
-                "Makopa trick end | context={Context} | leader={LeaderId} | leaderHand={LeaderHandCount} | opponentHand={OpponentHandCount} | winTriggered={WinTriggered}",
-                context, leaderId.Value, leaderHandCount, opponentHandCount, triggered);
-        }
+        var creatorHandCount = state.CreatorHand.Count;
+        var opponentHandCount = state.OpponentHand.Count;
+        var leaderIsCreator = nextLeaderId.Value == creatorId;
+        var leaderHandCount = leaderIsCreator ? creatorHandCount : opponentHandCount;
+        var triggered = leaderHandCount == 0;
+
+        _logger.LogInformation(
+            "Makopa trick end | trickWinnerId={TrickWinnerId} | nextLeaderId={NextLeaderId} | creatorHand={CreatorHandCount} | opponentHand={OpponentHandCount} | winTriggered={WinTriggered}",
+            trickWinnerId, nextLeaderId.Value, creatorHandCount, opponentHandCount, triggered);
 
         if (!triggered)
             return;
 
         var loserId = leaderIsCreator ? opponentId : creatorId;
-        await FinalizeGameAsync(session, leaderId.Value, loserId, cancellationToken);
+        await FinalizeGameAsync(session, nextLeaderId.Value, loserId, cancellationToken);
         session.GameStateJson = null;
         session.Status = GameStatus.Finished;
         session.FinishedAt = DateTime.UtcNow;
 
         _logger.LogInformation(
-            "Makopa win finalized immediately | context={Context} | winner={WinnerId} | loser={LoserId} | winnerHand={WinnerHandCount}",
-            context, leaderId.Value, loserId, leaderHandCount);
+            "Makopa win finalized | trickWinnerId={TrickWinnerId} | nextLeaderId={NextLeaderId} | loser={LoserId}",
+            trickWinnerId, nextLeaderId.Value, loserId);
     }
 
     /// <summary>Winning seat: higher rank on <paramref name="leadSuit"/>; equal ranks → leader (<paramref name="first"/>).</summary>
