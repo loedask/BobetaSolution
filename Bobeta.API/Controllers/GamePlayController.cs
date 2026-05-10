@@ -7,6 +7,7 @@ using Bobeta.Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 
 namespace Bobeta.API.Controllers;
 
@@ -18,7 +19,8 @@ public class GamePlayController(
     IGameEngineService gameEngineService,
     IHubContext<GameHub> hubContext,
     IGameSessionRepository sessionRepository,
-    IGameSessionConnectionTracker sessionConnectionTracker) : ControllerBase
+    IGameSessionConnectionTracker sessionConnectionTracker,
+    ILogger<GamePlayController> logger) : ControllerBase
 {
     private readonly IGameEngineService _gameEngineService = gameEngineService;
     private readonly IHubContext<GameHub> _hubContext = hubContext;
@@ -108,6 +110,11 @@ public class GamePlayController(
         if (state == null)
             return;
         var connectionIds = _sessionConnectionTracker.GetConnectionIds(sessionId, playerId);
+        var delivery = connectionIds.Count > 0 ? $"connectionIds={connectionIds.Count}" : "user-fallback(UserIdProvider)";
+        logger.LogInformation(
+            "SignalR GameState emit session={SessionId} player={PlayerId} delivery={Delivery} gameOver={GameOver} turn={Turn}",
+            sessionId, playerId, delivery, state.GameOver, state.CurrentTurnPlayerId);
+
         if (connectionIds.Count > 0)
         {
             foreach (var connectionId in connectionIds)
@@ -115,6 +122,9 @@ public class GamePlayController(
             return;
         }
 
+        logger.LogWarning(
+            "SignalR GameState session={SessionId} player={PlayerId}: no tracked hub connections — using IUserIdProvider fallback.",
+            sessionId, playerId);
         await _hubContext.Clients.User(playerId.ToString()).SendAsync("GameState", state, cancellationToken);
     }
 

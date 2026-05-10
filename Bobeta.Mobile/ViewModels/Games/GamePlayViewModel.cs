@@ -317,8 +317,8 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         if (moverPlayerId == _appState.State.CurrentPlayerId)
             return;
         _aiTriggerCts?.Cancel();
-        // GameState push is authoritative for trick/turn; skipping this prevents stale out-of-order move events
-        // from re-introducing an old lead card and corrupting local playability.
+        if (!string.IsNullOrEmpty(cardSuitRank))
+            LastPlayedCard = ParseCard(cardSuitRank);
         RefreshHandPlayability();
         RaiseStateChanged();
     }
