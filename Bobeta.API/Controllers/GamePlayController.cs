@@ -2,6 +2,7 @@ using Bobeta.Application.DTOs.Game;
 using Bobeta.Application.Interfaces;
 using Bobeta.API.App.Services;
 using Bobeta.API.Hubs;
+using Bobeta.API.Services;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
@@ -20,12 +21,14 @@ public class GamePlayController(
     IHubContext<GameHub> hubContext,
     IGameSessionRepository sessionRepository,
     IGameSessionConnectionTracker sessionConnectionTracker,
+    IGameInactivityCoordinator gameInactivityCoordinator,
     ILogger<GamePlayController> logger) : ControllerBase
 {
     private readonly IGameEngineService _gameEngineService = gameEngineService;
     private readonly IHubContext<GameHub> _hubContext = hubContext;
     private readonly IGameSessionRepository _sessionRepository = sessionRepository;
     private readonly IGameSessionConnectionTracker _sessionConnectionTracker = sessionConnectionTracker;
+    private readonly IGameInactivityCoordinator _gameInactivityCoordinator = gameInactivityCoordinator;
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
@@ -34,6 +37,7 @@ public class GamePlayController(
     public async Task<IActionResult> StartGame([FromQuery] Guid sessionId, CancellationToken cancellationToken)
     {
         await _gameEngineService.StartGameAsync(sessionId, cancellationToken);
+        await _gameInactivityCoordinator.RecordGameplayActivityAsync(sessionId, cancellationToken);
         return Ok();
     }
 
@@ -56,8 +60,12 @@ public class GamePlayController(
         var sessionRow = await _sessionRepository.GetByIdAsync(request.SessionId, cancellationToken);
         await PushGameStateToParticipantsAsync(sessionRow, request.SessionId, state, cancellationToken);
 
+        await _gameInactivityCoordinator.RecordGameplayActivityAsync(request.SessionId, cancellationToken);
         if (state.GameOver)
+        {
+            _gameInactivityCoordinator.UnregisterSession(request.SessionId);
             await _hubContext.Clients.Group(groupName).SendAsync("GameResult", state.WinnerPlayerId);
+        }
 
         return Ok(state);
     }
@@ -72,8 +80,10 @@ public class GamePlayController(
         var sessionRow = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
         await PushGameStateToParticipantsAsync(sessionRow, sessionId, state, cancellationToken);
 
+        await _gameInactivityCoordinator.RecordGameplayActivityAsync(sessionId, cancellationToken);
         if (state.GameOver)
         {
+            _gameInactivityCoordinator.UnregisterSession(sessionId);
             var groupName = GameHub.GroupPrefix + sessionId;
             await _hubContext.Clients.Group(groupName).SendAsync("GameResult", state.WinnerPlayerId);
         }

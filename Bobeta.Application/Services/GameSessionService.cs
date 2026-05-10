@@ -82,6 +82,23 @@ public class GameSessionService(
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc />
+    public async Task<bool> CancelInProgressGameAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        if (session == null || session.Status != GameStatus.InProgress || session.OpponentPlayerId == null)
+            return false;
+
+        await _walletService.ReleaseBetAsync(session.CreatorPlayerId, session.BetAmount, cancellationToken);
+        await _walletService.ReleaseBetAsync(session.OpponentPlayerId.Value, session.BetAmount, cancellationToken);
+
+        session.Status = GameStatus.Cancelled;
+        session.GameStateJson = null;
+        session.FinishedAt = DateTime.UtcNow;
+        await _sessionRepository.UpdateAsync(session, cancellationToken);
+        return true;
+    }
+
     private static GameSessionDto Map(GameSession s) =>
         new(s.Id, s.CreatorPlayerId, s.OpponentPlayerId, s.BetAmount, s.Status, s.CreatedAt, s.StartedAt, s.FinishedAt);
 }

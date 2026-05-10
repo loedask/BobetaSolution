@@ -153,6 +153,11 @@ public class I18nService(AppStateService appState)
                 "\u2022 Two players; 52 cards shuffled; each is dealt 4. The other cards are never used — there is no drawing.\n\u2022 Who opens first is chosen at random.\n\u2022 Follow suit by name: if a heart is led, play a heart when you have one — same for spades, clubs, and diamonds.\n\u2022 If you have several cards in the led suit, you choose which one to play.\n\u2022 If you cannot follow, tap Take: the leader's lead card is added to your hand and the leader opens the next trick.\n\u2022 When both cards match the led suit, the higher rank wins the trick; the winner leads next (ties favour whoever led). Those cards are then played out from both hands.\n\u2022 You win immediately when you win a trick and have no cards left — you played your last card and you lead next.\n\u2022 If the other player has only one card left and you play a card of the same suit as that card, you lose immediately.",
             ["makopa_round_score"] = "Hands won: {0}\u2013{1}",
             ["makopa_rules_link"] = "Rules",
+            ["inactivity_warning_first"] =
+                "Due to inactivity from you or your opponent, the game will be suspended in 10 seconds.",
+            ["inactivity_warning_second"] = "Your game will be canceled in 10 seconds due to inactivity.",
+            ["continue_play"] = "Continue",
+            ["cancel_game"] = "Cancel Game",
         };
 
         var fr = new Dictionary<string, string>(en)
@@ -199,6 +204,11 @@ public class I18nService(AppStateService appState)
                 "\u2022 Deux joueurs ; 52 cartes mélangées ; 4 cartes chacun. Les autres cartes ne sont pas utilisées — aucune pioche.\n\u2022 Le joueur qui commence est tiré au sort.\n\u2022 Suivre la couleur : cœur sur cœur, pique sur pique, trèfle sur trèfle, carreau sur carreau, si vous en avez.\n\u2022 Si vous avez plusieurs cartes dans la couleur demandée, vous choisissez laquelle jouer.\n\u2022 Si vous n'avez pas la couleur menée, touchez Prendre : la carte d'entame est ajoutée à votre main et le joueur qui a mené entame à nouveau.\n\u2022 Quand les deux cartes suivent la couleur menée, la plus forte remporte le pli ; le gagnant entame le suivant (égalité : le joueur qui a mené). Les deux cartes du pli sont jouées.\n\u2022 Vous gagnez immédiatement si vous remportez un pli et qu'il ne vous reste plus aucune carte — vous venez de jouer votre dernière carte et vous entamez.\n\u2022 Si l'autre joueur n'a plus qu'une carte et que vous jouez une carte de la même couleur que cette carte, vous perdez immédiatement.",
             ["makopa_round_score"] = "Mains gagnées : {0}\u2013{1}",
             ["makopa_rules_link"] = "Règles",
+            ["inactivity_warning_first"] =
+                "En raison d'inactivité de votre part ou de celle de l'adversaire, la partie sera suspendue dans 10 secondes.",
+            ["inactivity_warning_second"] = "La partie sera annulée dans 10 secondes pour cause d'inactivité.",
+            ["continue_play"] = "Continuer",
+            ["cancel_game"] = "Annuler la partie",
         };
 
         var kt = new Dictionary<string, string>(en);

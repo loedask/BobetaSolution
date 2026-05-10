@@ -170,6 +170,54 @@
         <ActivityIndicator x:Name="Busy" Grid.Row="5" IsRunning="False" Color="{StaticResource PrimaryGold}" />
 
         <Border
+            x:Name="InactivityOverlay"
+            Grid.Row="0"
+            Grid.RowSpan="6"
+            IsVisible="False"
+            BackgroundColor="#CC12151f"
+            Padding="20"
+            StrokeThickness="0">
+            <Border
+                VerticalOptions="Center"
+                Padding="20"
+                BackgroundColor="{StaticResource Card}"
+                StrokeShape="RoundRectangle 20">
+                <VerticalStackLayout Spacing="14">
+                    <Label
+                        x:Name="InactivityMessageLabel"
+                        FontSize="13"
+                        LineBreakMode="WordWrap"
+                        HorizontalTextAlignment="Center"
+                        TextColor="{StaticResource Foreground}" />
+                    <Label
+                        x:Name="InactivityCountLabel"
+                        FontSize="36"
+                        FontAttributes="Bold"
+                        HorizontalTextAlignment="Center"
+                        TextColor="{StaticResource PrimaryGold}" />
+                    <Grid x:Name="InactivityButtonsRow" ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Button
+                            x:Name="InactivityContinueBtn"
+                            Grid.Column="0"
+                            Clicked="OnInactivityContinue"
+                            CornerRadius="12"
+                            HeightRequest="44"
+                            BackgroundColor="#3A404D"
+                            TextColor="{StaticResource Foreground}" />
+                        <Button
+                            x:Name="InactivityCancelBtn"
+                            Grid.Column="1"
+                            Clicked="OnInactivityCancel"
+                            CornerRadius="12"
+                            HeightRequest="44"
+                            BackgroundColor="#D64545"
+                            TextColor="White" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </Border>
+
+        <Border
             x:Name="ResultOverlay"
             Grid.Row="0"
             Grid.RowSpan="6"

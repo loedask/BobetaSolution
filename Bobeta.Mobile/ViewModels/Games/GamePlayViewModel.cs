@@ -16,6 +16,8 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     private readonly GamePlayTestService? _testService;
     private readonly I18nService _i18n;
     private CancellationTokenSource? _aiTriggerCts;
+    private CancellationTokenSource? _inactivityCountdownCts;
+    private DateTime? _inactivityDeadlineUtc;
 
     public GamePlayViewModel(
         GamePlayService gamePlayService,
@@ -57,17 +59,50 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
     public bool MustFollowLedSuit { get; private set; }
 
+    public bool ShowInactivityOverlay { get; private set; }
+    public bool InactivityShowButtons { get; private set; }
+    public int InactivityCountdownSeconds { get; private set; }
+
+    public event Action? NavigateHomeRequested;
+
     public async Task LoadGameAsync(string sessionId)
     {
         SessionId = sessionId;
         SetLoading(true);
         ClearError();
+        var notifyInactivityReady = false;
+        var hubPausedThisLoad = false;
         try
         {
             if (!Guid.TryParse(sessionId, out var sessionGuid))
             {
                 SetError("Invalid game session.");
                 return;
+            }
+
+            if (_hubClient != null)
+            {
+                try
+                {
+                    await _hubClient.ConnectAsync(sessionId);
+                    WireInactivityHubEvents();
+                    await _hubClient.PauseInactivityAsync(sessionId);
+                    hubPausedThisLoad = true;
+                    _hubClient.OnGameStateUpdated -= ApplyGameStateFromHub;
+                    _hubClient.OnGameStateUpdated += ApplyGameStateFromHub;
+                    _hubClient.OnOpponentMove -= ApplyOpponentMoveFromHub;
+                    _hubClient.OnOpponentMove += ApplyOpponentMoveFromHub;
+                    _hubClient.OnGameResult -= ApplyGameResultFromHub;
+                    _hubClient.OnGameResult += ApplyGameResultFromHub;
+                    _hubClient.OnGameStarted -= OnGameStartedReload;
+                    _hubClient.OnGameStarted += OnGameStartedReload;
+                    _hubClient.OnReconnected -= OnHubReconnected;
+                    _hubClient.OnReconnected += OnHubReconnected;
+                }
+                catch
+                {
+                    // Table still works from HTTP; hub is for live updates.
+                }
             }
 
             var res = await _gameService.GetGameStateAsync(sessionGuid);
@@ -97,27 +132,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             ApplyMatchRoundScore(state);
             RefreshHandPlayability();
 
-            if (_hubClient != null)
-            {
-                try
-                {
-                    await _hubClient.ConnectAsync(sessionId);
-                    _hubClient.OnGameStateUpdated -= ApplyGameStateFromHub;
-                    _hubClient.OnGameStateUpdated += ApplyGameStateFromHub;
-                    _hubClient.OnOpponentMove -= ApplyOpponentMoveFromHub;
-                    _hubClient.OnOpponentMove += ApplyOpponentMoveFromHub;
-                    _hubClient.OnGameResult -= ApplyGameResultFromHub;
-                    _hubClient.OnGameResult += ApplyGameResultFromHub;
-                    _hubClient.OnGameStarted -= OnGameStartedReload;
-                    _hubClient.OnGameStarted += OnGameStartedReload;
-                    _hubClient.OnReconnected -= OnHubReconnected;
-                    _hubClient.OnReconnected += OnHubReconnected;
-                }
-                catch
-                {
-                    // Table still works from HTTP; hub is for live updates.
-                }
-            }
+            notifyInactivityReady = !WaitingForOpponent && !state.GameOver;
 
             ScheduleAiOpponentIfNeeded(sessionGuid);
 
@@ -130,8 +145,104 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         finally
         {
             SetLoading(false);
+            if (_hubClient != null && Guid.TryParse(sessionId, out _) && hubPausedThisLoad)
+            {
+                try
+                {
+                    await _hubClient.ResumeInactivityAsync(sessionId);
+                    if (notifyInactivityReady)
+                        await _hubClient.NotifyGameReadyForInactivityAsync(sessionId);
+                }
+                catch
+                {
+                    // Hub optional
+                }
+            }
         }
     }
+
+    private void WireInactivityHubEvents()
+    {
+        if (_hubClient == null) return;
+        _hubClient.OnInactivityWarning -= OnInactivityWarningFromHub;
+        _hubClient.OnInactivityWarning += OnInactivityWarningFromHub;
+        _hubClient.OnInactivityWarningDismissed -= OnInactivityDismissedFromHub;
+        _hubClient.OnInactivityWarningDismissed += OnInactivityDismissedFromHub;
+        _hubClient.OnGameEndedByInactivity -= OnGameEndedByInactivityFromHub;
+        _hubClient.OnGameEndedByInactivity += OnGameEndedByInactivityFromHub;
+    }
+
+    private void OnInactivityWarningFromHub(InactivityWarningPayload payload)
+    {
+        ShowInactivityOverlay = true;
+        InactivityShowButtons = payload.ShowButtons;
+        _inactivityDeadlineUtc = payload.DecisionDeadlineUtc.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(payload.DecisionDeadlineUtc, DateTimeKind.Utc)
+            : payload.DecisionDeadlineUtc.ToUniversalTime();
+        StartInactivityCountdown();
+        RefreshHandPlayability();
+        RaiseStateChanged();
+    }
+
+    private void OnInactivityDismissedFromHub()
+    {
+        StopInactivityCountdown();
+        ShowInactivityOverlay = false;
+        _inactivityDeadlineUtc = null;
+        RefreshHandPlayability();
+        RaiseStateChanged();
+    }
+
+    private void OnGameEndedByInactivityFromHub()
+    {
+        StopInactivityCountdown();
+        ShowInactivityOverlay = false;
+        _inactivityDeadlineUtc = null;
+        NavigateHomeRequested?.Invoke();
+    }
+
+    private void StartInactivityCountdown()
+    {
+        StopInactivityCountdown();
+        _inactivityCountdownCts = new CancellationTokenSource();
+        _ = RunInactivityCountdownAsync(_inactivityCountdownCts.Token);
+    }
+
+    private async Task RunInactivityCountdownAsync(CancellationToken token)
+    {
+        while (!token.IsCancellationRequested && ShowInactivityOverlay && _inactivityDeadlineUtc is { } d)
+        {
+            var sec = Math.Max(0, (int)Math.Ceiling((d - DateTime.UtcNow).TotalSeconds));
+            InactivityCountdownSeconds = sec;
+            RaiseStateChanged();
+            if (sec <= 0)
+                break;
+            try
+            {
+                await Task.Delay(200, token);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+        }
+    }
+
+    private void StopInactivityCountdown()
+    {
+        _inactivityCountdownCts?.Cancel();
+        _inactivityCountdownCts = null;
+    }
+
+    public Task ContinueInactivityAsync() =>
+        _hubClient != null && !string.IsNullOrEmpty(SessionId)
+            ? _hubClient.InactivityContinueAsync(SessionId)
+            : Task.CompletedTask;
+
+    public Task CancelGameFromInactivityAsync() =>
+        _hubClient != null && !string.IsNullOrEmpty(SessionId)
+            ? _hubClient.InactivityCancelGameAsync(SessionId)
+            : Task.CompletedTask;
 
     public async Task PlayCardAsync(CardViewModel card) =>
         await SubmitCardAsync(card, enforceLocalFollowSuitValidation: true);
@@ -270,6 +381,9 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
     public void HandleGameResult(Guid? winnerPlayerId)
     {
+        StopInactivityCountdown();
+        ShowInactivityOverlay = false;
+        _inactivityDeadlineUtc = null;
         ShowGameResult = true;
         WinnerPlayerName = winnerPlayerId == _appState.State.CurrentPlayerId ? "You" : "Opponent";
         RefreshHandPlayability();
@@ -325,7 +439,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
     private void RefreshHandPlayability()
     {
-        var canInteract = IsPlayerTurn && !WaitingForOpponent && !ShowGameResult;
+        var canInteract = IsPlayerTurn && !WaitingForOpponent && !ShowGameResult && !ShowInactivityOverlay;
         var enforceFollow = MustFollowLedSuit;
         var last = LastPlayedCard?.DisplayValue;
         var hand = PlayerCards.Select(c => c.DisplayValue).ToList();
@@ -367,6 +481,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         _aiTriggerCts?.Cancel();
+        StopInactivityCountdown();
         if (_hubClient != null)
         {
             _hubClient.OnGameStateUpdated -= ApplyGameStateFromHub;
@@ -374,6 +489,9 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             _hubClient.OnGameResult -= ApplyGameResultFromHub;
             _hubClient.OnGameStarted -= OnGameStartedReload;
             _hubClient.OnReconnected -= OnHubReconnected;
+            _hubClient.OnInactivityWarning -= OnInactivityWarningFromHub;
+            _hubClient.OnInactivityWarningDismissed -= OnInactivityDismissedFromHub;
+            _hubClient.OnGameEndedByInactivity -= OnGameEndedByInactivityFromHub;
             await _hubClient.DisconnectAsync();
         }
     }

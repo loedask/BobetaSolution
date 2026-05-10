@@ -44,7 +44,7 @@
             <PlayerHand Cards="@ViewModel.PlayerCards" IsPlayerTurn="@ViewModel.IsPlayerTurn" OnPlayCard="PlayCard" OnDragStart="HandleDragStart" OnDragEnd="HandleDragEnd" />
             <button type="button"
                     class="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-55"
-                    disabled="@(!ViewModel.CanTakeCard || ViewModel.IsLoading)"
+                    disabled="@(!ViewModel.CanTakeCard || ViewModel.IsLoading || ViewModel.ShowInactivityOverlay)"
                     @onclick="TakeCard">
                 @I18n.T("take_card")
             </button>
@@ -55,6 +55,35 @@
         }
     </div>
 </div>
+
+@if (ViewModel.ShowInactivityOverlay)
+{
+    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4">
+        <div class="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
+            <p class="text-center text-sm leading-relaxed text-foreground">
+                @(ViewModel.InactivityShowButtons ? I18n.T("inactivity_warning_first") : I18n.T("inactivity_warning_second"))
+            </p>
+            <p class="mt-6 text-center font-mono text-4xl font-bold tabular-nums text-primary">
+                @ViewModel.InactivityCountdownSeconds
+            </p>
+            @if (ViewModel.InactivityShowButtons)
+            {
+                <div class="mt-6 grid grid-cols-2 gap-3">
+                    <button type="button"
+                            class="rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground"
+                            @onclick="OnInactivityContinue">
+                        @I18n.T("continue_play")
+                    </button>
+                    <button type="button"
+                            class="rounded-xl bg-destructive px-4 py-3 text-sm font-semibold text-destructive-foreground"
+                            @onclick="OnInactivityCancelGame">
+                        @I18n.T("cancel_game")
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+}
 
 @if (ViewModel.ShowGameResult)
 {
@@ -97,10 +126,15 @@
 
     private async Task HandleCardDropped()
     {
+        if (ViewModel.ShowInactivityOverlay) return;
         if (string.IsNullOrEmpty(_draggedCardDisplayValue)) return;
         var card = ViewModel.PlayerCards.FirstOrDefault(c => c.DisplayValue == _draggedCardDisplayValue);
         if (card != null)
             await ViewModel.PlayCardAsync(card);
         _draggedCardDisplayValue = null;
     }
+
+    private Task OnInactivityContinue() => ViewModel.ContinueInactivityAsync();
+
+    private Task OnInactivityCancelGame() => ViewModel.CancelGameFromInactivityAsync();
 }

@@ -44,6 +44,10 @@ public class GameHubClient
 
     public event Action? OnGameStarted;
 
+    public event Action<InactivityWarningPayload>? OnInactivityWarning;
+    public event Action? OnInactivityWarningDismissed;
+    public event Action? OnGameEndedByInactivity;
+
     public bool IsConnected => _connection?.State == HubConnectionState.Connected;
 
     public async Task ConnectAsync(string sessionId, CancellationToken cancellationToken = default)
@@ -120,6 +124,26 @@ public class GameHubClient
             OnGameStarted?.Invoke();
         });
 
+        _connection.On<JsonElement>("InactivityWarning", payload =>
+        {
+            try
+            {
+                var model = JsonSerializer.Deserialize<InactivityWarningPayload>(payload, JsonProtocolOptions);
+                if (model == null)
+                    return;
+                if (model.DecisionDeadlineUtc.Kind == DateTimeKind.Unspecified)
+                    model.DecisionDeadlineUtc = DateTime.SpecifyKind(model.DecisionDeadlineUtc, DateTimeKind.Utc);
+                OnInactivityWarning?.Invoke(model);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "InactivityWarning deserialize failed.");
+            }
+        });
+
+        _connection.On("InactivityWarningDismissed", () => OnInactivityWarningDismissed?.Invoke());
+        _connection.On("GameEndedByInactivity", () => OnGameEndedByInactivity?.Invoke());
+
         await StartAndJoinAsync(sessionGuid, cancellationToken);
     }
 
@@ -168,6 +192,41 @@ public class GameHubClient
             }
             catch { /* retry */ }
         }
+    }
+
+    public async Task NotifyGameReadyForInactivityAsync(string sessionId, CancellationToken cancellationToken = default)
+    {
+        if (!Guid.TryParse(sessionId, out var sessionGuid) || _connection?.State != HubConnectionState.Connected)
+            return;
+        await _connection.InvokeAsync("NotifyGameReadyForInactivity", sessionGuid, cancellationToken);
+    }
+
+    public async Task PauseInactivityAsync(string sessionId, CancellationToken cancellationToken = default)
+    {
+        if (!Guid.TryParse(sessionId, out var sessionGuid) || _connection?.State != HubConnectionState.Connected)
+            return;
+        await _connection.InvokeAsync("PauseInactivity", sessionGuid, cancellationToken);
+    }
+
+    public async Task ResumeInactivityAsync(string sessionId, CancellationToken cancellationToken = default)
+    {
+        if (!Guid.TryParse(sessionId, out var sessionGuid) || _connection?.State != HubConnectionState.Connected)
+            return;
+        await _connection.InvokeAsync("ResumeInactivity", sessionGuid, cancellationToken);
+    }
+
+    public async Task InactivityContinueAsync(string sessionId, CancellationToken cancellationToken = default)
+    {
+        if (!Guid.TryParse(sessionId, out var sessionGuid) || _connection?.State != HubConnectionState.Connected)
+            return;
+        await _connection.InvokeAsync("InactivityContinue", sessionGuid, cancellationToken);
+    }
+
+    public async Task InactivityCancelGameAsync(string sessionId, CancellationToken cancellationToken = default)
+    {
+        if (!Guid.TryParse(sessionId, out var sessionGuid) || _connection?.State != HubConnectionState.Connected)
+            return;
+        await _connection.InvokeAsync("InactivityCancelGame", sessionGuid, cancellationToken);
     }
 
     public async Task PlayCardAsync(string sessionId, string suit, int rank, CancellationToken cancellationToken = default)
