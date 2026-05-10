@@ -19,4 +19,7 @@ public interface IGameSessionService
 
     /// <summary>Accepts a pending bet change for the game.</summary>
     Task AcceptBetChangeAsync(Guid gameId, CancellationToken cancellationToken = default);
+
+    /// <summary>Cancels an in-progress match and releases both players&apos; locked stakes.</summary>
+    Task<bool> CancelInProgressGameAsync(Guid sessionId, CancellationToken cancellationToken = default);
 }

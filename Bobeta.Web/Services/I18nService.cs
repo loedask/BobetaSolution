@@ -150,6 +150,11 @@ public class I18nService(AppStateService appState)
             ["makopa_round_score"] = "Hands won: {0}\u2013{1}",
             ["makopa_rules_link"] = "Rules",
             ["dev_test_deposit_notice"] = "Development build: deposits are simulated test credits (no real MoMo). Use only with a non-production API where DemoAuth:EnableTestWalletDeposits is enabled.",
+            ["inactivity_warning_first"] =
+                "Due to inactivity from you or your opponent, the game will be suspended in 10 seconds.",
+            ["inactivity_warning_second"] = "Your game will be canceled in 10 seconds due to inactivity.",
+            ["continue_play"] = "Continue",
+            ["cancel_game"] = "Cancel Game",
         };
 
         var fr = new Dictionary<string, string>(en)
@@ -198,6 +203,11 @@ public class I18nService(AppStateService appState)
             ["makopa_round_score"] = "Mains gagnées : {0}\u2013{1}",
             ["makopa_rules_link"] = "Règles",
             ["dev_test_deposit_notice"] = "Version de développement : les dépôts sont des crédits de test (pas de MoMo réel). À utiliser uniquement avec une API non production où DemoAuth:EnableTestWalletDeposits est activé.",
+            ["inactivity_warning_first"] =
+                "En raison d'inactivité de votre part ou de celle de l'adversaire, la partie sera suspendue dans 10 secondes.",
+            ["inactivity_warning_second"] = "La partie sera annulée dans 10 secondes pour cause d'inactivité.",
+            ["continue_play"] = "Continuer",
+            ["cancel_game"] = "Annuler la partie",
         };
 
         var kt = new Dictionary<string, string>(en);

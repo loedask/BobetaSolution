@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Bobeta.API.App.Services;
+using Bobeta.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -7,9 +8,12 @@ namespace Bobeta.API.Hubs;
 
 /// <summary>SignalR hub for real-time game events: join/leave session, play card, broadcast state and result. Requires JWT (query or header).</summary>
 [Authorize]
-public class GameHub(IGameSessionConnectionTracker sessionConnectionTracker) : Hub
+public class GameHub(
+    IGameSessionConnectionTracker sessionConnectionTracker,
+    IGameInactivityCoordinator gameInactivityCoordinator) : Hub
 {
     private readonly IGameSessionConnectionTracker _sessionConnectionTracker = sessionConnectionTracker;
+    private readonly IGameInactivityCoordinator _gameInactivityCoordinator = gameInactivityCoordinator;
     /// <summary>Prefix for group names; group id is GroupPrefix + sessionId.</summary>
     public const string GroupPrefix = "Game_";
 
@@ -40,6 +44,28 @@ public class GameHub(IGameSessionConnectionTracker sessionConnectionTracker) : H
         var moverId = GetPlayerId(Context);
         await Clients.OthersInGroup(GroupPrefix + sessionId).SendAsync("NotifyOpponentMove", moverId, cardSuitRank);
     }
+
+    /// <summary>Client finished loading the table; starts inactivity tracking for an active match.</summary>
+    public Task NotifyGameReadyForInactivity(Guid sessionId) =>
+        _gameInactivityCoordinator.NotifyGameReadyAsync(sessionId, GetPlayerId(Context), Context.ConnectionAborted);
+
+    public Task PauseInactivity(Guid sessionId)
+    {
+        _gameInactivityCoordinator.Pause(sessionId);
+        return Task.CompletedTask;
+    }
+
+    public Task ResumeInactivity(Guid sessionId)
+    {
+        _gameInactivityCoordinator.Resume(sessionId);
+        return Task.CompletedTask;
+    }
+
+    public Task InactivityContinue(Guid sessionId) =>
+        _gameInactivityCoordinator.ContinueAsync(sessionId, GetPlayerId(Context), Context.ConnectionAborted);
+
+    public Task InactivityCancelGame(Guid sessionId) =>
+        _gameInactivityCoordinator.CancelByPlayerAsync(sessionId, GetPlayerId(Context), Context.ConnectionAborted);
 
     private static Guid GetPlayerId(HubCallerContext context)
     {

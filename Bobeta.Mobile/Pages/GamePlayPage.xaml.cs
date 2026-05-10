@@ -26,6 +26,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         BindingContext = _vm;
         _vm.StateChanged -= OnVmChanged;
         _vm.StateChanged += OnVmChanged;
+        _vm.NavigateHomeRequested -= OnNavigateHomeFromInactivity;
+        _vm.NavigateHomeRequested += OnNavigateHomeFromInactivity;
 
         var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
         Title = i18n.T("game");
@@ -37,6 +39,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         DoneBtn.Text = i18n.T("done_short");
         TakeCardButton.Text = i18n.T("take_card");
         RulesLink.Text = i18n.T("makopa_rules_link");
+        InactivityContinueBtn.Text = i18n.T("continue_play");
+        InactivityCancelBtn.Text = i18n.T("cancel_game");
 
         if (!string.IsNullOrEmpty(_sessionId))
             await _vm.LoadGameAsync(_sessionId);
@@ -49,6 +53,7 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         if (_vm != null)
         {
             _vm.StateChanged -= OnVmChanged;
+            _vm.NavigateHomeRequested -= OnNavigateHomeFromInactivity;
             await _vm.DisposeAsync();
         }
 
@@ -71,8 +76,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
                 ? i18n.T("your_turn")
                 : i18n.T("opponent_turn");
         TurnLabel.TextColor = _vm.IsPlayerTurn ? Color.FromArgb("#2dd48e") : Color.FromArgb("#8a93a8");
-        HandView.IsEnabled = _vm.IsPlayerTurn && !_vm.ShowGameResult;
-        TakeCardButton.IsEnabled = _vm.CanTakeCard && !_vm.IsLoading;
+        HandView.IsEnabled = _vm.IsPlayerTurn && !_vm.ShowGameResult && !_vm.ShowInactivityOverlay;
+        TakeCardButton.IsEnabled = _vm.CanTakeCard && !_vm.IsLoading && !_vm.ShowInactivityOverlay;
         TakeCardButton.Opacity = TakeCardButton.IsEnabled ? 1.0 : 0.55;
         TakeCardHintLabel.Text = _vm.CanTakeCard
             ? i18n.T("take_card_hint_enabled")
@@ -121,6 +126,34 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
             PotOpponentNameLabel.Text = opp.Trim();
             PotOpponentInitialsLabel.Text = InitialsFromName(opp);
         }
+
+        InactivityOverlay.IsVisible = _vm.ShowInactivityOverlay;
+        if (_vm.ShowInactivityOverlay)
+        {
+            InactivityMessageLabel.Text = _vm.InactivityShowButtons
+                ? i18n.T("inactivity_warning_first")
+                : i18n.T("inactivity_warning_second");
+            InactivityCountLabel.Text = _vm.InactivityCountdownSeconds.ToString();
+            InactivityButtonsRow.IsVisible = _vm.InactivityShowButtons;
+        }
+    }
+
+    private async void OnNavigateHomeFromInactivity()
+    {
+        await MainThread.InvokeOnMainThreadAsync(async () =>
+            await Shell.Current.GoToAsync("//MainTabs/Dashboard"));
+    }
+
+    private async void OnInactivityContinue(object? sender, EventArgs e)
+    {
+        if (_vm != null)
+            await _vm.ContinueInactivityAsync();
+    }
+
+    private async void OnInactivityCancel(object? sender, EventArgs e)
+    {
+        if (_vm != null)
+            await _vm.CancelGameFromInactivityAsync();
     }
 
     private static string InitialsFromName(string name)
@@ -134,7 +167,7 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
 
     private async void OnHandCardTapped(object? sender, TappedEventArgs e)
     {
-        if (_vm == null || !_vm.IsPlayerTurn || _vm.ShowGameResult) return;
+        if (_vm == null || !_vm.IsPlayerTurn || _vm.ShowGameResult || _vm.ShowInactivityOverlay) return;
         if (sender is not Border { BindingContext: CardViewModel card }) return;
         if (!card.IsPlayable) return;
         await _vm.PlayCardAsync(card);

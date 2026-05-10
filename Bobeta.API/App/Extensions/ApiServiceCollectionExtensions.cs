@@ -1,5 +1,6 @@
 using System.Text;
 using Bobeta.API.App.Services;
+using Bobeta.API.Services;
 using Bobeta.Application.Extensions;
 using Microsoft.AspNetCore.SignalR;
 using Bobeta.Application.Interfaces;
@@ -29,6 +30,8 @@ public static class ApiServiceCollectionExtensions
         services.AddBobetaApplication();
         services.AddScoped<IGameSessionNotifier, GameSessionSignalRNotifier>();
         services.AddSingleton<IGameSessionConnectionTracker, GameSessionConnectionTracker>();
+        services.AddSingleton<IGameInactivityCoordinator, GameInactivityCoordinator>();
+        services.AddHostedService<GameInactivityHostedService>();
         services.AddSingleton<IUserIdProvider, PlayerIdSignalRUserIdProvider>();
         services.AddBobetaIdentity();
         services.AddBobetaInfrastructure(configuration);
