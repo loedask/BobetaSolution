@@ -74,6 +74,62 @@ public class GameEngineServiceTests
     }
 
     [Fact]
+    public async Task PlayCardAsync_WhenLeaderPlaysLastCardOnLeadAndWinsTrick_EndsGameAfterFollowerPlays()
+    {
+        var sessionId = Guid.NewGuid();
+        var creatorId = Guid.NewGuid();
+        var opponentId = Guid.NewGuid();
+        var dealState = new MakopaGameState
+        {
+            CreatorHand = new List<string> { "Spade_14" },
+            OpponentHand = new List<string> { "Spade_5", "Heart_10" },
+            LeadPlayerId = creatorId,
+            CurrentTurnPlayerId = creatorId,
+            TrickPlays = new List<PlayedInTrick>(),
+            TrickSuit = null
+        };
+
+        var session = new GameSession
+        {
+            Id = sessionId,
+            CreatorPlayerId = creatorId,
+            OpponentPlayerId = opponentId,
+            BetAmount = 100m,
+            Status = GameStatus.InProgress,
+            CreatedAt = DateTime.UtcNow,
+            GameStateJson = JsonSerializer.Serialize(dealState, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })
+        };
+
+        var sessionRepo = new InMemoryGameSessionRepository(session);
+        var moveRepo = new InMemoryGameMoveRepository();
+        var resultRepo = new InMemoryGameResultRepository(result => session.GameResult = result);
+        var wallet = new RecordingWalletService();
+        var players = new InMemoryPlayerRepository(
+            new Player { Id = creatorId, PlayerName = "Creator" },
+            new Player { Id = opponentId, PlayerName = "Opponent" });
+
+        var sut = new GameEngineService(
+            sessionRepo,
+            moveRepo,
+            resultRepo,
+            wallet,
+            players,
+            NullLogger<GameEngineService>.Instance);
+
+        var afterLead = await sut.PlayCardAsync(creatorId, sessionId, new Card(CardSuit.Spade, CardRank.Ace));
+        Assert.NotNull(afterLead);
+        Assert.False(afterLead!.GameOver);
+        Assert.Empty(afterLead.MyCards);
+
+        var afterTrick = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.Five));
+        Assert.NotNull(afterTrick);
+        Assert.True(afterTrick!.GameOver);
+        Assert.Equal(creatorId, afterTrick.WinnerPlayerId);
+        Assert.Equal(GameStatus.Finished, session.Status);
+        Assert.Single(wallet.Settlements);
+    }
+
+    [Fact]
     public async Task PlayCardAsync_WhenTrickWinnerStillHasCards_GameContinues()
     {
         var sessionId = Guid.NewGuid();

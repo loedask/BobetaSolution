@@ -177,7 +177,16 @@ public class GameEngineService(
         if (state.TrickPlays.Count == 0)
             state.LastTrickWinnerPlayerId = null;
 
+        _logger.LogInformation(
+            "Makopa play | step1 before card removal | session={SessionId} player={PlayerId} handCount={HandCount} card={Card}",
+            sessionId, playerId, hand.Count, cardStr);
+
         hand.Remove(cardStr);
+
+        _logger.LogInformation(
+            "Makopa play | step2 after card removal | session={SessionId} player={PlayerId} handCount={HandCount}",
+            sessionId, playerId, hand.Count);
+
         state.TrickPlays.Add(new PlayedInTrick { PlayerId = playerId, Card = cardStr });
         state.TrickSuit ??= cardStr.Split('_')[0];
         if (state.TrickPlays.Count == 1)
@@ -196,22 +205,42 @@ public class GameEngineService(
 
         if (state.TrickPlays.Count == 2)
         {
-            // Completed trick only: both cards leave hands; compare led suit; tie → leader (first play) wins.
-            var winner = ResolveTrick(state.TrickPlays[0], state.TrickPlays[1], state.TrickSuit!);
-            state.LastTrickWinnerPlayerId = winner;
+            // Completed trick: both cards already left hands; compare led suit; tie → leader (first play) wins.
+            var trickWinnerId = ResolveTrick(state.TrickPlays[0], state.TrickPlays[1], state.TrickSuit!);
+            state.LastTrickWinnerPlayerId = trickWinnerId;
             state.TrickPlays.Clear();
             state.TrickSuit = null;
 
-            state.LeadPlayerId = winner;
-            state.CurrentTurnPlayerId = winner;
+            state.LeadPlayerId = trickWinnerId;
+            state.CurrentTurnPlayerId = trickWinnerId;
 
-            await TryFinalizeWinIfNextLeaderOutOfCardsAsync(
-                session,
-                state,
-                creatorId,
-                opponentId,
-                trickWinnerId: winner,
-                cancellationToken);
+            _logger.LogInformation(
+                "Makopa play | step3 after trick winner and leader assigned | session={SessionId} trickWinnerId={TrickWinnerId} currentLeaderId={CurrentLeaderId}",
+                sessionId, trickWinnerId, state.LeadPlayerId);
+
+            var creatorHandCount = state.CreatorHand.Count;
+            var opponentHandCount = state.OpponentHand.Count;
+            var leaderHandCount = GetHandCount(state, trickWinnerId, creatorId);
+
+            _logger.LogInformation(
+                "Makopa play | step4 before win check | session={SessionId} trickWinnerId={TrickWinnerId} leaderHandCount={LeaderHandCount} creatorHand={CreatorHandCount} opponentHand={OpponentHandCount}",
+                sessionId, trickWinnerId, leaderHandCount, creatorHandCount, opponentHandCount);
+
+            var (winTriggered, winReason) = EvaluateLastCardWin(
+                state, trickWinnerId, creatorId, leaderHandCount);
+
+            _logger.LogInformation(
+                "Makopa play | step5 win check result | session={SessionId} winTriggered={WinTriggered} reason={Reason}",
+                sessionId, winTriggered, winReason);
+
+            if (winTriggered)
+            {
+                var loserId = trickWinnerId == creatorId ? opponentId : creatorId;
+                await FinalizeGameAsync(session, trickWinnerId, loserId, cancellationToken);
+                session.GameStateJson = null;
+                session.Status = GameStatus.Finished;
+                session.FinishedAt = DateTime.UtcNow;
+            }
         }
         else
         {
@@ -247,9 +276,9 @@ public class GameEngineService(
         {
             if (session.Status == GameStatus.Waiting)
                 return new GameStateDto(sessionId, Array.Empty<string>(), null, null, false, null, true, lobbyPot, opponentName, null, 0, 0);
-            if (session.Status == GameStatus.Finished && session.GameResult != null)
+            if (session.Status == GameStatus.Finished)
             {
-                var w = session.GameResult.WinnerPlayerId;
+                var w = session.GameResult?.WinnerPlayerId;
                 return new GameStateDto(sessionId, Array.Empty<string>(), null, null, true, w, false, lobbyPot, opponentName, null, 0, 0);
             }
 
@@ -342,7 +371,7 @@ public class GameEngineService(
         var commission = totalPot * CommissionRate;
         var winnerAmount = totalPot - commission;
         await _walletService.SettleGameAsync(winnerId, loserId, session.BetAmount, cancellationToken);
-        await _resultRepository.AddAsync(new GameResult
+        var result = new GameResult
         {
             Id = Guid.NewGuid(),
             GameSessionId = session.Id,
@@ -352,54 +381,39 @@ public class GameEngineService(
             WinnerAmount = winnerAmount,
             PlatformCommission = commission,
             CreatedAt = DateTime.UtcNow
-        }, cancellationToken);
+        };
+        await _resultRepository.AddAsync(result, cancellationToken);
+        session.GameResult = result;
     }
 
+    private static int GetHandCount(MakopaGameState state, Guid playerId, Guid creatorId) =>
+        playerId == creatorId ? state.CreatorHand.Count : state.OpponentHand.Count;
+
     /// <summary>
-    /// Win condition (engine-authoritative): after trick resolution, the trick winner is next leader.
-    /// If their hand is empty, they win immediately. Must run after card removal and leader/turn assignment.
+    /// Last-card win: trick winner is next leader and has no cards left (played final card on this trick).
     /// </summary>
-    private async Task TryFinalizeWinIfNextLeaderOutOfCardsAsync(
-        GameSession session,
+    private static (bool Triggered, string Reason) EvaluateLastCardWin(
         MakopaGameState state,
-        Guid creatorId,
-        Guid opponentId,
         Guid trickWinnerId,
-        CancellationToken cancellationToken)
+        Guid creatorId,
+        int trickWinnerHandCount)
     {
-        if (session.Status == GameStatus.Finished)
-            return;
+        if (!state.LeadPlayerId.HasValue)
+            return (false, "no lead player assigned");
 
-        var nextLeaderId = state.LeadPlayerId;
-        var currentTurn = state.CurrentTurnPlayerId;
-        if (!nextLeaderId.HasValue || !currentTurn.HasValue || nextLeaderId.Value != currentTurn.Value)
-            return;
+        if (state.LeadPlayerId.Value != trickWinnerId)
+            return (false, $"leader {state.LeadPlayerId.Value} is not trick winner {trickWinnerId}");
 
-        if (nextLeaderId.Value != trickWinnerId)
-            return;
+        if (!state.CurrentTurnPlayerId.HasValue)
+            return (false, "no current turn player");
 
-        var creatorHandCount = state.CreatorHand.Count;
-        var opponentHandCount = state.OpponentHand.Count;
-        var leaderIsCreator = nextLeaderId.Value == creatorId;
-        var leaderHandCount = leaderIsCreator ? creatorHandCount : opponentHandCount;
-        var triggered = leaderHandCount == 0;
+        if (state.CurrentTurnPlayerId.Value != trickWinnerId)
+            return (false, $"turn holder {state.CurrentTurnPlayerId.Value} is not trick winner {trickWinnerId}");
 
-        _logger.LogInformation(
-            "Makopa trick end | trickWinnerId={TrickWinnerId} | nextLeaderId={NextLeaderId} | creatorHand={CreatorHandCount} | opponentHand={OpponentHandCount} | winTriggered={WinTriggered}",
-            trickWinnerId, nextLeaderId.Value, creatorHandCount, opponentHandCount, triggered);
+        if (trickWinnerHandCount != 0)
+            return (false, $"trick winner hand count is {trickWinnerHandCount}, expected 0");
 
-        if (!triggered)
-            return;
-
-        var loserId = leaderIsCreator ? opponentId : creatorId;
-        await FinalizeGameAsync(session, nextLeaderId.Value, loserId, cancellationToken);
-        session.GameStateJson = null;
-        session.Status = GameStatus.Finished;
-        session.FinishedAt = DateTime.UtcNow;
-
-        _logger.LogInformation(
-            "Makopa win finalized | trickWinnerId={TrickWinnerId} | nextLeaderId={NextLeaderId} | loser={LoserId}",
-            trickWinnerId, nextLeaderId.Value, loserId);
+        return (true, "trick winner is next leader with empty hand");
     }
 
     /// <summary>Winning seat: higher rank on <paramref name="leadSuit"/>; equal ranks → leader (<paramref name="first"/>).</summary>
