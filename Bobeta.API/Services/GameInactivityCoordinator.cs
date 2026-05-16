@@ -3,6 +3,7 @@ using Bobeta.API.Hubs;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Enums;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Bobeta.API.Services;
@@ -40,8 +41,7 @@ internal sealed class SessionInactivityState
 
 /// <inheritdoc />
 public sealed class GameInactivityCoordinator(
-    IGameSessionRepository sessionRepository,
-    IGameSessionService gameSessionService,
+    IServiceScopeFactory scopeFactory,
     IHubContext<GameHub> hubContext,
     ILogger<GameInactivityCoordinator> logger) : IGameInactivityCoordinator
 {
@@ -49,8 +49,7 @@ public sealed class GameInactivityCoordinator(
     public const int SecondIdleSeconds = 40;
     public const int DecisionSeconds = 10;
 
-    private readonly IGameSessionRepository _sessionRepository = sessionRepository;
-    private readonly IGameSessionService _gameSessionService = gameSessionService;
+    private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
     private readonly IHubContext<GameHub> _hubContext = hubContext;
     private readonly ILogger<GameInactivityCoordinator> _logger = logger;
 
@@ -60,10 +59,7 @@ public sealed class GameInactivityCoordinator(
     /// <inheritdoc />
     public async Task NotifyGameReadyAsync(Guid sessionId, Guid playerId, CancellationToken cancellationToken = default)
     {
-        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
-        if (session == null || session.Status != GameStatus.InProgress || session.OpponentPlayerId == null)
-            return;
-        if (playerId != session.CreatorPlayerId && playerId != session.OpponentPlayerId.Value)
+        if (!await IsParticipantAsync(sessionId, playerId, cancellationToken))
             return;
 
         lock (_sync)
@@ -225,8 +221,7 @@ public sealed class GameInactivityCoordinator(
 
     private async Task TryOpenWarningAsync(Guid sessionId, bool secondStrike, CancellationToken cancellationToken)
     {
-        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
-        if (session == null || session.Status != GameStatus.InProgress)
+        if (!await IsSessionInProgressAsync(sessionId, cancellationToken))
         {
             UnregisterSession(sessionId);
             return;
@@ -267,7 +262,7 @@ public sealed class GameInactivityCoordinator(
         lock (_sync)
             _sessions.Remove(sessionId);
 
-        var ok = await _gameSessionService.CancelInProgressGameAsync(sessionId, cancellationToken);
+        var ok = await CancelSessionInScopeAsync(sessionId, cancellationToken);
         if (!ok)
             return;
 
@@ -279,9 +274,29 @@ public sealed class GameInactivityCoordinator(
 
     private async Task<bool> IsParticipantAsync(Guid sessionId, Guid playerId, CancellationToken cancellationToken)
     {
-        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
-        if (session?.OpponentPlayerId == null)
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var session = await scope.ServiceProvider
+            .GetRequiredService<IGameSessionRepository>()
+            .GetByIdAsync(sessionId, cancellationToken);
+        if (session == null || session.Status != GameStatus.InProgress || session.OpponentPlayerId == null)
             return false;
         return playerId == session.CreatorPlayerId || playerId == session.OpponentPlayerId.Value;
+    }
+
+    private async Task<bool> IsSessionInProgressAsync(Guid sessionId, CancellationToken cancellationToken)
+    {
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var session = await scope.ServiceProvider
+            .GetRequiredService<IGameSessionRepository>()
+            .GetByIdAsync(sessionId, cancellationToken);
+        return session != null && session.Status == GameStatus.InProgress;
+    }
+
+    private async Task<bool> CancelSessionInScopeAsync(Guid sessionId, CancellationToken cancellationToken)
+    {
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        return await scope.ServiceProvider
+            .GetRequiredService<IGameSessionService>()
+            .CancelInProgressGameAsync(sessionId, cancellationToken);
     }
 }
