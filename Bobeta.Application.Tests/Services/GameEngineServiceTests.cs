@@ -60,11 +60,12 @@ public class GameEngineServiceTests
             players,
             NullLogger<GameEngineService>.Instance);
 
-        var state = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.Queen));
+        var move = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.Queen));
 
-        Assert.NotNull(state);
-        Assert.True(state!.GameOver);
-        Assert.Equal(opponentId, state.WinnerPlayerId);
+        Assert.True(move.IsSuccess);
+        Assert.NotNull(move.State);
+        Assert.True(move.State!.GameOver);
+        Assert.Equal(opponentId, move.State.WinnerPlayerId);
         Assert.Equal(GameStatus.Finished, session.Status);
         Assert.Null(session.GameStateJson);
         Assert.NotNull(session.GameResult);
@@ -119,11 +120,12 @@ public class GameEngineServiceTests
             players,
             NullLogger<GameEngineService>.Instance);
 
-        var state = await sut.VoidFollowDrawAsync(opponentId, sessionId);
+        var move = await sut.VoidFollowDrawAsync(opponentId, sessionId);
 
-        Assert.NotNull(state);
-        Assert.True(state!.GameOver);
-        Assert.Equal(creatorId, state.WinnerPlayerId);
+        Assert.True(move.IsSuccess);
+        Assert.NotNull(move.State);
+        Assert.True(move.State!.GameOver);
+        Assert.Equal(creatorId, move.State.WinnerPlayerId);
         Assert.Equal(GameStatus.Finished, session.Status);
         Assert.Single(wallet.Settlements);
     }
@@ -174,11 +176,12 @@ public class GameEngineServiceTests
             players,
             NullLogger<GameEngineService>.Instance);
 
-        var state = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Heart, CardRank.Ten));
+        var move = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Heart, CardRank.Ten));
 
-        Assert.NotNull(state);
-        Assert.False(state!.GameOver);
-        Assert.Null(state.WinnerPlayerId);
+        Assert.True(move.IsSuccess);
+        Assert.NotNull(move.State);
+        Assert.False(move.State!.GameOver);
+        Assert.Null(move.State.WinnerPlayerId);
         Assert.Equal(GameStatus.InProgress, session.Status);
         Assert.Empty(wallet.Settlements);
     }

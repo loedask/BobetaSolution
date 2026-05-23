@@ -170,6 +170,23 @@
         <ActivityIndicator x:Name="Busy" Grid.Row="5" IsRunning="False" Color="{StaticResource PrimaryGold}" />
 
         <Border
+            x:Name="SendingMoveOverlay"
+            Grid.Row="1"
+            Grid.RowSpan="4"
+            IsVisible="False"
+            BackgroundColor="#BF12151f"
+            Padding="16"
+            StrokeThickness="0">
+            <Label
+                x:Name="SendingMoveLabel"
+                VerticalOptions="Center"
+                HorizontalTextAlignment="Center"
+                FontSize="14"
+                FontAttributes="Bold"
+                TextColor="{StaticResource Foreground}" />
+        </Border>
+
+        <Border
             x:Name="InactivityOverlay"
             Grid.Row="0"
             Grid.RowSpan="6"

@@ -72,28 +72,28 @@ public class GameEngineService(
         await _sessionRepository.UpdateAsync(session, cancellationToken);
     }
 
-    public async Task<GameStateDto?> VoidFollowDrawAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default)
+    public async Task<GameMoveResult> VoidFollowDrawAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default)
     {
         var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
         if (session?.GameStateJson == null || session.Status != GameStatus.InProgress)
-            return null;
+            return GameMoveResult.Fail(GameMoveErrorCodes.InvalidState);
         var state = JsonSerializer.Deserialize<MakopaGameState>(session.GameStateJson, JsonOptions)!;
         var creatorId = session.CreatorPlayerId;
         var opponentId = session.OpponentPlayerId!.Value;
         // Take is not playing a card; turn stays with leader after this (they lead again).
         if (state.CurrentTurnPlayerId != playerId)
-            return null;
+            return GameMoveResult.Fail(GameMoveErrorCodes.NotYourTurn);
         if (state.TrickPlays.Count != 1 || state.TrickSuit == null)
-            return null;
+            return GameMoveResult.Fail(GameMoveErrorCodes.InvalidTrick);
 
         var lead = state.TrickPlays[0];
         var leaderId = lead.PlayerId;
         if (playerId == leaderId)
-            return null;
+            return GameMoveResult.Fail(GameMoveErrorCodes.InvalidTrick);
 
         var responderHand = playerId == creatorId ? state.CreatorHand : state.OpponentHand;
         if (MakopaRules.HandContainsLedSuit(state.TrickSuit, responderHand))
-            return null;
+            return GameMoveResult.Fail(GameMoveErrorCodes.MustFollowSuit);
 
         responderHand.Add(lead.Card);
         state.TrickPlays.Clear();
@@ -122,31 +122,34 @@ public class GameEngineService(
             : JsonSerializer.Serialize(state, JsonOptions);
         await _sessionRepository.UpdateAsync(session, cancellationToken);
 
-        return await GetGameStateAsync(playerId, sessionId, cancellationToken);
+        var dto = await GetGameStateAsync(playerId, sessionId, cancellationToken);
+        return dto == null ? GameMoveResult.Fail(GameMoveErrorCodes.InvalidState) : GameMoveResult.Ok(dto);
     }
 
-    public async Task<GameStateDto?> PlayCardAsync(Guid playerId, Guid sessionId, Card card, CancellationToken cancellationToken = default)
+    public async Task<GameMoveResult> PlayCardAsync(Guid playerId, Guid sessionId, Card card, CancellationToken cancellationToken = default)
     {
         var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
         if (session?.GameStateJson == null || session.Status != GameStatus.InProgress)
-            return null;
+            return GameMoveResult.Fail(GameMoveErrorCodes.InvalidState);
         var state = JsonSerializer.Deserialize<MakopaGameState>(session.GameStateJson, JsonOptions)!;
         var creatorId = session.CreatorPlayerId;
         var opponentId = session.OpponentPlayerId!.Value;
         var hand = playerId == creatorId ? state.CreatorHand : state.OpponentHand;
         var cardStr = CardToString(card.Suit, card.Rank);
 
-        if (state.CurrentTurnPlayerId != playerId) return null;
-        if (!hand.Contains(cardStr)) return null;
+        if (state.CurrentTurnPlayerId != playerId)
+            return GameMoveResult.Fail(GameMoveErrorCodes.NotYourTurn);
+        if (!hand.Contains(cardStr))
+            return GameMoveResult.Fail(GameMoveErrorCodes.CardNotInHand);
 
         if (!MakopaRules.IsLegalFollowSuit(cardStr, state.TrickSuit, hand))
-            return null;
+            return GameMoveResult.Fail(GameMoveErrorCodes.MustFollowSuit);
 
         // Void: responder has no card in the led suit — must use Take (VoidFollow), not play a card.
         if (state.TrickPlays.Count == 1
             && !string.IsNullOrEmpty(state.TrickSuit)
             && !MakopaRules.HandContainsLedSuit(state.TrickSuit!, hand))
-            return null;
+            return GameMoveResult.Fail(GameMoveErrorCodes.MustTake);
 
         // Instant loss (evaluated before trick resolution): singleton holder wins if responder matches their suit.
         if (state.TrickPlays.Count == 1 && TryInstantLossSingletonSuit(
@@ -174,7 +177,10 @@ public class GameEngineService(
             session.Status = GameStatus.Finished;
             session.FinishedAt = DateTime.UtcNow;
             await _sessionRepository.UpdateAsync(session, cancellationToken);
-            return await GetGameStateAsync(playerId, sessionId, cancellationToken);
+            var instantLossState = await GetGameStateAsync(playerId, sessionId, cancellationToken);
+            return instantLossState == null
+                ? GameMoveResult.Fail(GameMoveErrorCodes.InvalidState)
+                : GameMoveResult.Ok(instantLossState);
         }
 
         if (state.TrickPlays.Count == 0)
@@ -233,7 +239,8 @@ public class GameEngineService(
 
         await _sessionRepository.UpdateAsync(session, cancellationToken);
 
-        return await GetGameStateAsync(playerId, sessionId, cancellationToken);
+        var playedState = await GetGameStateAsync(playerId, sessionId, cancellationToken);
+        return playedState == null ? GameMoveResult.Fail(GameMoveErrorCodes.InvalidState) : GameMoveResult.Ok(playedState);
     }
 
     public async Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default)

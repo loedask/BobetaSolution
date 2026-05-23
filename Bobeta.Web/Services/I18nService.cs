@@ -44,6 +44,9 @@ public class I18nService(AppStateService appState)
             ["send_code_desc"] = "We'll send a verification code to your MoMo number",
             ["session_expired_banner"] = "Your session ended (timeout or sign-in expired). Enter your number again to pick up where you left off.",
             ["invalid_move_follow_suit"] = "You must follow the led suit when you have a card in that suit. Choose a highlighted card.",
+            ["invalid_move_not_your_turn"] = "It is not your turn yet — the table is updating.",
+            ["invalid_move_must_take"] = "You have no card in the led suit. Tap Take instead of playing a card.",
+            ["invalid_move_stale"] = "That move did not apply. The table has been refreshed — try again if it is still your turn.",
             ["trick_outcome_you"] = "You took this trick.",
             ["trick_outcome_opponent"] = "Opponent took this trick.",
             ["phone_placeholder"] = "0XX XXX XXX",
@@ -155,6 +158,7 @@ public class I18nService(AppStateService appState)
             ["inactivity_warning_second"] = "Your game will be canceled in 10 seconds due to inactivity.",
             ["continue_play"] = "Continue",
             ["cancel_game"] = "Cancel Game",
+            ["sending_move"] = "Sending move…",
         };
 
         var fr = new Dictionary<string, string>(en)
@@ -166,6 +170,9 @@ public class I18nService(AppStateService appState)
             ["send_code"] = "Envoyer le code",
             ["session_expired_banner"] = "Votre session a expiré. Entrez à nouveau votre numéro pour continuer.",
             ["invalid_move_follow_suit"] = "Vous devez suivre la couleur demandée si vous en avez. Choisissez une carte mise en évidence.",
+            ["invalid_move_not_your_turn"] = "Ce n'est pas encore à vous de jouer — la table se met à jour.",
+            ["invalid_move_must_take"] = "Vous n'avez pas la couleur menée. Touchez Prendre au lieu de jouer une carte.",
+            ["invalid_move_stale"] = "Ce coup n'a pas été appliqué. La table a été actualisée — réessayez si c'est encore votre tour.",
             ["trick_outcome_you"] = "Vous remportez ce pli.",
             ["trick_outcome_opponent"] = "L'adversaire remporte ce pli.",
             ["verify"] = "Vérifier",
@@ -208,6 +215,7 @@ public class I18nService(AppStateService appState)
             ["inactivity_warning_second"] = "La partie sera annulée dans 10 secondes pour cause d'inactivité.",
             ["continue_play"] = "Continuer",
             ["cancel_game"] = "Annuler la partie",
+            ["sending_move"] = "Envoi du coup…",
         };
 
         var kt = new Dictionary<string, string>(en);

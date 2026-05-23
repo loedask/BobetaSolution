@@ -76,8 +76,11 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
                 ? i18n.T("your_turn")
                 : i18n.T("opponent_turn");
         TurnLabel.TextColor = _vm.IsPlayerTurn ? Color.FromArgb("#2dd48e") : Color.FromArgb("#8a93a8");
-        HandView.IsEnabled = _vm.IsPlayerTurn && !_vm.ShowGameResult && !_vm.ShowInactivityOverlay;
-        TakeCardButton.IsEnabled = _vm.CanTakeCard && !_vm.IsLoading && !_vm.ShowInactivityOverlay;
+        HandView.IsEnabled = _vm.IsPlayerTurn && !_vm.ShowGameResult && !_vm.ShowInactivityOverlay && !_vm.IsSendingMove;
+        TakeCardButton.IsEnabled = _vm.CanTakeCard && !_vm.IsSendingMove && !_vm.ShowInactivityOverlay;
+        SendingMoveOverlay.IsVisible = _vm.IsSendingMove;
+        if (_vm.IsSendingMove)
+            SendingMoveLabel.Text = i18n.T("sending_move");
         TakeCardButton.Opacity = TakeCardButton.IsEnabled ? 1.0 : 0.55;
         TakeCardHintLabel.Text = _vm.CanTakeCard
             ? i18n.T("take_card_hint_enabled")
@@ -135,6 +138,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
                 : i18n.T("inactivity_warning_second");
             InactivityCountLabel.Text = _vm.InactivityCountdownSeconds.ToString();
             InactivityButtonsRow.IsVisible = _vm.InactivityShowButtons;
+            InactivityContinueBtn.IsEnabled = !_vm.InactivityActionBusy;
+            InactivityCancelBtn.IsEnabled = !_vm.InactivityActionBusy;
         }
     }
 
@@ -146,14 +151,16 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
 
     private async void OnInactivityContinue(object? sender, EventArgs e)
     {
-        if (_vm != null)
-            await _vm.ContinueInactivityAsync();
+        if (_vm == null || _vm.InactivityActionBusy)
+            return;
+        await _vm.ContinueInactivityAsync();
     }
 
     private async void OnInactivityCancel(object? sender, EventArgs e)
     {
-        if (_vm != null)
-            await _vm.CancelGameFromInactivityAsync();
+        if (_vm == null || _vm.InactivityActionBusy)
+            return;
+        await _vm.CancelGameFromInactivityAsync();
     }
 
     private static string InitialsFromName(string name)

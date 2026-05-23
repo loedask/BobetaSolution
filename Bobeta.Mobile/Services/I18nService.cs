@@ -141,6 +141,9 @@ public class I18nService(AppStateService appState)
             ["your_turn"] = "Your turn",
             ["opponent_turn"] = "Opponent's turn",
             ["invalid_move_follow_suit"] = "You must follow the led suit when you have a card in that suit. Choose a highlighted card.",
+            ["invalid_move_not_your_turn"] = "It is not your turn yet — the table is updating.",
+            ["invalid_move_must_take"] = "You have no card in the led suit. Tap Take instead of playing a card.",
+            ["invalid_move_stale"] = "That move did not apply. The table has been refreshed — try again if it is still your turn.",
             ["trick_outcome_you"] = "You took this trick.",
             ["trick_outcome_opponent"] = "Opponent took this trick.",
             ["waiting_for_opponent"] = "Waiting for an opponent…",
@@ -158,6 +161,7 @@ public class I18nService(AppStateService appState)
             ["inactivity_warning_second"] = "Your game will be canceled in 10 seconds due to inactivity.",
             ["continue_play"] = "Continue",
             ["cancel_game"] = "Cancel Game",
+            ["sending_move"] = "Sending move…",
         };
 
         var fr = new Dictionary<string, string>(en)
@@ -194,6 +198,9 @@ public class I18nService(AppStateService appState)
             ["pot_chip_title"] = "{0} FCFA par joueur · 2 places",
             ["pot_opponent_lane"] = "En face",
             ["invalid_move_follow_suit"] = "Vous devez suivre la couleur demandée si vous en avez. Choisissez une carte mise en évidence.",
+            ["invalid_move_not_your_turn"] = "Ce n'est pas encore à vous de jouer — la table se met à jour.",
+            ["invalid_move_must_take"] = "Vous n'avez pas la couleur menée. Touchez Prendre au lieu de jouer une carte.",
+            ["invalid_move_stale"] = "Ce coup n'a pas été appliqué. La table a été actualisée — réessayez si c'est encore votre tour.",
             ["trick_outcome_you"] = "Vous remportez ce pli.",
             ["trick_outcome_opponent"] = "L'adversaire remporte ce pli.",
             ["take_card"] = "Prendre",
@@ -209,6 +216,7 @@ public class I18nService(AppStateService appState)
             ["inactivity_warning_second"] = "La partie sera annulée dans 10 secondes pour cause d'inactivité.",
             ["continue_play"] = "Continuer",
             ["cancel_game"] = "Annuler la partie",
+            ["sending_move"] = "Envoi du coup…",
         };
 
         var kt = new Dictionary<string, string>(en);

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Bobeta.Client.Contracts;
 using Bobeta.Client.Contracts.Interfaces;
 using Bobeta.Client.Models.Games;
 using Bobeta.Client.Presentation;
@@ -20,6 +21,7 @@ public class GamePlayViewModel : ViewModelBase
     private CancellationTokenSource? _aiTriggerCts;
     private CancellationTokenSource? _inactivityCountdownCts;
     private DateTime? _inactivityDeadlineUtc;
+    private readonly SemaphoreSlim _moveGate = new(1, 1);
 
     public GamePlayViewModel(
         GamePlayService gamePlayService,
@@ -69,6 +71,10 @@ public class GamePlayViewModel : ViewModelBase
     public bool ShowInactivityOverlay { get; private set; }
     public bool InactivityShowButtons { get; private set; }
     public int InactivityCountdownSeconds { get; private set; }
+    public bool InactivityActionBusy { get; private set; }
+
+    /// <summary>Play or Take request in flight (not initial table load).</summary>
+    public bool IsSendingMove => IsLoading && PlayerCards.Count > 0;
 
     /// <summary>From server: we are responding to opponent&apos;s lead (client must not infer this from <see cref="LastPlayedCard"/> alone — it can be our own lead while we wait).</summary>
     public bool MustFollowLedSuit { get; private set; }
@@ -203,13 +209,7 @@ public class GamePlayViewModel : ViewModelBase
         RaiseStateChanged();
     }
 
-    private void OnGameEndedByInactivityFromHub()
-    {
-        StopInactivityCountdown();
-        ShowInactivityOverlay = false;
-        _inactivityDeadlineUtc = null;
-        _nav.NavigateTo("/dashboard");
-    }
+    private void OnGameEndedByInactivityFromHub() => _ = FinishInactivityAndLeaveAsync();
 
     private void StartInactivityCountdown()
     {
@@ -224,6 +224,14 @@ public class GamePlayViewModel : ViewModelBase
         {
             var sec = Math.Max(0, (int)Math.Ceiling((d - DateTime.UtcNow).TotalSeconds));
             InactivityCountdownSeconds = sec;
+            if (sec <= 0 && InactivityShowButtons)
+            {
+                InactivityShowButtons = false;
+                RaiseStateChanged();
+                await TryResolveInactivityAfterDeadlineAsync();
+                break;
+            }
+
             RaiseStateChanged();
             if (sec <= 0)
                 break;
@@ -244,15 +252,68 @@ public class GamePlayViewModel : ViewModelBase
         _inactivityCountdownCts = null;
     }
 
-    public Task ContinueInactivityAsync() =>
-        _hubClient != null && !string.IsNullOrEmpty(SessionId)
-            ? _hubClient.InactivityContinueAsync(SessionId)
-            : Task.CompletedTask;
+    public async Task ContinueInactivityAsync()
+    {
+        if (InactivityActionBusy || string.IsNullOrEmpty(SessionId) || !Guid.TryParse(SessionId, out var sessionGuid))
+            return;
 
-    public Task CancelGameFromInactivityAsync() =>
-        _hubClient != null && !string.IsNullOrEmpty(SessionId)
-            ? _hubClient.InactivityCancelGameAsync(SessionId)
-            : Task.CompletedTask;
+        InactivityActionBusy = true;
+        RaiseStateChanged();
+        try
+        {
+            if (_hubClient != null)
+                await _hubClient.InactivityContinueAsync(SessionId);
+            await _gamePlayService.ContinueInactivityAsync(sessionGuid);
+        }
+        finally
+        {
+            InactivityActionBusy = false;
+            RaiseStateChanged();
+        }
+    }
+
+    public async Task CancelGameFromInactivityAsync()
+    {
+        if (InactivityActionBusy || string.IsNullOrEmpty(SessionId) || !Guid.TryParse(SessionId, out var sessionGuid))
+            return;
+
+        InactivityActionBusy = true;
+        RaiseStateChanged();
+        try
+        {
+            if (_hubClient != null)
+                await _hubClient.InactivityCancelGameAsync(SessionId);
+            await _gamePlayService.CancelInactivityAsync(sessionGuid);
+            await FinishInactivityAndLeaveAsync();
+        }
+        finally
+        {
+            InactivityActionBusy = false;
+            RaiseStateChanged();
+        }
+    }
+
+    private async Task TryResolveInactivityAfterDeadlineAsync()
+    {
+        if (string.IsNullOrEmpty(SessionId) || !Guid.TryParse(SessionId, out var sessionGuid))
+            return;
+        var res = await _gameService.GetGameStateAsync(sessionGuid);
+        if (!res.IsSuccess)
+            await FinishInactivityAndLeaveAsync();
+    }
+
+    private Task FinishInactivityAndLeaveAsync()
+    {
+        StopInactivityCountdown();
+        ShowInactivityOverlay = false;
+        _inactivityDeadlineUtc = null;
+        InactivityShowButtons = false;
+        InactivityActionBusy = false;
+        RefreshHandPlayability();
+        RaiseStateChanged();
+        _nav.NavigateTo("/dashboard");
+        return Task.CompletedTask;
+    }
 
     public async Task PlayCardAsync(CardViewModel card) =>
         await SubmitCardAsync(card, enforceLocalFollowSuitValidation: true);
@@ -262,52 +323,53 @@ public class GamePlayViewModel : ViewModelBase
         if (!CanTakeCard || string.IsNullOrEmpty(SessionId) || !Guid.TryParse(SessionId, out var sessionGuid))
             return;
 
+        if (!await _moveGate.WaitAsync(0))
+            return;
+
         SetLoading(true);
         ClearError();
         try
         {
+            var handStr = PlayerCards.Select(c => c.DisplayValue).ToList();
+            if (!MakopaFollowSuit.ResponderNeedsVoidFollow(LastPlayedCard?.DisplayValue, handStr))
+            {
+                SetError(_i18n?.T("invalid_move_follow_suit") ?? "You must follow the led suit when you can.");
+                return;
+            }
+
             var res = await _gamePlayService.VoidFollowDrawAsync(sessionGuid);
             if (!res.IsSuccess)
             {
                 if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
                     return;
-                SetError(res.ErrorMessage ?? "Could not draw.");
+                await HandleMoveFailureAsync(res);
                 return;
             }
 
             if (res.Data != null)
-            {
-                WaitingForOpponent = res.Data.WaitingForGameStart;
-                PotAmount = res.Data.LobbyPotAmount;
-                OpponentDisplayName = res.Data.OpponentDisplayName;
-                CurrentPlayerId = res.Data.CurrentTurnPlayerId;
-                IsPlayerTurn = !WaitingForOpponent && res.Data.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
-                PlayerCards = ParseCards(res.Data.MyCards ?? new List<string>());
-                LastPlayedCard = string.IsNullOrEmpty(res.Data.LastPlayedCard) ? null : ParseCard(res.Data.LastPlayedCard);
-                MustFollowLedSuit = res.Data.MustFollowLedSuit;
-                if (res.Data.GameOver)
-                    HandleGameResult(res.Data.WinnerPlayerId);
-                ApplyTrickOutcomeMessage(res.Data.LastTrickWinnerPlayerId);
-                ApplyMatchRoundScore(res.Data);
-            }
-
-            RefreshHandPlayability();
-            RaiseStateChanged();
+                ApplyStateFromDto(res.Data);
         }
         catch (Exception)
         {
             SetError("Something went wrong. Please try again.");
+            await SyncGameStateFromServerAsync();
         }
         finally
         {
             SetLoading(false);
+            _moveGate.Release();
         }
     }
 
     private async Task SubmitCardAsync(CardViewModel card, bool enforceLocalFollowSuitValidation)
     {
-        if (IsLoading || !IsPlayerTurn || string.IsNullOrEmpty(SessionId)) return;
-        if (!Guid.TryParse(SessionId, out var sessionGuid)) return;
+        if (!IsPlayerTurn || string.IsNullOrEmpty(SessionId) || !card.IsPlayable)
+            return;
+        if (!Guid.TryParse(SessionId, out var sessionGuid))
+            return;
+
+        if (!await _moveGate.WaitAsync(0))
+            return;
 
         var handStr = PlayerCards.Select(c => c.DisplayValue).ToList();
         if (enforceLocalFollowSuitValidation &&
@@ -315,6 +377,7 @@ public class GamePlayViewModel : ViewModelBase
             !MakopaFollowSuit.IsLegalPlay(card.DisplayValue, LastPlayedCard?.DisplayValue, handStr))
         {
             SetError(_i18n?.T("invalid_move_follow_suit") ?? "You must follow the led suit when you can.");
+            _moveGate.Release();
             return;
         }
 
@@ -332,40 +395,88 @@ public class GamePlayViewModel : ViewModelBase
             {
                 if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
                     return;
-                if (res.StatusCode == 400)
-                    SetError(_i18n?.T("invalid_move_follow_suit") ?? res.ErrorMessage ?? "Invalid move.");
-                else
-                    SetError(res.ErrorMessage ?? "Failed to play card.");
+                await HandleMoveFailureAsync(res);
                 return;
             }
 
             if (res.Data != null)
-            {
-                WaitingForOpponent = res.Data.WaitingForGameStart;
-                PotAmount = res.Data.LobbyPotAmount;
-                OpponentDisplayName = res.Data.OpponentDisplayName;
-                CurrentPlayerId = res.Data.CurrentTurnPlayerId;
-                IsPlayerTurn = !WaitingForOpponent && res.Data.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
-                PlayerCards = ParseCards(res.Data.MyCards ?? new List<string>());
-                LastPlayedCard = string.IsNullOrEmpty(res.Data.LastPlayedCard) ? null : ParseCard(res.Data.LastPlayedCard);
-                MustFollowLedSuit = res.Data.MustFollowLedSuit;
-                if (res.Data.GameOver)
-                    HandleGameResult(res.Data.WinnerPlayerId);
-                ApplyTrickOutcomeMessage(res.Data.LastTrickWinnerPlayerId);
-                ApplyMatchRoundScore(res.Data);
-            }
-
-            RefreshHandPlayability();
-            RaiseStateChanged();
+                ApplyStateFromDto(res.Data);
         }
         catch (Exception)
         {
             SetError("Something went wrong. Please try again.");
+            await SyncGameStateFromServerAsync();
         }
         finally
         {
             SetLoading(false);
+            _moveGate.Release();
         }
+    }
+
+    private void ApplyStateFromDto(GameStateViewModel state)
+    {
+        WaitingForOpponent = state.WaitingForGameStart;
+        PotAmount = state.LobbyPotAmount;
+        OpponentDisplayName = state.OpponentDisplayName;
+        CurrentPlayerId = state.CurrentTurnPlayerId;
+        IsPlayerTurn = !WaitingForOpponent && state.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
+        PlayerCards = ParseCards(state.MyCards ?? new List<string>());
+        LastPlayedCard = string.IsNullOrEmpty(state.LastPlayedCard) ? null : ParseCard(state.LastPlayedCard);
+        MustFollowLedSuit = state.MustFollowLedSuit;
+        if (state.GameOver)
+            HandleGameResult(state.WinnerPlayerId);
+        ApplyTrickOutcomeMessage(state.LastTrickWinnerPlayerId);
+        ApplyMatchRoundScore(state);
+        RefreshHandPlayability();
+        RaiseStateChanged();
+    }
+
+    private async Task SyncGameStateFromServerAsync()
+    {
+        if (string.IsNullOrEmpty(SessionId) || !Guid.TryParse(SessionId, out var sessionGuid))
+            return;
+        var res = await _gameService.GetGameStateAsync(sessionGuid);
+        if (res.IsSuccess && res.Data != null)
+            ApplyStateFromDto(res.Data);
+        else
+            RaiseStateChanged();
+    }
+
+    private async Task HandleMoveFailureAsync<T>(Response<T> res)
+    {
+        await SyncGameStateFromServerAsync();
+
+        if (res.ErrorCode == GameMoveClientCodes.NotYourTurn && !IsPlayerTurn)
+        {
+            ClearError();
+            return;
+        }
+
+        if (res.ErrorCode == GameMoveClientCodes.MustFollowSuit
+            && MustFollowLedSuit
+            && !string.IsNullOrEmpty(LastPlayedCard?.DisplayValue))
+        {
+            SetError(_i18n?.T("invalid_move_follow_suit") ?? res.ErrorMessage ?? "Invalid move.");
+            return;
+        }
+
+        if (res.ErrorCode == GameMoveClientCodes.MustTake)
+        {
+            SetError(_i18n?.T("invalid_move_must_take") ?? res.ErrorMessage ?? "Invalid move.");
+            return;
+        }
+
+        if (res.ErrorCode == GameMoveClientCodes.NotYourTurn)
+        {
+            SetError(_i18n?.T("invalid_move_not_your_turn") ?? res.ErrorMessage ?? "Invalid move.");
+            return;
+        }
+
+        if (res.StatusCode == 400)
+            SetError(_i18n?.T("invalid_move_stale") ?? res.ErrorMessage ?? "Invalid move.");
+        else
+            SetError(res.ErrorMessage ?? "Failed to apply move.");
     }
 
     private void ApplyMatchRoundScore(GameStateViewModel? state)
@@ -470,6 +581,10 @@ public class GamePlayViewModel : ViewModelBase
         // Show the played card immediately; full seat state still comes from the following GameState push.
         if (!string.IsNullOrEmpty(cardSuitRank))
             LastPlayedCard = ParseCard(cardSuitRank);
+        MustFollowLedSuit = true;
+        IsPlayerTurn = true;
+        CurrentPlayerId = _appState.State.CurrentPlayerId;
+        ClearError();
         RefreshHandPlayability();
         RaiseStateChanged();
     }

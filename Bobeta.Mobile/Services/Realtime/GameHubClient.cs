@@ -142,7 +142,7 @@ public class GameHubClient
         });
 
         _connection.On("InactivityWarningDismissed", () => OnInactivityWarningDismissed?.Invoke());
-        _connection.On("GameEndedByInactivity", () => OnGameEndedByInactivity?.Invoke());
+        _connection.On<JsonElement>("GameEndedByInactivity", _ => OnGameEndedByInactivity?.Invoke());
 
         await StartAndJoinAsync(sessionGuid, cancellationToken);
     }
@@ -215,18 +215,40 @@ public class GameHubClient
         await _connection.InvokeAsync("ResumeInactivity", sessionGuid, cancellationToken);
     }
 
+    public async Task<bool> TryEnsureConnectedAsync(string sessionId, CancellationToken cancellationToken = default)
+    {
+        if (_connection?.State == HubConnectionState.Connected)
+            return true;
+        if (_currentSessionId != sessionId || string.IsNullOrEmpty(sessionId))
+            return false;
+        try
+        {
+            await ConnectAsync(sessionId, cancellationToken);
+            return _connection?.State == HubConnectionState.Connected;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "SignalR reconnect for inactivity failed session={SessionId}", sessionId);
+            return false;
+        }
+    }
+
     public async Task InactivityContinueAsync(string sessionId, CancellationToken cancellationToken = default)
     {
-        if (!Guid.TryParse(sessionId, out var sessionGuid) || _connection?.State != HubConnectionState.Connected)
+        if (!Guid.TryParse(sessionId, out var sessionGuid))
             return;
-        await _connection.InvokeAsync("InactivityContinue", sessionGuid, cancellationToken);
+        if (!await TryEnsureConnectedAsync(sessionId, cancellationToken))
+            return;
+        await _connection!.InvokeAsync("InactivityContinue", sessionGuid, cancellationToken);
     }
 
     public async Task InactivityCancelGameAsync(string sessionId, CancellationToken cancellationToken = default)
     {
-        if (!Guid.TryParse(sessionId, out var sessionGuid) || _connection?.State != HubConnectionState.Connected)
+        if (!Guid.TryParse(sessionId, out var sessionGuid))
             return;
-        await _connection.InvokeAsync("InactivityCancelGame", sessionGuid, cancellationToken);
+        if (!await TryEnsureConnectedAsync(sessionId, cancellationToken))
+            return;
+        await _connection!.InvokeAsync("InactivityCancelGame", sessionGuid, cancellationToken);
     }
 
     public async Task PlayCardAsync(string sessionId, string suit, int rank, CancellationToken cancellationToken = default)

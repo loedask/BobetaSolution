@@ -8,6 +8,8 @@
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
     <BlazorWebAssemblyHostEnvironment Condition="'$(Configuration)'=='Release'">Production</BlazorWebAssemblyHostEnvironment>
     <BlazorWebAssemblyHostEnvironment Condition="'$(Configuration)'=='Debug'">Development</BlazorWebAssemblyHostEnvironment>
+    <!-- Smaller/faster first download: compressed boot assets (Brotli). -->
+    <BlazorEnableCompression>true</BlazorEnableCompression>
   </PropertyGroup>
 
   <ItemGroup>
