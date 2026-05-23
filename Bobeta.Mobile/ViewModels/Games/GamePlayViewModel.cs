@@ -321,7 +321,13 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         try
         {
             var handStr = PlayerCards.Select(c => c.DisplayValue).ToList();
-            if (!MakopaFollowSuit.ResponderNeedsVoidFollow(LastPlayedCard?.DisplayValue, handStr))
+            if (string.IsNullOrEmpty(LastPlayedCard?.DisplayValue))
+            {
+                await SyncGameStateFromServerAsync();
+                return;
+            }
+
+            if (!MakopaFollowSuit.ResponderNeedsVoidFollow(LastPlayedCard.DisplayValue, handStr))
             {
                 SetError(_i18n.T("invalid_move_follow_suit"));
                 return;
@@ -360,6 +366,15 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             return;
 
         var handStr = PlayerCards.Select(c => c.DisplayValue).ToList();
+        if (enforceLocalFollowSuitValidation &&
+            MustFollowLedSuit &&
+            string.IsNullOrEmpty(LastPlayedCard?.DisplayValue))
+        {
+            await SyncGameStateFromServerAsync();
+            _moveGate.Release();
+            return;
+        }
+
         if (enforceLocalFollowSuitValidation &&
             MustFollowLedSuit &&
             !MakopaFollowSuit.IsLegalPlay(card.DisplayValue, LastPlayedCard?.DisplayValue, handStr))
@@ -439,9 +454,12 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             return;
         }
 
-        if (res.ErrorCode == GameMoveClientCodes.MustFollowSuit && MustFollowLedSuit)
+        if (res.ErrorCode == GameMoveClientCodes.MustFollowSuit)
         {
-            SetError(_i18n.T("invalid_move_follow_suit"));
+            if (MustFollowLedSuit && !string.IsNullOrEmpty(LastPlayedCard?.DisplayValue))
+                SetError(_i18n.T("invalid_move_follow_suit"));
+            else
+                ClearError();
             return;
         }
 
@@ -539,19 +557,17 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         _aiTriggerCts?.Cancel();
         if (!string.IsNullOrEmpty(cardSuitRank))
             LastPlayedCard = ParseCard(cardSuitRank);
-        MustFollowLedSuit = true;
-        IsPlayerTurn = true;
-        CurrentPlayerId = _appState.State.CurrentPlayerId;
         ClearError();
         RefreshHandPlayability();
         RaiseStateChanged();
+        _ = SyncGameStateFromServerAsync();
     }
 
     private void RefreshHandPlayability()
     {
         var canInteract = IsPlayerTurn && !WaitingForOpponent && !ShowGameResult && !ShowInactivityOverlay;
-        var enforceFollow = MustFollowLedSuit;
         var last = LastPlayedCard?.DisplayValue;
+        var enforceFollow = MustFollowLedSuit && !string.IsNullOrEmpty(last);
         var hand = PlayerCards.Select(c => c.DisplayValue).ToList();
         var needsVoid = canInteract && enforceFollow && MakopaFollowSuit.ResponderNeedsVoidFollow(last, hand);
         foreach (var c in PlayerCards)
