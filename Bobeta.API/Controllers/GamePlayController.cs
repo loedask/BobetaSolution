@@ -1,3 +1,4 @@
+using Bobeta.Application.Common;
 using Bobeta.Application.DTOs.Game;
 using Bobeta.Application.Interfaces;
 using Bobeta.API.App.Services;
@@ -46,9 +47,11 @@ public class GamePlayController(
     public async Task<ActionResult<GameStateDto>> PlayCard([FromBody] PlayCardRequest request, CancellationToken cancellationToken)
     {
         var card = new Card(request.Card.Suit, request.Card.Rank);
-        var state = await _gameEngineService.PlayCardAsync(PlayerId, request.SessionId, card, cancellationToken);
-        if (state == null) return BadRequest("Invalid move or game state.");
+        var move = await _gameEngineService.PlayCardAsync(PlayerId, request.SessionId, card, cancellationToken);
+        if (!move.IsSuccess)
+            return BadRequest(new { code = move.ErrorCode, message = DescribeMoveError(move.ErrorCode) });
 
+        var state = move.State!;
         var groupName = GameHub.GroupPrefix + request.SessionId;
         var cardSuitRank = $"{request.Card.Suit}_{(int)request.Card.Rank}";
 
@@ -75,8 +78,11 @@ public class GamePlayController(
     [HttpPost("void-follow")]
     public async Task<ActionResult<GameStateDto>> VoidFollowDraw([FromQuery] Guid sessionId, CancellationToken cancellationToken)
     {
-        var state = await _gameEngineService.VoidFollowDrawAsync(PlayerId, sessionId, cancellationToken);
-        if (state == null) return BadRequest("Invalid move or game state.");
+        var move = await _gameEngineService.VoidFollowDrawAsync(PlayerId, sessionId, cancellationToken);
+        if (!move.IsSuccess)
+            return BadRequest(new { code = move.ErrorCode, message = DescribeMoveError(move.ErrorCode) });
+
+        var state = move.State!;
 
         await _gameInactivityCoordinator.RecordGameplayActivityAsync(sessionId, cancellationToken);
         if (state.GameOver)
@@ -163,4 +169,14 @@ public class GamePlayController(
         await _gameInactivityCoordinator.CancelByPlayerAsync(sessionId, PlayerId, cancellationToken);
         return Ok();
     }
+
+    private static string DescribeMoveError(string? code) => code switch
+    {
+        GameMoveErrorCodes.NotYourTurn => "It is not your turn.",
+        GameMoveErrorCodes.MustFollowSuit => "You must follow the led suit.",
+        GameMoveErrorCodes.MustTake => "You cannot play a card — use Take when you have no card in the led suit.",
+        GameMoveErrorCodes.CardNotInHand => "That card is not in your hand.",
+        GameMoveErrorCodes.InvalidTrick => "No valid trick to respond to.",
+        _ => "Invalid move or game state."
+    };
 }

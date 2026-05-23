@@ -128,10 +128,10 @@
 
     private async Task HandleCardDropped()
     {
-        if (ViewModel.ShowInactivityOverlay) return;
+        if (ViewModel.ShowInactivityOverlay || ViewModel.IsLoading) return;
         if (string.IsNullOrEmpty(_draggedCardDisplayValue)) return;
         var card = ViewModel.PlayerCards.FirstOrDefault(c => c.DisplayValue == _draggedCardDisplayValue);
-        if (card != null)
+        if (card != null && card.IsPlayable)
             await ViewModel.PlayCardAsync(card);
         _draggedCardDisplayValue = null;
     }

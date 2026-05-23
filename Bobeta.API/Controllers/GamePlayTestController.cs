@@ -58,10 +58,10 @@ public class GamePlayTestController(
             var cardStr = legal[random.Next(legal.Count)];
             if (!TryParseCard(cardStr, out var card) || card == null)
                 return BadRequest("Could not parse card.");
-            var newState = await _gameEngineService.PlayCardAsync(opponentId, sessionId, card!, cancellationToken);
-            if (newState == null)
+            var move = await _gameEngineService.PlayCardAsync(opponentId, sessionId, card!, cancellationToken);
+            if (!move.IsSuccess)
                 return BadRequest("Invalid move.");
-            return Ok(newState);
+            return Ok(move.State);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

@@ -7,6 +7,8 @@ public class Response<T>
     public T? Data { get; init; }
     public string? ErrorMessage { get; init; }
     public int? StatusCode { get; init; }
+    /// <summary>API error code when present (e.g. <c>not_your_turn</c>, <c>must_follow_suit</c>).</summary>
+    public string? ErrorCode { get; init; }
 
     public static Response<T> Success(T data) => new()
     {
@@ -14,10 +16,11 @@ public class Response<T>
         Data = data
     };
 
-    public static Response<T> Failure(string message, int? statusCode = null) => new()
+    public static Response<T> Failure(string message, int? statusCode = null, string? errorCode = null) => new()
     {
         IsSuccess = false,
         ErrorMessage = message,
-        StatusCode = statusCode
+        StatusCode = statusCode,
+        ErrorCode = errorCode
     };
 }

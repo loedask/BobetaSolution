@@ -176,7 +176,28 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
     private static async Task<Response<T>> ToErrorResponseAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        var message = string.IsNullOrEmpty(body) ? $"API error: {response.StatusCode}" : body;
-        return Response<T>.Failure(message, (int)response.StatusCode);
+        string? code = null;
+        string message;
+        if (!string.IsNullOrWhiteSpace(body) && body.TrimStart().StartsWith('{'))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                if (doc.RootElement.TryGetProperty("code", out var codeEl))
+                    code = codeEl.GetString();
+                if (doc.RootElement.TryGetProperty("message", out var msgEl))
+                    message = msgEl.GetString() ?? body;
+                else
+                    message = body;
+            }
+            catch (JsonException)
+            {
+                message = body;
+            }
+        }
+        else
+            message = string.IsNullOrEmpty(body) ? $"API error: {response.StatusCode}" : body;
+
+        return Response<T>.Failure(message, (int)response.StatusCode, code);
     }
 }
