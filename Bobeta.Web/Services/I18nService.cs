@@ -158,6 +158,7 @@ public class I18nService(AppStateService appState)
             ["inactivity_warning_second"] = "Your game will be canceled in 10 seconds due to inactivity.",
             ["continue_play"] = "Continue",
             ["cancel_game"] = "Cancel Game",
+            ["sending_move"] = "Sending move…",
         };
 
         var fr = new Dictionary<string, string>(en)
@@ -214,6 +215,7 @@ public class I18nService(AppStateService appState)
             ["inactivity_warning_second"] = "La partie sera annulée dans 10 secondes pour cause d'inactivité.",
             ["continue_play"] = "Continuer",
             ["cancel_game"] = "Annuler la partie",
+            ["sending_move"] = "Envoi du coup…",
         };
 
         var kt = new Dictionary<string, string>(en);

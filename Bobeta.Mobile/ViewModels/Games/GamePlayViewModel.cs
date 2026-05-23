@@ -66,6 +66,9 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public int InactivityCountdownSeconds { get; private set; }
     public bool InactivityActionBusy { get; private set; }
 
+    /// <summary>Play or Take request in flight (not initial table load).</summary>
+    public bool IsSendingMove => IsLoading && PlayerCards.Count > 0;
+
     public event Action? NavigateHomeRequested;
 
     public async Task LoadGameAsync(string sessionId)

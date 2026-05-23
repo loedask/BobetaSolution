@@ -73,6 +73,9 @@ public class GamePlayViewModel : ViewModelBase
     public int InactivityCountdownSeconds { get; private set; }
     public bool InactivityActionBusy { get; private set; }
 
+    /// <summary>Play or Take request in flight (not initial table load).</summary>
+    public bool IsSendingMove => IsLoading && PlayerCards.Count > 0;
+
     /// <summary>From server: we are responding to opponent&apos;s lead (client must not infer this from <see cref="LastPlayedCard"/> alone — it can be our own lead while we wait).</summary>
     public bool MustFollowLedSuit { get; private set; }
 

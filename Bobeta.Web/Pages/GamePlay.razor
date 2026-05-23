@@ -39,12 +39,28 @@
             {
                 <p class="rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-center text-sm text-foreground">@ViewModel.TrickOutcomeMessage</p>
             }
-            <OpponentHand CardCount="@ViewModel.OpponentCards.Count" />
-            <GameBoard LastPlayedCard="@ViewModel.LastPlayedCard" OnCardDropped="HandleCardDropped" />
-            <PlayerHand Cards="@ViewModel.PlayerCards" IsPlayerTurn="@ViewModel.IsPlayerTurn" OnPlayCard="PlayCard" OnDragStart="HandleDragStart" OnDragEnd="HandleDragEnd" />
+            <div class="relative">
+                <OpponentHand CardCount="@ViewModel.OpponentCards.Count" />
+                <GameBoard LastPlayedCard="@ViewModel.LastPlayedCard" OnCardDropped="HandleCardDropped" />
+                <PlayerHand
+                    Cards="@ViewModel.PlayerCards"
+                    IsPlayerTurn="@ViewModel.IsPlayerTurn"
+                    CanInteract="@(ViewModel.IsPlayerTurn && !ViewModel.IsSendingMove && !ViewModel.ShowInactivityOverlay)"
+                    OnPlayCard="PlayCard"
+                    OnDragStart="HandleDragStart"
+                    OnDragEnd="HandleDragEnd" />
+                @if (ViewModel.IsSendingMove)
+                {
+                    <div class="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-background/75 backdrop-blur-sm">
+                        <p class="rounded-xl border border-primary/40 bg-card px-5 py-3 text-sm font-semibold text-foreground shadow-lg">
+                            @I18n.T("sending_move")
+                        </p>
+                    </div>
+                }
+            </div>
             <button type="button"
                     class="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-55"
-                    disabled="@(!ViewModel.CanTakeCard || ViewModel.IsLoading || ViewModel.ShowInactivityOverlay)"
+                    disabled="@(!ViewModel.CanTakeCard || ViewModel.IsSendingMove || ViewModel.ShowInactivityOverlay)"
                     @onclick="TakeCard">
                 @I18n.T("take_card")
             </button>
@@ -128,7 +144,7 @@
 
     private async Task HandleCardDropped()
     {
-        if (ViewModel.ShowInactivityOverlay || ViewModel.IsLoading) return;
+        if (ViewModel.ShowInactivityOverlay || ViewModel.IsSendingMove) return;
         if (string.IsNullOrEmpty(_draggedCardDisplayValue)) return;
         var card = ViewModel.PlayerCards.FirstOrDefault(c => c.DisplayValue == _draggedCardDisplayValue);
         if (card != null && card.IsPlayable)

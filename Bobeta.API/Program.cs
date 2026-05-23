@@ -1,7 +1,9 @@
+using System.IO.Compression;
 using Bobeta.API.App.Extensions;
 using Bobeta.API.App.Filters;
 using Bobeta.API.Hubs;
 using Bobeta.Application.Common;
+using Microsoft.AspNetCore.ResponseCompression;
 
 // Build the web application and configure services.
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,18 @@ builder.Services.AddBobetaSwagger();
 
 // Bobeta: persistence, application, identity, infrastructure, JWT, SignalR.
 builder.Services.AddBobetaServices(builder.Configuration);
+
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/json"]);
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+    options.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+    options.Level = CompressionLevel.Fastest);
 
 // Blazor WebAssembly (and other browser clients) call the API from a different origin/port than Kestrel — browsers require CORS.
 builder.Services.AddCors(options =>
@@ -41,6 +55,7 @@ var app = builder.Build();
 
 // Must run early so OPTIONS preflight gets Access-Control-* headers before auth/endpoints (see browser CORS errors).
 app.UseCors();
+app.UseResponseCompression();
 app.UseBobetaSwagger();
 // In Development the mobile app often uses http://localhost:5163. UseHttpsRedirection would 307 to https on
 // another port; HttpClient follows but drops the Authorization header, so wallet calls return 401 after login.

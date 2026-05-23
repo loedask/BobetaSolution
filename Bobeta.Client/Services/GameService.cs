@@ -83,7 +83,10 @@ public class GameService(IClient client, HttpClient httpClient, IAccessTokenProv
         // Use GetAsync (not NSwag StateAsync) so AttachBearerAsync runs on the request. In Blazor WASM, PostAsync/GetAsync
         // attach the token from this service's scoped IAccessTokenProvider; NSwag-only calls rely on BearerTokenHandler,
         // which can resolve a different scope via IHttpClientFactory and send no Authorization — join POST works, state GET 401.
-        var res = await GetAsync<GameStateDto>($"api/GamePlay/state?sessionId={sessionId:D}", cancellationToken).ConfigureAwait(false);
+        var res = await GetAsync<GameStateDto>(
+            $"api/GamePlay/state?sessionId={sessionId:D}",
+            retryOnTransientFailure: true,
+            cancellationToken).ConfigureAwait(false);
         if (!res.IsSuccess || res.Data == null)
             return Response<GameStateViewModel?>.Failure(res.ErrorMessage ?? "Failed to load game state.", res.StatusCode);
         return Response<GameStateViewModel?>.Success(MapState(res.Data));

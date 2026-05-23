@@ -49,7 +49,38 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
-    protected async Task<Response<T>> GetAsync<T>(string requestUri, CancellationToken cancellationToken = default)
+    protected Task<Response<T>> GetAsync<T>(string requestUri, CancellationToken cancellationToken = default) =>
+        GetAsync<T>(requestUri, retryOnTransientFailure: false, cancellationToken);
+
+    /// <summary>GET with optional single retry on timeouts / connection resets (game state sync on poor networks).</summary>
+    protected async Task<Response<T>> GetAsync<T>(
+        string requestUri,
+        bool retryOnTransientFailure,
+        CancellationToken cancellationToken = default)
+    {
+        var attempts = retryOnTransientFailure ? 2 : 1;
+        Response<T>? last = null;
+        for (var attempt = 0; attempt < attempts; attempt++)
+        {
+            try
+            {
+                last = await SendGetOnceAsync<T>(requestUri, cancellationToken).ConfigureAwait(false);
+                if (last.IsSuccess || last.StatusCode is 401 or 404 || attempt == attempts - 1)
+                    return last;
+            }
+            catch (Exception) when (attempt < attempts - 1 && !cancellationToken.IsCancellationRequested)
+            {
+                // Timeout or connection reset — one short retry for game-state sync.
+            }
+
+            if (attempt < attempts - 1)
+                await Task.Delay(400, cancellationToken).ConfigureAwait(false);
+        }
+
+        return last ?? Response<T>.Failure("Network error. Please check your connection and try again.", null);
+    }
+
+    private async Task<Response<T>> SendGetOnceAsync<T>(string requestUri, CancellationToken cancellationToken)
     {
         try
         {
@@ -58,7 +89,6 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
             using var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                // Browser HTTP cache can return a stale 401 from a pre-login GET; retry once with a unique URL.
                 response.Dispose();
                 using var retry = new HttpRequestMessage(HttpMethod.Get, ResolveRequestUri(WithCacheBuster(requestUri, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())));
                 await AttachBearerAsync(retry, cancellationToken).ConfigureAwait(false);

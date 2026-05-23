@@ -2,13 +2,14 @@
     @foreach (var card in Cards)
     {
         var c = card;
-        <CardComponent Card="@c" Disabled="@(!IsPlayerTurn || !c.IsPlayable)" OnClick="() => OnPlayCard.InvokeAsync(c)" OnDragStart="OnDragStart" OnDragEnd="OnDragEnd" />
+        <CardComponent Card="@c" Disabled="@(!CanInteract || !c.IsPlayable)" OnClick="() => OnPlayCard.InvokeAsync(c)" OnDragStart="OnDragStart" OnDragEnd="OnDragEnd" />
     }
 </div>
 
 @code {
     [Parameter] public List<CardViewModel> Cards { get; set; } = new();
     [Parameter] public bool IsPlayerTurn { get; set; }
+    [Parameter] public bool CanInteract { get; set; } = true;
     [Parameter] public EventCallback<CardViewModel> OnPlayCard { get; set; }
     [Parameter] public EventCallback<string> OnDragStart { get; set; }
     [Parameter] public EventCallback OnDragEnd { get; set; }
