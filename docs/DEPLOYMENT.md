@@ -18,6 +18,12 @@ The PWA profile (`bobeta-pwa`) should run in the **same region as the API** so s
 
 The API enables **Brotli/Gzip** for JSON and other responses (see `Bobeta.API/Program.cs`). No extra App Service setting is required.
 
+## Blazor WASM lazy-loaded pages
+
+Lobby, wallet, and profile routes (`/dashboard`, `/history`, `/join`, etc.) are in the **`Bobeta.Web.Deferred`** assembly and download only when first visited. Login and **`/game/...`** stay in the main bundle for faster game entry.
+
+After publish, confirm `_framework/Bobeta.Web.Deferred.wasm` exists under `wwwroot`.
+
 ## Verify latency
 
 From a browser devtools **Network** tab on the game page, check `play-card` and `state` requests:

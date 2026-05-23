@@ -8,33 +8,33 @@
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
     <BlazorWebAssemblyHostEnvironment Condition="'$(Configuration)'=='Release'">Production</BlazorWebAssemblyHostEnvironment>
     <BlazorWebAssemblyHostEnvironment Condition="'$(Configuration)'=='Debug'">Development</BlazorWebAssemblyHostEnvironment>
-    <!-- Smaller/faster first download: compressed boot assets (Brotli). -->
     <BlazorEnableCompression>true</BlazorEnableCompression>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.3" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Bobeta.Client\Bobeta.Client.csproj" />
+    <ProjectReference Include="..\Bobeta.Web.Shared\Bobeta.Web.Shared.csproj" />
+    <ProjectReference Include="..\Bobeta.Web.Deferred\Bobeta.Web.Deferred.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <BlazorWebAssemblyLazyLoad Include="Bobeta.Web.Deferred.dll" />
   </ItemGroup>
 
   <ItemGroup>
     <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
   </ItemGroup>
 
-  <!-- Tailwind source only; production uses built tailwind.css -->
   <ItemGroup>
     <Content Remove="wwwroot\css\tailwind.input.css" />
   </ItemGroup>
 
-  <!-- Linux App Service serves the site root as /home/site/wwwroot (no IIS web.config rewrite).
-       Blazor publish puts static assets under publish/wwwroot/, so bare /manifest.webmanifest 404s unless
-       that folder alone is deployed — or we mirror the manifest at the publish root too. -->
   <Target Name="MirrorPwaManifestToPublishRoot" AfterTargets="Publish">
     <Copy SourceFiles="$(PublishDir)wwwroot\manifest.webmanifest"
           DestinationFiles="$(PublishDir)manifest.webmanifest"

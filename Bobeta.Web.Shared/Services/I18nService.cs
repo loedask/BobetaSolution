@@ -1,0 +1,234 @@
+using System.Collections.Frozen;
+
+namespace Bobeta.Web.Shared.Services;
+
+/// <summary>Supported locales: en, fr, kt, ln, sw. Stored in <see cref="State.AppState.SelectedLanguage"/>.</summary>
+public class I18nService(AppStateService appState)
+{
+    private readonly AppStateService _appState = appState;
+
+    public string Locale => _appState.State.SelectedLanguage;
+
+    private static readonly FrozenDictionary<string, FrozenDictionary<string, string>> Translations = BuildTranslations();
+
+    public string T(string key)
+    {
+        var locale = _appState.State.SelectedLanguage ?? "en";
+        if (Translations.TryGetValue(locale, out var dict) && dict.TryGetValue(key, out var v)) return v;
+        if (Translations.TryGetValue("en", out var en) && en.TryGetValue(key, out var enV)) return enV;
+        return key;
+    }
+
+    public static IReadOnlyList<(string Code, string Label, string ShortCode)> SupportedLocales { get; } = new[]
+    {
+        ("en", "English", "EN"),
+        ("fr", "Français", "FR"),
+        ("kt", "Kituba", "KT"),
+        ("ln", "Lingala", "LN"),
+        ("sw", "Kiswahili", "SW"),
+    };
+
+    private static FrozenDictionary<string, FrozenDictionary<string, string>> BuildTranslations()
+    {
+        var en = new Dictionary<string, string>
+        {
+            ["app_name"] = "BOBETA",
+            ["tagline"] = "Play Smart. Win Real Money.",
+            ["get_started"] = "Get Started",
+            ["secure_momo"] = "Secure MoMo Transactions",
+            ["secure"] = "Secure",
+            ["fair_randomized"] = "Fair & Randomized",
+            ["instant_payouts"] = "Instant Payouts",
+            ["choose_language"] = "Choose Language",
+            ["enter_number"] = "Enter Your Number",
+            ["send_code_desc"] = "We'll send a verification code to your MoMo number",
+            ["session_expired_banner"] = "Your session ended (timeout or sign-in expired). Enter your number again to pick up where you left off.",
+            ["invalid_move_follow_suit"] = "You must follow the led suit when you have a card in that suit. Choose a highlighted card.",
+            ["invalid_move_not_your_turn"] = "It is not your turn yet — the table is updating.",
+            ["invalid_move_must_take"] = "You have no card in the led suit. Tap Take instead of playing a card.",
+            ["invalid_move_stale"] = "That move did not apply. The table has been refreshed — try again if it is still your turn.",
+            ["trick_outcome_you"] = "You took this trick.",
+            ["trick_outcome_opponent"] = "Opponent took this trick.",
+            ["phone_placeholder"] = "0XX XXX XXX",
+            ["send_code"] = "Send Code",
+            ["verification_code"] = "Verification Code",
+            ["enter_otp_desc"] = "Enter the 6-digit code sent to",
+            ["verify"] = "Verify",
+            ["resend_code"] = "Resend Code",
+            ["choose_player_name"] = "Choose Player Name",
+            ["player_name_desc"] = "This is how other players will see you",
+            ["player_name_placeholder"] = "Enter your player name",
+            ["create_account"] = "Create Account",
+            ["welcome_back"] = "Welcome back,",
+            ["wallet_balance"] = "Wallet Balance",
+            ["deposit"] = "Deposit",
+            ["withdraw"] = "Withdraw",
+            ["create_game"] = "Create Game",
+            ["join_game"] = "Join Game",
+            ["history"] = "History",
+            ["recent_activity"] = "Recent Activity",
+            ["see_all"] = "See All",
+            ["won_vs"] = "Won vs",
+            ["deposit_label"] = "Deposit",
+            ["tx_bet_lock"] = "Game stake",
+            ["tx_bet_release"] = "Stake returned",
+            ["tx_winnings"] = "Winnings",
+            ["tx_commission"] = "Platform fee",
+            ["bet_placed"] = "Bet placed",
+            ["trust_message"] = "All transactions are secured. 75% payout guaranteed. Fair & randomized card system.",
+            ["select_bet_amount"] = "Select Bet Amount",
+            ["choose_bet_desc"] = "Choose how much you want to bet",
+            ["your_bet"] = "Your bet",
+            ["potential_win"] = "Potential win (75%)",
+            ["platform_fee"] = "Platform fee (25%)",
+            ["create_game_session"] = "Create Game Session",
+            ["waiting_for_opponent"] = "Waiting for Opponent",
+            ["looking_for_match"] = "Looking for a match...",
+            ["cancel"] = "Cancel",
+            ["bet"] = "Bet",
+            ["open_game_sessions"] = "Open game sessions",
+            ["refresh"] = "Refresh",
+            ["live"] = "Live",
+            ["join"] = "Join",
+            ["waiting_for_opponent_short"] = "Waiting for opponent",
+            ["game_history"] = "Game History",
+            ["won"] = "Won",
+            ["lost"] = "Lost",
+            ["history_waiting"] = "Waiting for opponent",
+            ["history_in_progress"] = "In progress",
+            ["history_live_game"] = "Live game",
+            ["history_you_hosted"] = "You started this game",
+            ["history_you_joined"] = "You joined this game",
+            ["history_live_hint"] = "Join only lists open lobbies. Open the table to keep playing.",
+            ["history_continue"] = "Open table",
+            ["history_cancelled"] = "Cancelled",
+            ["profile"] = "Profile",
+            ["games"] = "Games",
+            ["wins"] = "Wins",
+            ["win_rate"] = "Win Rate",
+            ["wallet_settings"] = "Wallet Settings",
+            ["security"] = "Security",
+            ["sign_out"] = "Sign Out",
+            ["sign_out_confirm"] = "Are you sure you want to sign out of your account?",
+            ["current_balance"] = "Current Balance",
+            ["amount_fcfa"] = "Amount (FCFA)",
+            ["enter_amount"] = "Enter amount",
+            ["payment_method_momo"] = "Mobile Money (MoMo)",
+            ["instant_deposit_momo"] = "Instant deposit via MoMo",
+            ["confirm_deposit"] = "Confirm Deposit",
+            ["processing"] = "Processing…",
+            ["deposit_successful"] = "Deposit Successful!",
+            ["added_to_wallet"] = "added to wallet",
+            ["invalid_amount"] = "Invalid amount",
+            ["min_deposit_msg"] = "Minimum deposit is 100 FCFA",
+            ["available_balance"] = "Available Balance",
+            ["momo_number"] = "MoMo Number",
+            ["confirm_withdrawal"] = "Confirm Withdrawal",
+            ["withdrawal_successful"] = "Withdrawal Successful!",
+            ["sent_to_momo"] = "sent to MoMo",
+            ["min_withdrawal"] = "Minimum",
+            ["max_withdrawal"] = "Max",
+            ["insufficient_balance"] = "Insufficient balance",
+            ["cannot_exceed_balance"] = "You cannot withdraw more than your balance",
+            ["min_withdraw_msg"] = "Minimum withdrawal is",
+            ["home"] = "Home",
+            ["create"] = "Create",
+            ["loading"] = "Creating…",
+            ["bet_range_fcfa"] = "Stake must be between 200 and 500 FCFA.",
+            ["pot_table"] = "Table pot",
+            ["pot_seats"] = "Head-to-head",
+            ["pot_activity_hint"] = "Activity lists only your seat (−{0} FCFA). This line is both stacks combined.",
+            ["pot_chip_title"] = "{0} FCFA from each player · 2 seats",
+            ["pot_opponent_lane"] = "Across from you",
+            ["language"] = "Language",
+            ["confirm"] = "Confirm",
+            ["not_found"] = "Oops! Page not found",
+            ["return_home"] = "Return to Home",
+            ["take_card"] = "Take",
+            ["take_card_hint_disabled"] = "Play a card of the led suit if you hold one.",
+            ["take_card_hint_enabled"] = "No led suit — tap Take: you take the lead card into your hand; the leader opens again.",
+            ["makopa_how_to_play_title"] = "How to play Makopa",
+            ["makopa_rules_body"] =
+                "\u2022 Two players; 52 cards shuffled; each is dealt 4. The other cards are never used — there is no drawing.\n\u2022 Who opens first is chosen at random.\n\u2022 Follow suit by name: if a heart is led, play a heart when you have one — same for spades, clubs, and diamonds.\n\u2022 If you have several cards in the led suit, you choose which one to play.\n\u2022 If you cannot follow, tap Take: the leader's lead card is added to your hand and the leader opens the next trick.\n\u2022 When both cards match the led suit, the higher rank wins the trick; the winner leads next (ties favour whoever led). Those cards are then played out from both hands.\n\u2022 You win immediately when it is your turn to lead and you have exactly one card left.\n\u2022 If the other player has only one card left and you play a card of the same suit as that card, you lose immediately.",
+            ["makopa_round_score"] = "Hands won: {0}\u2013{1}",
+            ["makopa_rules_link"] = "Rules",
+            ["dev_test_deposit_notice"] = "Development build: deposits are simulated test credits (no real MoMo). Use only with a non-production API where DemoAuth:EnableTestWalletDeposits is enabled.",
+            ["inactivity_warning_first"] =
+                "Due to inactivity from you or your opponent, the game will be suspended in 10 seconds.",
+            ["inactivity_warning_second"] = "Your game will be canceled in 10 seconds due to inactivity.",
+            ["continue_play"] = "Continue",
+            ["cancel_game"] = "Cancel Game",
+            ["sending_move"] = "Sending move…",
+        };
+
+        var fr = new Dictionary<string, string>(en)
+        {
+            ["app_name"] = "BOBETA",
+            ["tagline"] = "Jouez malin. Gagnez de l'argent réel.",
+            ["get_started"] = "Commencer",
+            ["choose_language"] = "Choisir la langue",
+            ["send_code"] = "Envoyer le code",
+            ["session_expired_banner"] = "Votre session a expiré. Entrez à nouveau votre numéro pour continuer.",
+            ["invalid_move_follow_suit"] = "Vous devez suivre la couleur demandée si vous en avez. Choisissez une carte mise en évidence.",
+            ["invalid_move_not_your_turn"] = "Ce n'est pas encore à vous de jouer — la table se met à jour.",
+            ["invalid_move_must_take"] = "Vous n'avez pas la couleur menée. Touchez Prendre au lieu de jouer une carte.",
+            ["invalid_move_stale"] = "Ce coup n'a pas été appliqué. La table a été actualisée — réessayez si c'est encore votre tour.",
+            ["trick_outcome_you"] = "Vous remportez ce pli.",
+            ["trick_outcome_opponent"] = "L'adversaire remporte ce pli.",
+            ["verify"] = "Vérifier",
+            ["cancel"] = "Annuler",
+            ["deposit"] = "Dépôt",
+            ["withdraw"] = "Retrait",
+            ["profile"] = "Profil",
+            ["home"] = "Accueil",
+            ["language"] = "Langue",
+            ["history_waiting"] = "En attente d'un adversaire",
+            ["history_in_progress"] = "Partie en cours",
+            ["history_live_game"] = "Partie en direct",
+            ["history_you_hosted"] = "Vous avez créé cette partie",
+            ["history_you_joined"] = "Vous avez rejoint cette partie",
+            ["history_live_hint"] = "Rejoindre n'affiche que les salons ouverts. Ouvrez la table pour continuer.",
+            ["history_continue"] = "Ouvrir la table",
+            ["history_cancelled"] = "Annulée",
+            ["tx_bet_lock"] = "Mise de jeu",
+            ["tx_bet_release"] = "Mise rendue",
+            ["tx_winnings"] = "Gains",
+            ["tx_commission"] = "Frais plateforme",
+            ["loading"] = "Création…",
+            ["bet_range_fcfa"] = "La mise doit être entre 200 et 500 FCFA.",
+            ["pot_table"] = "Pot (table)",
+            ["pot_seats"] = "Duel",
+            ["pot_activity_hint"] = "L'activité n'affiche que votre place (−{0} FCFA). Ici = les deux piles réunies.",
+            ["pot_chip_title"] = "{0} FCFA par joueur · 2 places",
+            ["pot_opponent_lane"] = "En face",
+            ["take_card"] = "Prendre",
+            ["take_card_hint_disabled"] = "Jouez une carte de la couleur demandée si vous en avez.",
+            ["take_card_hint_enabled"] = "Sans la couleur menée — touchez Prendre : la carte d'entame est ajoutée à votre main ; le joueur qui a mené entame à nouveau.",
+            ["makopa_how_to_play_title"] = "Comment jouer (Makopa)",
+            ["makopa_rules_body"] =
+                "\u2022 Deux joueurs ; 52 cartes mélangées ; 4 cartes chacun. Les autres cartes ne sont pas utilisées — aucune pioche.\n\u2022 Le joueur qui commence est tiré au sort.\n\u2022 Suivre la couleur : cœur sur cœur, pique sur pique, trèfle sur trèfle, carreau sur carreau, si vous en avez.\n\u2022 Si vous avez plusieurs cartes dans la couleur demandée, vous choisissez laquelle jouer.\n\u2022 Si vous n'avez pas la couleur menée, touchez Prendre : la carte d'entame est ajoutée à votre main et le joueur qui a mené entame à nouveau.\n\u2022 Quand les deux cartes suivent la couleur menée, la plus forte remporte le pli ; le gagnant entame le suivant (égalité : le joueur qui a mené). Les deux cartes du pli sont jouées.\n\u2022 Vous gagnez immédiatement lorsque c'est à vous d'entamer et qu'il ne vous reste qu'une seule carte.\n\u2022 Si l'autre joueur n'a plus qu'une carte et que vous jouez une carte de la même couleur que cette carte, vous perdez immédiatement.",
+            ["makopa_round_score"] = "Mains gagnées : {0}\u2013{1}",
+            ["makopa_rules_link"] = "Règles",
+            ["dev_test_deposit_notice"] = "Version de développement : les dépôts sont des crédits de test (pas de MoMo réel). À utiliser uniquement avec une API non production où DemoAuth:EnableTestWalletDeposits est activé.",
+            ["inactivity_warning_first"] =
+                "En raison d'inactivité de votre part ou de celle de l'adversaire, la partie sera suspendue dans 10 secondes.",
+            ["inactivity_warning_second"] = "La partie sera annulée dans 10 secondes pour cause d'inactivité.",
+            ["continue_play"] = "Continuer",
+            ["cancel_game"] = "Annuler la partie",
+            ["sending_move"] = "Envoi du coup…",
+        };
+
+        var kt = new Dictionary<string, string>(en);
+        var ln = new Dictionary<string, string>(en);
+        var sw = new Dictionary<string, string>(en);
+
+        return new Dictionary<string, FrozenDictionary<string, string>>
+        {
+            ["en"] = en.ToFrozenDictionary(),
+            ["fr"] = fr.ToFrozenDictionary(),
+            ["kt"] = kt.ToFrozenDictionary(),
+            ["ln"] = ln.ToFrozenDictionary(),
+            ["sw"] = sw.ToFrozenDictionary(),
+        }.ToFrozenDictionary();
+    }
+}

@@ -27,3 +27,7 @@ _pubtest/
 _b/
 Bobeta.Application.Tests/obj/
 Bobeta.Application.Tests/bin/
+Bobeta.Web.Deferred/obj/
+Bobeta.Web.Shared/obj/
+Bobeta.Web.Shared/bin/
+Bobeta.Web.Deferred/bin/

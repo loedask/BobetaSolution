@@ -4,8 +4,10 @@ using Bobeta.Client.Contracts.Interfaces;
 using Bobeta.Client.Models.Games;
 using Bobeta.Client.Presentation;
 using Bobeta.Web.Services;
-using Bobeta.Web.Services.Realtime;
+using Bobeta.Web.Shared.Services.Realtime;
 using Bobeta.Client.Services;
+using Bobeta.Web.Shared.Services;
+using Bobeta.Web.Shared.ViewModels;
 
 namespace Bobeta.Web.ViewModels.Games;
 
