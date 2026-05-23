@@ -418,7 +418,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         IsPlayerTurn = !WaitingForOpponent && state.CurrentTurnPlayerId == _appState.State.CurrentPlayerId;
         if (state.GameOver)
             HandleGameResult(state.WinnerPlayerId);
-        else
+        else if (!ShowGameResult)
             ShowGameResult = false;
         ApplyTrickOutcomeMessage(state.LastTrickWinnerPlayerId);
         ApplyMatchRoundScore(state);

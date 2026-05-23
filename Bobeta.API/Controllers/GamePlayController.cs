@@ -55,17 +55,18 @@ public class GamePlayController(
         // Include mover id so WASM/mobile clients can ignore their own play (IHubContext has no "caller" for OthersInGroup).
         await _hubContext.Clients.Group(groupName).SendAsync("NotifyOpponentMove", PlayerId, cardSuitRank);
 
-        // GameStateDto is per-viewer (myCards, opponent name). Broadcasting the mover's DTO to the whole group
-        // overwrote the other client's hand and could desync turn UI — send each seat their own state via JWT user id.
-        var sessionRow = await _sessionRepository.GetByIdAsync(request.SessionId, cancellationToken);
-        await PushGameStateToParticipantsAsync(sessionRow, request.SessionId, state, cancellationToken);
-
         await _gameInactivityCoordinator.RecordGameplayActivityAsync(request.SessionId, cancellationToken);
         if (state.GameOver)
         {
             _gameInactivityCoordinator.UnregisterSession(request.SessionId);
+            // GameResult first so clients show the winner screen before any seat-specific GameState that might still be in flight.
             await _hubContext.Clients.Group(groupName).SendAsync("GameResult", state.WinnerPlayerId);
         }
+
+        // GameStateDto is per-viewer (myCards, opponent name). Broadcasting the mover's DTO to the whole group
+        // overwrote the other client's hand and could desync turn UI — send each seat their own state via JWT user id.
+        var sessionRow = await _sessionRepository.GetByIdAsync(request.SessionId, cancellationToken);
+        await PushGameStateToParticipantsAsync(sessionRow, request.SessionId, state, cancellationToken);
 
         return Ok(state);
     }
@@ -77,9 +78,6 @@ public class GamePlayController(
         var state = await _gameEngineService.VoidFollowDrawAsync(PlayerId, sessionId, cancellationToken);
         if (state == null) return BadRequest("Invalid move or game state.");
 
-        var sessionRow = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
-        await PushGameStateToParticipantsAsync(sessionRow, sessionId, state, cancellationToken);
-
         await _gameInactivityCoordinator.RecordGameplayActivityAsync(sessionId, cancellationToken);
         if (state.GameOver)
         {
@@ -87,6 +85,9 @@ public class GamePlayController(
             var groupName = GameHub.GroupPrefix + sessionId;
             await _hubContext.Clients.Group(groupName).SendAsync("GameResult", state.WinnerPlayerId);
         }
+
+        var sessionRow = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        await PushGameStateToParticipantsAsync(sessionRow, sessionId, state, cancellationToken);
 
         return Ok(state);
     }
