@@ -12,9 +12,8 @@ public static class MakopaRules
         if (sep <= 0)
             return true;
         var leadSuit = leadCardPlayedInTrick[..sep];
-        var hasLeadSuit = myHandCardStrings.Any(c => c.StartsWith(leadSuit, StringComparison.Ordinal));
-        if (!hasLeadSuit)
-            return true;
+        if (!HandContainsLedSuit(leadSuit, myHandCardStrings))
+            return false;
         return cardToPlay.StartsWith(leadSuit, StringComparison.Ordinal);
     }
 

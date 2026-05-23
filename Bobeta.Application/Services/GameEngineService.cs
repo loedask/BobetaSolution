@@ -13,7 +13,7 @@ namespace Bobeta.Application.Services;
 /// Makopa (authoritative rules): 2 players, 4 cards each from a shuffled 52-card deck; remaining cards are unused (no drawing ever).
 /// Trick = lead + response. Follow suit when possible; void → Take only (lead card to responder's hand; leader leads again; Take is not a card play).
 /// Completed trick: compare led suit only; higher rank wins; ties → leader wins; both cards leave play; winner leads next.
-/// Win (strict): after turn/leader assignment, if the current-turn player has zero cards, they win immediately.
+/// Win: after turn/leader assignment, if it is your turn to lead and you hold exactly one card, you win immediately.
 /// Instant loss (before trick resolution): responder plays a suit matching the other player's only card while that player holds exactly one card.
 /// </summary>
 public class GameEngineService(
@@ -367,8 +367,14 @@ public class GameEngineService(
     private static int GetHandCount(MakopaGameState state, Guid playerId, Guid creatorId) =>
         playerId == creatorId ? state.CreatorHand.Count : state.OpponentHand.Count;
 
+    /// <summary>No trick in progress and the current player is the designated leader (about to open).</summary>
+    private static bool IsTurnToLead(MakopaGameState state) =>
+        state.TrickPlays.Count == 0
+        && state.LeadPlayerId.HasValue
+        && state.CurrentTurnPlayerId == state.LeadPlayerId;
+
     /// <summary>
-    /// Win when it is a player&apos;s turn and their hand is empty (e.g. after winning a trick or regaining lead after Take).
+    /// Win when it is a player&apos;s turn to lead and they hold exactly one card (e.g. after winning a trick or regaining lead after Take).
     /// </summary>
     private async Task TryEndGameIfCurrentPlayerHasNoCardsAsync(
         GameSession session,
@@ -391,11 +397,11 @@ public class GameEngineService(
 
         var currentPlayerId = state.CurrentTurnPlayerId.Value;
         var handCount = GetHandCount(state, currentPlayerId, creatorId);
-        var endGameTriggered = handCount == 0;
+        var endGameTriggered = handCount == 1 && IsTurnToLead(state);
 
         _logger.LogInformation(
-            "Makopa win check | session={SessionId} currentPlayerId={CurrentPlayerId} handCount={HandCount} endGameTriggered={EndGameTriggered}",
-            sessionId, currentPlayerId, handCount, endGameTriggered);
+            "Makopa win check | session={SessionId} currentPlayerId={CurrentPlayerId} handCount={HandCount} turnToLead={TurnToLead} endGameTriggered={EndGameTriggered}",
+            sessionId, currentPlayerId, handCount, IsTurnToLead(state), endGameTriggered);
 
         if (!endGameTriggered)
             return;

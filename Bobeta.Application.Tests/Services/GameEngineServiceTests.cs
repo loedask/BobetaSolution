@@ -14,16 +14,16 @@ namespace Bobeta.Application.Tests.Services;
 public class GameEngineServiceTests
 {
     [Fact]
-    public async Task PlayCardAsync_WhenTrickWinnerHasNoCardsLeft_EndsGameInSameCall()
+    public async Task PlayCardAsync_WhenTrickWinnerHasOneCardToLead_EndsGameInSameCall()
     {
         var sessionId = Guid.NewGuid();
         var creatorId = Guid.NewGuid();
         var opponentId = Guid.NewGuid();
         var pendingState = new MakopaGameState
         {
-            // Creator already led their last card; winner will be opponent with an empty hand after this play.
+            // Creator led; opponent wins the trick and keeps one card — wins immediately when it is their turn to lead.
             CreatorHand = new List<string>(),
-            OpponentHand = new List<string> { "Spade_12" },
+            OpponentHand = new List<string> { "Spade_12", "Heart_10" },
             LeadPlayerId = creatorId,
             CurrentTurnPlayerId = opponentId,
             TrickSuit = "Spade",
@@ -74,71 +74,15 @@ public class GameEngineServiceTests
     }
 
     [Fact]
-    public async Task PlayCardAsync_WhenLeaderPlaysLastCardOnLeadAndWinsTrick_EndsGameAfterFollowerPlays()
-    {
-        var sessionId = Guid.NewGuid();
-        var creatorId = Guid.NewGuid();
-        var opponentId = Guid.NewGuid();
-        var dealState = new MakopaGameState
-        {
-            CreatorHand = new List<string> { "Spade_14" },
-            OpponentHand = new List<string> { "Spade_5", "Heart_10" },
-            LeadPlayerId = creatorId,
-            CurrentTurnPlayerId = creatorId,
-            TrickPlays = new List<PlayedInTrick>(),
-            TrickSuit = null
-        };
-
-        var session = new GameSession
-        {
-            Id = sessionId,
-            CreatorPlayerId = creatorId,
-            OpponentPlayerId = opponentId,
-            BetAmount = 100m,
-            Status = GameStatus.InProgress,
-            CreatedAt = DateTime.UtcNow,
-            GameStateJson = JsonSerializer.Serialize(dealState, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })
-        };
-
-        var sessionRepo = new InMemoryGameSessionRepository(session);
-        var moveRepo = new InMemoryGameMoveRepository();
-        var resultRepo = new InMemoryGameResultRepository(result => session.GameResult = result);
-        var wallet = new RecordingWalletService();
-        var players = new InMemoryPlayerRepository(
-            new Player { Id = creatorId, PlayerName = "Creator" },
-            new Player { Id = opponentId, PlayerName = "Opponent" });
-
-        var sut = new GameEngineService(
-            sessionRepo,
-            moveRepo,
-            resultRepo,
-            wallet,
-            players,
-            NullLogger<GameEngineService>.Instance);
-
-        var afterLead = await sut.PlayCardAsync(creatorId, sessionId, new Card(CardSuit.Spade, CardRank.Ace));
-        Assert.NotNull(afterLead);
-        Assert.False(afterLead!.GameOver);
-        Assert.Empty(afterLead.MyCards);
-
-        var afterTrick = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.Five));
-        Assert.NotNull(afterTrick);
-        Assert.True(afterTrick!.GameOver);
-        Assert.Equal(creatorId, afterTrick.WinnerPlayerId);
-        Assert.Equal(GameStatus.Finished, session.Status);
-        Assert.Single(wallet.Settlements);
-    }
-
-    [Fact]
-    public async Task VoidFollowDrawAsync_WhenLeaderHasNoCardsAndRegainsTurn_EndsGameInSameCall()
+    public async Task VoidFollowDrawAsync_WhenLeaderHasOneCardToLead_EndsGameInSameCall()
     {
         var sessionId = Guid.NewGuid();
         var creatorId = Guid.NewGuid();
         var opponentId = Guid.NewGuid();
         var pendingState = new MakopaGameState
         {
-            CreatorHand = new List<string>(),
-            OpponentHand = new List<string> { "Club_10" },
+            CreatorHand = new List<string> { "Spade_2" },
+            OpponentHand = new List<string> { "Club_10", "Diamond_3" },
             LeadPlayerId = creatorId,
             CurrentTurnPlayerId = opponentId,
             TrickSuit = "Heart",
@@ -193,7 +137,7 @@ public class GameEngineServiceTests
         var pendingState = new MakopaGameState
         {
             CreatorHand = new List<string> { "Club_9" },
-            OpponentHand = new List<string> { "Heart_10", "Club_2" },
+            OpponentHand = new List<string> { "Heart_10", "Club_2", "Spade_3" },
             LeadPlayerId = creatorId,
             CurrentTurnPlayerId = opponentId,
             TrickSuit = "Heart",
