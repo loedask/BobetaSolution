@@ -263,13 +263,13 @@ public sealed class GameInactivityCoordinator(
             _sessions.Remove(sessionId);
 
         var ok = await CancelSessionInScopeAsync(sessionId, cancellationToken);
-        if (!ok)
-            return;
 
+        // Always notify clients so overlays dismiss even when the session was already cancelled (e.g. deadline + manual cancel).
         var group = GameHub.GroupPrefix + sessionId;
         await _hubContext.Clients.Group(group).SendAsync("GameEndedByInactivity", new { reason = "inactivity" },
             cancellationToken);
-        _logger.LogInformation("Game ended due to inactivity session={SessionId}", sessionId);
+        if (ok)
+            _logger.LogInformation("Game ended due to inactivity session={SessionId}", sessionId);
     }
 
     private async Task<bool> IsParticipantAsync(Guid sessionId, Guid playerId, CancellationToken cancellationToken)

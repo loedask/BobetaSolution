@@ -70,12 +70,14 @@
             {
                 <div class="mt-6 grid grid-cols-2 gap-3">
                     <button type="button"
-                            class="rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground"
+                            class="rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground disabled:opacity-50"
+                            disabled="@ViewModel.InactivityActionBusy"
                             @onclick="OnInactivityContinue">
                         @I18n.T("continue_play")
                     </button>
                     <button type="button"
-                            class="rounded-xl bg-destructive px-4 py-3 text-sm font-semibold text-destructive-foreground"
+                            class="rounded-xl bg-destructive px-4 py-3 text-sm font-semibold text-destructive-foreground disabled:opacity-50"
+                            disabled="@ViewModel.InactivityActionBusy"
                             @onclick="OnInactivityCancelGame">
                         @I18n.T("cancel_game")
                     </button>
@@ -134,7 +136,7 @@
         _draggedCardDisplayValue = null;
     }
 
-    private Task OnInactivityContinue() => ViewModel.ContinueInactivityAsync();
+    private async Task OnInactivityContinue() => await ViewModel.ContinueInactivityAsync();
 
-    private Task OnInactivityCancelGame() => ViewModel.CancelGameFromInactivityAsync();
+    private async Task OnInactivityCancelGame() => await ViewModel.CancelGameFromInactivityAsync();
 }

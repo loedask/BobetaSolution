@@ -69,6 +69,7 @@ public class GamePlayViewModel : ViewModelBase
     public bool ShowInactivityOverlay { get; private set; }
     public bool InactivityShowButtons { get; private set; }
     public int InactivityCountdownSeconds { get; private set; }
+    public bool InactivityActionBusy { get; private set; }
 
     /// <summary>From server: we are responding to opponent&apos;s lead (client must not infer this from <see cref="LastPlayedCard"/> alone — it can be our own lead while we wait).</summary>
     public bool MustFollowLedSuit { get; private set; }
@@ -203,13 +204,7 @@ public class GamePlayViewModel : ViewModelBase
         RaiseStateChanged();
     }
 
-    private void OnGameEndedByInactivityFromHub()
-    {
-        StopInactivityCountdown();
-        ShowInactivityOverlay = false;
-        _inactivityDeadlineUtc = null;
-        _nav.NavigateTo("/dashboard");
-    }
+    private void OnGameEndedByInactivityFromHub() => _ = FinishInactivityAndLeaveAsync();
 
     private void StartInactivityCountdown()
     {
@@ -224,6 +219,14 @@ public class GamePlayViewModel : ViewModelBase
         {
             var sec = Math.Max(0, (int)Math.Ceiling((d - DateTime.UtcNow).TotalSeconds));
             InactivityCountdownSeconds = sec;
+            if (sec <= 0 && InactivityShowButtons)
+            {
+                InactivityShowButtons = false;
+                RaiseStateChanged();
+                await TryResolveInactivityAfterDeadlineAsync();
+                break;
+            }
+
             RaiseStateChanged();
             if (sec <= 0)
                 break;
@@ -244,15 +247,68 @@ public class GamePlayViewModel : ViewModelBase
         _inactivityCountdownCts = null;
     }
 
-    public Task ContinueInactivityAsync() =>
-        _hubClient != null && !string.IsNullOrEmpty(SessionId)
-            ? _hubClient.InactivityContinueAsync(SessionId)
-            : Task.CompletedTask;
+    public async Task ContinueInactivityAsync()
+    {
+        if (InactivityActionBusy || string.IsNullOrEmpty(SessionId) || !Guid.TryParse(SessionId, out var sessionGuid))
+            return;
 
-    public Task CancelGameFromInactivityAsync() =>
-        _hubClient != null && !string.IsNullOrEmpty(SessionId)
-            ? _hubClient.InactivityCancelGameAsync(SessionId)
-            : Task.CompletedTask;
+        InactivityActionBusy = true;
+        RaiseStateChanged();
+        try
+        {
+            if (_hubClient != null)
+                await _hubClient.InactivityContinueAsync(SessionId);
+            await _gamePlayService.ContinueInactivityAsync(sessionGuid);
+        }
+        finally
+        {
+            InactivityActionBusy = false;
+            RaiseStateChanged();
+        }
+    }
+
+    public async Task CancelGameFromInactivityAsync()
+    {
+        if (InactivityActionBusy || string.IsNullOrEmpty(SessionId) || !Guid.TryParse(SessionId, out var sessionGuid))
+            return;
+
+        InactivityActionBusy = true;
+        RaiseStateChanged();
+        try
+        {
+            if (_hubClient != null)
+                await _hubClient.InactivityCancelGameAsync(SessionId);
+            await _gamePlayService.CancelInactivityAsync(sessionGuid);
+            await FinishInactivityAndLeaveAsync();
+        }
+        finally
+        {
+            InactivityActionBusy = false;
+            RaiseStateChanged();
+        }
+    }
+
+    private async Task TryResolveInactivityAfterDeadlineAsync()
+    {
+        if (string.IsNullOrEmpty(SessionId) || !Guid.TryParse(SessionId, out var sessionGuid))
+            return;
+        var res = await _gameService.GetGameStateAsync(sessionGuid);
+        if (!res.IsSuccess)
+            await FinishInactivityAndLeaveAsync();
+    }
+
+    private Task FinishInactivityAndLeaveAsync()
+    {
+        StopInactivityCountdown();
+        ShowInactivityOverlay = false;
+        _inactivityDeadlineUtc = null;
+        InactivityShowButtons = false;
+        InactivityActionBusy = false;
+        RefreshHandPlayability();
+        RaiseStateChanged();
+        _nav.NavigateTo("/dashboard");
+        return Task.CompletedTask;
+    }
 
     public async Task PlayCardAsync(CardViewModel card) =>
         await SubmitCardAsync(card, enforceLocalFollowSuitValidation: true);

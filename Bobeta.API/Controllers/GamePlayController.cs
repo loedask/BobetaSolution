@@ -147,4 +147,20 @@ public class GamePlayController(
         if (state == null) return NotFound();
         return Ok(state);
     }
+
+    /// <summary>Dismisses the first AFK warning and resumes play (HTTP fallback when SignalR invoke fails).</summary>
+    [HttpPost("inactivity/continue")]
+    public async Task<IActionResult> InactivityContinue([FromQuery] Guid sessionId, CancellationToken cancellationToken)
+    {
+        await _gameInactivityCoordinator.ContinueAsync(sessionId, PlayerId, cancellationToken);
+        return Ok();
+    }
+
+    /// <summary>Cancels the in-progress match due to inactivity (HTTP fallback when SignalR invoke fails).</summary>
+    [HttpPost("inactivity/cancel")]
+    public async Task<IActionResult> InactivityCancel([FromQuery] Guid sessionId, CancellationToken cancellationToken)
+    {
+        await _gameInactivityCoordinator.CancelByPlayerAsync(sessionId, PlayerId, cancellationToken);
+        return Ok();
+    }
 }

@@ -36,6 +36,24 @@ public class GamePlayService(IClient client, HttpClient httpClient, IAccessToken
         return Response<GameStateViewModel?>.Success(MapState(res.Data));
     }
 
+    public async Task<Response<bool>> ContinueInactivityAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        var uri = $"api/GamePlay/inactivity/continue?sessionId={sessionId:D}";
+        var res = await PostAsync<object>(uri, null, cancellationToken).ConfigureAwait(false);
+        return res.IsSuccess
+            ? Response<bool>.Success(true)
+            : Response<bool>.Failure(res.ErrorMessage ?? "Could not continue.", res.StatusCode);
+    }
+
+    public async Task<Response<bool>> CancelInactivityAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        var uri = $"api/GamePlay/inactivity/cancel?sessionId={sessionId:D}";
+        var res = await PostAsync<object>(uri, null, cancellationToken).ConfigureAwait(false);
+        return res.IsSuccess
+            ? Response<bool>.Success(true)
+            : Response<bool>.Failure(res.ErrorMessage ?? "Could not cancel game.", res.StatusCode);
+    }
+
     public async Task<Response<GameStateViewModel?>> PlayCardAsync(Guid sessionId, GameMoveRequest request, CancellationToken cancellationToken = default)
     {
         try

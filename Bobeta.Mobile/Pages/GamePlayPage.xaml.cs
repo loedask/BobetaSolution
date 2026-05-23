@@ -135,6 +135,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
                 : i18n.T("inactivity_warning_second");
             InactivityCountLabel.Text = _vm.InactivityCountdownSeconds.ToString();
             InactivityButtonsRow.IsVisible = _vm.InactivityShowButtons;
+            InactivityContinueBtn.IsEnabled = !_vm.InactivityActionBusy;
+            InactivityCancelBtn.IsEnabled = !_vm.InactivityActionBusy;
         }
     }
 
@@ -146,14 +148,16 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
 
     private async void OnInactivityContinue(object? sender, EventArgs e)
     {
-        if (_vm != null)
-            await _vm.ContinueInactivityAsync();
+        if (_vm == null || _vm.InactivityActionBusy)
+            return;
+        await _vm.ContinueInactivityAsync();
     }
 
     private async void OnInactivityCancel(object? sender, EventArgs e)
     {
-        if (_vm != null)
-            await _vm.CancelGameFromInactivityAsync();
+        if (_vm == null || _vm.InactivityActionBusy)
+            return;
+        await _vm.CancelGameFromInactivityAsync();
     }
 
     private static string InitialsFromName(string name)
