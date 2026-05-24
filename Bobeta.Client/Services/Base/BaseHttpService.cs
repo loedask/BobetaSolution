@@ -217,6 +217,8 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
                     code = codeEl.GetString();
                 if (doc.RootElement.TryGetProperty("message", out var msgEl))
                     message = msgEl.GetString() ?? body;
+                else if (doc.RootElement.TryGetProperty("title", out var titleEl))
+                    message = titleEl.GetString() ?? body;
                 else
                     message = body;
             }
@@ -227,6 +229,9 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
         }
         else
             message = string.IsNullOrEmpty(body) ? $"API error: {response.StatusCode}" : body;
+
+        if (response.StatusCode == HttpStatusCode.NotFound && message.StartsWith('{'))
+            message = "Game not found or no longer in progress.";
 
         return Response<T>.Failure(message, (int)response.StatusCode, code);
     }

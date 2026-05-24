@@ -2,6 +2,7 @@
 @implements IDisposable
 @inject DashboardViewModel ViewModel
 @inject I18nService I18n
+@inject NavigationManager Nav
 
 <div class="min-h-screen bg-background pb-24">
     <div class="flex items-center justify-between px-5 pt-6 pb-4">
@@ -16,6 +17,10 @@
     </div>
 
     <div class="space-y-6 px-5">
+        @if (!string.IsNullOrEmpty(_sessionEndedMessage))
+        {
+            <div class="rounded-xl border border-primary/35 bg-primary/10 px-4 py-3 text-sm text-foreground">@_sessionEndedMessage</div>
+        }
         <ErrorBanner Message="@ViewModel.ErrorMessage" />
         @if (ViewModel.IsLoading && ViewModel.Transactions.Count == 0)
         {
@@ -77,7 +82,20 @@
 </div>
 
 @code {
-    protected override void OnInitialized() => ViewModel.StateChanged += OnStateChanged;
+    private string? _sessionEndedMessage;
+
+    protected override void OnInitialized()
+    {
+        ViewModel.StateChanged += OnStateChanged;
+        var query = Nav.ToAbsoluteUri(Nav.Uri).Query;
+        if (query.Contains("message=", StringComparison.Ordinal))
+        {
+            var start = query.IndexOf("message=", StringComparison.Ordinal) + "message=".Length;
+            var end = query.IndexOf('&', start);
+            var raw = end < 0 ? query[start..] : query[start..end];
+            _sessionEndedMessage = Uri.UnescapeDataString(raw);
+        }
+    }
     protected override async Task OnInitializedAsync() => await ViewModel.LoadAsync();
     public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
     private void OnStateChanged() => InvokeAsync(StateHasChanged);

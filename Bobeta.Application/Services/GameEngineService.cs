@@ -267,6 +267,9 @@ public class GameEngineService(
                 return new GameStateDto(sessionId, Array.Empty<string>(), null, null, true, w, false, lobbyPot, opponentName, null, 0, 0);
             }
 
+            if (session.Status == GameStatus.Cancelled)
+                return new GameStateDto(sessionId, Array.Empty<string>(), null, null, true, null, false, lobbyPot, opponentName, null, 0, 0);
+
             return null;
         }
 

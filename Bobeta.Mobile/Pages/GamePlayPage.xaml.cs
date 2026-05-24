@@ -145,8 +145,13 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
 
     private async void OnNavigateHomeFromInactivity()
     {
+        var message = _vm?.SessionLeaveMessage;
         await MainThread.InvokeOnMainThreadAsync(async () =>
-            await Shell.Current.GoToAsync("//MainTabs/Dashboard"));
+        {
+            await Shell.Current.GoToAsync("//MainTabs/Dashboard");
+            if (!string.IsNullOrEmpty(message))
+                await DisplayAlertAsync(Title, message, "OK");
+        });
     }
 
     private async void OnInactivityContinue(object? sender, EventArgs e)

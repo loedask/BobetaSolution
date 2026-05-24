@@ -71,6 +71,9 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
     public event Action? NavigateHomeRequested;
 
+    /// <summary>Shown once when leaving the table because the session ended (e.g. inactivity cancel).</summary>
+    public string? SessionLeaveMessage { get; private set; }
+
     public async Task LoadGameAsync(string sessionId)
     {
         SessionId = sessionId;
@@ -88,10 +91,10 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
             if (_hubClient != null)
             {
+                WireInactivityHubEvents();
                 try
                 {
                     await _hubClient.ConnectAsync(sessionId);
-                    WireInactivityHubEvents();
                     await _hubClient.PauseInactivityAsync(sessionId);
                     hubPausedThisLoad = true;
                     _hubClient.OnGameStateUpdated -= ApplyGameStateFromHub;
@@ -114,11 +117,22 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             var res = await _gameService.GetGameStateAsync(sessionGuid);
             if (!res.IsSuccess || res.Data == null)
             {
+                if (res.StatusCode == 404)
+                {
+                    await LeaveEndedSessionAsync(likelyInactivity: true);
+                    return;
+                }
+
                 SetError(res.ErrorMessage ?? "Failed to load game.");
                 return;
             }
 
             var state = res.Data;
+            if (IsSessionEndedWithoutWinner(state))
+            {
+                await LeaveEndedSessionAsync(likelyInactivity: true);
+                return;
+            }
             WaitingForOpponent = state.WaitingForGameStart;
             PotAmount = state.LobbyPotAmount;
             OpponentDisplayName = state.OpponentDisplayName;
@@ -292,13 +306,22 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             await FinishInactivityAndLeaveAsync();
     }
 
-    private Task FinishInactivityAndLeaveAsync()
+    private Task FinishInactivityAndLeaveAsync() => LeaveEndedSessionAsync(likelyInactivity: true);
+
+    private static bool IsSessionEndedWithoutWinner(GameStateViewModel state) =>
+        state.GameOver && !state.WinnerPlayerId.HasValue && !state.WaitingForGameStart;
+
+    private Task LeaveEndedSessionAsync(bool likelyInactivity)
     {
         StopInactivityCountdown();
         ShowInactivityOverlay = false;
         _inactivityDeadlineUtc = null;
         InactivityShowButtons = false;
         InactivityActionBusy = false;
+        ClearError();
+        SessionLeaveMessage = likelyInactivity
+            ? _i18n.T("game_cancelled_inactivity")
+            : _i18n.T("game_session_ended");
         RefreshHandPlayability();
         RaiseStateChanged();
         NavigateHomeRequested?.Invoke();
@@ -417,6 +440,12 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
     private void ApplyStateFromDto(GameStateViewModel state)
     {
+        if (IsSessionEndedWithoutWinner(state))
+        {
+            _ = LeaveEndedSessionAsync(likelyInactivity: true);
+            return;
+        }
+
         WaitingForOpponent = state.WaitingForGameStart;
         PotAmount = state.LobbyPotAmount;
         OpponentDisplayName = state.OpponentDisplayName;
@@ -440,6 +469,8 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         var res = await _gameService.GetGameStateAsync(sessionGuid);
         if (res.IsSuccess && res.Data != null)
             ApplyStateFromDto(res.Data);
+        else if (res.StatusCode == 404)
+            await LeaveEndedSessionAsync(likelyInactivity: true);
         else
             RaiseStateChanged();
     }

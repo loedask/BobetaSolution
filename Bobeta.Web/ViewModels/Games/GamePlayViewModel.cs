@@ -98,10 +98,10 @@ public class GamePlayViewModel : ViewModelBase
 
             if (_hubClient != null)
             {
+                WireInactivityHubEvents();
                 try
                 {
                     await _hubClient.ConnectAsync(sessionId);
-                    WireInactivityHubEvents();
                     await _hubClient.PauseInactivityAsync(sessionId);
                     hubPausedThisLoad = true;
                     _hubClient.OnGameStateUpdated -= ApplyGameStateFromHub;
@@ -126,11 +126,22 @@ public class GamePlayViewModel : ViewModelBase
             {
                 if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
                     return;
+                if (res.StatusCode == 404)
+                {
+                    await LeaveEndedSessionAsync(likelyInactivity: true);
+                    return;
+                }
+
                 SetError(res.ErrorMessage ?? "Failed to load game.");
                 return;
             }
 
             var state = res.Data;
+            if (IsSessionEndedWithoutWinner(state))
+            {
+                await LeaveEndedSessionAsync(likelyInactivity: true);
+                return;
+            }
             WaitingForOpponent = state.WaitingForGameStart;
             PotAmount = state.LobbyPotAmount;
             OpponentDisplayName = state.OpponentDisplayName;
@@ -304,16 +315,24 @@ public class GamePlayViewModel : ViewModelBase
             await FinishInactivityAndLeaveAsync();
     }
 
-    private Task FinishInactivityAndLeaveAsync()
+    private Task FinishInactivityAndLeaveAsync() => LeaveEndedSessionAsync(likelyInactivity: true);
+
+    private static bool IsSessionEndedWithoutWinner(GameStateViewModel state) =>
+        state.GameOver && !state.WinnerPlayerId.HasValue && !state.WaitingForGameStart;
+
+    private Task LeaveEndedSessionAsync(bool likelyInactivity)
     {
         StopInactivityCountdown();
         ShowInactivityOverlay = false;
         _inactivityDeadlineUtc = null;
         InactivityShowButtons = false;
         InactivityActionBusy = false;
+        ClearError();
         RefreshHandPlayability();
-        RaiseStateChanged();
-        _nav.NavigateTo("/dashboard");
+        var message = likelyInactivity
+            ? _i18n?.T("game_cancelled_inactivity") ?? "This game was ended due to inactivity."
+            : _i18n?.T("game_session_ended") ?? "This game is no longer in progress.";
+        _nav.NavigateTo($"/dashboard?ended={(likelyInactivity ? "inactivity" : "session")}&message={Uri.EscapeDataString(message)}");
         return Task.CompletedTask;
     }
 
@@ -433,6 +452,12 @@ public class GamePlayViewModel : ViewModelBase
 
     private void ApplyStateFromDto(GameStateViewModel state)
     {
+        if (IsSessionEndedWithoutWinner(state))
+        {
+            _ = LeaveEndedSessionAsync(likelyInactivity: true);
+            return;
+        }
+
         WaitingForOpponent = state.WaitingForGameStart;
         PotAmount = state.LobbyPotAmount;
         OpponentDisplayName = state.OpponentDisplayName;
@@ -456,6 +481,8 @@ public class GamePlayViewModel : ViewModelBase
         var res = await _gameService.GetGameStateAsync(sessionGuid);
         if (res.IsSuccess && res.Data != null)
             ApplyStateFromDto(res.Data);
+        else if (res.StatusCode == 404)
+            await LeaveEndedSessionAsync(likelyInactivity: true);
         else
             RaiseStateChanged();
     }
