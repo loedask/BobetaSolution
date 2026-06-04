@@ -1,6 +1,6 @@
 using System.ComponentModel;
+using Bobeta.Client.Models.Games;
 using Bobeta.Client.Presentation;
-using Bobeta.Mobile.ViewModels.Games;
 
 namespace Bobeta.Mobile.Controls;
 

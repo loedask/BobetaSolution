@@ -1,3 +1,4 @@
+using Bobeta.Client.Models.Games;
 using Bobeta.Mobile.Services;
 using Bobeta.Mobile.ViewModels.Games;
 

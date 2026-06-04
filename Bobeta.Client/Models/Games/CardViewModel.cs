@@ -1,5 +1,6 @@
-namespace Bobeta.Web.ViewModels.Games;
+namespace Bobeta.Client.Models.Games;
 
+/// <summary>Playing card on the table UI (hand or board).</summary>
 public class CardViewModel
 {
     public string Suit { get; set; } = "";
