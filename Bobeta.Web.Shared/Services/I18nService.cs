@@ -78,6 +78,7 @@ public class I18nService(AppStateService appState)
             ["tx_commission"] = "Platform fee",
             ["bet_placed"] = "Bet placed",
             ["trust_message"] = "All transactions are secured. 75% payout guaranteed. Fair & randomized card system.",
+            ["select_game_type"] = "Select Game",
             ["select_bet_amount"] = "Select Bet Amount",
             ["choose_bet_desc"] = "Choose how much you want to bet",
             ["your_bet"] = "Your bet",

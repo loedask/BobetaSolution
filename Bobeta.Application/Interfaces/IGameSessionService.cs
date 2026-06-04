@@ -1,4 +1,5 @@
 using Bobeta.Application.DTOs.Game;
+using Bobeta.Domain.Enums;
 
 namespace Bobeta.Application.Interfaces;
 
@@ -6,7 +7,7 @@ namespace Bobeta.Application.Interfaces;
 public interface IGameSessionService
 {
     /// <summary>Creates a new game with the given bet amount and locks that amount for the creator. Returns the new session DTO.</summary>
-    Task<GameSessionDto> CreateGameAsync(Guid playerId, decimal betAmount, CancellationToken cancellationToken = default);
+    Task<GameSessionDto> CreateGameAsync(Guid playerId, decimal betAmount, GameVariant variant = GameVariant.Makopa, CancellationToken cancellationToken = default);
 
     /// <summary>Joins an existing waiting game; locks bet for the joiner. Returns the session DTO or null if not joinable.</summary>
     Task<GameSessionDto?> JoinGameAsync(Guid playerId, Guid gameId, CancellationToken cancellationToken = default);

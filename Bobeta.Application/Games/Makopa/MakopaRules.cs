@@ -1,9 +1,8 @@
-namespace Bobeta.Application.Common;
+namespace Bobeta.Application.Games.Makopa;
 
 /// <summary>Makopa trick-taking: follow led suit when possible; void requires Take (no card play).</summary>
 public static class MakopaRules
 {
-    /// <summary>Follow-suit constraint: must play led suit when the hand contains at least one such card.</summary>
     public static bool IsLegalPlay(string cardToPlay, string? leadCardPlayedInTrick, IReadOnlyList<string> myHandCardStrings)
     {
         if (string.IsNullOrEmpty(leadCardPlayedInTrick))
@@ -17,8 +16,6 @@ public static class MakopaRules
         return cardToPlay.StartsWith(leadSuit, StringComparison.Ordinal);
     }
 
-    /// <summary>Equivalent check when trick suit is known (avoid parsing first-card string twice).</summary>
-    /// <remarks>When the responder has no led suit, they must take the void-follow path rather than playing a card.</remarks>
     public static bool IsLegalFollowSuit(string cardToPlay, string? trickLeadSuit, IReadOnlyList<string> myHandCardStrings)
     {
         if (string.IsNullOrEmpty(trickLeadSuit))
@@ -28,7 +25,6 @@ public static class MakopaRules
         return cardToPlay.StartsWith(trickLeadSuit, StringComparison.Ordinal);
     }
 
-    /// <summary>True if trick is waiting on a follower and follower has zero cards of the led suit → must use void-follow (Take).</summary>
     public static bool ResponderNeedsVoidFollow(string? lastPlayedLeadCardDisplay, IReadOnlyList<string> myHandCardStrings)
     {
         if (string.IsNullOrEmpty(lastPlayedLeadCardDisplay))

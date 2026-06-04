@@ -19,7 +19,7 @@ public class GameSessionService(
     private readonly IGameEngineService _gameEngine = gameEngine;
     private readonly IGameSessionNotifier _sessionNotifier = sessionNotifier;
 
-    public async Task<GameSessionDto> CreateGameAsync(Guid playerId, decimal betAmount, CancellationToken cancellationToken = default)
+    public async Task<GameSessionDto> CreateGameAsync(Guid playerId, decimal betAmount, GameVariant variant = GameVariant.Makopa, CancellationToken cancellationToken = default)
     {
         await _walletService.LockBetAsync(playerId, betAmount, cancellationToken);
         var session = new GameSession
@@ -27,6 +27,7 @@ public class GameSessionService(
             Id = Guid.NewGuid(),
             CreatorPlayerId = playerId,
             BetAmount = betAmount,
+            Variant = variant,
             Status = GameStatus.Waiting,
             CreatedAt = DateTime.UtcNow
         };
@@ -100,5 +101,5 @@ public class GameSessionService(
     }
 
     private static GameSessionDto Map(GameSession s) =>
-        new(s.Id, s.CreatorPlayerId, s.OpponentPlayerId, s.BetAmount, s.Status, s.CreatedAt, s.StartedAt, s.FinishedAt);
+        new(s.Id, s.CreatorPlayerId, s.OpponentPlayerId, s.BetAmount, s.Status, s.Variant, s.CreatedAt, s.StartedAt, s.FinishedAt);
 }

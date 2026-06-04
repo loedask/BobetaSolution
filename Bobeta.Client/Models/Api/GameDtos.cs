@@ -6,6 +6,9 @@ public sealed class CreateGameApiRequest
 {
     [JsonPropertyName("betAmount")]
     public double BetAmount { get; set; }
+
+    [JsonPropertyName("variant")]
+    public GameVariant Variant { get; set; } = GameVariant.Makopa;
 }
 
 public sealed class JoinGameApiRequest
@@ -39,6 +42,9 @@ public sealed class GameSessionDto
 
     [JsonPropertyName("status")]
     public GameStatus Status { get; set; }
+
+    [JsonPropertyName("variant")]
+    public GameVariant Variant { get; set; }
 
     [JsonPropertyName("createdAt")]
     public DateTime CreatedAt { get; set; }
@@ -108,6 +114,63 @@ public sealed class GameStateDto
 
     [JsonPropertyName("mustFollowLedSuit")]
     public bool MustFollowLedSuit { get; set; }
+
+    [JsonPropertyName("variant")]
+    public GameVariant Variant { get; set; }
+
+    [JsonPropertyName("kopo")]
+    public KopoStateDto? Kopo { get; set; }
+}
+
+public sealed class KopoSquareDto
+{
+    [JsonPropertyName("row")]
+    public int Row { get; set; }
+
+    [JsonPropertyName("col")]
+    public int Col { get; set; }
+}
+
+public sealed class KopoPieceDto
+{
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    [JsonPropertyName("ownerId")]
+    public Guid OwnerId { get; set; }
+
+    [JsonPropertyName("row")]
+    public int Row { get; set; }
+
+    [JsonPropertyName("col")]
+    public int Col { get; set; }
+
+    [JsonPropertyName("isKing")]
+    public bool IsKing { get; set; }
+}
+
+public sealed class KopoStateDto
+{
+    [JsonPropertyName("boardSize")]
+    public int BoardSize { get; set; }
+
+    [JsonPropertyName("pieces")]
+    public List<KopoPieceDto> Pieces { get; set; } = new();
+
+    [JsonPropertyName("mustContinueChain")]
+    public bool MustContinueChain { get; set; }
+
+    [JsonPropertyName("chainPieceId")]
+    public int? ChainPieceId { get; set; }
+}
+
+public sealed class KopoMoveApiRequest
+{
+    [JsonPropertyName("sessionId")]
+    public Guid SessionId { get; set; }
+
+    [JsonPropertyName("path")]
+    public List<KopoSquareDto> Path { get; set; } = new();
 }
 
 public sealed class GameHistoryItemDto

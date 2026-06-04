@@ -1,3 +1,4 @@
+using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
 
 namespace Bobeta.Client.Presentation;
@@ -5,6 +6,8 @@ namespace Bobeta.Client.Presentation;
 /// <summary>Mutable table UI state updated only from authoritative <see cref="GameStateViewModel"/> snapshots.</summary>
 public sealed class GamePlayTableState
 {
+    public GameVariant Variant { get; set; } = GameVariant.Makopa;
+    public KopoStateDto? Kopo { get; set; }
     public bool IsPlayerTurn { get; set; }
     public decimal PotAmount { get; set; }
     public string? OpponentDisplayName { get; set; }

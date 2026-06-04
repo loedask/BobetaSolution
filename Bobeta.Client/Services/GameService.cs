@@ -14,7 +14,7 @@ public class GameService(HttpClient httpClient, IAccessTokenProvider? accessToke
     {
         var postRes = await PostAsync<GameSessionDto>(
             "api/Game/create",
-            new CreateGameApiRequest { BetAmount = (double)request.BetAmount },
+            new CreateGameApiRequest { BetAmount = (double)request.BetAmount, Variant = request.Variant },
             cancellationToken).ConfigureAwait(false);
         if (!postRes.IsSuccess || postRes.Data == null)
             return Response<GameSessionViewModel?>.Failure(postRes.ErrorMessage ?? "Failed to create game.", postRes.StatusCode);

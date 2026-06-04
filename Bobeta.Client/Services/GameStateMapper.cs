@@ -8,6 +8,7 @@ internal static class GameStateMapper
     public static GameStateViewModel ToViewModel(GameStateDto dto) => new()
     {
         SessionId = dto.SessionId,
+        Variant = dto.Variant,
         MyCards = dto.MyCards ?? new List<string>(),
         LastPlayedCard = dto.LastPlayedCard,
         CurrentTurnPlayerId = dto.CurrentTurnPlayerId,
@@ -19,7 +20,8 @@ internal static class GameStateMapper
         LastTrickWinnerPlayerId = dto.LastTrickWinnerPlayerId,
         MyRoundWins = dto.MyRoundWins,
         OpponentRoundWins = dto.OpponentRoundWins,
-        MustFollowLedSuit = dto.MustFollowLedSuit
+        MustFollowLedSuit = dto.MustFollowLedSuit,
+        Kopo = dto.Kopo
     };
 
     public static GameSessionViewModel ToViewModel(GameSessionDto dto) => new()
@@ -28,6 +30,7 @@ internal static class GameStateMapper
         CreatorPlayerId = dto.CreatorPlayerId,
         OpponentPlayerId = dto.OpponentPlayerId,
         BetAmount = (decimal)dto.BetAmount,
+        Variant = dto.Variant,
         Status = dto.Status.ToString(),
         CreatedAt = dto.CreatedAt,
         StartedAt = dto.StartedAt,

@@ -1,7 +1,6 @@
 using System.Text.Json;
-using Bobeta.Application.Common;
+using Bobeta.Application.Games.Makopa;
 using Bobeta.Application.Interfaces;
-using Bobeta.Application.Services;
 using Bobeta.Application.DTOs.Wallet;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
@@ -52,13 +51,13 @@ public class GameEngineServiceTests
             new Player { Id = creatorId, PlayerName = "Creator" },
             new Player { Id = opponentId, PlayerName = "Opponent" });
 
-        var sut = new GameEngineService(
+        var sut = new MakopaGameEngine(
             sessionRepo,
             moveRepo,
             resultRepo,
             wallet,
             players,
-            NullLogger<GameEngineService>.Instance);
+            NullLogger<MakopaGameEngine>.Instance);
 
         var move = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.Queen));
 
@@ -112,13 +111,13 @@ public class GameEngineServiceTests
             new Player { Id = creatorId, PlayerName = "Creator" },
             new Player { Id = opponentId, PlayerName = "Opponent" });
 
-        var sut = new GameEngineService(
+        var sut = new MakopaGameEngine(
             sessionRepo,
             moveRepo,
             resultRepo,
             wallet,
             players,
-            NullLogger<GameEngineService>.Instance);
+            NullLogger<MakopaGameEngine>.Instance);
 
         var move = await sut.VoidFollowDrawAsync(opponentId, sessionId);
 
@@ -168,13 +167,13 @@ public class GameEngineServiceTests
             new Player { Id = creatorId, PlayerName = "Creator" },
             new Player { Id = opponentId, PlayerName = "Opponent" });
 
-        var sut = new GameEngineService(
+        var sut = new MakopaGameEngine(
             sessionRepo,
             moveRepo,
             resultRepo,
             wallet,
             players,
-            NullLogger<GameEngineService>.Instance);
+            NullLogger<MakopaGameEngine>.Instance);
 
         var move = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Heart, CardRank.Ten));
 

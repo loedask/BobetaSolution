@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Bobeta.Client.Contracts.Interfaces;
+using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
 using Bobeta.Web.Shared.Services;
 
@@ -16,8 +17,15 @@ public class CreateGameViewModel(IGameService gameService, AppStateService appSt
     public const decimal MaxBet = 500;
 
     public decimal SelectedBet { get; private set; } = 300;
+    public GameVariant SelectedVariant { get; private set; } = GameVariant.Makopa;
 
     public bool CanSubmit => SelectedBet is >= MinBet and <= MaxBet && !IsLoading;
+
+    public void SetVariant(GameVariant variant)
+    {
+        SelectedVariant = variant;
+        RaiseStateChanged();
+    }
 
     public void SetBet(decimal amount)
     {
@@ -32,7 +40,7 @@ public class CreateGameViewModel(IGameService gameService, AppStateService appSt
         ClearError();
         try
         {
-            var res = await _gameService.CreateGameAsync(new CreateGameRequest { BetAmount = SelectedBet });
+            var res = await _gameService.CreateGameAsync(new CreateGameRequest { BetAmount = SelectedBet, Variant = SelectedVariant });
             if (res.IsSuccess && res.Data != null)
             {
                 _appState.SetActiveGameSession(res.Data.Id);

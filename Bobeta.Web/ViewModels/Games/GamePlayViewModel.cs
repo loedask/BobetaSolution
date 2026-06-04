@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Bobeta.Client.Contracts;
 using Bobeta.Client.Contracts.Interfaces;
+using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
 using Bobeta.Client.Presentation;
 using Bobeta.Web.Services;
@@ -46,6 +47,8 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     }
 
     public string SessionId { get; private set; } = "";
+    public GameVariant Variant => _table.Variant;
+    public KopoStateDto? Kopo => _table.Kopo;
     public bool IsPlayerTurn => _table.IsPlayerTurn;
     public decimal PotAmount => _table.PotAmount;
     public string? OpponentDisplayName => _table.OpponentDisplayName;
@@ -56,6 +59,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public string? WinnerPlayerName => _table.WinnerPlayerName;
     public bool ShowGameResult => _table.ShowGameResult;
     public Guid? CurrentPlayerId => _table.CurrentPlayerId;
+    public Guid? MyPlayerId => _appState.State.CurrentPlayerId;
     public string? TrickOutcomeMessage => _table.TrickOutcomeMessage;
     public bool CanTakeCard => _table.CanTakeCard;
     public int MyRoundWins => _table.MyRoundWins;
@@ -67,9 +71,11 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public bool InactivityShowButtons { get; private set; }
     public int InactivityCountdownSeconds { get; private set; }
     public bool InactivityActionBusy { get; private set; }
-    public bool IsSendingMove => IsLoading && PlayerCards.Count > 0;
+    public bool IsSendingMove => IsLoading && (Variant == GameVariant.Kopo || PlayerCards.Count > 0);
 
-    private Guid? MyPlayerId => _appState.State.CurrentPlayerId;
+    private readonly List<KopoSquareDto> _kopoPath = new();
+    public IReadOnlyList<KopoSquareDto> KopoSelectionPath => _kopoPath;
+
     private bool BlockInteraction => ShowInactivityOverlay;
 
     public async Task LoadGameAsync(string sessionId)
@@ -317,6 +323,73 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     }
 
     public Task PlayCardAsync(CardViewModel card) => SubmitCardAsync(card);
+
+    public async Task OnKopoSquareClickedAsync(int row, int col)
+    {
+        if (Variant != GameVariant.Kopo || !IsPlayerTurn || BlockInteraction || !Guid.TryParse(SessionId, out var sessionGuid))
+            return;
+        var kopo = Kopo;
+        if (kopo == null || MyPlayerId is not { } myId)
+            return;
+
+        if (_kopoPath.Count == 0)
+        {
+            var piece = kopo.Pieces.FirstOrDefault(p => p.Row == row && p.Col == col);
+            if (kopo.MustContinueChain && kopo.ChainPieceId is { } chainId)
+                piece = kopo.Pieces.FirstOrDefault(p => p.Id == chainId);
+            if (piece == null || piece.OwnerId != myId)
+                return;
+            _kopoPath.Add(new KopoSquareDto { Row = row, Col = col });
+            RaiseStateChanged();
+            return;
+        }
+
+        _kopoPath.Add(new KopoSquareDto { Row = row, Col = col });
+        await SubmitKopoPathAsync(sessionGuid);
+    }
+
+    private async Task SubmitKopoPathAsync(Guid sessionGuid)
+    {
+        if (!await _moveGate.WaitAsync(0))
+            return;
+        SetLoading(true);
+        ClearError();
+        var path = _kopoPath.ToList();
+        _kopoPath.Clear();
+        try
+        {
+            var res = await _gamePlayService.ApplyKopoMoveAsync(sessionGuid, path);
+            if (!res.IsSuccess)
+            {
+                if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
+                    return;
+                await HandleMoveFailureAsync(res);
+                return;
+            }
+
+            if (res.Data != null)
+            {
+                await ApplyAuthoritativeStateAsync(res.Data);
+                if (res.Data.Kopo?.MustContinueChain == true && res.Data.Kopo.ChainPieceId is { } cid)
+                {
+                    var p = res.Data.Kopo.Pieces.FirstOrDefault(x => x.Id == cid);
+                    if (p != null)
+                        _kopoPath.Add(new KopoSquareDto { Row = p.Row, Col = p.Col });
+                }
+            }
+        }
+        catch (Exception)
+        {
+            SetError("Something went wrong. Please try again.");
+            await SyncGameStateFromServerAsync();
+        }
+        finally
+        {
+            SetLoading(false);
+            _moveGate.Release();
+            RaiseStateChanged();
+        }
+    }
 
     public async Task TakeCardAsync()
     {

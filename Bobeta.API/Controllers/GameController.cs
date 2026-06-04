@@ -21,7 +21,7 @@ public class GameController(IGameSessionService gameSessionService) : Controller
     {
         try
         {
-            var session = await _gameSessionService.CreateGameAsync(PlayerId, request.BetAmount, cancellationToken);
+            var session = await _gameSessionService.CreateGameAsync(PlayerId, request.BetAmount, request.Variant, cancellationToken);
             return Ok(session);
         }
         catch (InvalidOperationException ex)

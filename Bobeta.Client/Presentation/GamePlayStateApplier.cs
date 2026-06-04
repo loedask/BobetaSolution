@@ -1,3 +1,4 @@
+using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
 
 namespace Bobeta.Client.Presentation;
@@ -20,14 +21,26 @@ public static class GamePlayStateApplier
         if (IsSessionEndedWithoutWinner(state))
             return ApplyResult.SessionEnded;
 
+        table.Variant = state.Variant;
+        table.Kopo = state.Kopo;
         table.WaitingForOpponent = state.WaitingForGameStart;
         table.PotAmount = state.LobbyPotAmount;
         table.OpponentDisplayName = state.OpponentDisplayName;
         table.CurrentPlayerId = state.CurrentTurnPlayerId;
         table.IsPlayerTurn = !table.WaitingForOpponent && state.CurrentTurnPlayerId == myPlayerId;
-        table.PlayerCards = ParseCards(state.MyCards ?? new List<string>());
-        table.LastPlayedCard = string.IsNullOrEmpty(state.LastPlayedCard) ? null : ParseCard(state.LastPlayedCard);
-        table.MustFollowLedSuit = state.MustFollowLedSuit;
+        if (state.Variant == GameVariant.Kopo)
+        {
+            table.PlayerCards = new List<CardViewModel>();
+            table.LastPlayedCard = null;
+            table.MustFollowLedSuit = false;
+            table.CanTakeCard = false;
+        }
+        else
+        {
+            table.PlayerCards = ParseCards(state.MyCards ?? new List<string>());
+            table.LastPlayedCard = string.IsNullOrEmpty(state.LastPlayedCard) ? null : ParseCard(state.LastPlayedCard);
+            table.MustFollowLedSuit = state.MustFollowLedSuit;
+        }
 
         if (state.GameOver)
         {
@@ -40,7 +53,8 @@ public static class GamePlayStateApplier
         table.TrickOutcomeMessage = FormatTrickOutcome(
             state.LastTrickWinnerPlayerId, myPlayerId, trickOutcomeYou, trickOutcomeOpponent);
         ApplyMatchRoundScore(table, state, roundScoreFormat);
-        RefreshHandPlayability(table, blockInteraction);
+        if (state.Variant != GameVariant.Kopo)
+            RefreshHandPlayability(table, blockInteraction);
         return state.GameOver ? ApplyResult.GameOver : ApplyResult.Applied;
     }
 

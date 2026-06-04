@@ -1,0 +1,53 @@
+@using Bobeta.Client.Models.Api
+
+<div class="mx-auto max-w-md">
+    <div class="grid grid-cols-10 gap-0.5 rounded-xl border border-border bg-card p-2">
+        @for (var row = 0; row < BoardSize; row++)
+        {
+            var r = row;
+            @for (var col = 0; col < BoardSize; col++)
+            {
+                var c = col;
+                var dark = (r + c) % 2 == 1;
+                var piece = Pieces.FirstOrDefault(p => p.Row == r && p.Col == c);
+                var selected = SelectionPath.Any(s => s.Row == r && s.Col == c);
+                <button type="button"
+                        class="@CellClass(dark, selected, piece)"
+                        disabled="@(!CanInteract)"
+                        @onclick="() => OnCellClicked.InvokeAsync((r, c))">
+                    @if (piece != null)
+                    {
+                        <span class="@PieceClass(piece)">@(piece.IsKing ? "♔" : "●")</span>
+                    }
+                </button>
+            }
+        }
+    </div>
+    @if (MustContinueChain)
+    {
+        <p class="mt-2 text-center text-xs text-primary">Continue capturing with the same piece.</p>
+    }
+</div>
+
+@code {
+    [Parameter] public int BoardSize { get; set; } = 10;
+    [Parameter] public IReadOnlyList<KopoPieceDto> Pieces { get; set; } = Array.Empty<KopoPieceDto>();
+    [Parameter] public Guid MyPlayerId { get; set; }
+    [Parameter] public IReadOnlyList<KopoSquareDto> SelectionPath { get; set; } = Array.Empty<KopoSquareDto>();
+    [Parameter] public bool MustContinueChain { get; set; }
+    [Parameter] public bool CanInteract { get; set; }
+    [Parameter] public EventCallback<(int Row, int Col)> OnCellClicked { get; set; }
+
+    private static string CellClass(bool dark, bool selected, KopoPieceDto? piece)
+    {
+        var baseCls = dark ? "aspect-square bg-amber-900/40" : "aspect-square bg-amber-100/20";
+        if (selected) baseCls += " ring-2 ring-primary ring-inset";
+        if (piece != null) baseCls += " flex items-center justify-center";
+        return baseCls;
+    }
+
+    private string PieceClass(KopoPieceDto piece) =>
+        piece.OwnerId == MyPlayerId
+            ? "text-lg text-primary font-bold"
+            : "text-lg text-foreground/80 font-bold";
+}

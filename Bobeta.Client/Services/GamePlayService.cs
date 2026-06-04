@@ -45,6 +45,18 @@ public class GamePlayService(HttpClient httpClient, IAccessTokenProvider? access
             : Response<bool>.Failure(res.ErrorMessage ?? "Could not cancel game.", res.StatusCode);
     }
 
+    public async Task<Response<GameStateViewModel?>> ApplyKopoMoveAsync(
+        Guid sessionId,
+        IReadOnlyList<KopoSquareDto> path,
+        CancellationToken cancellationToken = default)
+    {
+        var body = new KopoMoveApiRequest { SessionId = sessionId, Path = path.ToList() };
+        var res = await PostAsync<GameStateDto>("api/GamePlay/kopo/move", body, cancellationToken).ConfigureAwait(false);
+        if (!res.IsSuccess || res.Data == null)
+            return Response<GameStateViewModel?>.Failure(res.ErrorMessage ?? "Failed to apply move.", res.StatusCode);
+        return Response<GameStateViewModel?>.Success(GameStateMapper.ToViewModel(res.Data));
+    }
+
     public async Task<Response<GameStateViewModel?>> PlayCardAsync(Guid sessionId, GameMoveRequest request, CancellationToken cancellationToken = default)
     {
         try
