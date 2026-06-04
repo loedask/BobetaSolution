@@ -1,0 +1,138 @@
+using System.Text.Json.Serialization;
+
+namespace Bobeta.Client.Models.Api;
+
+public sealed class CreateGameApiRequest
+{
+    [JsonPropertyName("betAmount")]
+    public double BetAmount { get; set; }
+}
+
+public sealed class JoinGameApiRequest
+{
+    [JsonPropertyName("gameId")]
+    public Guid GameId { get; set; }
+}
+
+public sealed class ProposeBetApiRequest
+{
+    [JsonPropertyName("gameId")]
+    public Guid GameId { get; set; }
+
+    [JsonPropertyName("amount")]
+    public double Amount { get; set; }
+}
+
+public sealed class GameSessionDto
+{
+    [JsonPropertyName("id")]
+    public Guid Id { get; set; }
+
+    [JsonPropertyName("creatorPlayerId")]
+    public Guid CreatorPlayerId { get; set; }
+
+    [JsonPropertyName("opponentPlayerId")]
+    public Guid? OpponentPlayerId { get; set; }
+
+    [JsonPropertyName("betAmount")]
+    public double BetAmount { get; set; }
+
+    [JsonPropertyName("status")]
+    public GameStatus Status { get; set; }
+
+    [JsonPropertyName("createdAt")]
+    public DateTime CreatedAt { get; set; }
+
+    [JsonPropertyName("startedAt")]
+    public DateTime? StartedAt { get; set; }
+
+    [JsonPropertyName("finishedAt")]
+    public DateTime? FinishedAt { get; set; }
+}
+
+public sealed class CardPlayDto
+{
+    [JsonPropertyName("suit")]
+    public int Suit { get; set; }
+
+    [JsonPropertyName("rank")]
+    public int Rank { get; set; }
+}
+
+public sealed class PlayCardApiRequest
+{
+    [JsonPropertyName("sessionId")]
+    public Guid SessionId { get; set; }
+
+    [JsonPropertyName("card")]
+    public CardPlayDto Card { get; set; } = new();
+}
+
+public sealed class GameStateDto
+{
+    [JsonPropertyName("sessionId")]
+    public Guid SessionId { get; set; }
+
+    [JsonPropertyName("myCards")]
+    public List<string>? MyCards { get; set; }
+
+    [JsonPropertyName("lastPlayedCard")]
+    public string? LastPlayedCard { get; set; }
+
+    [JsonPropertyName("currentTurnPlayerId")]
+    public Guid? CurrentTurnPlayerId { get; set; }
+
+    [JsonPropertyName("gameOver")]
+    public bool GameOver { get; set; }
+
+    [JsonPropertyName("winnerPlayerId")]
+    public Guid? WinnerPlayerId { get; set; }
+
+    [JsonPropertyName("waitingForGameStart")]
+    public bool WaitingForGameStart { get; set; }
+
+    [JsonPropertyName("lobbyPotAmount")]
+    public double LobbyPotAmount { get; set; }
+
+    [JsonPropertyName("opponentDisplayName")]
+    public string? OpponentDisplayName { get; set; }
+
+    [JsonPropertyName("lastTrickWinnerPlayerId")]
+    public Guid? LastTrickWinnerPlayerId { get; set; }
+
+    [JsonPropertyName("myRoundWins")]
+    public int MyRoundWins { get; set; }
+
+    [JsonPropertyName("opponentRoundWins")]
+    public int OpponentRoundWins { get; set; }
+
+    [JsonPropertyName("mustFollowLedSuit")]
+    public bool MustFollowLedSuit { get; set; }
+}
+
+public sealed class GameHistoryItemDto
+{
+    [JsonPropertyName("gameSessionId")]
+    public Guid GameSessionId { get; set; }
+
+    [JsonPropertyName("betAmount")]
+    public double BetAmount { get; set; }
+
+    [JsonPropertyName("status")]
+    public GameStatus Status { get; set; }
+
+    [JsonPropertyName("opponentPlayerId")]
+    public Guid? OpponentPlayerId { get; set; }
+
+    [JsonPropertyName("winnerPlayerId")]
+    public Guid? WinnerPlayerId { get; set; }
+
+    [JsonPropertyName("wonAmount")]
+    public double? WonAmount { get; set; }
+
+    [JsonPropertyName("createdAt")]
+    public DateTime CreatedAt { get; set; }
+
+    [JsonPropertyName("isCreator")]
+    public bool IsCreator { get; set; }
+}

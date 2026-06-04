@@ -1,7 +1,6 @@
+using Bobeta.Client.Models.Api;
 using Bobeta.Client.Services;
-using Bobeta.Client.Services.Base;
 using Bobeta.Mobile.Services;
-using GameStatusDto = Bobeta.Client.Services.Base.GameStatus;
 using Microsoft.Maui.Controls;
 
 namespace Bobeta.Mobile.ViewModels.Games;
@@ -58,7 +57,7 @@ public class GameHistoryViewModel : ViewModelBase
 
         switch (item.Status)
         {
-            case GameStatusDto._2:
+            case GameStatus.Finished:
             {
                 var won = (item.WonAmount ?? 0) > 0;
                 var title = $"{(won ? _i18n.T("won") : _i18n.T("lost"))} — {item.BetAmount:N0} FCFA";
@@ -75,7 +74,7 @@ public class GameHistoryViewModel : ViewModelBase
                     AmountColor = color
                 };
             }
-            case GameStatusDto._0:
+            case GameStatus.Waiting:
                 return new GameHistoryRow
                 {
                     SessionId = sid,
@@ -85,7 +84,7 @@ public class GameHistoryViewModel : ViewModelBase
                     AmountText = "—",
                     AmountColor = muted
                 };
-            case GameStatusDto._1:
+            case GameStatus.InProgress:
                 return new GameHistoryRow
                 {
                     SessionId = sid,
@@ -96,7 +95,7 @@ public class GameHistoryViewModel : ViewModelBase
                     AmountColor = muted,
                     ShowContinue = true
                 };
-            case GameStatusDto._3:
+            case GameStatus.Cancelled:
                 return new GameHistoryRow
                 {
                     SessionId = sid,

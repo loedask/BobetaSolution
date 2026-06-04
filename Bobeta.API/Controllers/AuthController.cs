@@ -28,7 +28,7 @@ public class AuthController(
         try
         {
             await _authService.SendOtpAsync(request.PhoneNumber, cancellationToken, clientIp);
-            // Must be 200 OK: the generated API client (NSwag) only treats 200 as success for this operation.
+            // Must be 200 OK: the client treats only 200 as success for this operation (empty body).
             return Ok();
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("Too many OTP", StringComparison.OrdinalIgnoreCase))

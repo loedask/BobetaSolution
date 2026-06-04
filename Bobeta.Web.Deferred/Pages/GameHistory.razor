@@ -1,5 +1,5 @@
 @page "/history"
-@using Bobeta.Client.Services.Base
+@using Bobeta.Client.Models.Api
 @implements IDisposable
 @inject GameHistoryViewModel ViewModel
 @inject I18nService I18n
@@ -49,7 +49,7 @@
                                 <div class="text-xs text-muted-foreground mt-0.5">@RowSubtitle(item)</div>
                             }
                             <div class="text-xs text-muted-foreground mt-0.5">@item.CreatedAt.ToString("g")</div>
-                            @if (item.Status == GameStatus._1)
+                            @if (item.Status == GameStatus.InProgress)
                             {
                                 <a href="@($"/game/{item.GameSessionId}")" class="mt-2 inline-block text-xs font-semibold text-primary hover:underline">@I18n.T("history_continue")</a>
                             }
@@ -70,7 +70,7 @@
     public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
 
-    private static bool RowIsFinished(GameHistoryItemDto item) => item.Status == GameStatus._2;
+    private static bool RowIsFinished(GameHistoryItemDto item) => item.Status == GameStatus.Finished;
 
     private bool RowIsWin(GameHistoryItemDto item) => RowIsFinished(item) && (item.WonAmount ?? 0) > 0;
 
@@ -78,10 +78,10 @@
 
     private string RowTitle(GameHistoryItemDto item) => item.Status switch
     {
-        GameStatus._2 => $"{(RowIsWin(item) ? I18n.T("won") : I18n.T("lost"))} — {item.BetAmount} FCFA",
-        GameStatus._0 => $"{I18n.T("history_waiting")} — {item.BetAmount} FCFA",
-        GameStatus._1 => $"{I18n.T("history_live_game")} — {item.BetAmount} FCFA",
-        GameStatus._3 => $"{I18n.T("history_cancelled")} — {item.BetAmount} FCFA",
+        GameStatus.Finished => $"{(RowIsWin(item) ? I18n.T("won") : I18n.T("lost"))} — {item.BetAmount} FCFA",
+        GameStatus.Waiting => $"{I18n.T("history_waiting")} — {item.BetAmount} FCFA",
+        GameStatus.InProgress => $"{I18n.T("history_live_game")} — {item.BetAmount} FCFA",
+        GameStatus.Cancelled => $"{I18n.T("history_cancelled")} — {item.BetAmount} FCFA",
         _ => $"{item.BetAmount} FCFA"
     };
 
@@ -90,8 +90,8 @@
         var role = item.IsCreator ? I18n.T("history_you_hosted") : I18n.T("history_you_joined");
         return item.Status switch
         {
-            GameStatus._1 => $"{role}. {I18n.T("history_live_hint")}",
-            GameStatus._0 or GameStatus._3 => role,
+            GameStatus.InProgress => $"{role}. {I18n.T("history_live_hint")}",
+            GameStatus.Waiting or GameStatus.Cancelled => role,
             _ => ""
         };
     }

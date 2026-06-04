@@ -1,5 +1,5 @@
+using Bobeta.Client.Models.Api;
 using Bobeta.Client.Services;
-using Bobeta.Client.Services.Base;
 using Bobeta.Web.Shared.Services;
 using Microsoft.AspNetCore.Components;
 

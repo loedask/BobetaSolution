@@ -24,6 +24,10 @@ Lobby, wallet, and profile routes (`/dashboard`, `/history`, `/join`, etc.) are 
 
 After publish, confirm `_framework/Bobeta.Web.Deferred.wasm` exists under `wwwroot`.
 
+## API contract (OpenAPI)
+
+The HTTP client uses hand-maintained DTOs in `Bobeta.Client/Models/Api/` and `BaseHttpService` — there is no NSwag codegen. A reference OpenAPI export lives at `docs/openapi/bobeta-api.swagger.json` (regenerate from the API when endpoints change).
+
 ## Verify latency
 
 From a browser devtools **Network** tab on the game page, check `play-card` and `state` requests:
