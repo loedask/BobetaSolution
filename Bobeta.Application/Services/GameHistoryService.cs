@@ -18,7 +18,7 @@ public class GameHistoryService(IGameSessionRepository sessionRepository) : IGam
             var winnerId = result?.WinnerPlayerId;
             var wonAmount = result != null && result.WinnerPlayerId == playerId ? result.WinnerAmount : (decimal?)null;
             var isCreator = s.CreatorPlayerId == playerId;
-            return new GameHistoryItemDto(s.Id, s.BetAmount, s.Status, opponentId, winnerId, wonAmount, s.CreatedAt, isCreator);
+            return new GameHistoryItemDto(s.Id, s.BetAmount, s.Status, s.Variant, opponentId, winnerId, wonAmount, s.CreatedAt, isCreator);
         }).ToList();
     }
 }

@@ -568,7 +568,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     {
         _aiTriggerCts?.Cancel();
         _aiTriggerCts = new CancellationTokenSource();
-        if (ShowGameResult || WaitingForOpponent || IsPlayerTurn || _testService == null)
+        if (Variant == GameVariant.Kopo || ShowGameResult || WaitingForOpponent || IsPlayerTurn || _testService == null)
             return;
         try
         {

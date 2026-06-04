@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
 using Bobeta.Client.Contracts.Interfaces;
 using Bobeta.Web.Shared.Services;
@@ -11,17 +12,24 @@ public class JoinGameViewModel(IGameService gameService, AppStateService appStat
     private readonly AppStateService _appState = appState;
     private readonly NavigationManager _nav = nav;
 
-    /// <summary>Prevents double-submit; must not use <see cref="ViewModelBase.IsLoading"/> — that is shared with <see cref="LoadGamesAsync"/> and blocks join while the list is still loading.</summary>
     private bool _joinBusy;
-
     private readonly object _loadSync = new();
     private Task? _loadInFlight;
     private DateTimeOffset _lastSuccessfulLoadUtc = DateTimeOffset.MinValue;
     private static readonly TimeSpan DuplicateSuppressionWindow = TimeSpan.FromSeconds(2);
 
+    /// <summary>null = show all game types.</summary>
+    public GameVariant? VariantFilter { get; private set; }
+
     public List<GameSessionViewModel> OpenGames { get; private set; } = new();
 
-    /// <summary>Loads joinable games. Coalesces concurrent calls and suppresses duplicate loads shortly after a success (Blazor can trigger lifecycle twice). Use <paramref name="forceRefresh"/> for the Refresh button.</summary>
+    public void SetVariantFilter(GameVariant? variant)
+    {
+        VariantFilter = variant;
+        RaiseStateChanged();
+        _ = LoadGamesAsync(forceRefresh: true);
+    }
+
     public Task LoadGamesAsync(bool forceRefresh = false)
     {
         lock (_loadSync)
@@ -47,7 +55,7 @@ public class JoinGameViewModel(IGameService gameService, AppStateService appStat
         ClearError();
         try
         {
-            var res = await _gameService.GetOpenGamesAsync();
+            var res = await _gameService.GetOpenGamesAsync(VariantFilter);
             if (res.IsSuccess && res.Data != null)
             {
                 OpenGames = res.Data.Where(x => x.OpponentPlayerId == null).ToList();

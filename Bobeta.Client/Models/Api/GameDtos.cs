@@ -184,6 +184,9 @@ public sealed class GameHistoryItemDto
     [JsonPropertyName("status")]
     public GameStatus Status { get; set; }
 
+    [JsonPropertyName("variant")]
+    public GameVariant Variant { get; set; }
+
     [JsonPropertyName("opponentPlayerId")]
     public Guid? OpponentPlayerId { get; set; }
 
@@ -198,4 +201,6 @@ public sealed class GameHistoryItemDto
 
     [JsonPropertyName("isCreator")]
     public bool IsCreator { get; set; }
+
+    public string VariantName => GameVariantLabels.Name(Variant);
 }

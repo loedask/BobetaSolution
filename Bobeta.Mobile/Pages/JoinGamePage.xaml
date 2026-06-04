@@ -6,8 +6,13 @@
     BackgroundColor="{StaticResource PageBackground}"
     Title="Join">
 
-    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
-        <Grid ColumnDefinitions="*,Auto">
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
+        <HorizontalStackLayout Spacing="8">
+            <Button x:Name="FilterAllBtn" Clicked="OnFilterAll" CornerRadius="8" FontSize="12" Padding="12,6" />
+            <Button x:Name="FilterMakopaBtn" Clicked="OnFilterMakopa" CornerRadius="8" FontSize="12" Padding="12,6" />
+            <Button x:Name="FilterKopoBtn" Clicked="OnFilterKopo" CornerRadius="8" FontSize="12" Padding="12,6" />
+        </HorizontalStackLayout>
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
             <Label x:Name="Subtitle" FontSize="14" TextColor="{StaticResource MutedForeground}" VerticalOptions="Center" />
             <Button
                 x:Name="RefreshBtn"
@@ -17,7 +22,7 @@
                 TextColor="{StaticResource PrimaryGold}"
                 FontSize="13" />
         </Grid>
-        <CollectionView x:Name="GamesList" Grid.Row="1" ItemsSource="{Binding OpenGames}">
+        <CollectionView x:Name="GamesList" Grid.Row="2" ItemsSource="{Binding OpenGames}">
             <CollectionView.EmptyView>
                 <Label x:Name="EmptyLabel" TextColor="{StaticResource MutedForeground}" />
             </CollectionView.EmptyView>
@@ -26,7 +31,10 @@
                     <Border Margin="0,0,0,10" Padding="16" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 14">
                         <Grid ColumnDefinitions="*,Auto">
                             <VerticalStackLayout Spacing="4">
-                                <Label Text="Player" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+                                <HorizontalStackLayout Spacing="8">
+                                    <Label Text="Player" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+                                    <Label Text="{Binding VariantName}" FontSize="11" TextColor="{StaticResource PrimaryGold}" />
+                                </HorizontalStackLayout>
                                 <Label Text="{Binding BetAmount, StringFormat='{0:N0} FCFA'}" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource PrimaryGold}" />
                             </VerticalStackLayout>
                             <Button
@@ -43,7 +51,7 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-        <Label x:Name="ErrorLabel" Grid.Row="1" IsVisible="False" TextColor="{StaticResource Destructive}" VerticalOptions="Start" />
-        <ActivityIndicator x:Name="Busy" Grid.Row="1" IsRunning="False" Color="{StaticResource PrimaryGold}" VerticalOptions="Center" HorizontalOptions="Center" />
+        <Label x:Name="ErrorLabel" Grid.Row="2" IsVisible="False" TextColor="{StaticResource Destructive}" VerticalOptions="Start" />
+        <ActivityIndicator x:Name="Busy" Grid.Row="2" IsRunning="False" Color="{StaticResource PrimaryGold}" VerticalOptions="Center" HorizontalOptions="Center" />
     </Grid>
 </ContentPage>

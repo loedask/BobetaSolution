@@ -10,6 +10,7 @@ public class GameSessionViewModel
     public Guid? OpponentPlayerId { get; set; }
     public decimal BetAmount { get; set; }
     public GameVariant Variant { get; set; }
+    public string VariantName => GameVariantLabels.Name(Variant);
     public string Status { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime? StartedAt { get; set; }

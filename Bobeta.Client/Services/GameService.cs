@@ -51,9 +51,12 @@ public class GameService(HttpClient httpClient, IAccessTokenProvider? accessToke
             : Response<bool>.Failure(res.ErrorMessage ?? "Failed to accept bet.", res.StatusCode);
     }
 
-    public async Task<Response<IReadOnlyList<GameSessionViewModel>>> GetOpenGamesAsync(CancellationToken cancellationToken = default)
+    public async Task<Response<IReadOnlyList<GameSessionViewModel>>> GetOpenGamesAsync(GameVariant? variant = null, CancellationToken cancellationToken = default)
     {
-        var res = await GetAsync<List<GameSessionDto>>("api/Game/open?skip=0&take=100", cancellationToken).ConfigureAwait(false);
+        var url = "api/Game/open?skip=0&take=100";
+        if (variant.HasValue)
+            url += $"&variant={(int)variant.Value}";
+        var res = await GetAsync<List<GameSessionDto>>(url, cancellationToken).ConfigureAwait(false);
         if (!res.IsSuccess || res.Data == null)
             return Response<IReadOnlyList<GameSessionViewModel>>.Failure(res.ErrorMessage ?? "Failed to load open games.", res.StatusCode);
         return Response<IReadOnlyList<GameSessionViewModel>>.Success(res.Data.Select(GameStateMapper.ToViewModel).ToList());

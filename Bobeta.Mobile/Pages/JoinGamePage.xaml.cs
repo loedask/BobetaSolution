@@ -1,3 +1,4 @@
+using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
 using Bobeta.Mobile.Services;
 using Bobeta.Mobile.ViewModels.Games;
@@ -25,7 +26,10 @@ public partial class JoinGamePage : ContentPage
         Title = i18n.T("join_game");
         Subtitle.Text = i18n.T("open_game_sessions");
         RefreshBtn.Text = i18n.T("refresh");
-        EmptyLabel.Text = "No open games. Create one from the dashboard.";
+        EmptyLabel.Text = i18n.T("no_open_games");
+        FilterAllBtn.Text = i18n.T("filter_all_games");
+        FilterMakopaBtn.Text = "Makopa";
+        FilterKopoBtn.Text = "Kopo";
 
         _ = _vm.LoadGamesAsync();
         SyncUi();
@@ -46,7 +50,20 @@ public partial class JoinGamePage : ContentPage
         ErrorLabel.Text = _vm.ErrorMessage ?? "";
         ErrorLabel.IsVisible = !string.IsNullOrEmpty(_vm.ErrorMessage);
         Busy.IsRunning = _vm.IsLoading && _vm.OpenGames.Count == 0;
+        StyleFilter(FilterAllBtn, _vm.VariantFilter == null);
+        StyleFilter(FilterMakopaBtn, _vm.VariantFilter == GameVariant.Makopa);
+        StyleFilter(FilterKopoBtn, _vm.VariantFilter == GameVariant.Kopo);
     }
+
+    private static void StyleFilter(Button btn, bool selected)
+    {
+        btn.BackgroundColor = selected ? Color.FromArgb("#eab308") : Color.FromArgb("#2a3142");
+        btn.TextColor = selected ? Color.FromArgb("#12151f") : Color.FromArgb("#e2e8f0");
+    }
+
+    private void OnFilterAll(object? sender, EventArgs e) => _vm?.SetVariantFilter(null);
+    private void OnFilterMakopa(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Makopa);
+    private void OnFilterKopo(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Kopo);
 
     private async void OnRefresh(object? sender, EventArgs e)
     {

@@ -1,3 +1,4 @@
+@using Bobeta.Client.Models.Api
 @inject I18nService I18n
 
 <div class="flex items-center justify-between rounded-xl border border-border bg-card p-4">
@@ -6,7 +7,10 @@
             <svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
         </div>
         <div>
-            <div class="font-semibold text-foreground">@PlayerName</div>
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-foreground">@PlayerName</span>
+                <span class="rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">@GameVariantLabels.Name(Variant)</span>
+            </div>
             <div class="text-sm text-muted-foreground">@I18n.T("waiting_for_opponent_short")</div>
         </div>
     </div>
@@ -22,5 +26,6 @@
 @code {
     [Parameter] public string PlayerName { get; set; } = "";
     [Parameter] public decimal BetAmount { get; set; }
+    [Parameter] public GameVariant Variant { get; set; } = GameVariant.Makopa;
     [Parameter] public EventCallback OnJoin { get; set; }
 }

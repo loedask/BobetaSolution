@@ -24,13 +24,14 @@ public class GameSessionRepository : IGameSessionRepository
             .OrderBy(s => s.CreatedAt)
             .ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<GameSession>> GetJoinableWaitingSessionsAsync(Guid forPlayerId, int skip, int take, CancellationToken cancellationToken = default) =>
-        await _db.GameSessions
-            .Where(s => s.Status == GameStatus.Waiting && s.OpponentPlayerId == null && s.CreatorPlayerId != forPlayerId)
-            .OrderByDescending(s => s.CreatedAt)
-            .Skip(skip)
-            .Take(take)
-            .ToListAsync(cancellationToken);
+    public async Task<IReadOnlyList<GameSession>> GetJoinableWaitingSessionsAsync(Guid forPlayerId, int skip, int take, GameVariant? variant = null, CancellationToken cancellationToken = default)
+    {
+        var q = _db.GameSessions
+            .Where(s => s.Status == GameStatus.Waiting && s.OpponentPlayerId == null && s.CreatorPlayerId != forPlayerId);
+        if (variant.HasValue)
+            q = q.Where(s => s.Variant == variant.Value);
+        return await q.OrderByDescending(s => s.CreatedAt).Skip(skip).Take(take).ToListAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<GameSession>> GetByPlayerIdAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default) =>
         await _db.GameSessions

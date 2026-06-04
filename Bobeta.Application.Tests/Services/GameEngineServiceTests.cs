@@ -197,7 +197,7 @@ public class GameEngineServiceTests
         public Task<IReadOnlyList<GameSession>> GetWaitingSessionsAsync(decimal betAmount, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
 
-        public Task<IReadOnlyList<GameSession>> GetJoinableWaitingSessionsAsync(Guid forPlayerId, int skip, int take, CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<GameSession>> GetJoinableWaitingSessionsAsync(Guid forPlayerId, int skip, int take, GameVariant? variant = null, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
 
         public Task<IReadOnlyList<GameSession>> GetByPlayerIdAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default)

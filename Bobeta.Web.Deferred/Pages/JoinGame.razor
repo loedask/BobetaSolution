@@ -1,4 +1,5 @@
 @page "/join"
+@using Bobeta.Client.Models.Api
 @implements IDisposable
 @inject JoinGameViewModel ViewModel
 @inject I18nService I18n
@@ -17,6 +18,12 @@
 
     <div class="space-y-3 px-5">
         <ErrorBanner Message="@ViewModel.ErrorMessage" />
+        <div class="flex flex-wrap gap-2">
+            <button type="button" class="@FilterClass(null)" @onclick="() => SetFilter(null)">@I18n.T("filter_all_games")</button>
+            <button type="button" class="@FilterClass(GameVariant.Makopa)" @onclick="() => SetFilter(GameVariant.Makopa)">Makopa</button>
+            <button type="button" class="@FilterClass(GameVariant.Kopo)" @onclick="() => SetFilter(GameVariant.Kopo)">Kopo</button>
+        </div>
+
         <div class="flex items-center justify-between">
             <p class="text-sm text-muted-foreground">@I18n.T("open_game_sessions")</p>
             <button type="button" class="flex items-center gap-1 text-xs text-primary hover:underline" @onclick="LoadGames" disabled="@ViewModel.IsLoading">
@@ -34,7 +41,7 @@
             @foreach (var game in ViewModel.OpenGames)
             {
                 var g = game;
-                <GameSessionCard PlayerName="Player" BetAmount="(decimal)g.BetAmount" OnJoin="() => DoJoin(g.Id)" />
+                <GameSessionCard PlayerName="Player" BetAmount="(decimal)g.BetAmount" Variant="g.Variant" OnJoin="() => DoJoin(g.Id)" />
             }
             @if (ViewModel.OpenGames.Count == 0 && !ViewModel.IsLoading)
             {
@@ -51,4 +58,10 @@
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
     private async Task LoadGames() => await ViewModel.LoadGamesAsync(forceRefresh: true);
     private async Task DoJoin(Guid gameId) => await ViewModel.JoinGameAsync(gameId);
+    private void SetFilter(GameVariant? variant) => ViewModel.SetVariantFilter(variant);
+
+    private string FilterClass(GameVariant? variant) =>
+        ViewModel.VariantFilter == variant
+            ? "rounded-lg border-2 border-primary bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary"
+            : "rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground";
 }

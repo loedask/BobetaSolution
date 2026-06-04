@@ -54,6 +54,7 @@ public class GameHistoryViewModel : ViewModelBase
         var muted = Color.FromArgb("#8a93a8");
         var sid = item.GameSessionId;
         var role = item.IsCreator ? _i18n.T("history_you_hosted") : _i18n.T("history_you_joined");
+        var meta = $"{item.VariantName} · {role}";
 
         switch (item.Status)
         {
@@ -68,7 +69,7 @@ public class GameHistoryViewModel : ViewModelBase
                 {
                     SessionId = sid,
                     Title = title,
-                    Subtitle = role,
+                    Subtitle = meta,
                     Time = item.CreatedAt.ToString("g"),
                     AmountText = amountText,
                     AmountColor = color
@@ -79,7 +80,7 @@ public class GameHistoryViewModel : ViewModelBase
                 {
                     SessionId = sid,
                     Title = $"{_i18n.T("history_waiting")} — {item.BetAmount:N0} FCFA",
-                    Subtitle = role,
+                    Subtitle = meta,
                     Time = item.CreatedAt.ToString("g"),
                     AmountText = "—",
                     AmountColor = muted
@@ -100,7 +101,7 @@ public class GameHistoryViewModel : ViewModelBase
                 {
                     SessionId = sid,
                     Title = $"{_i18n.T("history_cancelled")} — {item.BetAmount:N0} FCFA",
-                    Subtitle = role,
+                    Subtitle = meta,
                     Time = item.CreatedAt.ToString("g"),
                     AmountText = "—",
                     AmountColor = muted

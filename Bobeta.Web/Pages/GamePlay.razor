@@ -35,11 +35,13 @@
             @if (ViewModel.Variant == GameVariant.Kopo)
             {
                 <details class="rounded-xl border border-border bg-card/60 px-4 py-3 text-sm text-foreground">
-                    <summary class="cursor-pointer select-none font-semibold">Kopo — how to play</summary>
-                    <div class="mt-2 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
-                        10×10 checkers with flying kings. Tap your piece, then the destination square. Captures are compulsory; take the line that captures the most pieces.
-                    </div>
+                    <summary class="cursor-pointer select-none font-semibold">@I18n.T("kopo_how_to_play_title")</summary>
+                    <div class="mt-2 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">@I18n.T("kopo_rules_body")</div>
                 </details>
+                @if (ViewModel.Kopo?.MustContinueChain == true)
+                {
+                    <p class="text-center text-xs text-primary">@I18n.T("kopo_continue_capture")</p>
+                }
                 @if (ViewModel.Kopo != null && ViewModel.MyPlayerId is { } myId)
                 {
                     <KopoBoard BoardSize="@ViewModel.Kopo.BoardSize"
