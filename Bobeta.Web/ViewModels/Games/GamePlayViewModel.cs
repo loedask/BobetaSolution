@@ -73,6 +73,9 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public bool InactivityActionBusy { get; private set; }
     public bool IsSendingMove => IsLoading && (Variant == GameVariant.Kopo || PlayerCards.Count > 0);
 
+    public bool ShowLoadingShell => GamePlayUiHelper.ShowLoadingShell(
+        IsLoading, Variant, Kopo != null, PlayerCards.Count, WaitingForOpponent);
+
     private readonly List<KopoSquareDto> _kopoPath = new();
     public IReadOnlyList<KopoSquareDto> KopoSelectionPath => _kopoPath;
 
@@ -299,7 +302,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     private async Task TryResolveInactivityAfterDeadlineAsync()
     {
         await SyncGameStateFromServerAsync();
-        if (!ShowGameResult && !WaitingForOpponent && PlayerCards.Count > 0)
+        if (GamePlayUiHelper.IsMatchTableActive(ShowGameResult, WaitingForOpponent, Variant, Kopo != null, PlayerCards.Count))
             return;
         if (!ShowInactivityOverlay)
             return;
@@ -524,6 +527,16 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         {
             SetError(_i18n?.T("invalid_move_not_your_turn") ?? res.ErrorMessage ?? "Invalid move.");
             return;
+        }
+
+        if (_i18n != null)
+        {
+            var kopoMsg = GameMoveErrorMessages.TryGetMessage(res.ErrorCode, _i18n.T);
+            if (kopoMsg != null)
+            {
+                SetError(kopoMsg);
+                return;
+            }
         }
 
         if (res.StatusCode == 400)

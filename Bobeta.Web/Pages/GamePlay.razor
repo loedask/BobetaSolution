@@ -18,7 +18,7 @@
     <div class="space-y-4 px-5 py-4">
         <ErrorBanner Message="@ViewModel.ErrorMessage" />
 
-        @if (ViewModel.IsLoading && ViewModel.PlayerCards.Count == 0)
+        @if (ViewModel.ShowLoadingShell)
         {
             <SkeletonLoader CssClass="h-12 rounded-xl mb-4" />
             <SkeletonLoader CssClass="h-24 rounded-2xl mb-4" />

@@ -73,7 +73,7 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         if (_vm == null) return;
         ErrorLabel.Text = _vm.ErrorMessage ?? "";
         ErrorLabel.IsVisible = !string.IsNullOrEmpty(_vm.ErrorMessage);
-        Busy.IsRunning = _vm.IsLoading && (_vm.IsKopo ? _vm.Kopo == null : _vm.PlayerCards.Count == 0);
+        Busy.IsRunning = _vm.ShowLoadingShell;
 
         var isKopo = _vm.IsKopo;
         MakopaPanel.IsVisible = !isKopo;
