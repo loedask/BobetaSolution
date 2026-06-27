@@ -31,3 +31,7 @@ Bobeta.Web.Deferred/obj/
 Bobeta.Web.Shared/obj/
 Bobeta.Web.Shared/bin/
 Bobeta.Web.Deferred/bin/
+Bobeta.Web.Host/bin/
+Bobeta.Web.Host/obj/
+artifacts/
+**/*.pubxml.user

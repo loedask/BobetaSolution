@@ -14,6 +14,7 @@
   </Folder>
   <Folder Name="/src/UI/">
     <Project Path="Bobeta.Mobile/Bobeta.Mobile.csproj" Id="42840e20-7c0a-446a-bad0-35e548c09335" />
+    <Project Path="Bobeta.Web.Host/Bobeta.Web.Host.csproj" />
     <Project Path="Bobeta.Web/Bobeta.Web.csproj" />
     <Project Path="Bobeta.Web.Deferred/Bobeta.Web.Deferred.csproj" />
     <Project Path="Bobeta.Web.Shared/Bobeta.Web.Shared.csproj" />

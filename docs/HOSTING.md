@@ -4,7 +4,16 @@ This guide covers what you need when hosting the Bobeta API and Web app in produ
 
 ## 1. Publishing the apps
 
-You can publish the API and Web app as you normally would (e.g. `dotnet publish`, or your CI/CD pipeline). There is no separate “SignalR install” step — the real-time hub is part of the API and the client library is part of the Web app.
+Publish both apps to **Azure Linux App Service** (see [DEPLOYMENT.md](./DEPLOYMENT.md) for profiles and portal setup):
+
+| App | Project | Notes |
+|-----|---------|--------|
+| API | **`Bobeta.API`** | `linux-x64`, Zip Deploy profile **`bobeta - Zip Deploy`** |
+| PWA | **`Bobeta.Web.Host`** | Serves **`Bobeta.Web`** (Blazor WASM); profile **`bobeta-pwa - Zip Deploy`** |
+
+Enable **WebSockets** on the **API** app in the Azure Portal (**Configuration → General settings**). SignalR is part of the API; no separate install step.
+
+For local development, run **`Bobeta.Web`** directly (`dotnet run`); use **`Bobeta.Web.Host`** only for production-style hosting and Azure publish.
 
 ## 2. Configuration (required)
 
