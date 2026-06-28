@@ -35,6 +35,10 @@
     <Content Remove="wwwroot\css\tailwind.input.css" />
   </ItemGroup>
 
+  <Target Name="BuildTailwindCss" BeforeTargets="Build">
+    <Exec Command="npm run build:css" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="Exists('$(MSBuildProjectDirectory)\package.json')" />
+  </Target>
+
   <Target Name="MirrorPwaManifestToPublishRoot" AfterTargets="Publish">
     <Copy SourceFiles="$(PublishDir)wwwroot\manifest.webmanifest"
           DestinationFiles="$(PublishDir)manifest.webmanifest"
