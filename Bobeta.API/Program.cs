@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Text.Json.Serialization;
 using Bobeta.API.App.Extensions;
 using Bobeta.API.App.Filters;
 using Bobeta.API.Hubs;
@@ -9,7 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 var configuredCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
 
 // Controllers with global validation filter (FluentValidation on request DTOs).
-builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>());
+builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>())
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddBobetaSwagger();
