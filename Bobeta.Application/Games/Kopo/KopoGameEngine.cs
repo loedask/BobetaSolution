@@ -15,6 +15,7 @@ public class KopoGameEngine(
     IGameResultRepository resultRepository,
     IWalletService walletService,
     IPlayerRepository playerRepository,
+    IGameRevenueService gameRevenueService,
     ILogger<KopoGameEngine> logger) : IGameEngine
 {
     private const decimal CommissionRate = 0.25m;
@@ -180,6 +181,7 @@ public class KopoGameEngine(
             PlatformCommission = commission,
             CreatedAt = DateTime.UtcNow
         };
+        await gameRevenueService.EnrichWithPartnerShareAsync(result, winnerId, cancellationToken);
         await resultRepository.AddAsync(result, cancellationToken);
         session.GameResult = result;
     }

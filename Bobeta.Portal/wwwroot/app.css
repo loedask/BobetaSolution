@@ -265,6 +265,10 @@ a {
   max-width: 480px;
 }
 
+.portal-form-wide {
+  max-width: 560px;
+}
+
 .portal-form-actions {
   display: flex;
   gap: 0.75rem;

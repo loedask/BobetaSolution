@@ -14,4 +14,5 @@ public class PortalUser
   public DateTime CreatedAt { get; set; }
   public Guid? CreatedById { get; set; }
   public PortalUser? CreatedBy { get; set; }
+  public LicensePartner? LicensePartner { get; set; }
 }

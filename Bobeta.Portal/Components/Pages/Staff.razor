@@ -80,6 +80,7 @@ else
     private static string FormatRole(PortalUserRole role) => role switch
     {
         PortalUserRole.PlatformOwner => "Platform Owner",
+        PortalUserRole.LicensePartner => "License Partner",
         _ => role.ToString()
     };
 }

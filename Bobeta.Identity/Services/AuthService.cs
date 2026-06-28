@@ -120,6 +120,7 @@ public class AuthService : IAuthService
             Id = Guid.NewGuid(),
             PhoneNumber = phoneNumber,
             PlayerName = playerName,
+            CountryCode = CountryCatalog.ResolveCountryCodeFromPhone(phoneNumber),
             Language = "en",
             CreatedAt = DateTime.UtcNow,
             IsVerified = true,

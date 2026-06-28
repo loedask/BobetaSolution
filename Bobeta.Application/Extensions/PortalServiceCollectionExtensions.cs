@@ -17,6 +17,8 @@ public static class PortalServiceCollectionExtensions
     services.AddScoped<IPlayerQueryService, PlayerQueryService>();
     services.AddScoped<IWalletService, WalletService>();
     services.AddScoped<IGameHistoryService, GameHistoryService>();
+    services.AddScoped<ILicensePartnerService, LicensePartnerService>();
+    services.AddScoped<IRevenueShareResolver, RevenueShareResolver>();
     return services;
   }
 }

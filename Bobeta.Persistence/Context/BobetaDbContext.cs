@@ -37,6 +37,18 @@ public class BobetaDbContext(DbContextOptions<BobetaDbContext> options) : DbCont
     /// <summary>Bobeta.Portal staff accounts.</summary>
     public DbSet<PortalUser> PortalUsers => Set<PortalUser>();
 
+    /// <summary>Contracted country license holders.</summary>
+    public DbSet<LicensePartner> LicensePartners => Set<LicensePartner>();
+
+    /// <summary>Country assignments per license partner.</summary>
+    public DbSet<LicensePartnerCountryAssignment> LicensePartnerCountryAssignments => Set<LicensePartnerCountryAssignment>();
+
+    /// <summary>Effective-dated revenue share rates per assignment.</summary>
+    public DbSet<LicensePartnerRevenueShareRate> LicensePartnerRevenueShareRates => Set<LicensePartnerRevenueShareRate>();
+
+    /// <summary>Revenue split ledger entries.</summary>
+    public DbSet<RevenueAllocation> RevenueAllocations => Set<RevenueAllocation>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

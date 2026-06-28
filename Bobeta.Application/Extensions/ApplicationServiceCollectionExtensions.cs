@@ -21,6 +21,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IGameEngineService, GameEngineService>();
         services.AddScoped<IGameHistoryService, GameHistoryService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IGameRevenueService, GameRevenueService>();
+        services.AddScoped<IRevenueShareResolver, RevenueShareResolver>();
         services.AddValidatorsFromAssemblyContaining<CreateGameRequestValidator>();
         return services;
     }

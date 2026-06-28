@@ -4,5 +4,6 @@ namespace Bobeta.Domain.Enums;
 public enum PortalUserRole
 {
   Member = 0,
-  PlatformOwner = 1
+  PlatformOwner = 1,
+  LicensePartner = 2
 }

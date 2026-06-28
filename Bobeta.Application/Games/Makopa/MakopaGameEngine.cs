@@ -23,6 +23,7 @@ public class MakopaGameEngine(
     IGameResultRepository resultRepository,
     IWalletService walletService,
     IPlayerRepository playerRepository,
+    IGameRevenueService gameRevenueService,
     ILogger<MakopaGameEngine> logger) : IGameEngine
 {
     public GameVariant Variant => GameVariant.Makopa;
@@ -372,6 +373,7 @@ public class MakopaGameEngine(
             PlatformCommission = commission,
             CreatedAt = DateTime.UtcNow
         };
+        await gameRevenueService.EnrichWithPartnerShareAsync(result, winnerId, cancellationToken);
         await _resultRepository.AddAsync(result, cancellationToken);
         session.GameResult = result;
     }

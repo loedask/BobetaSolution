@@ -26,6 +26,12 @@ public class GameResult
     /// <summary>Platform commission (25% of pot).</summary>
     public decimal PlatformCommission { get; set; }
 
+    /// <summary>Amount allocated to the license partner from platform commission.</summary>
+    public decimal PartnerCommission { get; set; }
+
+    /// <summary>License partner that received a revenue share, if any.</summary>
+    public Guid? LicensePartnerId { get; set; }
+
     /// <summary>When the result was recorded.</summary>
     public DateTime CreatedAt { get; set; }
 

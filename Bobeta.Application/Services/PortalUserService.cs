@@ -34,6 +34,9 @@ public sealed class PortalUserService(
     if (request.Role == PortalUserRole.PlatformOwner && await portalUsers.GetByIdAsync(createdById, cancellationToken) is not { Role: PortalUserRole.PlatformOwner })
       throw new UnauthorizedAccessException("Only platform owners can create platform owner accounts.");
 
+    if (request.Role == PortalUserRole.LicensePartner)
+      throw new InvalidOperationException("License partners must be registered via the license partner flow.");
+
     var user = new PortalUser
     {
       Id = Guid.NewGuid(),

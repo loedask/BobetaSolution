@@ -1,7 +1,15 @@
 @page "/"
 @attribute [Authorize]
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
 
 @code {
-    protected override void OnInitialized() => Nav.NavigateTo("/users", replace: true);
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthState.GetAuthenticationStateAsync();
+        if (auth.User.IsInRole(nameof(PortalUserRole.LicensePartner)))
+            Nav.NavigateTo("/my-license", replace: true);
+        else
+            Nav.NavigateTo("/users", replace: true);
+    }
 }

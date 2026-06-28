@@ -1,15 +1,23 @@
 <nav class="portal-nav">
-    <NavLink class="portal-nav-link" href="/users" Match="NavLinkMatch.All">
-        Players
-    </NavLink>
+    <AuthorizeView Roles="LicensePartner">
+        <Authorized>
+            <NavLink class="portal-nav-link" href="/my-license">My license</NavLink>
+        </Authorized>
+        <NotAuthorized>
+            <NavLink class="portal-nav-link" href="/users" Match="NavLinkMatch.All">Players</NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
     <AuthorizeView Roles="PlatformOwner">
         <Authorized>
-            <NavLink class="portal-nav-link" href="/staff">
-                Staff
-            </NavLink>
-            <NavLink class="portal-nav-link" href="/staff/register">
-                Register staff
-            </NavLink>
+            <NavLink class="portal-nav-link" href="/users">Players</NavLink>
+            <NavLink class="portal-nav-link" href="/license-partners">License partners</NavLink>
+            <NavLink class="portal-nav-link" href="/staff">Staff</NavLink>
+            <NavLink class="portal-nav-link" href="/staff/register">Register staff</NavLink>
+        </Authorized>
+    </AuthorizeView>
+    <AuthorizeView Roles="Member">
+        <Authorized>
+            <NavLink class="portal-nav-link" href="/users">Players</NavLink>
         </Authorized>
     </AuthorizeView>
 </nav>
