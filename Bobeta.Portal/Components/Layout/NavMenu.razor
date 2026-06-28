@@ -1,4 +1,9 @@
 <nav class="portal-nav">
+    <AuthorizeView>
+        <Authorized>
+            <NavLink class="portal-nav-link" href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
+        </Authorized>
+    </AuthorizeView>
     <AuthorizeView Roles="LicensePartner">
         <Authorized>
             <NavLink class="portal-nav-link" href="/users">Players</NavLink>

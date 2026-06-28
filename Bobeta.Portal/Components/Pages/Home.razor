@@ -1,15 +1,231 @@
 @page "/"
 @attribute [Authorize]
-@inject NavigationManager Nav
-@inject AuthenticationStateProvider AuthState
+@inject IDashboardService Dashboard
+@inject PortalUserContext PortalUser
+@rendermode InteractiveServer
+
+<PageTitle>Dashboard - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p class="portal-muted">Platform overview and downloadable reports.</p>
+    </div>
+</div>
+
+<div class="portal-card portal-section">
+    <h2>Period</h2>
+    <div class="portal-filter-row">
+        <div class="portal-field">
+            <label>From (UTC)</label>
+            <InputDate class="portal-input" @bind-Value="_fromDate" />
+        </div>
+        <div class="portal-field">
+            <label>To (UTC)</label>
+            <InputDate class="portal-input" @bind-Value="_toDate" />
+        </div>
+        <button class="portal-button portal-button-primary" type="button" @onclick="LoadAsync" disabled="@_loading">
+            @(_loading ? "Loading..." : "Apply")
+        </button>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <div class="portal-alert portal-alert-error">@_error</div>
+}
+
+@if (_stats is not null)
+{
+    <div class="portal-detail-grid portal-section">
+        <section class="portal-card">
+            <h2>Players</h2>
+            <p class="portal-stat">@_stats.Players.TotalPlayers</p>
+            <p class="portal-muted">@_stats.Players.NewPlayers new in period · @_stats.Players.ActivePlayers active</p>
+        </section>
+        @if (_stats.ShowFinancials)
+        {
+            <section class="portal-card">
+                <h2>MoMo deposits</h2>
+                <p class="portal-stat">@FormatAmount(_stats.Payments.DepositVolume)</p>
+                <p class="portal-muted">@_stats.Payments.SuccessfulDeposits successful</p>
+            </section>
+            <section class="portal-card">
+                <h2>MoMo withdrawals</h2>
+                <p class="portal-stat">@FormatAmount(_stats.Payments.WithdrawalVolume)</p>
+                <p class="portal-muted">@_stats.Payments.SuccessfulWithdrawals successful</p>
+            </section>
+            <section class="portal-card">
+                <h2>Games played</h2>
+                <p class="portal-stat">@_stats.Games.GamesPlayed</p>
+                <p class="portal-muted">@FormatAmount(_stats.Games.TotalPot) total pot</p>
+            </section>
+            <section class="portal-card">
+                <h2>Platform revenue</h2>
+                <p class="portal-stat">@FormatAmount(_stats.Revenue.GrossPlatformRevenue)</p>
+                <p class="portal-muted">@FormatAmount(_stats.Revenue.PlatformRetained) retained · @_stats.Revenue.AllocationCount allocations</p>
+            </section>
+            <section class="portal-card">
+                <h2>Partner share paid</h2>
+                <p class="portal-stat">@FormatAmount(_stats.Revenue.PartnerSharePaid)</p>
+                <p class="portal-muted">License partner earnings in period</p>
+            </section>
+        }
+    </div>
+
+    <div class="portal-card portal-section">
+        <h2>Download reports</h2>
+        <div class="portal-downloads">
+            <a class="portal-button" href="@ReportUrl("summary.csv")">Summary CSV</a>
+            <a class="portal-button" href="@ReportUrl("players.csv")">Players by country</a>
+            @if (_stats.ShowFinancials)
+            {
+                <a class="portal-button" href="@ReportUrl("revenue.csv")">Revenue detail</a>
+                <a class="portal-button" href="@ReportUrl("payments.csv")">Payments summary</a>
+            }
+        </div>
+    </div>
+
+    <div class="portal-detail-grid portal-section">
+        <section class="portal-card">
+            <h2>Players by country</h2>
+            @if (_stats.PlayersByCountry.Count == 0)
+            {
+                <p class="portal-muted">No players in this scope.</p>
+            }
+            else
+            {
+                <div class="portal-table-wrap">
+                    <table class="portal-table">
+                        <thead>
+                            <tr><th>Country</th><th>Players</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in _stats.PlayersByCountry)
+                            {
+                                <tr>
+                                    <td>@row.CountryName</td>
+                                    <td>@row.Count</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        @if (_stats.ShowFinancials)
+        {
+            <section class="portal-card">
+                <h2>Revenue by source</h2>
+                @if (_stats.RevenueBySource.Count == 0)
+                {
+                    <p class="portal-muted">No revenue in this period.</p>
+                }
+                else
+                {
+                    <div class="portal-table-wrap">
+                        <table class="portal-table">
+                            <thead>
+                                <tr><th>Source</th><th>Gross</th><th>Partner share</th><th>Txns</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in _stats.RevenueBySource)
+                                {
+                                    <tr>
+                                        <td>@row.Label</td>
+                                        <td>@FormatAmount(row.GrossPlatformRevenue)</td>
+                                        <td>@FormatAmount(row.PartnerAmount)</td>
+                                        <td>@row.TransactionCount</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+        }
+    </div>
+
+    @if (_stats.ShowPartnerLeaderboard)
+    {
+        <section class="portal-card portal-section">
+            <h2>Revenue by license partner</h2>
+            @if (_stats.RevenueByPartner.Count == 0)
+            {
+                <p class="portal-muted">No partner revenue in this period.</p>
+            }
+            else
+            {
+                <div class="portal-table-wrap">
+                    <table class="portal-table">
+                        <thead>
+                            <tr><th>Partner</th><th>Partner share</th><th>Gross</th><th>Txns</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in _stats.RevenueByPartner)
+                            {
+                                <tr>
+                                    <td>@row.Label</td>
+                                    <td>@FormatAmount(row.PartnerAmount)</td>
+                                    <td>@FormatAmount(row.GrossPlatformRevenue)</td>
+                                    <td>@row.TransactionCount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+}
 
 @code {
-    protected override async Task OnInitializedAsync()
+    private DashboardStatsDto? _stats;
+    private DateTime? _fromDate = DateTime.UtcNow.Date.AddDays(-30);
+    private DateTime? _toDate = DateTime.UtcNow.Date;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
     {
-        var auth = await AuthState.GetAuthenticationStateAsync();
-        if (auth.User.IsInRole(nameof(PortalUserRole.LicensePartner)))
-            Nav.NavigateTo("/users", replace: true);
-        else
-            Nav.NavigateTo("/users", replace: true);
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            if (PortalUser.UserId is not { } userId || PortalUser.Role is not { } role)
+            {
+                _error = "Could not determine your portal account.";
+                return;
+            }
+
+            var query = new DashboardQuery
+            {
+                FromUtc = _fromDate?.ToUniversalTime(),
+                ToUtc = _toDate?.Date.AddDays(1).AddTicks(-1).ToUniversalTime()
+            };
+
+            _stats = await Dashboard.GetDashboardAsync(query, role, userId);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
+
+    private string ReportUrl(string fileName)
+    {
+        var from = _fromDate?.ToString("yyyy-MM-dd") ?? string.Empty;
+        var to = _toDate?.ToString("yyyy-MM-dd") ?? string.Empty;
+        return $"/reports/{fileName}?from={Uri.EscapeDataString(from)}&to={Uri.EscapeDataString(to)}";
+    }
+
+    private static string FormatAmount(decimal amount) => amount.ToString("N0");
 }

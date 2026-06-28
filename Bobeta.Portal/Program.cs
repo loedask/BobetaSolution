@@ -75,6 +75,7 @@ app.MapRazorComponents<Bobeta.Portal.Components.App>()
     .AddInteractiveServerRenderMode();
 
 app.MapPortalAuthEndpoints();
+app.MapDashboardReportEndpoints();
 
 await ApplyPortalMigrationsAsync(app);
 

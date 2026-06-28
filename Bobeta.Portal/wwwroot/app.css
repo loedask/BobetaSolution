@@ -282,6 +282,12 @@ a {
   align-items: end;
 }
 
+.portal-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .portal-form-actions {
   display: flex;
   gap: 0.75rem;

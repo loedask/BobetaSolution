@@ -28,6 +28,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<ISmsMessageRepository, SmsMessageRepository>();
         services.AddScoped<IPortalUserRepository, PortalUserRepository>();
         services.AddScoped<ILicensePartnerRepository, LicensePartnerRepository>();
+        services.AddScoped<IDashboardStatsRepository, DashboardStatsRepository>();
         return services;
     }
 }

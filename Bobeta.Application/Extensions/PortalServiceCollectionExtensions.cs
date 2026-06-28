@@ -24,6 +24,7 @@ public static class PortalServiceCollectionExtensions
     services.AddScoped<IPaymentRevenueService, PaymentRevenueService>();
     services.AddScoped<IPartnerRevenueReportService, PartnerRevenueReportService>();
     services.AddScoped<ILicensePartnerAccessService, LicensePartnerAccessService>();
+    services.AddScoped<IDashboardService, DashboardService>();
     return services;
   }
 }
