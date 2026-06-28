@@ -3,19 +3,18 @@ using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Enums;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Bobeta.Portal.Services;
 
-public sealed class PortalSignInService(
-    IPortalAuthService auth,
-    IHttpContextAccessor httpContextAccessor)
+public sealed class PortalSignInService(IPortalAuthService auth)
 {
-  public async Task<bool> SignInAsync(string email, string password, CancellationToken cancellationToken = default)
+  public async Task<bool> SignInAsync(
+      HttpContext httpContext,
+      string email,
+      string password,
+      CancellationToken cancellationToken = default)
   {
-    var httpContext = httpContextAccessor.HttpContext;
-    if (httpContext is null)
-      return false;
-
     var user = await auth.ValidateCredentialsAsync(email, password, cancellationToken);
     if (user is null)
       return false;
@@ -43,12 +42,8 @@ public sealed class PortalSignInService(
     return true;
   }
 
-  public async Task SignOutAsync()
-  {
-    var httpContext = httpContextAccessor.HttpContext;
-    if (httpContext is not null)
-      await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-  }
+  public static Task SignOutAsync(HttpContext httpContext) =>
+    httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
   public static bool IsPlatformOwner(ClaimsPrincipal user) =>
     user.IsInRole(nameof(PortalUserRole.PlatformOwner));

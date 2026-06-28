@@ -4,6 +4,7 @@ using Bobeta.Domain.Enums;
 using Bobeta.Persistence.Context;
 using Bobeta.Persistence.Extensions;
 using Bobeta.Persistence.Seeding;
+using Bobeta.Portal.Auth;
 using Bobeta.Portal.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -46,6 +47,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("PortalPlatformOwner", policy => policy.RequireRole(nameof(PortalUserRole.PlatformOwner)));
 });
 
+builder.Services.AddHttpsRedirection(options => options.HttpsPort = 443);
+
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<PortalSignInService>();
@@ -70,6 +73,8 @@ app.UseAuthorization();
 app.MapStaticAssets();
 app.MapRazorComponents<Bobeta.Portal.Components.App>()
     .AddInteractiveServerRenderMode();
+
+app.MapPortalAuthEndpoints();
 
 await ApplyPortalMigrationsAsync(app);
 

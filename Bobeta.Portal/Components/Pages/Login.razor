@@ -1,9 +1,6 @@
 @page "/login"
 @layout Bobeta.Portal.Components.Layout.LoginLayout
 @attribute [AllowAnonymous]
-@rendermode InteractiveServer
-@inject PortalSignInService SignIn
-@inject NavigationManager Nav
 
 <PageTitle>Sign in - Bobeta Portal</PageTitle>
 
@@ -11,60 +8,30 @@
     <h1>Bobeta Portal</h1>
     <p class="portal-muted">Sign in with your employee account.</p>
 
-    @if (!string.IsNullOrEmpty(_error))
+    @if (Error == "invalid")
     {
-        <div class="portal-alert portal-alert-error">@_error</div>
+        <div class="portal-alert portal-alert-error">Invalid email or password.</div>
     }
 
-    <EditForm Model="_model" OnValidSubmit="HandleLoginAsync">
+    <form method="post" action="/account/login">
+        <AntiforgeryToken />
+        <input type="hidden" name="returnUrl" value="@ReturnUrl" />
         <div class="portal-field">
             <label for="email">Email</label>
-            <InputText id="email" class="portal-input" @bind-Value="_model.Email" autocomplete="username" />
+            <input id="email" name="email" class="portal-input" type="email" autocomplete="username" required />
         </div>
         <div class="portal-field">
             <label for="password">Password</label>
-            <InputText id="password" type="password" class="portal-input" @bind-Value="_model.Password" autocomplete="current-password" />
+            <input id="password" name="password" type="password" class="portal-input" autocomplete="current-password" required />
         </div>
-        <button class="portal-button portal-button-primary" type="submit" disabled="@_busy">
-            @(_busy ? "Signing in..." : "Sign in")
-        </button>
-    </EditForm>
+        <button class="portal-button portal-button-primary" type="submit">Sign in</button>
+    </form>
 </div>
 
 @code {
-    private readonly LoginModel _model = new();
-    private string? _error;
-    private bool _busy;
-
     [SupplyParameterFromQuery(Name = "returnUrl")]
-  public string? ReturnUrl { get; set; }
+    public string? ReturnUrl { get; set; }
 
-    private async Task HandleLoginAsync()
-    {
-        _busy = true;
-        _error = null;
-
-        try
-        {
-            var ok = await SignIn.SignInAsync(_model.Email, _model.Password);
-            if (!ok)
-            {
-                _error = "Invalid email or password.";
-                return;
-            }
-
-            var target = string.IsNullOrWhiteSpace(ReturnUrl) ? "/users" : ReturnUrl;
-            Nav.NavigateTo(target, forceLoad: true);
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
-
-    private sealed class LoginModel
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
+    [SupplyParameterFromQuery]
+    public string? Error { get; set; }
 }
