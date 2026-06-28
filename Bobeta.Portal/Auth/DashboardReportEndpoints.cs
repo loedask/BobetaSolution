@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using System.Text;
 using Bobeta.Application.DTOs.Portal;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Enums;
@@ -9,12 +8,14 @@ namespace Bobeta.Portal.Auth;
 
 public static class DashboardReportEndpoints
 {
+  private const string ExcelContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
   public static IEndpointRouteBuilder MapDashboardReportEndpoints(this IEndpointRouteBuilder endpoints)
   {
-    endpoints.MapGet("/reports/summary.csv", DownloadAsync(ExportKind.Summary)).RequireAuthorization();
-    endpoints.MapGet("/reports/players.csv", DownloadAsync(ExportKind.Players)).RequireAuthorization();
-    endpoints.MapGet("/reports/revenue.csv", DownloadAsync(ExportKind.Revenue)).RequireAuthorization();
-    endpoints.MapGet("/reports/payments.csv", DownloadAsync(ExportKind.Payments)).RequireAuthorization();
+    endpoints.MapGet("/reports/summary.xlsx", DownloadAsync(ExportKind.Summary)).RequireAuthorization();
+    endpoints.MapGet("/reports/players.xlsx", DownloadAsync(ExportKind.Players)).RequireAuthorization();
+    endpoints.MapGet("/reports/revenue.xlsx", DownloadAsync(ExportKind.Revenue)).RequireAuthorization();
+    endpoints.MapGet("/reports/payments.xlsx", DownloadAsync(ExportKind.Payments)).RequireAuthorization();
     return endpoints;
   }
 
@@ -31,25 +32,25 @@ public static class DashboardReportEndpoints
 
       try
       {
-        var csv = kind switch
+        var content = kind switch
         {
-          ExportKind.Summary => await dashboard.ExportSummaryCsvAsync(query, user.Value.Role, user.Value.UserId),
-          ExportKind.Players => await dashboard.ExportPlayersCsvAsync(query, user.Value.Role, user.Value.UserId),
-          ExportKind.Revenue => await dashboard.ExportRevenueCsvAsync(query, user.Value.Role, user.Value.UserId),
-          ExportKind.Payments => await dashboard.ExportPaymentsCsvAsync(query, user.Value.Role, user.Value.UserId),
-          _ => string.Empty
+          ExportKind.Summary => await dashboard.ExportSummaryExcelAsync(query, user.Value.Role, user.Value.UserId),
+          ExportKind.Players => await dashboard.ExportPlayersExcelAsync(query, user.Value.Role, user.Value.UserId),
+          ExportKind.Revenue => await dashboard.ExportRevenueExcelAsync(query, user.Value.Role, user.Value.UserId),
+          ExportKind.Payments => await dashboard.ExportPaymentsExcelAsync(query, user.Value.Role, user.Value.UserId),
+          _ => Array.Empty<byte>()
         };
 
         var fileName = kind switch
         {
-          ExportKind.Summary => "dashboard-summary.csv",
-          ExportKind.Players => "players-by-country.csv",
-          ExportKind.Revenue => "revenue-detail.csv",
-          ExportKind.Payments => "payments-summary.csv",
-          _ => "report.csv"
+          ExportKind.Summary => "dashboard-summary.xlsx",
+          ExportKind.Players => "players-by-country.xlsx",
+          ExportKind.Revenue => "revenue-detail.xlsx",
+          ExportKind.Payments => "payments-summary.xlsx",
+          _ => "report.xlsx"
         };
 
-        return Results.File(Encoding.UTF8.GetBytes(csv), "text/csv", fileName);
+        return Results.File(content, ExcelContentType, fileName);
       }
       catch (UnauthorizedAccessException)
       {

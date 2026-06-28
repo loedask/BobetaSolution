@@ -75,13 +75,14 @@
 
     <div class="portal-card portal-section">
         <h2>Download reports</h2>
+        <p class="portal-muted">Excel workbooks with filter dropdowns on each column.</p>
         <div class="portal-downloads">
-            <a class="portal-button" href="@ReportUrl("summary.csv")">Summary CSV</a>
-            <a class="portal-button" href="@ReportUrl("players.csv")">Players by country</a>
+            <a class="portal-button" href="@ReportUrl("summary.xlsx")">Summary Excel</a>
+            <a class="portal-button" href="@ReportUrl("players.xlsx")">Players by country</a>
             @if (_stats.ShowFinancials)
             {
-                <a class="portal-button" href="@ReportUrl("revenue.csv")">Revenue detail</a>
-                <a class="portal-button" href="@ReportUrl("payments.csv")">Payments summary</a>
+                <a class="portal-button" href="@ReportUrl("revenue.xlsx")">Revenue detail</a>
+                <a class="portal-button" href="@ReportUrl("payments.xlsx")">Payments summary</a>
             }
         </div>
     </div>

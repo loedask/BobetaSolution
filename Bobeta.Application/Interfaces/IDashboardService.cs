@@ -11,25 +11,25 @@ public interface IDashboardService
       Guid portalUserId,
       CancellationToken cancellationToken = default);
 
-  Task<string> ExportSummaryCsvAsync(
+  Task<byte[]> ExportSummaryExcelAsync(
       DashboardQuery query,
       PortalUserRole role,
       Guid portalUserId,
       CancellationToken cancellationToken = default);
 
-  Task<string> ExportPlayersCsvAsync(
+  Task<byte[]> ExportPlayersExcelAsync(
       DashboardQuery query,
       PortalUserRole role,
       Guid portalUserId,
       CancellationToken cancellationToken = default);
 
-  Task<string> ExportRevenueCsvAsync(
+  Task<byte[]> ExportRevenueExcelAsync(
       DashboardQuery query,
       PortalUserRole role,
       Guid portalUserId,
       CancellationToken cancellationToken = default);
 
-  Task<string> ExportPaymentsCsvAsync(
+  Task<byte[]> ExportPaymentsExcelAsync(
       DashboardQuery query,
       PortalUserRole role,
       Guid portalUserId,

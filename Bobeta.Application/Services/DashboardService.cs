@@ -55,46 +55,29 @@ public sealed class DashboardService(
     };
   }
 
-  public async Task<string> ExportSummaryCsvAsync(
+  public async Task<byte[]> ExportSummaryExcelAsync(
       DashboardQuery query,
       PortalUserRole role,
       Guid portalUserId,
       CancellationToken cancellationToken = default)
   {
     var dashboard = await GetDashboardAsync(query, role, portalUserId, cancellationToken);
-    var rows = new List<string[]>
-    {
-      new[] { "Metric", "Value" },
-      new[] { "Period from (UTC)", FormatDate(dashboard.FromUtc) },
-      new[] { "Period to (UTC)", FormatDate(dashboard.ToUtc) },
-      new[] { "Total players", dashboard.Players.TotalPlayers.ToString() },
-      new[] { "New players", dashboard.Players.NewPlayers.ToString() },
-      new[] { "Verified players", dashboard.Players.VerifiedPlayers.ToString() },
-      new[] { "Active players", dashboard.Players.ActivePlayers.ToString() }
-    };
+    var metrics = BuildSummaryMetrics(dashboard);
 
-    if (dashboard.ShowFinancials)
-    {
-      rows.AddRange(new[]
-      {
-        new[] { "Successful deposits", dashboard.Payments.SuccessfulDeposits.ToString() },
-        new[] { "Deposit volume", dashboard.Payments.DepositVolume.ToString("N2") },
-        new[] { "Successful withdrawals", dashboard.Payments.SuccessfulWithdrawals.ToString() },
-        new[] { "Withdrawal volume", dashboard.Payments.WithdrawalVolume.ToString("N2") },
-        new[] { "Games played", dashboard.Games.GamesPlayed.ToString() },
-        new[] { "Total pot", dashboard.Games.TotalPot.ToString("N2") },
-        new[] { "Platform commission", dashboard.Games.PlatformCommission.ToString("N2") },
-        new[] { "Gross platform revenue", dashboard.Revenue.GrossPlatformRevenue.ToString("N2") },
-        new[] { "Partner share paid", dashboard.Revenue.PartnerSharePaid.ToString("N2") },
-        new[] { "Platform retained", dashboard.Revenue.PlatformRetained.ToString("N2") },
-        new[] { "Revenue allocations", dashboard.Revenue.AllocationCount.ToString() }
-      });
-    }
-
-    return CsvBuilder.Build(rows);
+    return ExcelReportWriter.BuildSummaryWorkbook(
+      dashboard.FromUtc,
+      dashboard.ToUtc,
+      metrics,
+      dashboard.PlayersByCountry.Select(r => (r.CountryCode, r.CountryName, r.Count)).ToList(),
+      dashboard.ShowFinancials
+        ? dashboard.RevenueBySource.Select(r => (r.Label, r.GrossPlatformRevenue, r.PartnerAmount, r.TransactionCount)).ToList()
+        : null,
+      dashboard.ShowPartnerLeaderboard
+        ? dashboard.RevenueByPartner.Select(r => (r.Label, r.PartnerAmount, r.GrossPlatformRevenue, r.TransactionCount)).ToList()
+        : null);
   }
 
-  public async Task<string> ExportPlayersCsvAsync(
+  public async Task<byte[]> ExportPlayersExcelAsync(
       DashboardQuery query,
       PortalUserRole role,
       Guid portalUserId,
@@ -104,12 +87,13 @@ public sealed class DashboardService(
     var filter = BuildFilter(query, scope);
     var rows = await stats.GetPlayersByCountryAsync(filter, cancellationToken);
 
-    var csvRows = new List<string[]> { new[] { "Country code", "Country", "Players" } };
-    csvRows.AddRange(rows.Select(r => new[] { r.CountryCode, r.CountryName, r.Count.ToString() }));
-    return CsvBuilder.Build(csvRows);
+    return ExcelReportWriter.Build(
+      "Players by country",
+      ["Country code", "Country", "Players"],
+      rows.Select(r => new object?[] { r.CountryCode, r.CountryName, r.Count }));
   }
 
-  public async Task<string> ExportRevenueCsvAsync(
+  public async Task<byte[]> ExportRevenueExcelAsync(
       DashboardQuery query,
       PortalUserRole role,
       Guid portalUserId,
@@ -122,26 +106,22 @@ public sealed class DashboardService(
     var filter = BuildFilter(query, scope);
     var allocations = await stats.GetRevenueAllocationsAsync(filter, take: 10_000, cancellationToken);
 
-    var csvRows = new List<string[]>
-    {
-      new[] { "Date (UTC)", "Source", "Country", "Gross revenue", "Partner rate %", "Partner amount", "Currency" }
-    };
-
-    csvRows.AddRange(allocations.Select(a => new[]
-    {
-      a.CreatedAt.ToString("yyyy-MM-dd HH:mm"),
-      FormatSourceType(a.SourceType),
-      a.CountryName,
-      a.GrossPlatformRevenue.ToString("N2"),
-      a.PartnerSharePercent.ToString("N2"),
-      a.PartnerAmount.ToString("N2"),
-      a.Currency
-    }));
-
-    return CsvBuilder.Build(csvRows);
+    return ExcelReportWriter.Build(
+      "Revenue detail",
+      ["Date (UTC)", "Source", "Country", "Gross revenue", "Partner rate %", "Partner amount", "Currency"],
+      allocations.Select(a => new object?[]
+      {
+        a.CreatedAt,
+        FormatSourceType(a.SourceType),
+        a.CountryName,
+        a.GrossPlatformRevenue,
+        a.PartnerSharePercent,
+        a.PartnerAmount,
+        a.Currency
+      }));
   }
 
-  public async Task<string> ExportPaymentsCsvAsync(
+  public async Task<byte[]> ExportPaymentsExcelAsync(
       DashboardQuery query,
       PortalUserRole role,
       Guid portalUserId,
@@ -154,12 +134,45 @@ public sealed class DashboardService(
     var filter = BuildFilter(query, scope);
     var payments = await stats.GetPaymentStatsAsync(filter, cancellationToken);
 
-    return CsvBuilder.Build(new[]
+    return ExcelReportWriter.Build(
+      "Payments",
+      ["Type", "Count", "Volume"],
+      new[]
+      {
+        new object?[] { "Deposits", payments.SuccessfulDeposits, payments.DepositVolume },
+        new object?[] { "Withdrawals", payments.SuccessfulWithdrawals, payments.WithdrawalVolume }
+      });
+  }
+
+  private static List<(string Category, string Metric, object? Value)> BuildSummaryMetrics(DashboardStatsDto dashboard)
+  {
+    var metrics = new List<(string Category, string Metric, object? Value)>
     {
-      new[] { "Type", "Count", "Volume" },
-      new[] { "Deposits", payments.SuccessfulDeposits.ToString(), payments.DepositVolume.ToString("N2") },
-      new[] { "Withdrawals", payments.SuccessfulWithdrawals.ToString(), payments.WithdrawalVolume.ToString("N2") }
-    });
+      ("Players", "Total players", dashboard.Players.TotalPlayers),
+      ("Players", "New players in period", dashboard.Players.NewPlayers),
+      ("Players", "Verified players", dashboard.Players.VerifiedPlayers),
+      ("Players", "Active players", dashboard.Players.ActivePlayers)
+    };
+
+    if (!dashboard.ShowFinancials)
+      return metrics;
+
+    metrics.AddRange(
+    [
+      ("Payments", "Successful deposits", dashboard.Payments.SuccessfulDeposits),
+      ("Payments", "Deposit volume", dashboard.Payments.DepositVolume),
+      ("Payments", "Successful withdrawals", dashboard.Payments.SuccessfulWithdrawals),
+      ("Payments", "Withdrawal volume", dashboard.Payments.WithdrawalVolume),
+      ("Games", "Games played", dashboard.Games.GamesPlayed),
+      ("Games", "Total pot", dashboard.Games.TotalPot),
+      ("Games", "Platform commission", dashboard.Games.PlatformCommission),
+      ("Revenue", "Gross platform revenue", dashboard.Revenue.GrossPlatformRevenue),
+      ("Revenue", "Partner share paid", dashboard.Revenue.PartnerSharePaid),
+      ("Revenue", "Platform retained", dashboard.Revenue.PlatformRetained),
+      ("Revenue", "Revenue allocations", dashboard.Revenue.AllocationCount)
+    ]);
+
+    return metrics;
   }
 
   private static DashboardStatsFilter BuildFilter(DashboardQuery query, DashboardScope scope) => new()
@@ -197,9 +210,6 @@ public sealed class DashboardService(
       _ => throw new UnauthorizedAccessException("Unknown portal role.")
     };
   }
-
-  private static string FormatDate(DateTime? value) =>
-    value?.ToString("yyyy-MM-dd") ?? string.Empty;
 
   private static string FormatSourceType(RevenueAllocationSourceType type) => type switch
   {
