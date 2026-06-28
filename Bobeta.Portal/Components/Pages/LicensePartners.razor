@@ -57,7 +57,11 @@ else
                             }
                         </td>
                         <td>@(partner.IsActive ? "Active" : "Inactive")</td>
-                        <td><a class="portal-link-button" href="@($"/license-partners/{partner.Id}")">Manage</a></td>
+                        <td>
+                            <a class="portal-link-button" href="@($"/license-partners/{partner.Id}")">Manage</a>
+                            ·
+                            <a class="portal-link-button" href="@($"/license-partners/{partner.Id}/revenue")">Revenue</a>
+                        </td>
                     </tr>
                 }
             </tbody>

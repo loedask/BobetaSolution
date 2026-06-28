@@ -1,3 +1,4 @@
+using Bobeta.Application.Common;
 using Bobeta.Application.DTOs.Portal;
 using Bobeta.Application.Interfaces;
 
@@ -9,20 +10,11 @@ public sealed class PlayerQueryService(IPlayerRepository players, IWalletReposit
       int skip,
       int take,
       string? search = null,
+      IReadOnlyList<string>? countryCodes = null,
       CancellationToken cancellationToken = default)
   {
-    var (items, total) = await players.GetPagedAsync(skip, take, search, cancellationToken);
-    var dtos = items.Select(p => new PlayerListItemDto
-    {
-      Id = p.Id,
-      PhoneNumber = p.PhoneNumber,
-      PlayerName = p.PlayerName,
-      Language = p.Language,
-      CreatedAt = p.CreatedAt,
-      IsVerified = p.IsVerified,
-      Status = p.Status
-    }).ToList();
-
+    var (items, total) = await players.GetPagedAsync(skip, take, search, countryCodes, cancellationToken);
+    var dtos = items.Select(MapListItem).ToList();
     return (dtos, total);
   }
 
@@ -40,6 +32,8 @@ public sealed class PlayerQueryService(IPlayerRepository players, IWalletReposit
       PhoneNumber = player.PhoneNumber,
       PlayerName = player.PlayerName,
       Language = player.Language,
+      CountryCode = player.CountryCode,
+      CountryName = CountryCatalog.GetByCode(player.CountryCode)?.Name,
       CreatedAt = player.CreatedAt,
       IsVerified = player.IsVerified,
       Status = player.Status,
@@ -53,4 +47,17 @@ public sealed class PlayerQueryService(IPlayerRepository players, IWalletReposit
           }
     };
   }
+
+  private static PlayerListItemDto MapListItem(Domain.Entities.Player p) => new()
+  {
+    Id = p.Id,
+    PhoneNumber = p.PhoneNumber,
+    PlayerName = p.PlayerName,
+    Language = p.Language,
+    CountryCode = p.CountryCode,
+    CountryName = CountryCatalog.GetByCode(p.CountryCode)?.Name,
+    CreatedAt = p.CreatedAt,
+    IsVerified = p.IsVerified,
+    Status = p.Status
+  };
 }

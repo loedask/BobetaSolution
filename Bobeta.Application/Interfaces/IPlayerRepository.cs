@@ -17,10 +17,11 @@ public interface IPlayerRepository
     /// <summary>Updates an existing player.</summary>
     Task UpdateAsync(Player player, CancellationToken cancellationToken = default);
 
-    /// <summary>Returns a page of players ordered by newest first, optionally filtered by phone or name.</summary>
+    /// <summary>Returns a page of players ordered by newest first, optionally filtered by phone or name and country.</summary>
     Task<(IReadOnlyList<Player> Items, int TotalCount)> GetPagedAsync(
         int skip,
         int take,
         string? search = null,
+        IReadOnlyList<string>? countryCodes = null,
         CancellationToken cancellationToken = default);
 }

@@ -1,4 +1,5 @@
 using Bobeta.Domain.Entities;
+using Bobeta.Domain.Enums;
 
 namespace Bobeta.Application.Interfaces;
 
@@ -16,4 +17,14 @@ public interface ILicensePartnerRepository
   Task<LicensePartnerRevenueShareRate> AddRateAsync(LicensePartnerRevenueShareRate rate, CancellationToken cancellationToken = default);
   Task CloseOpenRatesAsync(Guid assignmentId, DateTime effectiveTo, CancellationToken cancellationToken = default);
   Task<RevenueAllocation> AddAllocationAsync(RevenueAllocation allocation, CancellationToken cancellationToken = default);
+  Task<bool> AllocationExistsAsync(RevenueAllocationSourceType sourceType, Guid sourceId, CancellationToken cancellationToken = default);
+  Task<IReadOnlyList<RevenueAllocation>> GetAllocationsAsync(
+      Guid licensePartnerId,
+      DateTime? fromUtc,
+      DateTime? toUtc,
+      string? countryCode,
+      RevenueAllocationSourceType? sourceType,
+      int skip,
+      int take,
+      CancellationToken cancellationToken = default);
 }

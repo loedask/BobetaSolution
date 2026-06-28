@@ -1,6 +1,7 @@
-using Bobeta.Persistence.Context;
-using Bobeta.Domain.Entities;
 using Bobeta.Application.Interfaces;
+using Bobeta.Domain.Entities;
+using Bobeta.Domain.Enums;
+using Bobeta.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bobeta.Persistence.Repositories;
@@ -101,5 +102,46 @@ public class LicensePartnerRepository(BobetaDbContext db) : ILicensePartnerRepos
     db.RevenueAllocations.Add(allocation);
     await db.SaveChangesAsync(cancellationToken);
     return allocation;
+  }
+
+  public async Task<bool> AllocationExistsAsync(
+      RevenueAllocationSourceType sourceType,
+      Guid sourceId,
+      CancellationToken cancellationToken = default) =>
+    await db.RevenueAllocations
+      .AsNoTracking()
+      .AnyAsync(a => a.SourceType == sourceType && a.SourceId == sourceId, cancellationToken);
+
+  public async Task<IReadOnlyList<RevenueAllocation>> GetAllocationsAsync(
+      Guid licensePartnerId,
+      DateTime? fromUtc,
+      DateTime? toUtc,
+      string? countryCode,
+      RevenueAllocationSourceType? sourceType,
+      int skip,
+      int take,
+      CancellationToken cancellationToken = default)
+  {
+    var query = db.RevenueAllocations
+      .AsNoTracking()
+      .Where(a => a.LicensePartnerId == licensePartnerId);
+
+    if (fromUtc.HasValue)
+      query = query.Where(a => a.CreatedAt >= fromUtc.Value);
+    if (toUtc.HasValue)
+      query = query.Where(a => a.CreatedAt <= toUtc.Value);
+    if (!string.IsNullOrWhiteSpace(countryCode))
+    {
+      var code = countryCode.Trim().ToUpperInvariant();
+      query = query.Where(a => a.CountryCode == code);
+    }
+    if (sourceType.HasValue)
+      query = query.Where(a => a.SourceType == sourceType.Value);
+
+    return await query
+      .OrderByDescending(a => a.CreatedAt)
+      .Skip(skip)
+      .Take(take)
+      .ToListAsync(cancellationToken);
   }
 }

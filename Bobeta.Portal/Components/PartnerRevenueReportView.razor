@@ -1,0 +1,191 @@
+@using Bobeta.Application.Common
+
+<div class="portal-page-header">
+    <div>
+        <h1>Revenue report</h1>
+        <p class="portal-muted">Partner share from game commissions and MoMo transaction fees.</p>
+    </div>
+</div>
+
+<div class="portal-detail-grid portal-section">
+    <section class="portal-card">
+        <h2>Total earned</h2>
+        <p class="portal-stat">@FormatAmount(Report?.TotalPartnerAmount ?? 0)</p>
+        <p class="portal-muted">@((Report?.TransactionCount ?? 0)) transactions</p>
+    </section>
+    <section class="portal-card">
+        <h2>Gross platform revenue</h2>
+        <p class="portal-stat">@FormatAmount(Report?.TotalGrossPlatformRevenue ?? 0)</p>
+        <p class="portal-muted">Base amount partner share is calculated from</p>
+    </section>
+</div>
+
+<div class="portal-card portal-section">
+    <h2>Filters</h2>
+    <div class="portal-filter-row">
+        <div class="portal-field">
+            <label>From (UTC)</label>
+            <InputDate class="portal-input" @bind-Value="_fromDate" />
+        </div>
+        <div class="portal-field">
+            <label>To (UTC)</label>
+            <InputDate class="portal-input" @bind-Value="_toDate" />
+        </div>
+        <div class="portal-field">
+            <label>Country</label>
+            <select class="portal-input" @bind="_countryCode">
+                <option value="">All</option>
+                @foreach (var c in CountryCatalog.All)
+                {
+                    <option value="@c.Code">@c.Name</option>
+                }
+            </select>
+        </div>
+        <div class="portal-field">
+            <label>Source</label>
+            <select class="portal-input" @bind="_sourceType">
+                <option value="">All</option>
+                <option value="@RevenueAllocationSourceType.GameCommission">Game commission</option>
+                <option value="@RevenueAllocationSourceType.MoMoDeposit">MoMo deposit</option>
+                <option value="@RevenueAllocationSourceType.MoMoWithdrawal">MoMo withdrawal</option>
+            </select>
+        </div>
+        <button class="portal-button portal-button-primary" type="button" @onclick="ApplyFilters">Apply</button>
+    </div>
+</div>
+
+@if (Report is not null)
+{
+    <div class="portal-detail-grid portal-section">
+        <section class="portal-card">
+            <h2>By country</h2>
+            @if (Report.ByCountry.Count == 0)
+            {
+                <p class="portal-muted">No data.</p>
+            }
+            else
+            {
+                <div class="portal-table-wrap">
+                    <table class="portal-table">
+                        <thead>
+                            <tr><th>Country</th><th>Earned</th><th>Txns</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Report.ByCountry)
+                            {
+                                <tr>
+                                    <td>@row.Label</td>
+                                    <td>@FormatAmount(row.PartnerAmount)</td>
+                                    <td>@row.TransactionCount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+        <section class="portal-card">
+            <h2>By source</h2>
+            @if (Report.BySource.Count == 0)
+            {
+                <p class="portal-muted">No data.</p>
+            }
+            else
+            {
+                <div class="portal-table-wrap">
+                    <table class="portal-table">
+                        <thead>
+                            <tr><th>Source</th><th>Earned</th><th>Txns</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Report.BySource)
+                            {
+                                <tr>
+                                    <td>@row.Label</td>
+                                    <td>@FormatAmount(row.PartnerAmount)</td>
+                                    <td>@row.TransactionCount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+
+    <section class="portal-card portal-section">
+        <h2>Recent allocations</h2>
+        @if (Report.RecentAllocations.Count == 0)
+        {
+            <p class="portal-muted">No allocations in this period.</p>
+        }
+        else
+        {
+            <div class="portal-table-wrap">
+                <table class="portal-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Source</th>
+                            <th>Country</th>
+                            <th>Gross</th>
+                            <th>Rate</th>
+                            <th>Earned</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Report.RecentAllocations)
+                        {
+                            <tr>
+                                <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@FormatSource(item.SourceType)</td>
+                                <td>@item.CountryName</td>
+                                <td>@FormatAmount(item.GrossPlatformRevenue)</td>
+                                <td>@item.PartnerSharePercent.ToString("N2")%</td>
+                                <td>@FormatAmount(item.PartnerAmount)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid PartnerId { get; set; }
+
+    [Parameter]
+    public PartnerRevenueReportDto? Report { get; set; }
+
+    [Parameter]
+    public EventCallback<(DateTime? From, DateTime? To, string? Country, RevenueAllocationSourceType? Source)> OnFilterChanged { get; set; }
+
+    private DateTime? _fromDate;
+    private DateTime? _toDate;
+    private string _countryCode = string.Empty;
+    private string _sourceType = string.Empty;
+
+    private async Task ApplyFilters()
+    {
+        RevenueAllocationSourceType? source = string.IsNullOrEmpty(_sourceType)
+            ? null
+            : Enum.Parse<RevenueAllocationSourceType>(_sourceType);
+
+        var from = _fromDate?.ToUniversalTime();
+        var to = _toDate?.Date.AddDays(1).AddTicks(-1).ToUniversalTime();
+
+        await OnFilterChanged.InvokeAsync((from, to, string.IsNullOrEmpty(_countryCode) ? null : _countryCode, source));
+    }
+
+    private static string FormatAmount(decimal amount) => amount.ToString("N0");
+
+    private static string FormatSource(RevenueAllocationSourceType type) => type switch
+    {
+        RevenueAllocationSourceType.GameCommission => "Game",
+        RevenueAllocationSourceType.MoMoDeposit => "Deposit",
+        RevenueAllocationSourceType.MoMoWithdrawal => "Withdrawal",
+        _ => type.ToString()
+    };
+}

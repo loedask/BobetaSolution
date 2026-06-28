@@ -8,6 +8,8 @@ public sealed class PlayerListItemDto
   public string PhoneNumber { get; init; } = string.Empty;
   public string PlayerName { get; init; } = string.Empty;
   public string Language { get; init; } = string.Empty;
+  public string? CountryCode { get; init; }
+  public string? CountryName { get; init; }
   public DateTime CreatedAt { get; init; }
   public bool IsVerified { get; init; }
   public PlayerStatus Status { get; init; }

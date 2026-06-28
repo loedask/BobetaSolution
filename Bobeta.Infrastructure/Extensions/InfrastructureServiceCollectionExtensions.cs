@@ -28,6 +28,7 @@ public static class InfrastructureServiceCollectionExtensions
     {
         services.AddScoped<IMobileMoneyService, PlaceholderMobileMoneyService>();
         services.Configure<CountrySettings>(configuration.GetSection(CountrySettings.SectionName));
+        services.Configure<PaymentRevenueSettings>(configuration.GetSection(PaymentRevenueSettings.SectionName));
         services.Configure<MoMoSettings>(configuration.GetSection(MoMoSettings.SectionName));
         services.Configure<SmsOptions>(configuration.GetSection(SmsOptions.SectionName));
         services.Configure<SmsGatewaySettings>(configuration.GetSection(SmsGatewaySettings.SectionName));

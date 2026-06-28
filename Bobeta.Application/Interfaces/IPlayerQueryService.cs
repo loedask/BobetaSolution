@@ -8,6 +8,7 @@ public interface IPlayerQueryService
       int skip,
       int take,
       string? search = null,
+      IReadOnlyList<string>? countryCodes = null,
       CancellationToken cancellationToken = default);
 
   Task<PlayerDetailDto?> GetPlayerDetailAsync(Guid playerId, CancellationToken cancellationToken = default);

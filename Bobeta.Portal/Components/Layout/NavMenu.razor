@@ -1,11 +1,10 @@
 <nav class="portal-nav">
     <AuthorizeView Roles="LicensePartner">
         <Authorized>
+            <NavLink class="portal-nav-link" href="/users">Players</NavLink>
             <NavLink class="portal-nav-link" href="/my-license">My license</NavLink>
+            <NavLink class="portal-nav-link" href="/my-license/revenue">Revenue</NavLink>
         </Authorized>
-        <NotAuthorized>
-            <NavLink class="portal-nav-link" href="/users" Match="NavLinkMatch.All">Players</NavLink>
-        </NotAuthorized>
     </AuthorizeView>
     <AuthorizeView Roles="PlatformOwner">
         <Authorized>

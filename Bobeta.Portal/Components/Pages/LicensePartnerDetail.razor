@@ -16,6 +16,10 @@
             <p class="portal-muted">@_partner.ContactEmail · Portal: @_partner.PortalEmail</p>
         }
     </div>
+    @if (_partner is not null)
+    {
+        <a class="portal-button portal-button-primary" href="@($"/license-partners/{PartnerId}/revenue")">Revenue report</a>
+    }
 </div>
 
 @if (_loading)

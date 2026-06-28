@@ -37,6 +37,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<PortalSignInService>();
+builder.Services.AddScoped<PortalUserContext>();
 
 var app = builder.Build();
 

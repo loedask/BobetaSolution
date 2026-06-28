@@ -23,6 +23,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IGameRevenueService, GameRevenueService>();
         services.AddScoped<IRevenueShareResolver, RevenueShareResolver>();
+        services.AddScoped<IPartnerRevenueAllocationService, PartnerRevenueAllocationService>();
+        services.AddScoped<IPaymentRevenueService, PaymentRevenueService>();
         services.AddValidatorsFromAssemblyContaining<CreateGameRequestValidator>();
         return services;
     }

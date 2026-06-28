@@ -1,8 +1,10 @@
 @page "/users/{PlayerId:guid}"
-@attribute [Authorize(Roles = "Member,PlatformOwner")]
+@attribute [Authorize(Roles = "Member,PlatformOwner,LicensePartner")]
 @inject IPlayerQueryService PlayerQuery
 @inject IWalletService WalletService
 @inject IGameHistoryService GameHistory
+@inject ILicensePartnerAccessService PartnerAccess
+@inject PortalUserContext PortalUser
 @inject NavigationManager Nav
 @rendermode InteractiveServer
 
@@ -23,6 +25,10 @@
 {
     <p class="portal-muted">Loading player...</p>
 }
+else if (_accessDenied)
+{
+    <div class="portal-alert portal-alert-error">You do not have access to this player.</div>
+}
 else if (_player is null)
 {
     <div class="portal-alert portal-alert-error">Player not found.</div>
@@ -36,6 +42,7 @@ else
                 <div><dt>Status</dt><dd><span class="portal-badge portal-badge-@StatusClass(_player.Status)">@_player.Status</span></dd></div>
                 <div><dt>Verified</dt><dd>@(_player.IsVerified ? "Yes" : "No")</dd></div>
                 <div><dt>Language</dt><dd>@_player.Language</dd></div>
+                <div><dt>Country</dt><dd>@(_player.CountryName ?? _player.CountryCode ?? "—")</dd></div>
                 <div><dt>Joined</dt><dd>@_player.CreatedAt.ToString("yyyy-MM-dd HH:mm") UTC</dd></div>
                 <div><dt>Player ID</dt><dd class="portal-mono">@_player.Id</dd></div>
             </dl>
@@ -150,6 +157,7 @@ else
     private readonly List<WalletTransactionDto> _transactions = [];
     private readonly List<GameHistoryItemDto> _games = [];
     private bool _loading = true;
+    private bool _accessDenied;
     private bool _transactionsLoading = true;
     private bool _historyLoading = true;
 
@@ -163,6 +171,13 @@ else
 
         try
         {
+            if (PortalUser.UserId is { } userId && PortalUser.Role is { } role
+                && !await PartnerAccess.CanAccessPlayerAsync(userId, role, PlayerId))
+            {
+                _accessDenied = true;
+                return;
+            }
+
             _player = await PlayerQuery.GetPlayerDetailAsync(PlayerId);
             if (_player is null)
                 return;

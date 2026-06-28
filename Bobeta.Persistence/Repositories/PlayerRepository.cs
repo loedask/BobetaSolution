@@ -33,6 +33,7 @@ public class PlayerRepository(BobetaDbContext db) : IPlayerRepository
         int skip,
         int take,
         string? search = null,
+        IReadOnlyList<string>? countryCodes = null,
         CancellationToken cancellationToken = default)
     {
         var query = _db.Players.AsNoTracking();
@@ -43,6 +44,18 @@ public class PlayerRepository(BobetaDbContext db) : IPlayerRepository
             query = query.Where(p =>
                 p.PhoneNumber.Contains(term) ||
                 p.PlayerName.Contains(term));
+        }
+
+        if (countryCodes is { Count: > 0 })
+        {
+            var normalized = countryCodes
+              .Where(c => !string.IsNullOrWhiteSpace(c))
+              .Select(c => c.Trim().ToUpperInvariant())
+              .Distinct()
+              .ToList();
+
+            query = query.Where(p =>
+                p.CountryCode != null && normalized.Contains(p.CountryCode));
         }
 
         var total = await query.CountAsync(cancellationToken);

@@ -8,7 +8,7 @@
     {
         var auth = await AuthState.GetAuthenticationStateAsync();
         if (auth.User.IsInRole(nameof(PortalUserRole.LicensePartner)))
-            Nav.NavigateTo("/my-license", replace: true);
+            Nav.NavigateTo("/users", replace: true);
         else
             Nav.NavigateTo("/users", replace: true);
     }
