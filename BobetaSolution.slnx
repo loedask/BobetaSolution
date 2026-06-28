@@ -22,6 +22,11 @@
   <Folder Name="/src/UI/Mobile/">
     <Project Path="Bobeta.Mobile/Bobeta.Mobile.csproj" Id="42840e20-7c0a-446a-bad0-35e548c09335" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="Bobeta.API.Tests/Bobeta.API.Tests.csproj" />
+    <Project Path="Bobeta.Application.Tests/Bobeta.Application.Tests.csproj" />
+    <Project Path="Bobeta.Client.Tests/Bobeta.Client.Tests.csproj" />
+  </Folder>
   <Folder Name="/src/UI/PWA/">
     <Project Path="Bobeta.Web.Deferred/Bobeta.Web.Deferred.csproj" />
     <Project Path="Bobeta.Web.Host/Bobeta.Web.Host.csproj" />

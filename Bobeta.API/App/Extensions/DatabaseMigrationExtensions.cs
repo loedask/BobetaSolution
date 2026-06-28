@@ -16,10 +16,13 @@ public static class DatabaseMigrationExtensions
     /// </summary>
     public static async Task ApplyMigrationsAsync(this IHost host)
     {
+        var env = host.Services.GetRequiredService<IWebHostEnvironment>();
+        if (env.IsEnvironment("Testing"))
+            return;
+
         using var scope = host.Services.CreateScope();
         var services = scope.ServiceProvider;
 
-        var env = services.GetRequiredService<IWebHostEnvironment>();
         var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseMigration");
 
         var context = services.GetRequiredService<BobetaDbContext>();

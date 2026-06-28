@@ -57,6 +57,7 @@ public class GameEngineServiceTests
             resultRepo,
             wallet,
             players,
+            NoOpGameRevenueService.Instance,
             NullLogger<MakopaGameEngine>.Instance);
 
         var move = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.Queen));
@@ -117,6 +118,7 @@ public class GameEngineServiceTests
             resultRepo,
             wallet,
             players,
+            NoOpGameRevenueService.Instance,
             NullLogger<MakopaGameEngine>.Instance);
 
         var move = await sut.VoidFollowDrawAsync(opponentId, sessionId);
@@ -173,6 +175,7 @@ public class GameEngineServiceTests
             resultRepo,
             wallet,
             players,
+            NoOpGameRevenueService.Instance,
             NullLogger<MakopaGameEngine>.Instance);
 
         var move = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Heart, CardRank.Ten));
@@ -237,6 +240,14 @@ public class GameEngineServiceTests
         }
     }
 
+    private sealed class NoOpGameRevenueService : IGameRevenueService
+    {
+        public static NoOpGameRevenueService Instance { get; } = new();
+
+        public Task EnrichWithPartnerShareAsync(GameResult result, Guid winnerPlayerId, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+    }
+
     private sealed class RecordingWalletService : IWalletService
     {
         public List<(Guid WinnerId, Guid LoserId, decimal Bet)> Settlements { get; } = new();
@@ -275,6 +286,21 @@ public class GameEngineServiceTests
         {
             _players[player.Id] = player;
             return Task.CompletedTask;
+        }
+
+        public Task<(IReadOnlyList<Player> Items, int TotalCount)> GetPagedAsync(
+            int skip,
+            int take,
+            string? search = null,
+            IReadOnlyList<string>? countryCodes = null,
+            CancellationToken cancellationToken = default)
+        {
+            var items = _players.Values
+                .Where(p => search == null || p.PlayerName.Contains(search, StringComparison.OrdinalIgnoreCase) || p.PhoneNumber.Contains(search, StringComparison.OrdinalIgnoreCase))
+                .Skip(skip)
+                .Take(take)
+                .ToList();
+            return Task.FromResult<(IReadOnlyList<Player>, int)>((items, _players.Count));
         }
     }
 }

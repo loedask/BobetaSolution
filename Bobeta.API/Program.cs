@@ -1,7 +1,7 @@
 using System.IO.Compression;
-using System.Text.Json.Serialization;
 using Bobeta.API.App.Extensions;
 using Bobeta.API.App.Filters;
+using Bobeta.API.App.Json;
 using Bobeta.API.Hubs;
 using Microsoft.AspNetCore.ResponseCompression;
 
@@ -11,7 +11,7 @@ var configuredCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigin
 
 // Controllers with global validation filter (FluentValidation on request DTOs).
 builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>())
-    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+    .AddJsonOptions(options => ApiJsonSerializerOptions.Configure(options.JsonSerializerOptions));
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddBobetaSwagger();
@@ -70,3 +70,5 @@ app.MapHub<GameHub>("/hubs/game"); // SignalR game hub for real-time gameplay.
 await app.ApplyMigrationsAsync();
 
 app.Run();
+
+public partial class Program;
