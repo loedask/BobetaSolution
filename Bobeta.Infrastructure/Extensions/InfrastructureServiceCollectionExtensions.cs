@@ -20,6 +20,9 @@ public static class InfrastructureServiceCollectionExtensions
     /// <summary>Named HttpClient for SMSPortal REST API.</summary>
     public const string SmsPortalHttpClientName = "SmsPortal";
 
+    /// <summary>Named HttpClient for Twilio REST API.</summary>
+    public const string TwilioHttpClientName = "Twilio";
+
     /// <summary>Backward-compatible alias for <see cref="SendSmsGateHttpClientName"/>.</summary>
     public const string SmsGatewayHttpClientName = SendSmsGateHttpClientName;
 
@@ -33,10 +36,12 @@ public static class InfrastructureServiceCollectionExtensions
         services.Configure<SmsOptions>(configuration.GetSection(SmsOptions.SectionName));
         services.Configure<SmsGatewaySettings>(configuration.GetSection(SmsGatewaySettings.SectionName));
         services.Configure<SmsPortalSettings>(configuration.GetSection(SmsPortalSettings.SectionName));
+        services.Configure<TwilioSettings>(configuration.GetSection(TwilioSettings.SectionName));
 
         services.AddHttpClient(MoMoPaymentService.MoMoHttpClientName);
         services.AddHttpClient(SendSmsGateHttpClientName);
         services.AddHttpClient(SmsPortalHttpClientName);
+        services.AddHttpClient(TwilioHttpClientName);
 
         services.AddMemoryCache();
         services.AddScoped<IOtpRateLimitService, OtpRateLimitService>();
@@ -45,6 +50,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IPaymentService, MoMoPaymentService>();
         services.AddScoped<ISmsProvider, SendSmsGateSmsProvider>();
         services.AddScoped<ISmsProvider, SmsPortalSmsProvider>();
+        services.AddScoped<ISmsProvider, TwilioSmsProvider>();
         services.AddScoped<ISmsService, MultiProviderSmsService>();
 
         services.AddHostedService<PaymentStatusWorker>();

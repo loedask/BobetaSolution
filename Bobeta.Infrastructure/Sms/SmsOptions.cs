@@ -12,5 +12,5 @@ public class SmsOptions
     public bool EnableFallback { get; set; } = true;
 
     /// <summary>Ordered list of fallback provider names after the default fails.</summary>
-    public List<string> FallbackProviders { get; set; } = [SmsProviderNames.SendSmsGate];
+    public List<string> FallbackProviders { get; set; } = [SmsProviderNames.Twilio, SmsProviderNames.SendSmsGate];
 }

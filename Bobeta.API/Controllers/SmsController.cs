@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bobeta.API.Controllers;
 
-/// <summary>SMS delivery report (DLR) webhooks for SendSMSGate and SMSPortal.</summary>
+/// <summary>SMS delivery report (DLR) webhooks for SendSMSGate, SMSPortal, and Twilio.</summary>
 [ApiController]
 [Route("api/[controller]")]
 public class SmsController(
@@ -74,6 +74,30 @@ public class SmsController(
             cancellationToken);
     }
 
+    /// <summary>Receives status callback from Twilio (configure StatusCallback on send or in Messaging Service).</summary>
+    [HttpPost("dlr/twilio")]
+    [Consumes("application/x-www-form-urlencoded")]
+    public async Task<IActionResult> TwilioDeliveryReport(
+        [FromForm] TwilioDlrRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.MessageSid))
+        {
+            _logger.LogWarning("Twilio DLR received without MessageSid");
+            return BadRequest("Missing MessageSid");
+        }
+
+        var provider = GetProvider(SmsProviderNames.Twilio);
+        var mapped = provider?.MapDeliveryStatus(request.MessageStatus) ?? MapTwilioDlrStatus(request.MessageStatus);
+
+        return await ApplyDeliveryUpdateAsync(
+            request.MessageSid.Trim(),
+            customerId: null,
+            mapped,
+            request.MessageStatus,
+            cancellationToken);
+    }
+
     private ISmsProvider? GetProvider(string name) =>
         _providersByName.TryGetValue(name, out var provider) ? provider : null;
 
@@ -136,6 +160,17 @@ public class SmsController(
             _ => SmsMessageStatus.Sent
         };
     }
+
+    private static SmsMessageStatus MapTwilioDlrStatus(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status)) return SmsMessageStatus.Sent;
+        return status.Trim().ToLowerInvariant() switch
+        {
+            "delivered" => SmsMessageStatus.Delivered,
+            "failed" or "undelivered" or "canceled" => SmsMessageStatus.Failed,
+            _ => SmsMessageStatus.Sent
+        };
+    }
 }
 
 /// <summary>Request body for SendSMSGate DLR webhook (when POST with JSON).</summary>
@@ -153,4 +188,12 @@ public class SmsPortalDlrRequest
     public long? EventId { get; set; }
     public string? Status { get; set; }
     public string? PhoneNumber { get; set; }
+}
+
+/// <summary>Twilio status callback form fields.</summary>
+public class TwilioDlrRequest
+{
+    public string? MessageSid { get; set; }
+    public string? MessageStatus { get; set; }
+    public string? ErrorCode { get; set; }
 }

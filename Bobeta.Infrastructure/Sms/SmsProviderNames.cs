@@ -5,4 +5,5 @@ public static class SmsProviderNames
 {
     public const string SendSmsGate = "SendSmsGate";
     public const string SmsPortal = "SmsPortal";
+    public const string Twilio = "Twilio";
 }

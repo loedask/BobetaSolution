@@ -213,7 +213,7 @@ After configuration, the API will accept deposit and withdrawal requests via `/a
 
 ---
 
-## 10. SMS providers (SMSPortal + SendSMSGate)
+## 10. SMS providers (SMSPortal, Twilio, SendSMSGate)
 
 Bobeta supports multiple SMS gateways with a **default provider** and optional **fallbacks**. If the default is down or misconfigured, the API tries the next provider in order (when `Sms:EnableFallback` is true).
 
@@ -224,14 +224,14 @@ Bobeta supports multiple SMS gateways with a **default provider** and optional *
   "Sms": {
     "DefaultProvider": "SmsPortal",
     "EnableFallback": true,
-    "FallbackProviders": [ "SendSmsGate" ]
+    "FallbackProviders": [ "Twilio", "SendSmsGate" ]
   }
 }
 ```
 
 | Setting | Description |
 |--------|-------------|
-| **DefaultProvider** | `SmsPortal` or `SendSmsGate` |
+| **DefaultProvider** | `SmsPortal`, `Twilio`, or `SendSmsGate` |
 | **EnableFallback** | When `true`, tries **FallbackProviders** after the default fails |
 | **FallbackProviders** | Ordered list of provider names |
 
@@ -275,6 +275,45 @@ Azure application settings:
 Use the default JSON POST template (`customerId`, `id`, `status`, etc.). The API correlates DLRs via `customerId` (the internal SMS record id).
 
 5. **Test mode:** Set `SmsPortalSettings:TestMode` to `true` to validate the integration without sending real SMS ([quick start](https://docs.smsportal.com/docs/quickstart)).
+
+---
+
+### Twilio
+
+Uses [Twilio Programmable SMS](https://www.twilio.com/docs/sms).
+
+1. Sign in at [https://console.twilio.com/](https://console.twilio.com/).
+2. Note your **Account SID** and **Auth Token**.
+3. Buy or verify a **From** phone number in E.164, or create a **Messaging Service** and use its SID (`MG...`).
+4. Configure **TwilioSettings**:
+
+```json
+{
+  "TwilioSettings": {
+    "BaseUrl": "https://api.twilio.com",
+    "AccountSid": "ACxxxxxxxx",
+    "AuthToken": "your-auth-token",
+    "From": "+15017122661",
+    "MessagingServiceSid": "",
+    "StatusCallbackUrl": "https://your-api-host/api/sms/dlr/twilio"
+  }
+}
+```
+
+Use **either** `From` **or** `MessagingServiceSid` (not both required).
+
+Azure application settings:
+
+| Setting | Example |
+|--------|---------|
+| `TwilioSettings__AccountSid` | `ACxxxxxxxx` |
+| `TwilioSettings__AuthToken` | your auth token |
+| `TwilioSettings__From` | `+1...` or leave empty if using Messaging Service |
+| `TwilioSettings__MessagingServiceSid` | `MG...` (optional) |
+| `TwilioSettings__StatusCallbackUrl` | `https://bobeta-api.azurewebsites.net/api/sms/dlr/twilio` |
+| `Sms__DefaultProvider` | `Twilio` (to make Twilio primary) |
+
+5. **Status callbacks:** Set `StatusCallbackUrl` as above, or configure the same URL on your Twilio Messaging Service. Twilio POSTs `MessageSid` and `MessageStatus` to `/api/sms/dlr/twilio`.
 
 ---
 
