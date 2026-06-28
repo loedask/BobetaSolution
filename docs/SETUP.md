@@ -105,22 +105,22 @@ Navigate to:
 
 ## 6. Demo test accounts (Development / Staging)
 
-These accounts are for **local or non-production** environments only. Demo seeding and static OTP are **disabled in Production** (`DemoEnvironmentHelper`).
+These accounts are for **local or non-production** environments by default. Demo **seeding** still runs only in Development/Staging, but **static OTP** can be enabled in Production via `DemoAuth:EnableStaticOtp`.
 
 | Item | Value |
 |------|--------|
 | **Demo phone 1** | `+242700000001` (in the app: country **+242**, national **`700000001`**) |
 | **Demo phone 2** | `+242700000002` (national **`700000002`**) |
-| **Static OTP** (when enabled) | `123456` — see **`DemoAuth`** in `Bobeta.API/appsettings.Development.json` and `appsettings.Staging.json` |
+| **Static OTP** (when enabled) | `123456` — see **`DemoAuth`** in appsettings or Azure App Service settings |
 | **Wallet** | Each seeded player gets **100,000** balance (see `DemoAccountsSeeder`) |
 
 **How it works**
 
 1. On startup, the API applies pending migrations in all environments. **`DemoAccountsSeeder`** runs only in Development / Staging and creates the two players if missing.
-2. **`OtpService`** accepts the configured **`DemoAuth:StaticOtp`** for numbers listed in **`DemoAuth:PhoneNumbers`** only when `EnableStaticOtp` is true and the host is Development or Staging.
+2. **`OtpService`** accepts **`DemoAuth:StaticOtp`** for numbers in **`DemoAuth:PhoneNumbers`** when `EnableStaticOtp` is true — including Production when that flag is set in Azure.
 3. Source of truth for phone constants: `Bobeta.Persistence/Seeding/DemoAccountsSeeder.cs`.
 
-For any **new** number (not seeded), you still use a real SMS OTP unless you add that number to `DemoAuth:PhoneNumbers` (non-production only).
+For any other number, you still need a real SMS OTP unless you add it to `DemoAuth:PhoneNumbers` and keep `EnableStaticOtp` enabled.
 
 ## 7. Test flow
 

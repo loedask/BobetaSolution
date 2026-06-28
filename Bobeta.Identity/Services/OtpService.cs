@@ -5,7 +5,6 @@ using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Authentication;
 using Bobeta.Domain.Entities;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Bobeta.Identity.Services;
@@ -24,18 +23,15 @@ public class OtpService
 
     private readonly IOtpRepository _otpRepository;
     private readonly IConfiguration _configuration;
-    private readonly IHostEnvironment _hostEnvironment;
     private readonly ILogger<OtpService> _logger;
 
     public OtpService(
         IOtpRepository otpRepository,
         IConfiguration configuration,
-        IHostEnvironment hostEnvironment,
         ILogger<OtpService> logger)
     {
         _otpRepository = otpRepository;
         _configuration = configuration;
-        _hostEnvironment = hostEnvironment;
         _logger = logger;
     }
 
@@ -64,7 +60,7 @@ public class OtpService
     {
         if (TryValidateStaticDemoOtp(phoneNumber, code))
         {
-            _logger.LogInformation("OTP validated (dev/staging demo static code): PhoneNumber={PhoneNumber}", phoneNumber);
+            _logger.LogInformation("OTP validated (demo static code): PhoneNumber={PhoneNumber}", phoneNumber);
             return (true, null);
         }
 
@@ -128,12 +124,10 @@ public class OtpService
         return Random.Shared.Next(min, max).ToString();
     }
 
-    /// <summary>Allows a fixed OTP for configured demo numbers in Development or Staging only (never in Production).</summary>
+    /// <summary>Allows a fixed OTP for configured demo numbers when <c>DemoAuth:EnableStaticOtp</c> is true (any environment).</summary>
     private bool TryValidateStaticDemoOtp(string phoneNumber, string code)
     {
-        if (!DemoEnvironmentHelper.AllowsDemoAuthFeatures(_hostEnvironment))
-            return false;
-        if (!_configuration.GetValue("DemoAuth:EnableStaticOtp", false))
+        if (!DemoEnvironmentHelper.IsStaticOtpEnabled(_configuration))
             return false;
 
         var expected = _configuration["DemoAuth:StaticOtp"];
@@ -141,15 +135,6 @@ public class OtpService
             return false;
 
         var normalized = PhoneNumberHelper.Normalize(phoneNumber);
-        foreach (var child in _configuration.GetSection("DemoAuth:PhoneNumbers").GetChildren())
-        {
-            var configured = child.Value;
-            if (string.IsNullOrEmpty(configured))
-                continue;
-            if (PhoneNumberHelper.Normalize(configured) == normalized)
-                return true;
-        }
-
-        return false;
+        return DemoEnvironmentHelper.IsConfiguredDemoPhoneNumber(_configuration, normalized);
     }
 }
