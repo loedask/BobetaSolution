@@ -1,0 +1,213 @@
+@page "/users/{PlayerId:guid}"
+@attribute [Authorize]
+@inject IPlayerQueryService PlayerQuery
+@inject IWalletService WalletService
+@inject IGameHistoryService GameHistory
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<PageTitle>@(_player?.PlayerName ?? "Player") - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <a class="portal-back-link" href="/users">&larr; Back to players</a>
+        @if (_player is not null)
+        {
+            <h1>@_player.PlayerName</h1>
+            <p class="portal-muted">@_player.PhoneNumber</p>
+        }
+    </div>
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading player...</p>
+}
+else if (_player is null)
+{
+    <div class="portal-alert portal-alert-error">Player not found.</div>
+}
+else
+{
+    <div class="portal-detail-grid">
+        <section class="portal-card">
+            <h2>Account</h2>
+            <dl class="portal-dl">
+                <div><dt>Status</dt><dd><span class="portal-badge portal-badge-@StatusClass(_player.Status)">@_player.Status</span></dd></div>
+                <div><dt>Verified</dt><dd>@(_player.IsVerified ? "Yes" : "No")</dd></div>
+                <div><dt>Language</dt><dd>@_player.Language</dd></div>
+                <div><dt>Joined</dt><dd>@_player.CreatedAt.ToString("yyyy-MM-dd HH:mm") UTC</dd></div>
+                <div><dt>Player ID</dt><dd class="portal-mono">@_player.Id</dd></div>
+            </dl>
+        </section>
+
+        <section class="portal-card">
+            <h2>Wallet</h2>
+            @if (_player.Wallet is null)
+            {
+                <p class="portal-muted">No wallet on record.</p>
+            }
+            else
+            {
+                <dl class="portal-dl">
+                    <div><dt>Available</dt><dd class="portal-amount">@FormatAmount(_player.Wallet.Balance)</dd></div>
+                    <div><dt>Locked in bets</dt><dd class="portal-amount">@FormatAmount(_player.Wallet.LockedBalance)</dd></div>
+                    <div><dt>Total</dt><dd class="portal-amount">@FormatAmount(_player.Wallet.Balance + _player.Wallet.LockedBalance)</dd></div>
+                    <div><dt>Last updated</dt><dd>@_player.Wallet.UpdatedAt.ToString("yyyy-MM-dd HH:mm") UTC</dd></div>
+                </dl>
+            }
+        </section>
+    </div>
+
+    <section class="portal-card portal-section">
+        <h2>Recent wallet transactions</h2>
+        @if (_transactionsLoading)
+        {
+            <p class="portal-muted">Loading transactions...</p>
+        }
+        else if (_transactions.Count == 0)
+        {
+            <p class="portal-muted">No transactions yet.</p>
+        }
+        else
+        {
+            <div class="portal-table-wrap">
+                <table class="portal-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Reference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tx in _transactions)
+                        {
+                            <tr>
+                                <td>@tx.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@tx.Type</td>
+                                <td class="@AmountClass(tx.Amount)">@FormatSignedAmount(tx.Amount)</td>
+                                <td>@tx.Status</td>
+                                <td class="portal-mono">@tx.Reference</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
+    <section class="portal-card portal-section">
+        <h2>Recent games</h2>
+        @if (_historyLoading)
+        {
+            <p class="portal-muted">Loading game history...</p>
+        }
+        else if (_games.Count == 0)
+        {
+            <p class="portal-muted">No games played yet.</p>
+        }
+        else
+        {
+            <div class="portal-table-wrap">
+                <table class="portal-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Variant</th>
+                            <th>Bet</th>
+                            <th>Status</th>
+                            <th>Role</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var game in _games)
+                        {
+                            <tr>
+                                <td>@game.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@game.Variant</td>
+                                <td>@FormatAmount(game.BetAmount)</td>
+                                <td>@game.Status</td>
+                                <td>@(game.IsCreator ? "Host" : "Guest")</td>
+                                <td>@FormatGameResult(game)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid PlayerId { get; set; }
+
+    private PlayerDetailDto? _player;
+    private readonly List<WalletTransactionDto> _transactions = [];
+    private readonly List<GameHistoryItemDto> _games = [];
+    private bool _loading = true;
+    private bool _transactionsLoading = true;
+    private bool _historyLoading = true;
+
+    protected override async Task OnParametersSetAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _transactionsLoading = true;
+        _historyLoading = true;
+
+        try
+        {
+            _player = await PlayerQuery.GetPlayerDetailAsync(PlayerId);
+            if (_player is null)
+                return;
+
+            var transactions = await WalletService.GetTransactionsAsync(PlayerId, skip: 0, take: 20);
+            _transactions.Clear();
+            _transactions.AddRange(transactions);
+
+            var games = await GameHistory.GetPlayerHistoryAsync(PlayerId, skip: 0, take: 20);
+            _games.Clear();
+            _games.AddRange(games);
+        }
+        finally
+        {
+            _loading = false;
+            _transactionsLoading = false;
+            _historyLoading = false;
+        }
+    }
+
+    private static string FormatAmount(decimal amount) => amount.ToString("N0");
+
+    private static string FormatSignedAmount(decimal amount) =>
+        amount >= 0 ? $"+{amount:N0}" : amount.ToString("N0");
+
+    private static string AmountClass(decimal amount) =>
+        amount >= 0 ? "portal-amount-positive" : "portal-amount-negative";
+
+    private static string StatusClass(PlayerStatus status) => status switch
+    {
+        PlayerStatus.Active => "active",
+        PlayerStatus.Pending => "pending",
+        PlayerStatus.Suspended => "suspended",
+        PlayerStatus.Banned => "banned",
+        _ => "default"
+    };
+
+    private string FormatGameResult(GameHistoryItemDto game)
+    {
+        if (game.WinnerPlayerId == PlayerId)
+            return game.WonAmount.HasValue ? $"Won {FormatAmount(game.WonAmount.Value)}" : "Won";
+
+        if (game.WinnerPlayerId.HasValue)
+            return "Lost";
+
+        return game.Status.ToString();
+    }
+}

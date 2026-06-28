@@ -1,5 +1,5 @@
 @page "/staff"
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "PlatformOwner")]
 @inject IPortalUserService PortalUsers
 @rendermode InteractiveServer
 
@@ -44,7 +44,7 @@ else
                     <tr>
                         <td>@user.DisplayName</td>
                         <td>@user.Email</td>
-                        <td><span class="portal-badge">@user.Role</span></td>
+                        <td><span class="portal-badge">@FormatRole(user.Role)</span></td>
                         <td>@(user.IsActive ? "Yes" : "No")</td>
                         <td>@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                     </tr>
@@ -76,4 +76,10 @@ else
             _loading = false;
         }
     }
+
+    private static string FormatRole(PortalUserRole role) => role switch
+    {
+        PortalUserRole.PlatformOwner => "Platform Owner",
+        _ => role.ToString()
+    };
 }

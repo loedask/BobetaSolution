@@ -3,7 +3,7 @@ using Bobeta.Application.Interfaces;
 
 namespace Bobeta.Application.Services;
 
-public sealed class PlayerQueryService(IPlayerRepository players) : IPlayerQueryService
+public sealed class PlayerQueryService(IPlayerRepository players, IWalletRepository wallets) : IPlayerQueryService
 {
   public async Task<(IReadOnlyList<PlayerListItemDto> Items, int TotalCount)> GetPlayersAsync(
       int skip,
@@ -24,5 +24,33 @@ public sealed class PlayerQueryService(IPlayerRepository players) : IPlayerQuery
     }).ToList();
 
     return (dtos, total);
+  }
+
+  public async Task<PlayerDetailDto?> GetPlayerDetailAsync(Guid playerId, CancellationToken cancellationToken = default)
+  {
+    var player = await players.GetByIdAsync(playerId, cancellationToken);
+    if (player is null)
+      return null;
+
+    var wallet = await wallets.GetByPlayerIdAsync(playerId, cancellationToken);
+
+    return new PlayerDetailDto
+    {
+      Id = player.Id,
+      PhoneNumber = player.PhoneNumber,
+      PlayerName = player.PlayerName,
+      Language = player.Language,
+      CreatedAt = player.CreatedAt,
+      IsVerified = player.IsVerified,
+      Status = player.Status,
+      Wallet = wallet is null
+          ? null
+          : new PlayerWalletSummaryDto
+          {
+            Balance = wallet.Balance,
+            LockedBalance = wallet.LockedBalance,
+            UpdatedAt = wallet.UpdatedAt
+          }
+    };
   }
 }

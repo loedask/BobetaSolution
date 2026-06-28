@@ -31,8 +31,8 @@ public sealed class PortalUserService(
     if (await portalUsers.GetByEmailAsync(email, cancellationToken) is not null)
       throw new InvalidOperationException("A portal user with this email already exists.");
 
-    if (request.Role == PortalUserRole.Admin && await portalUsers.GetByIdAsync(createdById, cancellationToken) is not { Role: PortalUserRole.Admin })
-      throw new UnauthorizedAccessException("Only admins can create admin accounts.");
+    if (request.Role == PortalUserRole.PlatformOwner && await portalUsers.GetByIdAsync(createdById, cancellationToken) is not { Role: PortalUserRole.PlatformOwner })
+      throw new UnauthorizedAccessException("Only platform owners can create platform owner accounts.");
 
     var user = new PortalUser
     {

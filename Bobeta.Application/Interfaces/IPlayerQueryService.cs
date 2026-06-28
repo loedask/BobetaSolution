@@ -9,4 +9,6 @@ public interface IPlayerQueryService
       int take,
       string? search = null,
       CancellationToken cancellationToken = default);
+
+  Task<PlayerDetailDto?> GetPlayerDetailAsync(Guid playerId, CancellationToken cancellationToken = default);
 }

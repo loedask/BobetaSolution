@@ -9,8 +9,8 @@ using Microsoft.Extensions.Options;
 
 namespace Bobeta.Persistence.Seeding;
 
-/// <summary>Provisions portal admin accounts from <see cref="PortalSettings.AdminEmails"/>.</summary>
-public static class PortalAdminSeeder
+/// <summary>Provisions portal platform owner accounts from <see cref="PortalSettings.PlatformOwnerEmails"/>.</summary>
+public static class PortalPlatformOwnerSeeder
 {
   public static async Task SeedAsync(
       BobetaDbContext db,
@@ -27,7 +27,7 @@ public static class PortalAdminSeeder
       return;
     }
 
-    foreach (var rawEmail in portalSettings.AdminEmails)
+    foreach (var rawEmail in portalSettings.PlatformOwnerEmails)
     {
       if (string.IsNullOrWhiteSpace(rawEmail))
         continue;
@@ -41,14 +41,14 @@ public static class PortalAdminSeeder
         Id = Guid.NewGuid(),
         Email = email,
         DisplayName = email.Split('@')[0],
-        Role = PortalUserRole.Admin,
+        Role = PortalUserRole.PlatformOwner,
         IsActive = true,
         CreatedAt = DateTime.UtcNow
       };
       user.PasswordHash = passwordHasher.Hash(user, bootstrapPassword);
 
       db.PortalUsers.Add(user);
-      logger.LogInformation("Provisioned portal admin account for {Email}", email);
+      logger.LogInformation("Provisioned portal platform owner account for {Email}", email);
     }
 
     await db.SaveChangesAsync(cancellationToken);

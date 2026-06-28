@@ -1,6 +1,7 @@
 @page "/users"
 @attribute [Authorize]
 @inject IPlayerQueryService PlayerQuery
+@inject NavigationManager Nav
 @rendermode InteractiveServer
 
 <PageTitle>Players - Bobeta Portal</PageTitle>
@@ -49,8 +50,8 @@ else
             <tbody>
                 @foreach (var player in _players)
                 {
-                    <tr>
-                        <td>@player.PlayerName</td>
+                    <tr class="portal-table-row-link" @onclick="() => OpenPlayer(player.Id)">
+                        <td><a href="@GetPlayerUrl(player.Id)" @onclick:preventDefault @onclick:stopPropagation="true">@player.PlayerName</a></td>
                         <td>@player.PhoneNumber</td>
                         <td><span class="portal-badge">@player.Status</span></td>
                         <td>@(player.IsVerified ? "Yes" : "No")</td>
@@ -127,4 +128,8 @@ else
             await LoadPlayersAsync();
         }
     }
+
+    private void OpenPlayer(Guid id) => Nav.NavigateTo(GetPlayerUrl(id));
+
+    private static string GetPlayerUrl(Guid id) => $"/users/{id}";
 }

@@ -31,7 +31,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("PortalAdmin", policy => policy.RequireRole(nameof(PortalUserRole.Admin)));
+    options.AddPolicy("PortalPlatformOwner", policy => policy.RequireRole(nameof(PortalUserRole.PlatformOwner)));
 });
 
 builder.Services.AddCascadingAuthenticationState();
@@ -72,5 +72,5 @@ static async Task ApplyPortalMigrationsAsync(WebApplication app)
 
     var settings = services.GetRequiredService<Microsoft.Extensions.Options.IOptions<Bobeta.Application.Configuration.PortalSettings>>();
     var passwordHasher = services.GetRequiredService<Bobeta.Application.Services.PortalPasswordHasher>();
-    await PortalAdminSeeder.SeedAsync(db, settings, passwordHasher, logger);
+    await PortalPlatformOwnerSeeder.SeedAsync(db, settings, passwordHasher, logger);
 }

@@ -1,5 +1,5 @@
 @page "/staff/register"
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "PlatformOwner")]
 @inject IPortalUserService PortalUsers
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager Nav
@@ -40,7 +40,7 @@
         <label for="role">Role</label>
         <InputSelect id="role" class="portal-input" @bind-Value="_model.Role">
             <option value="@PortalUserRole.Member">Member</option>
-            <option value="@PortalUserRole.Admin">Admin</option>
+            <option value="@PortalUserRole.PlatformOwner">Platform Owner</option>
         </InputSelect>
     </div>
     <div class="portal-form-actions">

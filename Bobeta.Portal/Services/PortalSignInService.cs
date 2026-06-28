@@ -50,6 +50,6 @@ public sealed class PortalSignInService(
       await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
   }
 
-  public static bool IsAdmin(ClaimsPrincipal user) =>
-    user.IsInRole(nameof(PortalUserRole.Admin));
+  public static bool IsPlatformOwner(ClaimsPrincipal user) =>
+    user.IsInRole(nameof(PortalUserRole.PlatformOwner));
 }

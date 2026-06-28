@@ -15,6 +15,8 @@ public static class PortalServiceCollectionExtensions
     services.AddScoped<IPortalAuthService, PortalAuthService>();
     services.AddScoped<IPortalUserService, PortalUserService>();
     services.AddScoped<IPlayerQueryService, PlayerQueryService>();
+    services.AddScoped<IWalletService, WalletService>();
+    services.AddScoped<IGameHistoryService, GameHistoryService>();
     return services;
   }
 }
