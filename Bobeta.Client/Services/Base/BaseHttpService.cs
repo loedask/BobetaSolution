@@ -1,4 +1,5 @@
 using Bobeta.Client.Contracts;
+using Bobeta.Client.Json;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -11,11 +12,7 @@ namespace Bobeta.Client.Services.Base;
 /// </summary>
 public abstract class BaseHttpService(HttpClient httpClient, IAccessTokenProvider? accessTokenProvider = null)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ClientJsonSerializerOptions.Create();
 
     protected HttpClient HttpClient { get; } = httpClient;
 
@@ -81,6 +78,9 @@ public abstract class BaseHttpService(HttpClient httpClient, IAccessTokenProvide
     private static Response<T> NetworkFailure<T>() =>
         Response<T>.Failure("Unable to reach the server. Please check your connection and try again.", null);
 
+    private static Response<T> DeserializeFailure<T>() =>
+        Response<T>.Failure("Unexpected response from the server. Please try again.", null);
+
     private async Task<Response<T>> SendGetOnceAsync<T>(string requestUri, CancellationToken cancellationToken)
     {
         try
@@ -108,6 +108,10 @@ public abstract class BaseHttpService(HttpClient httpClient, IAccessTokenProvide
         catch (HttpRequestException)
         {
             return NetworkFailure<T>();
+        }
+        catch (JsonException)
+        {
+            return DeserializeFailure<T>();
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -146,6 +150,10 @@ public abstract class BaseHttpService(HttpClient httpClient, IAccessTokenProvide
         catch (HttpRequestException)
         {
             return NetworkFailure<T>();
+        }
+        catch (JsonException)
+        {
+            return DeserializeFailure<T>();
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -189,6 +197,10 @@ public abstract class BaseHttpService(HttpClient httpClient, IAccessTokenProvide
         {
             return NetworkFailure<T>();
         }
+        catch (JsonException)
+        {
+            return DeserializeFailure<T>();
+        }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             return NetworkFailure<T>();
@@ -209,6 +221,10 @@ public abstract class BaseHttpService(HttpClient httpClient, IAccessTokenProvide
         catch (HttpRequestException)
         {
             return NetworkFailure<bool>();
+        }
+        catch (JsonException)
+        {
+            return DeserializeFailure<bool>();
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
