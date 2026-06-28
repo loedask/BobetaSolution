@@ -33,8 +33,12 @@
         <InputText class="portal-input" @bind-Value="_model.PortalEmail" />
     </div>
     <div class="portal-field">
-        <label>Display name</label>
-        <InputText class="portal-input" @bind-Value="_model.DisplayName" />
+        <label>First name</label>
+        <InputText class="portal-input" @bind-Value="_model.FirstName" autocomplete="given-name" />
+    </div>
+    <div class="portal-field">
+        <label>Last name</label>
+        <InputText class="portal-input" @bind-Value="_model.LastName" autocomplete="family-name" />
     </div>
     <div class="portal-field">
         <label>Initial password</label>

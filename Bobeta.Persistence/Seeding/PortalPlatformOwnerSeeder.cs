@@ -40,7 +40,8 @@ public static class PortalPlatformOwnerSeeder
       {
         Id = Guid.NewGuid(),
         Email = email,
-        DisplayName = email.Split('@')[0],
+        FirstName = email.Split('@')[0],
+        LastName = string.Empty,
         Role = PortalUserRole.PlatformOwner,
         IsActive = true,
         CreatedAt = DateTime.UtcNow

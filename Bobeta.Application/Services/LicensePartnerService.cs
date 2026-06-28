@@ -38,7 +38,8 @@ public sealed class LicensePartnerService(
     {
       Id = Guid.NewGuid(),
       Email = portalEmail,
-      DisplayName = request.DisplayName.Trim(),
+      FirstName = request.FirstName.Trim(),
+      LastName = request.LastName.Trim(),
       Role = PortalUserRole.LicensePartner,
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
@@ -157,8 +158,10 @@ public sealed class LicensePartnerService(
       throw new InvalidOperationException("Contact email is required.");
     if (string.IsNullOrWhiteSpace(request.PortalEmail))
       throw new InvalidOperationException("Portal login email is required.");
-    if (string.IsNullOrWhiteSpace(request.DisplayName))
-      throw new InvalidOperationException("Display name is required.");
+    if (string.IsNullOrWhiteSpace(request.FirstName))
+      throw new InvalidOperationException("First name is required.");
+    if (string.IsNullOrWhiteSpace(request.LastName))
+      throw new InvalidOperationException("Last name is required.");
     if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
       throw new InvalidOperationException("Password must be at least 8 characters.");
   }

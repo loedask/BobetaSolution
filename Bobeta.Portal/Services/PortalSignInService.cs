@@ -23,7 +23,7 @@ public sealed class PortalSignInService(IPortalAuthService auth)
     {
       new(ClaimTypes.NameIdentifier, user.Id.ToString()),
       new(ClaimTypes.Email, user.Email),
-      new(ClaimTypes.Name, user.DisplayName),
+      new(ClaimTypes.Name, user.FullName),
       new(ClaimTypes.Role, user.Role.ToString())
     };
 

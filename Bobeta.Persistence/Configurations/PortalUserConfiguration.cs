@@ -11,7 +11,9 @@ public class PortalUserConfiguration : IEntityTypeConfiguration<PortalUser>
     builder.ToTable("PortalUsers");
     builder.HasKey(u => u.Id);
     builder.Property(u => u.Email).HasMaxLength(256).IsRequired();
-    builder.Property(u => u.DisplayName).HasMaxLength(100).IsRequired();
+    builder.Property(u => u.FirstName).HasMaxLength(50).IsRequired();
+    builder.Property(u => u.LastName).HasMaxLength(50).IsRequired();
+    builder.Ignore(u => u.FullName);
     builder.Property(u => u.PasswordHash).HasMaxLength(500).IsRequired();
     builder.HasIndex(u => u.Email).IsUnique();
     builder.HasOne(u => u.CreatedBy)

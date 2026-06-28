@@ -25,7 +25,8 @@ public sealed class RegisterLicensePartnerRequest
   public string LegalName { get; set; } = string.Empty;
   public string ContactEmail { get; set; } = string.Empty;
   public string PortalEmail { get; set; } = string.Empty;
-  public string DisplayName { get; set; } = string.Empty;
+  public string FirstName { get; set; } = string.Empty;
+  public string LastName { get; set; } = string.Empty;
   public string Password { get; set; } = string.Empty;
 }
 

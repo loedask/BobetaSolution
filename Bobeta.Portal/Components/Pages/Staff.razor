@@ -42,7 +42,7 @@ else
                 @foreach (var user in _staff)
                 {
                     <tr>
-                        <td>@user.DisplayName</td>
+                        <td>@user.FullName</td>
                         <td>@user.Email</td>
                         <td><span class="portal-badge">@FormatRole(user.Role)</span></td>
                         <td>@(user.IsActive ? "Yes" : "No")</td>

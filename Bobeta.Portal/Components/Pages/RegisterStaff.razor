@@ -25,8 +25,12 @@
 
 <EditForm class="portal-form" Model="_model" OnValidSubmit="HandleRegisterAsync">
     <div class="portal-field">
-        <label for="displayName">Display name</label>
-        <InputText id="displayName" class="portal-input" @bind-Value="_model.DisplayName" />
+        <label for="firstName">First name</label>
+        <InputText id="firstName" class="portal-input" @bind-Value="_model.FirstName" autocomplete="given-name" />
+    </div>
+    <div class="portal-field">
+        <label for="lastName">Last name</label>
+        <InputText id="lastName" class="portal-input" @bind-Value="_model.LastName" autocomplete="family-name" />
     </div>
     <div class="portal-field">
         <label for="email">Email</label>
@@ -76,7 +80,8 @@
             var created = await PortalUsers.RegisterAsync(_model, createdById);
             _success = $"Created account for {created.Email}.";
             _model.Email = string.Empty;
-            _model.DisplayName = string.Empty;
+            _model.FirstName = string.Empty;
+            _model.LastName = string.Empty;
             _model.Password = string.Empty;
             _model.Role = PortalUserRole.Member;
         }

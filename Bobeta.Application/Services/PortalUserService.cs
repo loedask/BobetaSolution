@@ -23,8 +23,10 @@ public sealed class PortalUserService(
     var email = request.Email.Trim().ToLowerInvariant();
     if (string.IsNullOrWhiteSpace(email))
       throw new InvalidOperationException("Email is required.");
-    if (string.IsNullOrWhiteSpace(request.DisplayName))
-      throw new InvalidOperationException("Display name is required.");
+    if (string.IsNullOrWhiteSpace(request.FirstName))
+      throw new InvalidOperationException("First name is required.");
+    if (string.IsNullOrWhiteSpace(request.LastName))
+      throw new InvalidOperationException("Last name is required.");
     if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
       throw new InvalidOperationException("Password must be at least 8 characters.");
 
@@ -41,7 +43,8 @@ public sealed class PortalUserService(
     {
       Id = Guid.NewGuid(),
       Email = email,
-      DisplayName = request.DisplayName.Trim(),
+      FirstName = request.FirstName.Trim(),
+      LastName = request.LastName.Trim(),
       Role = request.Role,
       IsActive = true,
       CreatedAt = DateTime.UtcNow,
@@ -57,7 +60,8 @@ public sealed class PortalUserService(
   {
     Id = user.Id,
     Email = user.Email,
-    DisplayName = user.DisplayName,
+    FirstName = user.FirstName,
+    LastName = user.LastName,
     Role = user.Role,
     IsActive = user.IsActive,
     CreatedAt = user.CreatedAt
