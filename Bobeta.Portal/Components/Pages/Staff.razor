@@ -1,0 +1,79 @@
+@page "/staff"
+@attribute [Authorize(Roles = "Admin")]
+@inject IPortalUserService PortalUsers
+@rendermode InteractiveServer
+
+<PageTitle>Staff - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <h1>Portal staff</h1>
+        <p class="portal-muted">Employees who can access Bobeta.Portal.</p>
+    </div>
+    <a class="portal-button portal-button-primary" href="/staff/register">Register staff</a>
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading staff...</p>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="portal-alert portal-alert-error">@_error</div>
+}
+else if (_staff.Count == 0)
+{
+    <p class="portal-muted">No staff accounts yet.</p>
+}
+else
+{
+    <div class="portal-table-wrap">
+        <table class="portal-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Active</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in _staff)
+                {
+                    <tr>
+                        <td>@user.DisplayName</td>
+                        <td>@user.Email</td>
+                        <td><span class="portal-badge">@user.Role</span></td>
+                        <td>@(user.IsActive ? "Yes" : "No")</td>
+                        <td>@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private readonly List<PortalUserListItemDto> _staff = [];
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var users = await PortalUsers.GetAllAsync();
+            _staff.Clear();
+            _staff.AddRange(users);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

@@ -34,6 +34,9 @@ public class BobetaDbContext(DbContextOptions<BobetaDbContext> options) : DbCont
     /// <summary>SMS messages sent via gateway (for DLR tracking).</summary>
     public DbSet<SmsMessage> SmsMessages => Set<SmsMessage>();
 
+    /// <summary>Bobeta.Portal staff accounts.</summary>
+    public DbSet<PortalUser> PortalUsers => Set<PortalUser>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,0 +1,12 @@
+@page "/logout"
+@attribute [Authorize]
+@inject PortalSignInService SignIn
+@inject NavigationManager Nav
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await SignIn.SignOutAsync();
+        Nav.NavigateTo("/login", forceLoad: true);
+    }
+}

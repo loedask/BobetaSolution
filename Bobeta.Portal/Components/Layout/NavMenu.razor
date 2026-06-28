@@ -1,0 +1,15 @@
+<nav class="portal-nav">
+    <NavLink class="portal-nav-link" href="/users" Match="NavLinkMatch.All">
+        Players
+    </NavLink>
+    <AuthorizeView Roles="Admin">
+        <Authorized>
+            <NavLink class="portal-nav-link" href="/staff">
+                Staff
+            </NavLink>
+            <NavLink class="portal-nav-link" href="/staff/register">
+                Register staff
+            </NavLink>
+        </Authorized>
+    </AuthorizeView>
+</nav>

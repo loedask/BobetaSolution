@@ -35,3 +35,5 @@ Bobeta.Web.Host/bin/
 Bobeta.Web.Host/obj/
 artifacts/
 **/*.pubxml.user
+Bobeta.Portal/bin/
+Bobeta.Portal/obj/

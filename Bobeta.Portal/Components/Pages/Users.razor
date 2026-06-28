@@ -1,0 +1,130 @@
+@page "/users"
+@attribute [Authorize]
+@inject IPlayerQueryService PlayerQuery
+@rendermode InteractiveServer
+
+<PageTitle>Players - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <h1>Players</h1>
+        <p class="portal-muted">Registered game users on the platform.</p>
+    </div>
+    <div class="portal-search">
+        <input class="portal-input"
+               placeholder="Search phone or name"
+               @bind="_search"
+               @bind:event="oninput"
+               @onkeyup="HandleSearchKey" />
+        <button class="portal-button" type="button" @onclick="LoadPlayersAsync">Search</button>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading players...</p>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="portal-alert portal-alert-error">@_error</div>
+}
+else if (_players.Count == 0)
+{
+    <p class="portal-muted">No players found.</p>
+}
+else
+{
+    <div class="portal-table-wrap">
+        <table class="portal-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Verified</th>
+                    <th>Language</th>
+                    <th>Joined</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var player in _players)
+                {
+                    <tr>
+                        <td>@player.PlayerName</td>
+                        <td>@player.PhoneNumber</td>
+                        <td><span class="portal-badge">@player.Status</span></td>
+                        <td>@(player.IsVerified ? "Yes" : "No")</td>
+                        <td>@player.Language</td>
+                        <td>@player.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="portal-pagination">
+        <button class="portal-button" type="button" disabled="@(_page == 0)" @onclick="PreviousPage">Previous</button>
+        <span class="portal-muted">Page @(_page + 1) of @TotalPages (@_total total)</span>
+        <button class="portal-button" type="button" disabled="@((_page + 1) >= TotalPages)" @onclick="NextPage">Next</button>
+    </div>
+}
+
+@code {
+    private const int PageSize = 25;
+
+    private readonly List<PlayerListItemDto> _players = [];
+    private string _search = string.Empty;
+    private int _page;
+    private int _total;
+    private bool _loading = true;
+    private string? _error;
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(_total / (double)PageSize));
+
+    protected override async Task OnInitializedAsync() => await LoadPlayersAsync();
+
+    private async Task LoadPlayersAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            var (items, total) = await PlayerQuery.GetPlayersAsync(_page * PageSize, PageSize, _search);
+            _players.Clear();
+            _players.AddRange(items);
+            _total = total;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task PreviousPage()
+    {
+        if (_page == 0) return;
+        _page--;
+        await LoadPlayersAsync();
+    }
+
+    private async Task NextPage()
+    {
+        if (_page + 1 >= TotalPages) return;
+        _page++;
+        await LoadPlayersAsync();
+    }
+
+    private async Task HandleSearchKey(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            _page = 0;
+            await LoadPlayersAsync();
+        }
+    }
+}

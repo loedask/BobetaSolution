@@ -13,6 +13,9 @@
     <Project Path="Bobeta.Persistence/Bobeta.Persistence.csproj" />
   </Folder>
   <Folder Name="/src/UI/" />
+  <Folder Name="/src/UI/Portal/">
+    <Project Path="Bobeta.Portal/Bobeta.Portal.csproj" />
+  </Folder>
   <Folder Name="/src/UI/Core/">
     <Project Path="Bobeta.Client/Bobeta.Client.csproj" Id="b5e64c6e-5696-4b8e-86c5-15076f88cdd0" />
   </Folder>

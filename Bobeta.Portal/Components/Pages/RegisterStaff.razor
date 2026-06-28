@@ -1,0 +1,92 @@
+@page "/staff/register"
+@attribute [Authorize(Roles = "Admin")]
+@inject IPortalUserService PortalUsers
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<PageTitle>Register staff - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <h1>Register staff</h1>
+        <p class="portal-muted">Create a new employee portal account.</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <div class="portal-alert portal-alert-error">@_error</div>
+}
+@if (!string.IsNullOrEmpty(_success))
+{
+    <div class="portal-alert portal-alert-success">@_success</div>
+}
+
+<EditForm class="portal-form" Model="_model" OnValidSubmit="HandleRegisterAsync">
+    <div class="portal-field">
+        <label for="displayName">Display name</label>
+        <InputText id="displayName" class="portal-input" @bind-Value="_model.DisplayName" />
+    </div>
+    <div class="portal-field">
+        <label for="email">Email</label>
+        <InputText id="email" class="portal-input" @bind-Value="_model.Email" autocomplete="email" />
+    </div>
+    <div class="portal-field">
+        <label for="password">Password</label>
+        <InputText id="password" type="password" class="portal-input" @bind-Value="_model.Password" autocomplete="new-password" />
+    </div>
+    <div class="portal-field">
+        <label for="role">Role</label>
+        <InputSelect id="role" class="portal-input" @bind-Value="_model.Role">
+            <option value="@PortalUserRole.Member">Member</option>
+            <option value="@PortalUserRole.Admin">Admin</option>
+        </InputSelect>
+    </div>
+    <div class="portal-form-actions">
+        <button class="portal-button portal-button-primary" type="submit" disabled="@_busy">
+            @(_busy ? "Creating..." : "Create account")
+        </button>
+        <a class="portal-button" href="/staff">Cancel</a>
+    </div>
+</EditForm>
+
+@code {
+    private readonly RegisterPortalUserRequest _model = new();
+    private string? _error;
+    private string? _success;
+    private bool _busy;
+
+    private async Task HandleRegisterAsync()
+    {
+        _busy = true;
+        _error = null;
+        _success = null;
+
+        try
+        {
+            var auth = await AuthState.GetAuthenticationStateAsync();
+            var userId = auth.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null || !Guid.TryParse(userId, out var createdById))
+            {
+                _error = "Could not determine the current user.";
+                return;
+            }
+
+            var created = await PortalUsers.RegisterAsync(_model, createdById);
+            _success = $"Created account for {created.Email}.";
+            _model.Email = string.Empty;
+            _model.DisplayName = string.Empty;
+            _model.Password = string.Empty;
+            _model.Role = PortalUserRole.Member;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}
