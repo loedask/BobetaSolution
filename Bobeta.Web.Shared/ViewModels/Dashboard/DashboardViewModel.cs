@@ -21,38 +21,36 @@ public class DashboardViewModel(WalletService walletService, AppStateService app
     {
         SetLoading(true);
         ClearError();
-        try
-        {
-            var balanceRes = await _walletService.GetBalanceAsync();
-            if (balanceRes.IsSuccess && balanceRes.Data != null)
-            {
-                _appState.SetWalletBalance(balanceRes.Data.Balance, balanceRes.Data.LockedBalance);
-                await _appState.PersistAsync();
-            }
-            else if (!balanceRes.IsSuccess)
-            {
-                if (await _appState.HandleUnauthorizedAsync(balanceRes.StatusCode, _nav))
-                    return;
-                SetError(balanceRes.ErrorMessage ?? "Failed to load balance.");
-            }
 
-            var txRes = await _walletService.GetTransactionsAsync(0, 10);
-            if (!txRes.IsSuccess && await _appState.HandleUnauthorizedAsync(txRes.StatusCode, _nav))
+        var balanceRes = await _walletService.GetBalanceAsync();
+        if (balanceRes.IsSuccess && balanceRes.Data != null)
+        {
+            _appState.SetWalletBalance(balanceRes.Data.Balance, balanceRes.Data.LockedBalance);
+            await _appState.PersistAsync();
+        }
+        else if (!balanceRes.IsSuccess)
+        {
+            if (await _appState.HandleUnauthorizedAsync(balanceRes.StatusCode, _nav))
                 return;
-            if (txRes.IsSuccess && txRes.Data != null)
-                Transactions = txRes.Data.Select(t => new TransactionItemDto(
-                    TransactionDescription(t.Type),
-                    t.CreatedAt.ToString("g"),
-                    t.Amount)).ToList();
+            SetError(balanceRes.ErrorMessage ?? "Failed to load balance.");
         }
-        catch (Exception)
+
+        var txRes = await _walletService.GetTransactionsAsync(0, 10);
+        if (!txRes.IsSuccess && await _appState.HandleUnauthorizedAsync(txRes.StatusCode, _nav))
+            return;
+        if (txRes.IsSuccess && txRes.Data != null)
         {
-            SetError("Something went wrong. Please try again.");
+            Transactions = txRes.Data.Select(t => new TransactionItemDto(
+                TransactionDescription(t.Type),
+                t.CreatedAt.ToString("g"),
+                t.Amount)).ToList();
         }
-        finally
+        else if (!txRes.IsSuccess && string.IsNullOrEmpty(ErrorMessage))
         {
-            SetLoading(false);
+            SetError(txRes.ErrorMessage ?? "Failed to load recent activity.");
         }
+
+        SetLoading(false);
     }
 
     public void GoToDeposit() => _nav.NavigateTo("/deposit");

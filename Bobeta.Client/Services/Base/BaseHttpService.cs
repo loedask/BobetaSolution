@@ -78,8 +78,13 @@ public abstract class BaseHttpService(HttpClient httpClient, IAccessTokenProvide
         return last ?? Response<T>.Failure("Network error. Please check your connection and try again.", null);
     }
 
+    private static Response<T> NetworkFailure<T>() =>
+        Response<T>.Failure("Unable to reach the server. Please check your connection and try again.", null);
+
     private async Task<Response<T>> SendGetOnceAsync<T>(string requestUri, CancellationToken cancellationToken)
     {
+        try
+        {
         using var request = new HttpRequestMessage(HttpMethod.Get, ResolveRequestUri(requestUri));
             await AttachBearerAsync(request, cancellationToken).ConfigureAwait(false);
             using var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -99,10 +104,21 @@ public abstract class BaseHttpService(HttpClient httpClient, IAccessTokenProvide
                 return await ToErrorResponseAsync<T>(response, cancellationToken).ConfigureAwait(false);
         var data = await ReadSuccessBodyAsync<T>(response, cancellationToken).ConfigureAwait(false);
         return Response<T>.Success(data!);
+        }
+        catch (HttpRequestException)
+        {
+            return NetworkFailure<T>();
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return NetworkFailure<T>();
+        }
     }
 
     protected async Task<Response<T>> PostAsync<T>(string requestUri, object? body, CancellationToken cancellationToken = default)
     {
+        try
+        {
         using var request = new HttpRequestMessage(HttpMethod.Post, ResolveRequestUri(requestUri));
             if (body != null)
                 request.Content = JsonContent.Create(body, mediaType: null, options: JsonOptions);
@@ -126,10 +142,21 @@ public abstract class BaseHttpService(HttpClient httpClient, IAccessTokenProvide
             return await ToErrorResponseAsync<T>(response, cancellationToken).ConfigureAwait(false);
         var data = await ReadSuccessBodyAsync<T>(response, cancellationToken).ConfigureAwait(false);
         return Response<T>.Success(data!);
+        }
+        catch (HttpRequestException)
+        {
+            return NetworkFailure<T>();
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return NetworkFailure<T>();
+        }
     }
 
     protected async Task<Response<T>> PutAsync<T>(string requestUri, object? body, CancellationToken cancellationToken = default)
     {
+        try
+        {
         using var request = new HttpRequestMessage(HttpMethod.Put, ResolveRequestUri(requestUri));
             if (body != null)
                 request.Content = JsonContent.Create(body, mediaType: null, options: JsonOptions);
@@ -157,16 +184,36 @@ public abstract class BaseHttpService(HttpClient httpClient, IAccessTokenProvide
                 ? default
                 : await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken).ConfigureAwait(false);
         return Response<T>.Success(data!);
+        }
+        catch (HttpRequestException)
+        {
+            return NetworkFailure<T>();
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return NetworkFailure<T>();
+        }
     }
 
     protected async Task<Response<bool>> DeleteAsync(string requestUri, CancellationToken cancellationToken = default)
     {
+        try
+        {
         using var request = new HttpRequestMessage(HttpMethod.Delete, ResolveRequestUri(requestUri));
             await AttachBearerAsync(request, cancellationToken).ConfigureAwait(false);
             using var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
                 return await ToErrorResponseAsync<bool>(response, cancellationToken).ConfigureAwait(false);
         return Response<bool>.Success(true);
+        }
+        catch (HttpRequestException)
+        {
+            return NetworkFailure<bool>();
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return NetworkFailure<bool>();
+        }
     }
 
     private static async Task<Response<T>> ToErrorResponseAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
