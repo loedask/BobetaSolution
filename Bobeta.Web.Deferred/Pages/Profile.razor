@@ -4,59 +4,83 @@
 @inject I18nService I18n
 
 <div class="min-h-screen bg-background pb-24">
-    <div class="flex items-center gap-3 px-5 pt-6 pb-4">
-        <a href="/dashboard" class="flex h-10 w-10 items-center justify-center rounded-xl bg-card">
-            <svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-        </a>
-        <h1 class="font-display text-xl font-bold text-foreground">@I18n.T("profile")</h1>
-    </div>
+    <AppHeader Title="@I18n.T("profile")" ShowBack="true" BackHref="/dashboard" />
 
-    <div class="px-5 space-y-6">
-        <div class="flex items-center gap-4">
-            <div class="gold-gradient flex h-16 w-16 items-center justify-center rounded-2xl">
-                <svg class="h-8 w-8 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+    <div class="space-y-4 px-5">
+        <div class="card-surface glow-gold overflow-hidden rounded-2xl border border-border/50 p-5">
+            <div class="flex items-center gap-4">
+                <div class="gold-gradient flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl shadow-lg">
+                    <span class="font-display text-xl font-bold text-primary-foreground">@ViewModel.Initials</span>
+                </div>
+                <div class="min-w-0">
+                    <h2 class="truncate font-display text-lg font-bold text-foreground">@ViewModel.PlayerName</h2>
+                    <p class="mt-0.5 text-sm text-muted-foreground">@ViewModel.PhoneNumber</p>
+                </div>
             </div>
-            <div>
-                <h2 class="font-display text-lg font-bold text-foreground">@ViewModel.PlayerName</h2>
-                <p class="text-sm text-muted-foreground">@ViewModel.PhoneNumber</p>
+
+            <div class="mt-5 grid grid-cols-3 divide-x divide-border/50 rounded-xl border border-border/40 bg-background/30">
+                <div class="px-2 py-3 text-center">
+                    @if (ViewModel.IsLoading)
+                    {
+                        <SkeletonLoader CssClass="mx-auto mb-1.5 h-6 w-8" />
+                    }
+                    else
+                    {
+                        <p class="font-display text-xl font-bold text-foreground">@(ViewModel.TotalGames == 0 ? "—" : ViewModel.TotalGames.ToString())</p>
+                    }
+                    <p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">@I18n.T("games")</p>
+                </div>
+                <div class="px-2 py-3 text-center">
+                    @if (ViewModel.IsLoading)
+                    {
+                        <SkeletonLoader CssClass="mx-auto mb-1.5 h-6 w-8" />
+                    }
+                    else
+                    {
+                        <p class="font-display text-xl font-bold text-accent">@(ViewModel.Wins == 0 && ViewModel.TotalGames == 0 ? "—" : ViewModel.Wins.ToString())</p>
+                    }
+                    <p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">@I18n.T("wins")</p>
+                </div>
+                <div class="px-2 py-3 text-center">
+                    @if (ViewModel.IsLoading)
+                    {
+                        <SkeletonLoader CssClass="mx-auto mb-1.5 h-6 w-10" />
+                    }
+                    else
+                    {
+                        <p class="gold-text font-display text-xl font-bold">@ViewModel.WinRateDisplay</p>
+                    }
+                    <p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">@I18n.T("win_rate")</p>
+                </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-3">
-            <div class="rounded-xl bg-card p-4 text-center">
-                <div class="font-display text-xl font-bold text-foreground">—</div>
-                <div class="text-xs text-muted-foreground">@I18n.T("games")</div>
-            </div>
-            <div class="rounded-xl bg-card p-4 text-center">
-                <div class="font-display text-xl font-bold text-foreground">—</div>
-                <div class="text-xs text-muted-foreground">@I18n.T("wins")</div>
-            </div>
-            <div class="rounded-xl bg-card p-4 text-center">
-                <div class="font-display text-xl font-bold text-foreground">—</div>
-                <div class="text-xs text-muted-foreground">@I18n.T("win_rate")</div>
-            </div>
-        </div>
-
-        <div>
-            <div class="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0h.5a2.5 2.5 0 002.5-2.5V8.935M12 12a2 2 0 100 4 2 2 0 000-4z" /></svg>
-                @I18n.T("language")
+        <div class="card-surface rounded-2xl border border-border/50 p-5">
+            <div class="mb-3 flex items-center gap-2">
+                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0h.5a2.5 2.5 0 002.5-2.5V8.935M12 12a2 2 0 100 4 2 2 0 000-4z" /></svg>
+                </div>
+                <span class="font-display text-sm font-semibold text-foreground">@I18n.T("language")</span>
             </div>
             <LanguageSelector />
         </div>
 
-        <div class="space-y-1">
-            <a href="/dashboard" class="flex w-full items-center justify-between rounded-xl bg-card p-4 transition-colors hover:bg-secondary text-foreground">
+        <div class="overflow-hidden rounded-2xl border border-border/50 card-surface">
+            <a href="/dashboard" class="flex w-full items-center justify-between border-b border-border/40 p-4 transition-colors hover:bg-secondary/40 active:bg-secondary/60">
                 <div class="flex items-center gap-3">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-                    <span class="text-sm font-medium">@I18n.T("wallet_settings")</span>
+                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                        <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                    </div>
+                    <span class="text-sm font-medium text-foreground">@I18n.T("wallet_settings")</span>
                 </div>
                 <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </a>
-            <button type="button" class="flex w-full items-center justify-between rounded-xl bg-card p-4 transition-colors hover:bg-secondary text-destructive" @onclick="ViewModel.ShowSignOut">
+            <button type="button" class="flex w-full items-center justify-between p-4 transition-colors hover:bg-destructive/5 active:bg-destructive/10" @onclick="ViewModel.ShowSignOut">
                 <div class="flex items-center gap-3">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                    <span class="text-sm font-medium">@I18n.T("sign_out")</span>
+                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10">
+                        <svg class="h-4 w-4 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                    </div>
+                    <span class="text-sm font-medium text-destructive">@I18n.T("sign_out")</span>
                 </div>
                 <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </button>
@@ -67,17 +91,17 @@
 @if (ViewModel.ShowSignOutModal)
 {
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm px-6" @onclick="ViewModel.HideSignOut">
-        <div class="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center" @onclick:stopPropagation="true">
+        <div class="card-surface w-full max-w-sm rounded-2xl border border-border/60 p-6 text-center shadow-2xl" @onclick:stopPropagation="true">
             <div class="mb-4 flex justify-center">
-                <div class="flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+                <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10">
                     <svg class="h-7 w-7 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                 </div>
             </div>
             <h3 class="mb-2 font-display text-lg font-bold text-foreground">@I18n.T("sign_out")?</h3>
             <p class="mb-6 text-sm text-muted-foreground">@I18n.T("sign_out_confirm")</p>
             <div class="flex gap-3">
-                <button type="button" class="flex-1 rounded-xl border border-primary/30 bg-transparent py-3 font-semibold text-primary" @onclick="ViewModel.HideSignOut">@I18n.T("cancel")</button>
-                <button type="button" class="flex-1 rounded-xl bg-destructive py-3 font-semibold text-destructive-foreground" @onclick="SignOut">@I18n.T("sign_out")</button>
+                <button type="button" class="flex-1 rounded-xl border border-border bg-secondary/50 py-3 text-sm font-semibold text-foreground transition-all active:scale-[0.98]" @onclick="ViewModel.HideSignOut">@I18n.T("cancel")</button>
+                <button type="button" class="flex-1 rounded-xl bg-destructive py-3 text-sm font-semibold text-destructive-foreground transition-all active:scale-[0.98]" @onclick="SignOut">@I18n.T("sign_out")</button>
             </div>
         </div>
     </div>
@@ -85,6 +109,7 @@
 
 @code {
     protected override void OnInitialized() => ViewModel.StateChanged += OnStateChanged;
+    protected override async Task OnInitializedAsync() => await ViewModel.LoadAsync();
     public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
     private async Task SignOut() => await ViewModel.SignOutAsync();
