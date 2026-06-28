@@ -12,14 +12,15 @@
     <Project Path="Bobeta.Infrastructure/Bobeta.Infrastructure.csproj" />
     <Project Path="Bobeta.Persistence/Bobeta.Persistence.csproj" />
   </Folder>
-  <Folder Name="/src/UI/">
-    <Project Path="Bobeta.Mobile/Bobeta.Mobile.csproj" Id="42840e20-7c0a-446a-bad0-35e548c09335" />
-    <Project Path="Bobeta.Web.Deferred/Bobeta.Web.Deferred.csproj" />
-  </Folder>
+  <Folder Name="/src/UI/" />
   <Folder Name="/src/UI/Core/">
     <Project Path="Bobeta.Client/Bobeta.Client.csproj" Id="b5e64c6e-5696-4b8e-86c5-15076f88cdd0" />
   </Folder>
+  <Folder Name="/src/UI/Mobile/">
+    <Project Path="Bobeta.Mobile/Bobeta.Mobile.csproj" Id="42840e20-7c0a-446a-bad0-35e548c09335" />
+  </Folder>
   <Folder Name="/src/UI/PWA/">
+    <Project Path="Bobeta.Web.Deferred/Bobeta.Web.Deferred.csproj" />
     <Project Path="Bobeta.Web.Host/Bobeta.Web.Host.csproj" />
     <Project Path="Bobeta.Web.Shared/Bobeta.Web.Shared.csproj" />
     <Project Path="Bobeta.Web/Bobeta.Web.csproj" />
