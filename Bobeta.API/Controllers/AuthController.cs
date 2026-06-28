@@ -1,7 +1,6 @@
 using Bobeta.Application.DTOs.Auth;
 using Bobeta.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
 
 namespace Bobeta.API.Controllers;
 
