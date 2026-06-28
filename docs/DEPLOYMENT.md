@@ -2,14 +2,17 @@
 
 ## Azure Linux (recommended)
 
-Both production apps run on **Linux App Service** in **South Africa North**:
+Production apps run on **Linux App Service** in **South Africa North**:
 
 | App | Project to publish | Publish profile | Runtime |
 |-----|-------------------|-----------------|---------|
-| **bobeta** (API) | `Bobeta.API` | `bobeta - Zip Deploy` | .NET 10, `linux-x64` |
+| **bobeta** (API) | `Bobeta.API` | `bobeta-api - Zip Deploy` | .NET 10, `linux-x64` |
 | **bobeta-pwa** (PWA) | `Bobeta.Web.Host` | `bobeta-pwa - Zip Deploy` | .NET 10, `linux-x64` |
+| **bobeta-portal** (employee portal) | `Bobeta.Portal` | `bobeta-portal - Zip Deploy` | .NET 10, `linux-x64` |
 
 **Do not** publish `Bobeta.Web` directly to App Service — standalone Blazor WASM is static files only; Linux App Service needs the thin **`Bobeta.Web.Host`** server for SPA routing and correct MIME types. Local dev can still use `dotnet run` on **`Bobeta.Web`**.
+
+**Do not** add a separate `Bobeta.Portal.Host` — **`Bobeta.Portal` is already a full ASP.NET host** (like `Bobeta.API`). Blazor **Server** runs on the server with live circuits; it is not a static WASM bundle. You publish **`Bobeta.Portal`** itself with the same **linux-x64 Zip Deploy** flow as the API. The PWA needs `Web.Host` only because WASM is client-side static files.
 
 ### One-time Azure Portal setup
 
@@ -48,6 +51,35 @@ dotnet publish Bobeta.Web.Host/Bobeta.Web.Host.csproj -c Release -r linux-x64 --
 ```
 
 Before publishing the PWA, set **`ApiBaseUrl`** in **`Bobeta.Web/wwwroot/appsettings.Production.json`** to your API URL.
+
+**Portal (Blazor Server):**
+
+```bash
+dotnet publish Bobeta.Portal/Bobeta.Portal.csproj -c Release -r linux-x64 --self-contained false
+# Or: Publish with profile "bobeta-portal - Zip Deploy"
+# Or: .\scripts\publish-portal-linux.ps1
+```
+
+### Portal (`bobeta-portal`) — one-time Azure setup
+
+Bobeta.Portal is **Blazor Server** (not WASM). It needs **WebSockets** for interactive UI, the same PostgreSQL database as the API, and portal-specific settings.
+
+1. **Create** → Web App → **Linux**, runtime **.NET 10** (e.g. name `bobeta-portal`, same region/plan as API).
+2. **Configuration → General settings** → **Web sockets**: **On** (required).
+3. **Connection strings** — same PostgreSQL as the API (`AZURE_POSTGRESQL_CONNECTIONSTRING` or `DefaultConnection`).
+4. **Application settings** (examples; use double underscore for nested keys):
+
+   | Setting | Purpose |
+   |---------|---------|
+   | `Portal__PlatformOwnerEmails__0` | First platform owner email (bootstrapped on startup) |
+   | `Portal__BootstrapPassword` | Initial password for provisioned owners (rotate after first login) |
+   | `PaymentRevenue__DepositFeePercent` | Optional; default 2.5 |
+   | `PaymentRevenue__WithdrawalFeePercent` | Optional; default 2.5 |
+
+5. Update **`Bobeta.Portal/Properties/PublishProfiles/bobeta-portal - Zip Deploy.pubxml`** `ResourceId` / `PublishUrl` if your Azure site name differs.
+6. Publish with profile **`bobeta-portal - Zip Deploy`** or the CLI command above.
+
+Migrations run automatically when the portal starts (same as local dev). Only one instance should run migrations at a time if you scale out; prefer a single portal instance or run migrations from the API only.
 
 ## API region (already configured)
 

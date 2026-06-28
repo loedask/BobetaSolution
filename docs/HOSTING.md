@@ -4,14 +4,15 @@ This guide covers what you need when hosting the Bobeta API and Web app in produ
 
 ## 1. Publishing the apps
 
-Publish both apps to **Azure Linux App Service** (see [DEPLOYMENT.md](./DEPLOYMENT.md) for profiles and portal setup):
+Publish all hosted apps to **Azure Linux App Service** (see [DEPLOYMENT.md](./DEPLOYMENT.md) for profiles and portal setup):
 
 | App | Project | Notes |
 |-----|---------|--------|
 | API | **`Bobeta.API`** | `linux-x64`, Zip Deploy profile **`bobeta - Zip Deploy`** |
 | PWA | **`Bobeta.Web.Host`** | Serves **`Bobeta.Web`** (Blazor WASM); profile **`bobeta-pwa - Zip Deploy`** |
+| Portal | **`Bobeta.Portal`** | Blazor Server employee portal; profile **`bobeta-portal - Zip Deploy`**; **WebSockets required** |
 
-Enable **WebSockets** on the **API** app in the Azure Portal (**Configuration → General settings**). SignalR is part of the API; no separate install step.
+Enable **WebSockets** on the **API** and **Portal** apps in the Azure Portal (**Configuration → General settings**). SignalR (API) and Blazor Server circuits (Portal) depend on WebSocket support.
 
 For local development, run **`Bobeta.Web`** directly (`dotnet run`); use **`Bobeta.Web.Host`** only for production-style hosting and Azure publish.
 
@@ -22,6 +23,10 @@ When you host, you must configure the environment:
 - **API**
   - **Connection string** — Points to your hosted PostgreSQL instance (not localhost).
   - **JWT** — Key, Issuer, and Audience (e.g. in `appsettings.Production.json` or environment variables) if they differ from development.
+
+- **Portal**
+  - **Connection string** — Same PostgreSQL as the API.
+  - **Portal** — `PlatformOwnerEmails` and `BootstrapPassword` for initial owner accounts (App Service: `Portal__PlatformOwnerEmails__0`, `Portal__BootstrapPassword`).
 
 - **Web app**
   - **ApiBaseUrl** — Must point to your **hosted** API base URL (e.g. `https://api.yourdomain.com`). If this is wrong, the Blazor app and SignalR will call the wrong endpoint.
