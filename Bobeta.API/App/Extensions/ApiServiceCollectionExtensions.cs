@@ -20,12 +20,27 @@ public static class ApiServiceCollectionExtensions
     public const string AzurePostgresConnectionStringName = "AZURE_POSTGRESQL_CONNECTIONSTRING";
 
     /// <summary>Adds persistence, application, identity, infrastructure, JWT bearer auth (including SignalR query token), and SignalR (Azure SignalR Service when <c>Azure:SignalR:ConnectionString</c> is set).</summary>
-    public static IServiceCollection AddBobetaServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddBobetaServices(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IWebHostEnvironment environment)
     {
         // Prefer Azure App Service connection string name so production overrides packaged appsettings.json.
         var connectionString = configuration.GetConnectionString(AzurePostgresConnectionStringName)
             ?? configuration.GetConnectionString("DefaultConnection")
             ?? "Host=localhost;Database=Bobeta;Username=postgres;Password=postgres";
+
+        if (environment.IsProduction())
+        {
+            var usesLocalhost = connectionString.Contains("localhost", StringComparison.OrdinalIgnoreCase)
+                || connectionString.Contains("127.0.0.1", StringComparison.OrdinalIgnoreCase);
+            if (usesLocalhost)
+            {
+                throw new InvalidOperationException(
+                    "Production requires a hosted PostgreSQL connection string. Set AZURE_POSTGRESQL_CONNECTIONSTRING " +
+                    "or DefaultConnection in Azure App Service → Configuration → Connection strings.");
+            }
+        }
         services.AddBobetaPersistence(connectionString);
         services.AddBobetaApplication();
         services.AddScoped<IGameSessionNotifier, GameSessionSignalRNotifier>();

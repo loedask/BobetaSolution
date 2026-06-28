@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using Bobeta.API.App.Extensions;
 using Bobeta.API.App.Filters;
+using Bobeta.API.App.HostedServices;
 using Bobeta.API.App.Json;
 using Bobeta.API.Hubs;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -17,7 +18,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddBobetaSwagger();
 
 // Bobeta: persistence, application, identity, infrastructure, JWT, SignalR.
-builder.Services.AddBobetaServices(builder.Configuration);
+builder.Services.AddBobetaServices(builder.Configuration, builder.Environment);
+builder.Services.AddHostedService<DatabaseMigrationHostedService>();
 
 builder.Services.AddResponseCompression(options =>
 {
@@ -66,8 +68,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<GameHub>("/hubs/game"); // SignalR game hub for real-time gameplay.
-
-await app.ApplyMigrationsAsync();
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" })).AllowAnonymous();
 
 app.Run();
 

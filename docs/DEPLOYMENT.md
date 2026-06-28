@@ -23,6 +23,8 @@ Production apps run on **Linux App Service** in **South Africa North**:
 1. **Settings → Configuration → General settings** → **Stack**: .NET, **Major version**: .NET 10, **Platform**: Linux.
 2. **Web sockets**: **On** (required for SignalR).
 3. Connection string, JWT, and optional **`Azure__SignalR__ConnectionString`** as in [HOSTING.md](./HOSTING.md).
+4. **CORS (API → API CORS settings in portal)**: Leave **Azure Portal → bobeta-api → CORS** empty (or disable platform CORS). The API configures CORS in `Program.cs`; enabling portal CORS without adding `https://bobeta-pwa.azurewebsites.net` causes preflight failures with *No 'Access-Control-Allow-Origin'* even when the app is healthy.
+5. **Connection string**: Set **`AZURE_POSTGRESQL_CONNECTIONSTRING`** (or **`DefaultConnection`**) to your hosted PostgreSQL. Without it, startup migrations hang on `localhost` and the API never accepts HTTP requests (browsers report CORS errors because there is no response).
 
 **PWA (`bobeta-pwa`)** — if the app was created as **Windows**, you **cannot** flip it to Linux in place. Either:
 

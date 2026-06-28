@@ -14,7 +14,7 @@ public static class DatabaseMigrationExtensions
     /// Applies pending migrations on every startup (including Production).
     /// Demo seed data runs only in Development or Staging.
     /// </summary>
-    public static async Task ApplyMigrationsAsync(this IHost host)
+    public static async Task ApplyMigrationsAsync(this IHost host, CancellationToken cancellationToken = default)
     {
         var env = host.Services.GetRequiredService<IWebHostEnvironment>();
         if (env.IsEnvironment("Testing"))
@@ -28,7 +28,7 @@ public static class DatabaseMigrationExtensions
         var context = services.GetRequiredService<BobetaDbContext>();
 
         logger.LogInformation("Applying pending database migrations (Environment={Environment})", env.EnvironmentName);
-        await context.Database.MigrateAsync();
+        await context.Database.MigrateAsync(cancellationToken);
         logger.LogInformation("Database migrations applied successfully");
 
         if (DemoEnvironmentHelper.AllowsDemoAuthFeatures(env))
