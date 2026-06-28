@@ -27,6 +27,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     private CancellationTokenSource? _fallbackPollCts;
     private DateTime? _inactivityDeadlineUtc;
     private readonly SemaphoreSlim _moveGate = new(1, 1);
+    private bool _leaveInProgress;
 
     public GamePlayViewModel(
         GamePlayService gamePlayService,
@@ -138,7 +139,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             OpponentCards = new List<CardViewModel>();
             notifyInactivityReady = !WaitingForOpponent && !ShowGameResult;
             ScheduleAiOpponentIfNeeded(sessionGuid);
-            StartFallbackPollIfNeeded();
+            StartSessionLivenessPoll();
             RaiseStateChanged();
         }
         catch (Exception)
@@ -302,8 +303,6 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     private async Task TryResolveInactivityAfterDeadlineAsync()
     {
         await SyncGameStateFromServerAsync();
-        if (GamePlayUiHelper.IsMatchTableActive(ShowGameResult, WaitingForOpponent, Variant, Kopo != null, PlayerCards.Count))
-            return;
         if (!ShowInactivityOverlay)
             return;
         await LeaveEndedSessionAsync(likelyInactivity: true);
@@ -311,7 +310,11 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
     private Task LeaveEndedSessionAsync(bool likelyInactivity)
     {
-        StopFallbackPoll();
+        if (_leaveInProgress)
+            return Task.CompletedTask;
+        _leaveInProgress = true;
+
+        StopSessionLivenessPoll();
         StopInactivityCountdown();
         ShowInactivityOverlay = false;
         _inactivityDeadlineUtc = null;
@@ -545,25 +548,23 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             SetError(res.ErrorMessage ?? "Failed to apply move.");
     }
 
-    private void StartFallbackPollIfNeeded()
+    private void StartSessionLivenessPoll()
     {
-        if (_hubClient?.IsConnected == true)
-            return;
-        StopFallbackPoll();
+        StopSessionLivenessPoll();
         _fallbackPollCts = new CancellationTokenSource();
-        _ = RunFallbackPollAsync(_fallbackPollCts.Token);
+        _ = RunSessionLivenessPollAsync(_fallbackPollCts.Token);
     }
 
-    private async Task RunFallbackPollAsync(CancellationToken token)
+    private async Task RunSessionLivenessPollAsync(CancellationToken token)
     {
         try
         {
-            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(20));
+            // Safety net when SignalR events are missed (e.g. reconnect gap). Poll faster when hub is down.
+            var interval = _hubClient?.IsConnected == true ? TimeSpan.FromSeconds(15) : TimeSpan.FromSeconds(8);
+            using var timer = new PeriodicTimer(interval);
             while (!token.IsCancellationRequested && await timer.WaitForNextTickAsync(token))
             {
                 if (ShowGameResult || string.IsNullOrEmpty(SessionId))
-                    break;
-                if (_hubClient?.IsConnected == true)
                     break;
                 await SyncGameStateFromServerAsync();
             }
@@ -571,7 +572,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         catch (OperationCanceledException) { }
     }
 
-    private void StopFallbackPoll()
+    private void StopSessionLivenessPoll()
     {
         _fallbackPollCts?.Cancel();
         _fallbackPollCts = null;
@@ -604,16 +605,18 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
     private void OnHubReconnected()
     {
-        StopFallbackPoll();
         if (!string.IsNullOrEmpty(SessionId))
+        {
+            _ = SyncGameStateFromServerAsync();
             _ = LoadGameAsync(SessionId);
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
         _aiTriggerCts?.Cancel();
         StopInactivityCountdown();
-        StopFallbackPoll();
+        StopSessionLivenessPoll();
         if (_hubClient != null)
         {
             _hubClient.OnGameStateUpdated -= OnGameStateFromHub;

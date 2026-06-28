@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Bobeta.API.App.Services;
 using Bobeta.API.Hubs;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Enums;
@@ -43,6 +44,7 @@ internal sealed class SessionInactivityState
 public sealed class GameInactivityCoordinator(
     IServiceScopeFactory scopeFactory,
     IHubContext<GameHub> hubContext,
+    IGameSessionConnectionTracker sessionConnectionTracker,
     ILogger<GameInactivityCoordinator> logger) : IGameInactivityCoordinator
 {
     public const int FirstIdleSeconds = 60;
@@ -51,6 +53,7 @@ public sealed class GameInactivityCoordinator(
 
     private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
     private readonly IHubContext<GameHub> _hubContext = hubContext;
+    private readonly IGameSessionConnectionTracker _sessionConnectionTracker = sessionConnectionTracker;
     private readonly ILogger<GameInactivityCoordinator> _logger = logger;
 
     private readonly object _sync = new();
@@ -262,14 +265,51 @@ public sealed class GameInactivityCoordinator(
         lock (_sync)
             _sessions.Remove(sessionId);
 
+        Guid? creatorId = null;
+        Guid? opponentId = null;
+        await using (var scope = _scopeFactory.CreateAsyncScope())
+        {
+            var session = await scope.ServiceProvider
+                .GetRequiredService<IGameSessionRepository>()
+                .GetByIdAsync(sessionId, cancellationToken);
+            if (session?.OpponentPlayerId is { } opp)
+            {
+                creatorId = session.CreatorPlayerId;
+                opponentId = opp;
+            }
+        }
+
         var ok = await CancelSessionInScopeAsync(sessionId, cancellationToken);
 
         // Always notify clients so overlays dismiss even when the session was already cancelled (e.g. deadline + manual cancel).
+        var payload = new { reason = "inactivity" };
         var group = GameHub.GroupPrefix + sessionId;
-        await _hubContext.Clients.Group(group).SendAsync("GameEndedByInactivity", new { reason = "inactivity" },
-            cancellationToken);
+        await _hubContext.Clients.Group(group).SendAsync("GameEndedByInactivity", payload, cancellationToken);
+        if (creatorId is { } creator && opponentId is { } opponent)
+        {
+            await SendGameEndedByInactivityToPlayerAsync(sessionId, creator, payload, cancellationToken);
+            await SendGameEndedByInactivityToPlayerAsync(sessionId, opponent, payload, cancellationToken);
+        }
+
         if (ok)
             _logger.LogInformation("Game ended due to inactivity session={SessionId}", sessionId);
+    }
+
+    private async Task SendGameEndedByInactivityToPlayerAsync(
+        Guid sessionId,
+        Guid playerId,
+        object payload,
+        CancellationToken cancellationToken)
+    {
+        var connectionIds = _sessionConnectionTracker.GetConnectionIds(sessionId, playerId);
+        if (connectionIds.Count > 0)
+        {
+            foreach (var connectionId in connectionIds)
+                await _hubContext.Clients.Client(connectionId).SendAsync("GameEndedByInactivity", payload, cancellationToken);
+            return;
+        }
+
+        await _hubContext.Clients.User(playerId.ToString()).SendAsync("GameEndedByInactivity", payload, cancellationToken);
     }
 
     private async Task<bool> IsParticipantAsync(Guid sessionId, Guid playerId, CancellationToken cancellationToken)
