@@ -53,19 +53,27 @@
             </a>
         </div>
 
-        <div>
-            <div class="mb-3 flex items-center justify-between">
-                <h2 class="font-display text-lg font-bold text-foreground">@I18n.T("recent_activity")</h2>
-                <a href="/history" class="text-sm text-primary hover:underline">@I18n.T("see_all")</a>
+        <div class="card-surface rounded-2xl border border-border/50 p-4">
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="font-display text-base font-bold text-foreground">@I18n.T("recent_activity")</h2>
+                <a href="/history" class="inline-flex items-center gap-1 text-xs font-semibold text-primary transition-colors hover:text-primary/80">
+                    @I18n.T("see_all")
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </a>
             </div>
-            <div class="space-y-2">
+            <div class="space-y-2.5">
                 @if (ViewModel.IsLoading && ViewModel.Transactions.Count == 0)
                 {
-                    @for (var i = 0; i < 3; i++) { <SkeletonLoader CssClass="h-16 rounded-xl" /> }
+                    @for (var i = 0; i < 3; i++) { <SkeletonLoader CssClass="h-[4.5rem] rounded-2xl" /> }
                 }
                 else if (ViewModel.Transactions.Count == 0)
                 {
-                    <p class="text-sm text-muted-foreground py-4">No recent activity</p>
+                    <div class="flex flex-col items-center gap-2 py-8 text-center">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/30">
+                            <svg class="h-6 w-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                        </div>
+                        <p class="text-sm text-muted-foreground">No recent activity</p>
+                    </div>
                 }
                 @foreach (var tx in ViewModel.Transactions)
                 {
@@ -74,9 +82,11 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-2 rounded-xl bg-accent/5 p-3 text-xs text-accent">
-            <svg class="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-            <span>@I18n.T("trust_message")</span>
+        <div class="flex items-start gap-3 rounded-2xl border border-accent/20 bg-accent/5 p-4">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent/15">
+                <svg class="h-4 w-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+            </div>
+            <p class="text-xs leading-relaxed text-accent/90">@I18n.T("trust_message")</p>
         </div>
     </div>
 </div>
