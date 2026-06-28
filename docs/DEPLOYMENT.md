@@ -12,6 +12,8 @@ Production apps run on **Linux App Service** in **South Africa North**:
 
 **Do not** publish `Bobeta.Web` directly to App Service — standalone Blazor WASM is static files only; Linux App Service needs the thin **`Bobeta.Web.Host`** server for SPA routing and correct MIME types. Local dev can still use `dotnet run` on **`Bobeta.Web`**.
 
+**Marketing landing (`Bobeta.Landing`)** — Razor class library referenced by the PWA. Route `/` ships inside **`bobeta-pwa`** today (no separate deploy). To split later: add **`Bobeta.Landing.Host`** (or a static site) and point the public domain at it; remove the project reference from **`Bobeta.Web`**.
+
 **Do not** add a separate `Bobeta.Portal.Host` — **`Bobeta.Portal` is already a full ASP.NET host** (like `Bobeta.API`). Blazor **Server** runs on the server with live circuits; it is not a static WASM bundle. You publish **`Bobeta.Portal`** itself with the same **linux-x64 Zip Deploy** flow as the API. The PWA needs `Web.Host` only because WASM is client-side static files.
 
 ### One-time Azure Portal setup

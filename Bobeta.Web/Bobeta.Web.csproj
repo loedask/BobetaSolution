@@ -21,6 +21,7 @@
     <ProjectReference Include="..\Bobeta.Client\Bobeta.Client.csproj" />
     <ProjectReference Include="..\Bobeta.Web.Shared\Bobeta.Web.Shared.csproj" />
     <ProjectReference Include="..\Bobeta.Web.Deferred\Bobeta.Web.Deferred.csproj" />
+    <ProjectReference Include="..\Bobeta.Landing\Bobeta.Landing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
