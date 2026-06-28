@@ -255,6 +255,8 @@ Add or update the `SmsGatewaySettings` section in **Bobeta.API/appsettings.json*
 
 After configuration, OTP messages (e.g. for login) are sent via SendSMSGate, and delivery status is updated when DLR callbacks are received.
 
+For provider strategy and the planned migration to [SMS Gateway for Android](https://sms-gateway.app/) at higher volume (fixed device/SIM cost vs per-SMS fees), see [SMS.md](./SMS.md).
+
 ---
 
 For API details (e.g. Swagger), open the API base URL in the browser (e.g. `https://localhost:7029/swagger` when using the API’s HTTPS profile).
