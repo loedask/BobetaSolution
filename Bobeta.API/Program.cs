@@ -2,7 +2,6 @@ using System.IO.Compression;
 using Bobeta.API.App.Extensions;
 using Bobeta.API.App.Filters;
 using Bobeta.API.Hubs;
-using Bobeta.Application.Common;
 using Microsoft.AspNetCore.ResponseCompression;
 
 // Build the web application and configure services.
@@ -66,7 +65,6 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<GameHub>("/hubs/game"); // SignalR game hub for real-time gameplay.
 
-if (DemoEnvironmentHelper.AllowsDemoAuthFeatures(app.Environment))
-    await app.ApplyMigrationsAsync();
+await app.ApplyMigrationsAsync();
 
 app.Run();

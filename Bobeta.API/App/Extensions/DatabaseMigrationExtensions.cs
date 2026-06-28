@@ -6,12 +6,13 @@ using Microsoft.EntityFrameworkCore;
 namespace Bobeta.API.App.Extensions;
 
 /// <summary>
-/// Applies pending EF Core migrations at host startup (Development and Staging only).
+/// Applies pending EF Core migrations at host startup in all environments.
 /// </summary>
 public static class DatabaseMigrationExtensions
 {
     /// <summary>
-    /// Applies pending migrations and demo seed data. Runs only in Development or Staging.
+    /// Applies pending migrations on every startup (including Production).
+    /// Demo seed data runs only in Development or Staging.
     /// </summary>
     public static async Task ApplyMigrationsAsync(this IHost host)
     {
@@ -19,12 +20,18 @@ public static class DatabaseMigrationExtensions
         var services = scope.ServiceProvider;
 
         var env = services.GetRequiredService<IWebHostEnvironment>();
-
-        if (!DemoEnvironmentHelper.AllowsDemoAuthFeatures(env))
-            return;
+        var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseMigration");
 
         var context = services.GetRequiredService<BobetaDbContext>();
+
+        logger.LogInformation("Applying pending database migrations (Environment={Environment})", env.EnvironmentName);
         await context.Database.MigrateAsync();
-        await DemoAccountsSeeder.SeedAsync(context);
+        logger.LogInformation("Database migrations applied successfully");
+
+        if (DemoEnvironmentHelper.AllowsDemoAuthFeatures(env))
+        {
+            logger.LogInformation("Seeding demo accounts (Development/Staging only)");
+            await DemoAccountsSeeder.SeedAsync(context);
+        }
     }
 }

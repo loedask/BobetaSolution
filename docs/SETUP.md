@@ -95,7 +95,7 @@ Use your PC’s **LAN IP**: `http://192.168.x.x:5163`. Add that host under **`do
 - **Windows MAUI** on the same PC as the API: **`https://localhost:7029`** or **`http://localhost:5163`** in Development (no `adb reverse`).
 - **Release** builds use Production JSON and stay on **HTTPS** to Azure (no cleartext to the host).
 
-PostgreSQL must be running for a local API; migrations run on startup only when **`ASPNETCORE_ENVIRONMENT`** is **Development** or **Staging** — otherwise a missing database can surface as **500** on send-otp.
+PostgreSQL must be running for a local API. Pending EF Core migrations are applied automatically on API startup in every environment (including Production). Demo account seeding still runs only when **`ASPNETCORE_ENVIRONMENT`** is **Development** or **Staging**.
 
 ## 5. Open the browser
 
@@ -116,7 +116,7 @@ These accounts are for **local or non-production** environments only. Demo seedi
 
 **How it works**
 
-1. On startup, the API runs migrations and **`DemoAccountsSeeder`** (Development / Staging only) and creates the two players if missing.
+1. On startup, the API applies pending migrations in all environments. **`DemoAccountsSeeder`** runs only in Development / Staging and creates the two players if missing.
 2. **`OtpService`** accepts the configured **`DemoAuth:StaticOtp`** for numbers listed in **`DemoAuth:PhoneNumbers`** only when `EnableStaticOtp` is true and the host is Development or Staging.
 3. Source of truth for phone constants: `Bobeta.Persistence/Seeding/DemoAccountsSeeder.cs`.
 
