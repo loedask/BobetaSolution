@@ -31,12 +31,6 @@ namespace Bobeta.Persistence.Migrations
 
             migrationBuilder.Sql("""UPDATE "GameSessions" SET "CreatorChargedAmount" = "BetAmount" WHERE "CreatorChargedAmount" = 0;""");
 
-            migrationBuilder.Sql("""
-INSERT INTO "PlatformSettings" ("Key", "Value", "UpdatedAt", "UpdatedByPortalUserId")
-VALUES ('InfluencerPlayerDiscountPercent', '5', NOW() AT TIME ZONE 'utc', NULL)
-ON CONFLICT ("Key") DO NOTHING;
-""");
-
             migrationBuilder.AddColumn<decimal>(
                 name: "OpponentChargedAmount",
                 table: "GameSessions",
@@ -91,6 +85,12 @@ ON CONFLICT ("Key") DO NOTHING;
                 {
                     table.PrimaryKey("PK_PlatformSettings", x => x.Key);
                 });
+
+            migrationBuilder.Sql("""
+INSERT INTO "PlatformSettings" ("Key", "Value", "UpdatedAt", "UpdatedByPortalUserId")
+VALUES ('InfluencerPlayerDiscountPercent', '5', NOW() AT TIME ZONE 'utc', NULL)
+ON CONFLICT ("Key") DO NOTHING;
+""");
 
             migrationBuilder.CreateTable(
                 name: "InfluencerCodeRedemptions",
