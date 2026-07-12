@@ -220,6 +220,10 @@ public class MakopaGameEngine(
             // Completed trick: both cards already left hands; compare led suit; tie → leader (first play) wins.
             var trickWinnerId = ResolveTrick(state.TrickPlays[0], state.TrickPlays[1], state.TrickSuit!);
             state.LastTrickWinnerPlayerId = trickWinnerId;
+            if (trickWinnerId == creatorId)
+                state.CreatorRoundWins++;
+            else
+                state.OpponentRoundWins++;
             state.TrickPlays.Clear();
             state.TrickSuit = null;
 
@@ -283,7 +287,9 @@ public class MakopaGameEngine(
         var gameOver = session.Status == GameStatus.Finished;
         var winnerId = session.GameResult?.WinnerPlayerId;
 
-        var (myRounds, opponentRounds) = (0, 0);
+        var (myRounds, opponentRounds) = playerId == creatorId
+            ? (state.CreatorRoundWins, state.OpponentRoundWins)
+            : (state.OpponentRoundWins, state.CreatorRoundWins);
 
         var mustFollowLedSuit = state.TrickPlays.Count == 1
             && state.TrickPlays[0].PlayerId != playerId
@@ -428,23 +434,8 @@ public class MakopaGameEngine(
     }
 
     /// <summary>Winning seat: higher rank on <paramref name="leadSuit"/>; equal ranks → leader (<paramref name="first"/>).</summary>
-    private static Guid ResolveTrick(PlayedInTrick first, PlayedInTrick second, string leadSuit)
-    {
-        var s1 = first.Card.Split('_', 2, StringSplitOptions.None);
-        var s2 = second.Card.Split('_', 2, StringSplitOptions.None);
-        var r1 = RankOnLeadCard(s1, leadSuit);
-        var r2 = RankOnLeadCard(s2, leadSuit);
-        return r1 >= r2 ? first.PlayerId : second.PlayerId;
-    }
-
-    private static int RankOnLeadCard(string[] suitRankParts, string leadSuit)
-    {
-        if (suitRankParts.Length < 2)
-            return 0;
-        if (!string.Equals(suitRankParts[0], leadSuit, StringComparison.Ordinal))
-            return 0;
-        return int.TryParse(suitRankParts[1], out var n) ? n : 0;
-    }
+    private static Guid ResolveTrick(PlayedInTrick first, PlayedInTrick second, string leadSuit) =>
+        MakopaRules.ResolveTrickWinner(first.PlayerId, first.Card, second.PlayerId, second.Card, leadSuit);
 
     private static List<(CardSuit Suit, CardRank Rank)> BuildDeck()
     {

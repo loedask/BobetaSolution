@@ -38,4 +38,22 @@ public static class MakopaRules
 
     public static bool HandContainsLedSuit(string trickLeadSuit, IReadOnlyList<string> myHandCardStrings) =>
         myHandCardStrings.Any(c => c.StartsWith(trickLeadSuit, StringComparison.Ordinal));
+
+    /// <summary>Winning seat: higher rank on <paramref name="leadSuit"/>; equal ranks → leader (<paramref name="firstPlayerId"/>).</summary>
+    public static Guid ResolveTrickWinner(Guid firstPlayerId, string firstCard, Guid secondPlayerId, string secondCard, string leadSuit)
+    {
+        var r1 = RankOnLeadCard(firstCard, leadSuit);
+        var r2 = RankOnLeadCard(secondCard, leadSuit);
+        return r1 >= r2 ? firstPlayerId : secondPlayerId;
+    }
+
+    private static int RankOnLeadCard(string card, string leadSuit)
+    {
+        var parts = card.Split('_', 2, StringSplitOptions.None);
+        if (parts.Length < 2)
+            return 0;
+        if (!string.Equals(parts[0], leadSuit, StringComparison.Ordinal))
+            return 0;
+        return int.TryParse(parts[1], out var n) ? n : 0;
+    }
 }

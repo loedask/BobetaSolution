@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Bobeta.Application.Games.Makopa;
-using Bobeta.Application.Interfaces;
-using Bobeta.Application.DTOs.Wallet;
+using Bobeta.Application.Tests.Games;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
 using Bobeta.Domain.ValueObjects;
@@ -12,6 +11,11 @@ namespace Bobeta.Application.Tests.Services;
 
 public class GameEngineServiceTests
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     [Fact]
     public async Task PlayCardAsync_WhenTrickWinnerHasOneCardToLead_EndsGameInSameCall()
     {
@@ -20,7 +24,6 @@ public class GameEngineServiceTests
         var opponentId = Guid.NewGuid();
         var pendingState = new MakopaGameState
         {
-            // Creator led; opponent wins the trick and keeps one card — wins immediately when it is their turn to lead.
             CreatorHand = new List<string>(),
             OpponentHand = new List<string> { "Spade_12", "Heart_10" },
             LeadPlayerId = creatorId,
@@ -32,33 +35,9 @@ public class GameEngineServiceTests
             }
         };
 
-        var session = new GameSession
-        {
-            Id = sessionId,
-            CreatorPlayerId = creatorId,
-            OpponentPlayerId = opponentId,
-            BetAmount = 100m,
-            Status = GameStatus.InProgress,
-            CreatedAt = DateTime.UtcNow,
-            GameStateJson = JsonSerializer.Serialize(pendingState, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })
-        };
-
-        var sessionRepo = new InMemoryGameSessionRepository(session);
-        var moveRepo = new InMemoryGameMoveRepository();
-        var resultRepo = new InMemoryGameResultRepository(result => session.GameResult = result);
+        var session = CreateSession(sessionId, creatorId, opponentId, pendingState);
         var wallet = new RecordingWalletService();
-        var players = new InMemoryPlayerRepository(
-            new Player { Id = creatorId, PlayerName = "Creator" },
-            new Player { Id = opponentId, PlayerName = "Opponent" });
-
-        var sut = new MakopaGameEngine(
-            sessionRepo,
-            moveRepo,
-            resultRepo,
-            wallet,
-            players,
-            NoOpGameRevenueService.Instance,
-            NullLogger<MakopaGameEngine>.Instance);
+        var sut = CreateEngine(session, wallet);
 
         var move = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.Queen));
 
@@ -93,33 +72,9 @@ public class GameEngineServiceTests
             }
         };
 
-        var session = new GameSession
-        {
-            Id = sessionId,
-            CreatorPlayerId = creatorId,
-            OpponentPlayerId = opponentId,
-            BetAmount = 100m,
-            Status = GameStatus.InProgress,
-            CreatedAt = DateTime.UtcNow,
-            GameStateJson = JsonSerializer.Serialize(pendingState, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })
-        };
-
-        var sessionRepo = new InMemoryGameSessionRepository(session);
-        var moveRepo = new InMemoryGameMoveRepository();
-        var resultRepo = new InMemoryGameResultRepository(result => session.GameResult = result);
+        var session = CreateSession(sessionId, creatorId, opponentId, pendingState);
         var wallet = new RecordingWalletService();
-        var players = new InMemoryPlayerRepository(
-            new Player { Id = creatorId, PlayerName = "Creator" },
-            new Player { Id = opponentId, PlayerName = "Opponent" });
-
-        var sut = new MakopaGameEngine(
-            sessionRepo,
-            moveRepo,
-            resultRepo,
-            wallet,
-            players,
-            NoOpGameRevenueService.Instance,
-            NullLogger<MakopaGameEngine>.Instance);
+        var sut = CreateEngine(session, wallet);
 
         var move = await sut.VoidFollowDrawAsync(opponentId, sessionId);
 
@@ -150,33 +105,9 @@ public class GameEngineServiceTests
             }
         };
 
-        var session = new GameSession
-        {
-            Id = sessionId,
-            CreatorPlayerId = creatorId,
-            OpponentPlayerId = opponentId,
-            BetAmount = 100m,
-            Status = GameStatus.InProgress,
-            CreatedAt = DateTime.UtcNow,
-            GameStateJson = JsonSerializer.Serialize(pendingState, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })
-        };
-
-        var sessionRepo = new InMemoryGameSessionRepository(session);
-        var moveRepo = new InMemoryGameMoveRepository();
-        var resultRepo = new InMemoryGameResultRepository(result => session.GameResult = result);
+        var session = CreateSession(sessionId, creatorId, opponentId, pendingState);
         var wallet = new RecordingWalletService();
-        var players = new InMemoryPlayerRepository(
-            new Player { Id = creatorId, PlayerName = "Creator" },
-            new Player { Id = opponentId, PlayerName = "Opponent" });
-
-        var sut = new MakopaGameEngine(
-            sessionRepo,
-            moveRepo,
-            resultRepo,
-            wallet,
-            players,
-            NoOpGameRevenueService.Instance,
-            NullLogger<MakopaGameEngine>.Instance);
+        var sut = CreateEngine(session, wallet);
 
         var move = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Heart, CardRank.Ten));
 
@@ -188,119 +119,28 @@ public class GameEngineServiceTests
         Assert.Empty(wallet.Settlements);
     }
 
-    private sealed class InMemoryGameSessionRepository : IGameSessionRepository
+    private static GameSession CreateSession(Guid sessionId, Guid creatorId, Guid opponentId, MakopaGameState state) => new()
     {
-        private readonly GameSession _session;
+        Id = sessionId,
+        CreatorPlayerId = creatorId,
+        OpponentPlayerId = opponentId,
+        BetAmount = 100m,
+        Status = GameStatus.InProgress,
+        CreatedAt = DateTime.UtcNow,
+        GameStateJson = JsonSerializer.Serialize(state, JsonOptions)
+    };
 
-        public InMemoryGameSessionRepository(GameSession session) => _session = session;
-
-        public Task<GameSession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-            => Task.FromResult(id == _session.Id ? _session : null);
-
-        public Task<IReadOnlyList<GameSession>> GetWaitingSessionsAsync(decimal betAmount, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
-
-        public Task<IReadOnlyList<GameSession>> GetJoinableWaitingSessionsAsync(Guid forPlayerId, int skip, int take, GameVariant? variant = null, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
-
-        public Task<IReadOnlyList<GameSession>> GetByPlayerIdAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
-
-        public Task<GameSession> AddAsync(GameSession session, CancellationToken cancellationToken = default)
-            => Task.FromResult(session);
-
-        public Task UpdateAsync(GameSession session, CancellationToken cancellationToken = default) => Task.CompletedTask;
-    }
-
-    private sealed class InMemoryGameMoveRepository : IGameMoveRepository
+    private static MakopaGameEngine CreateEngine(GameSession session, RecordingWalletService wallet)
     {
-        private readonly List<GameMove> _moves = new();
-
-        public Task<GameMove> AddAsync(GameMove move, CancellationToken cancellationToken = default)
-        {
-            _moves.Add(move);
-            return Task.FromResult(move);
-        }
-
-        public Task<IReadOnlyList<GameMove>> GetByGameSessionIdAsync(Guid gameSessionId, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<GameMove>>(_moves.Where(m => m.GameSessionId == gameSessionId).ToList());
-
-        public Task<int> GetCountByGameSessionIdAsync(Guid gameSessionId, CancellationToken cancellationToken = default)
-            => Task.FromResult(_moves.Count(m => m.GameSessionId == gameSessionId));
-    }
-
-    private sealed class InMemoryGameResultRepository(Action<GameResult> onAdd) : IGameResultRepository
-    {
-        private readonly Action<GameResult> _onAdd = onAdd;
-
-        public Task<GameResult> AddAsync(GameResult result, CancellationToken cancellationToken = default)
-        {
-            _onAdd(result);
-            return Task.FromResult(result);
-        }
-    }
-
-    private sealed class NoOpGameRevenueService : IGameRevenueService
-    {
-        public static NoOpGameRevenueService Instance { get; } = new();
-
-        public Task EnrichWithPartnerShareAsync(GameResult result, Guid winnerPlayerId, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-    }
-
-    private sealed class RecordingWalletService : IWalletService
-    {
-        public List<(Guid WinnerId, Guid LoserId, decimal Bet)> Settlements { get; } = new();
-
-        public Task<WalletBalanceDto> GetBalanceAsync(Guid playerId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<WalletTransactionDto> DepositAsync(Guid playerId, decimal amount, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<WalletTransactionDto> WithdrawAsync(Guid playerId, decimal amount, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task LockBetAsync(Guid playerId, decimal amount, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task ReleaseBetAsync(Guid playerId, decimal amount, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<IReadOnlyList<WalletTransactionDto>> GetTransactionsAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-
-        public Task SettleGameAsync(Guid winnerId, Guid loserId, decimal betAmountPerPlayer, CancellationToken cancellationToken = default)
-        {
-            Settlements.Add((winnerId, loserId, betAmountPerPlayer));
-            return Task.CompletedTask;
-        }
-    }
-
-    private sealed class InMemoryPlayerRepository(params Player[] players) : IPlayerRepository
-    {
-        private readonly Dictionary<Guid, Player> _players = players.ToDictionary(x => x.Id);
-
-        public Task<Player?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-            => Task.FromResult(_players.TryGetValue(id, out var player) ? player : null);
-
-        public Task<Player?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default)
-            => Task.FromResult(_players.Values.FirstOrDefault(x => x.PhoneNumber == phoneNumber));
-
-        public Task<Player> AddAsync(Player player, CancellationToken cancellationToken = default)
-        {
-            _players[player.Id] = player;
-            return Task.FromResult(player);
-        }
-
-        public Task UpdateAsync(Player player, CancellationToken cancellationToken = default)
-        {
-            _players[player.Id] = player;
-            return Task.CompletedTask;
-        }
-
-        public Task<(IReadOnlyList<Player> Items, int TotalCount)> GetPagedAsync(
-            int skip,
-            int take,
-            string? search = null,
-            IReadOnlyList<string>? countryCodes = null,
-            CancellationToken cancellationToken = default)
-        {
-            var items = _players.Values
-                .Where(p => search == null || p.PlayerName.Contains(search, StringComparison.OrdinalIgnoreCase) || p.PhoneNumber.Contains(search, StringComparison.OrdinalIgnoreCase))
-                .Skip(skip)
-                .Take(take)
-                .ToList();
-            return Task.FromResult<(IReadOnlyList<Player>, int)>((items, _players.Count));
-        }
+        return new MakopaGameEngine(
+            new InMemoryGameSessionRepository(session),
+            new InMemoryGameMoveRepository(),
+            new InMemoryGameResultRepository(result => session.GameResult = result),
+            wallet,
+            new InMemoryPlayerRepository(
+                new Player { Id = session.CreatorPlayerId, PlayerName = "Creator" },
+                new Player { Id = session.OpponentPlayerId!.Value, PlayerName = "Opponent" }),
+            NoOpGameRevenueService.Instance,
+            NullLogger<MakopaGameEngine>.Instance);
     }
 }

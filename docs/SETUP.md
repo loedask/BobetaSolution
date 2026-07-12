@@ -2,6 +2,8 @@
 
 This guide walks you through running the Bobeta platform and Makopa game locally.
 
+For authoritative game rules (Makopa, Kopo, platform/session), see **[GAME_RULES.md](./GAME_RULES.md)**.
+
 ## 1. Install prerequisites
 
 - **.NET 8+** (or .NET 10 if the solution targets it) — [Download](https://dotnet.microsoft.com/download)
