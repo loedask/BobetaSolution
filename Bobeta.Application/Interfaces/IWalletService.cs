@@ -20,8 +20,14 @@ public interface IWalletService
     /// <summary>Moves amount from locked back to balance (e.g. game cancelled or bet released).</summary>
     Task ReleaseBetAsync(Guid playerId, decimal amount, CancellationToken cancellationToken = default);
 
-    /// <summary>Settles a finished game: winner gets winnings, loser's locked bet is removed; commission applied.</summary>
-    Task SettleGameAsync(Guid winnerId, Guid loserId, decimal betAmountPerPlayer, CancellationToken cancellationToken = default);
+    /// <summary>Settles a finished game: unlocks each player's charged amount, winner credited pot minus commission.</summary>
+    Task SettleGameAsync(
+        Guid winnerId,
+        Guid loserId,
+        decimal betAmountPerPlayer,
+        decimal winnerChargedAmount,
+        decimal loserChargedAmount,
+        CancellationToken cancellationToken = default);
 
     /// <summary>Returns paginated transaction history for the player.</summary>
     Task<IReadOnlyList<WalletTransactionDto>> GetTransactionsAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default);

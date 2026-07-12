@@ -16,8 +16,14 @@ public class GameSession
     /// <summary>Player who joined the game, or null while waiting for an opponent.</summary>
     public Guid? OpponentPlayerId { get; set; }
 
-    /// <summary>Bet amount locked by each player for this game.</summary>
+    /// <summary>Nominal bet amount per player (used for pot / commission).</summary>
     public decimal BetAmount { get; set; }
+
+    /// <summary>Amount actually locked from the creator (may be discounted).</summary>
+    public decimal CreatorChargedAmount { get; set; }
+
+    /// <summary>Amount actually locked from the opponent (may be discounted).</summary>
+    public decimal? OpponentChargedAmount { get; set; }
 
     /// <summary>Ruleset for this session (Makopa, Kopo, …).</summary>
     public GameVariant Variant { get; set; } = GameVariant.Makopa;

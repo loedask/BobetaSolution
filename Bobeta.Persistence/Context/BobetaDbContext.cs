@@ -49,6 +49,18 @@ public class BobetaDbContext(DbContextOptions<BobetaDbContext> options) : DbCont
     /// <summary>Revenue split ledger entries.</summary>
     public DbSet<RevenueAllocation> RevenueAllocations => Set<RevenueAllocation>();
 
+    /// <summary>Influencer marketing partners.</summary>
+    public DbSet<Influencer> Influencers => Set<Influencer>();
+
+    /// <summary>Player redemptions of influencer invite codes.</summary>
+    public DbSet<InfluencerCodeRedemption> InfluencerCodeRedemptions => Set<InfluencerCodeRedemption>();
+
+    /// <summary>Influencer game commission ledger.</summary>
+    public DbSet<InfluencerCommissionAllocation> InfluencerCommissionAllocations => Set<InfluencerCommissionAllocation>();
+
+    /// <summary>Platform key/value settings.</summary>
+    public DbSet<PlatformSetting> PlatformSettings => Set<PlatformSetting>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

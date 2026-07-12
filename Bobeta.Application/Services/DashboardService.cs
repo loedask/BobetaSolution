@@ -207,6 +207,11 @@ public sealed class DashboardService(
         CountryCodes = await access.GetLicensedCountryCodesAsync(portalUserId, cancellationToken),
         LicensePartnerId = (await partners.GetByPortalUserIdAsync(portalUserId, cancellationToken))?.Id
       },
+      PortalUserRole.Influencer => new DashboardScope
+      {
+        ShowFinancials = false,
+        ShowPartnerLeaderboard = false
+      },
       _ => throw new UnauthorizedAccessException("Unknown portal role.")
     };
   }

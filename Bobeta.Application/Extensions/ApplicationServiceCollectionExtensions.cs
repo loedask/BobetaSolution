@@ -25,6 +25,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IRevenueShareResolver, RevenueShareResolver>();
         services.AddScoped<IPartnerRevenueAllocationService, PartnerRevenueAllocationService>();
         services.AddScoped<IPaymentRevenueService, PaymentRevenueService>();
+        services.AddScoped<IInfluencerAttributionService, InfluencerAttributionService>();
+        services.AddScoped<IInfluencerProgramSettingsService, InfluencerProgramSettingsService>();
         services.AddValidatorsFromAssemblyContaining<CreateGameRequestValidator>();
         return services;
     }

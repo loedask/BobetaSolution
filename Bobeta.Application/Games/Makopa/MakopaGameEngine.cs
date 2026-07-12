@@ -3,6 +3,7 @@ using Bobeta.Application.Common;
 using Bobeta.Application.DTOs.Game;
 using Bobeta.Application.Games;
 using Bobeta.Application.Interfaces;
+using Bobeta.Application.Services;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
 using Bobeta.Domain.ValueObjects;
@@ -367,7 +368,13 @@ public class MakopaGameEngine(
         var totalPot = session.BetAmount * 2;
         var commission = totalPot * CommissionRate;
         var winnerAmount = totalPot - commission;
-        await _walletService.SettleGameAsync(winnerId, loserId, session.BetAmount, cancellationToken);
+        await _walletService.SettleGameAsync(
+            winnerId,
+            loserId,
+            session.BetAmount,
+            GameSessionService.ChargedAmount(session, winnerId),
+            GameSessionService.ChargedAmount(session, loserId),
+            cancellationToken);
         var result = new GameResult
         {
             Id = Guid.NewGuid(),

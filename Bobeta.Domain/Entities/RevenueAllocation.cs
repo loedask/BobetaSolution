@@ -13,6 +13,8 @@ public class RevenueAllocation
   public decimal GrossPlatformRevenue { get; set; }
   public decimal PartnerSharePercent { get; set; }
   public decimal PartnerAmount { get; set; }
+  /// <summary>Total influencer commission deducted from this gross (games sources only).</summary>
+  public decimal InfluencerAmount { get; set; }
   public decimal PlatformRetainedAmount { get; set; }
   public string Currency { get; set; } = "XAF";
   public DateTime CreatedAt { get; set; }

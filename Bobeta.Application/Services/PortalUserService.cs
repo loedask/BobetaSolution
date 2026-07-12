@@ -39,6 +39,9 @@ public sealed class PortalUserService(
     if (request.Role == PortalUserRole.LicensePartner)
       throw new InvalidOperationException("License partners must be registered via the license partner flow.");
 
+    if (request.Role == PortalUserRole.Influencer)
+      throw new InvalidOperationException("Influencers must be registered via the influencer flow.");
+
     var user = new PortalUser
     {
       Id = Guid.NewGuid(),

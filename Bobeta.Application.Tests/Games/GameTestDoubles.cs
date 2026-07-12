@@ -58,6 +58,20 @@ internal sealed class NoOpGameRevenueService : IGameRevenueService
         => Task.CompletedTask;
 }
 
+internal sealed class NoOpInfluencerAttributionService : IInfluencerAttributionService
+{
+    public static NoOpInfluencerAttributionService Instance { get; } = new();
+
+    public Task ApplyCodeAsync(Guid playerId, string code, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task<Bobeta.Application.DTOs.Influencer.InfluencerCodeStatusDto> GetStatusAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+        Task.FromResult(new Bobeta.Application.DTOs.Influencer.InfluencerCodeStatusDto(false, null, null, 5));
+    public Task<decimal> GetChargeAmountAsync(Guid playerId, decimal betAmount, CancellationToken cancellationToken = default) =>
+        Task.FromResult(betAmount);
+    public Task AttachPendingCodeToGameAsync(Guid playerId, Guid gameSessionId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task MarkGameRedemptionsConsumedAsync(Guid gameSessionId, DateTime atUtc, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task DetachGameRedemptionsAsync(Guid gameSessionId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+}
+
 internal sealed class RecordingWalletService : IWalletService
 {
     public List<(Guid WinnerId, Guid LoserId, decimal Bet)> Settlements { get; } = new();
@@ -74,7 +88,13 @@ internal sealed class RecordingWalletService : IWalletService
     }
     public Task<IReadOnlyList<WalletTransactionDto>> GetTransactionsAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default) => throw new NotSupportedException();
 
-    public Task SettleGameAsync(Guid winnerId, Guid loserId, decimal betAmountPerPlayer, CancellationToken cancellationToken = default)
+    public Task SettleGameAsync(
+        Guid winnerId,
+        Guid loserId,
+        decimal betAmountPerPlayer,
+        decimal winnerChargedAmount,
+        decimal loserChargedAmount,
+        CancellationToken cancellationToken = default)
     {
         Settlements.Add((winnerId, loserId, betAmountPerPlayer));
         return Task.CompletedTask;

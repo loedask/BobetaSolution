@@ -1,0 +1,114 @@
+@page "/influencers/{InfluencerId:guid}"
+@attribute [Authorize(Roles = "PlatformOwner")]
+@inject IInfluencerService InfluencerService
+@rendermode InteractiveServer
+
+<PageTitle>@(_influencer?.DisplayName ?? "Influencer") - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <a class="portal-back-link" href="/influencers">&larr; Back to influencers</a>
+        @if (_influencer is not null)
+        {
+            <h1>@_influencer.DisplayName</h1>
+            <p class="portal-muted">@_influencer.ContactEmail · Portal: @_influencer.PortalEmail</p>
+        }
+    </div>
+    @if (_influencer is not null)
+    {
+        <a class="portal-button portal-button-primary" href="@($"/influencers/{InfluencerId}/revenue")">Revenue report</a>
+    }
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading...</p>
+}
+else if (_influencer is null)
+{
+    <div class="portal-alert portal-alert-error">Influencer not found.</div>
+}
+else
+{
+    <section class="portal-card portal-section">
+        <dl class="portal-dl">
+            <div><dt>Invite code</dt><dd><code>@_influencer.Code</code></dd></div>
+            <div><dt>Invite link path</dt><dd><code>/invite/@_influencer.Code</code></dd></div>
+            <div><dt>Commission</dt><dd>@_influencer.CommissionPercent.ToString("N2")% of half the game platform fee per attributed player</dd></div>
+            <div><dt>Status</dt><dd>@(_influencer.IsActive ? "Active" : "Inactive")</dd></div>
+        </dl>
+    </section>
+
+    <section class="portal-card portal-section">
+        <h2>Update commission</h2>
+        <p class="portal-muted">Must leave room for license partner share (I% + P% ≤ 100).</p>
+        @if (!string.IsNullOrEmpty(_rateError))
+        {
+            <div class="portal-alert portal-alert-error">@_rateError</div>
+        }
+        @if (!string.IsNullOrEmpty(_rateSuccess))
+        {
+            <div class="portal-alert portal-alert-success">@_rateSuccess</div>
+        }
+        <EditForm Model="_rateModel" OnValidSubmit="HandleUpdateRateAsync">
+            <div class="portal-field">
+                <label>Commission %</label>
+                <InputNumber class="portal-input" @bind-Value="_rateModel.CommissionPercent" />
+            </div>
+            <button class="portal-button portal-button-primary" type="submit" disabled="@_rateBusy">Save</button>
+        </EditForm>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid InfluencerId { get; set; }
+
+    private InfluencerListItemDto? _influencer;
+    private readonly UpdateInfluencerCommissionRequest _rateModel = new();
+    private bool _loading = true;
+    private bool _rateBusy;
+    private string? _rateError;
+    private string? _rateSuccess;
+
+    protected override async Task OnParametersSetAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try
+        {
+            _influencer = await InfluencerService.GetByIdAsync(InfluencerId);
+            if (_influencer is not null)
+            {
+                _rateModel.InfluencerId = InfluencerId;
+                _rateModel.CommissionPercent = _influencer.CommissionPercent;
+            }
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task HandleUpdateRateAsync()
+    {
+        _rateBusy = true;
+        _rateError = null;
+        _rateSuccess = null;
+        try
+        {
+            _rateModel.InfluencerId = InfluencerId;
+            _influencer = await InfluencerService.UpdateCommissionAsync(_rateModel);
+            _rateSuccess = $"Commission updated to {_influencer.CommissionPercent:N2}%.";
+        }
+        catch (Exception ex)
+        {
+            _rateError = ex.Message;
+        }
+        finally
+        {
+            _rateBusy = false;
+        }
+    }
+}

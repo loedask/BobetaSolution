@@ -32,6 +32,9 @@ public class GameResult
     /// <summary>License partner that received a revenue share, if any.</summary>
     public Guid? LicensePartnerId { get; set; }
 
+    /// <summary>Total influencer commission paid from platform commission for this game.</summary>
+    public decimal InfluencerCommission { get; set; }
+
     /// <summary>When the result was recorded.</summary>
     public DateTime CreatedAt { get; set; }
 

@@ -4,6 +4,12 @@
             <NavLink class="portal-nav-link" href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
         </Authorized>
     </AuthorizeView>
+    <AuthorizeView Roles="Influencer">
+        <Authorized>
+            <NavLink class="portal-nav-link" href="/my-influencer">My influencer</NavLink>
+            <NavLink class="portal-nav-link" href="/my-influencer/revenue">Revenue</NavLink>
+        </Authorized>
+    </AuthorizeView>
     <AuthorizeView Roles="LicensePartner">
         <Authorized>
             <NavLink class="portal-nav-link" href="/users">Players</NavLink>
@@ -15,6 +21,8 @@
         <Authorized>
             <NavLink class="portal-nav-link" href="/users">Players</NavLink>
             <NavLink class="portal-nav-link" href="/license-partners">License partners</NavLink>
+            <NavLink class="portal-nav-link" href="/influencers">Influencers</NavLink>
+            <NavLink class="portal-nav-link" href="/influencer-settings">Influencer settings</NavLink>
             <NavLink class="portal-nav-link" href="/staff">Staff</NavLink>
         </Authorized>
     </AuthorizeView>
