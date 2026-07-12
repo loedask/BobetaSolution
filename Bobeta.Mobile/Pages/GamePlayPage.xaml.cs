@@ -1,3 +1,4 @@
+using Bobeta.Client.Models.Games;
 using Bobeta.Mobile.Services;
 using Bobeta.Mobile.ViewModels.Games;
 
@@ -42,6 +43,9 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         InactivityContinueBtn.Text = i18n.T("continue_play");
         InactivityCancelBtn.Text = i18n.T("cancel_game");
 
+        KopoBoard.CellTapped -= OnKopoCellTapped;
+        KopoBoard.CellTapped += OnKopoCellTapped;
+
         if (!string.IsNullOrEmpty(_sessionId))
             await _vm.LoadGameAsync(_sessionId);
 
@@ -57,6 +61,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
             await _vm.DisposeAsync();
         }
 
+        KopoBoard.CellTapped -= OnKopoCellTapped;
+
         base.OnDisappearing();
     }
 
@@ -67,7 +73,15 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         if (_vm == null) return;
         ErrorLabel.Text = _vm.ErrorMessage ?? "";
         ErrorLabel.IsVisible = !string.IsNullOrEmpty(_vm.ErrorMessage);
-        Busy.IsRunning = _vm.IsLoading && _vm.PlayerCards.Count == 0;
+        Busy.IsRunning = _vm.ShowLoadingShell;
+
+        var isKopo = _vm.IsKopo;
+        MakopaPanel.IsVisible = !isKopo;
+        HandView.IsVisible = !isKopo;
+        TakeCardButton.IsVisible = !isKopo;
+        TakeCardHintLabel.IsVisible = !isKopo;
+        KopoBoard.IsVisible = isKopo && _vm.Kopo != null;
+        KopoChainHint.IsVisible = isKopo && (_vm.Kopo?.MustContinueChain ?? false);
 
         var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
         TurnLabel.Text = _vm.WaitingForOpponent
@@ -86,7 +100,19 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
             ? i18n.T("take_card_hint_enabled")
             : i18n.T("take_card_hint_disabled");
 
-        if (_vm.WaitingForOpponent)
+        if (isKopo && _vm.Kopo != null && _vm.MyPlayerId is { } pid)
+        {
+            KopoBoard.BoardSize = _vm.Kopo.BoardSize;
+            KopoBoard.Pieces = _vm.Kopo.Pieces;
+            KopoBoard.MyPlayerId = pid;
+            KopoBoard.SelectionPath = _vm.KopoSelectionPath.ToList();
+            KopoBoard.CanInteract = _vm.IsPlayerTurn && !_vm.ShowGameResult && !_vm.ShowInactivityOverlay && !_vm.IsSendingMove;
+            KopoChainHint.Text = i18n.T("kopo_continue_capture");
+            RulesLink.IsVisible = true;
+            RulesLink.Text = i18n.T("kopo_rules_link");
+            RoundScoreLabel.IsVisible = false;
+        }
+        else if (_vm.WaitingForOpponent)
         {
             RoundScoreLabel.Text = "";
             RoundScoreLabel.IsVisible = false;
@@ -145,8 +171,13 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
 
     private async void OnNavigateHomeFromInactivity()
     {
+        var message = _vm?.SessionLeaveMessage;
         await MainThread.InvokeOnMainThreadAsync(async () =>
-            await Shell.Current.GoToAsync("//MainTabs/Dashboard"));
+        {
+            await Shell.Current.GoToAsync("//MainTabs/Dashboard");
+            if (!string.IsNullOrEmpty(message))
+                await DisplayAlertAsync(Title, message, "OK");
+        });
     }
 
     private async void OnInactivityContinue(object? sender, EventArgs e)
@@ -194,6 +225,15 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
     private async void OnRulesTapped(object? sender, TappedEventArgs e)
     {
         var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
-        await DisplayAlert(i18n.T("makopa_how_to_play_title"), i18n.T("makopa_rules_body"), i18n.T("done_short"));
+        if (_vm?.IsKopo == true)
+            await DisplayAlert(i18n.T("kopo_how_to_play_title"), i18n.T("kopo_rules_body"), i18n.T("done_short"));
+        else
+            await DisplayAlert(i18n.T("makopa_how_to_play_title"), i18n.T("makopa_rules_body"), i18n.T("done_short"));
+    }
+
+    private async void OnKopoCellTapped(object? sender, (int Row, int Col) e)
+    {
+        if (_vm == null) return;
+        await _vm.OnKopoSquareClickedAsync(e.Row, e.Col);
     }
 }

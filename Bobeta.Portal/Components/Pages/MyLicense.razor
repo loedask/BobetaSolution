@@ -1,0 +1,80 @@
+@page "/my-license"
+@attribute [Authorize(Roles = "LicensePartner")]
+@inject ILicensePartnerService LicensePartnerService
+@inject AuthenticationStateProvider AuthState
+@rendermode InteractiveServer
+
+<PageTitle>My license - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <h1>My license</h1>
+        <p class="portal-muted">Your contracted countries and current revenue share rates.</p>
+    </div>
+    <a class="portal-button portal-button-primary" href="/my-license/revenue">Revenue report</a>
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading...</p>
+}
+else if (_partner is null)
+{
+    <div class="portal-alert portal-alert-error">No license partner profile linked to your account.</div>
+}
+else
+{
+    <section class="portal-card portal-section">
+        <dl class="portal-dl">
+            <div><dt>Legal name</dt><dd>@_partner.LegalName</dd></div>
+            <div><dt>Contact email</dt><dd>@_partner.ContactEmail</dd></div>
+        </dl>
+    </section>
+
+    <section class="portal-card portal-section">
+        <h2>Licensed countries</h2>
+        @if (_partner.Countries.Count == 0)
+        {
+            <p class="portal-muted">No countries assigned yet. Contact the platform owner.</p>
+        }
+        else
+        {
+            <div class="portal-table-wrap">
+                <table class="portal-table">
+                    <thead>
+                        <tr>
+                            <th>Country</th>
+                            <th>Your revenue share</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var country in _partner.Countries)
+                        {
+                            <tr>
+                                <td>@country.CountryName</td>
+                                <td>@(country.CurrentRevenueSharePercent.HasValue ? $"{country.CurrentRevenueSharePercent:N2}% of platform commission" : "—")</td>
+                                <td>@(country.IsActive ? "Active" : "Inactive")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+}
+
+@code {
+    private LicensePartnerListItemDto? _partner;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthState.GetAuthenticationStateAsync();
+        var userId = auth.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userId is not null && Guid.TryParse(userId, out var portalUserId))
+            _partner = await LicensePartnerService.GetByPortalUserIdAsync(portalUserId);
+
+        _loading = false;
+    }
+}

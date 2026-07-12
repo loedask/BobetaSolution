@@ -1,0 +1,21 @@
+@inject I18nService I18n
+@inject AppStateService AppState
+
+<div class="flex flex-wrap gap-2">
+    @foreach (var item in I18nService.SupportedLocales)
+    {
+        var isActive = AppState.State.SelectedLanguage == item.Code;
+        <button type="button" aria-label="Select @item.Label" class="flex h-10 min-w-[2.75rem] items-center justify-center rounded-xl px-3 text-xs font-bold transition-all @(isActive ? "choice-selected border border-primary/40 text-primary" : "choice-unselected border border-border/80 text-muted-foreground")"
+                @onclick="() => SetLocale(item.Code)">
+            @item.ShortCode
+        </button>
+    }
+</div>
+
+@code {
+    private async Task SetLocale(string code)
+    {
+        AppState.SetLanguage(code);
+        await AppState.PersistAsync();
+    }
+}

@@ -1,4 +1,5 @@
 using Bobeta.Client.Contracts.Interfaces;
+using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
 using Bobeta.Mobile.Services;
 
@@ -12,7 +13,16 @@ public class JoinGameViewModel(IGameService gameService, AppStateService appStat
 
     private bool _joinBusy;
 
+    public GameVariant? VariantFilter { get; private set; }
+
     public List<GameSessionViewModel> OpenGames { get; private set; } = new();
+
+    public void SetVariantFilter(GameVariant? variant)
+    {
+        VariantFilter = variant;
+        RaiseStateChanged();
+        _ = LoadGamesAsync();
+    }
 
     public async Task LoadGamesAsync()
     {
@@ -20,7 +30,7 @@ public class JoinGameViewModel(IGameService gameService, AppStateService appStat
         ClearError();
         try
         {
-            var res = await _gameService.GetOpenGamesAsync();
+            var res = await _gameService.GetOpenGamesAsync(VariantFilter);
             if (res.IsSuccess && res.Data != null)
                 OpenGames = res.Data.Where(x => x.OpponentPlayerId == null).ToList();
             else if (!res.IsSuccess)

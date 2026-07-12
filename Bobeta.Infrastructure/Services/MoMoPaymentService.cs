@@ -24,6 +24,7 @@ public class MoMoPaymentService : IPaymentService
     private readonly MoMoSettings _settings;
     private readonly IPaymentTransactionRepository _paymentRepository;
     private readonly IWalletService _walletService;
+    private readonly IPaymentRevenueService _paymentRevenueService;
     private readonly ILogger<MoMoPaymentService> _logger;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     /// <summary>Part 4 — Retry: up to 3 times for network/transient failures.</summary>
@@ -43,12 +44,14 @@ public class MoMoPaymentService : IPaymentService
         IOptions<MoMoSettings> settings,
         IPaymentTransactionRepository paymentRepository,
         IWalletService walletService,
+        IPaymentRevenueService paymentRevenueService,
         ILogger<MoMoPaymentService> logger)
     {
         _httpClientFactory = httpClientFactory;
         _settings = settings.Value;
         _paymentRepository = paymentRepository;
         _walletService = walletService;
+        _paymentRevenueService = paymentRevenueService;
         _logger = logger;
     }
 
@@ -200,12 +203,28 @@ public class MoMoPaymentService : IPaymentService
             if (transaction.Type == PaymentTransactionType.Deposit && transaction.Status == PaymentTransactionStatus.Success)
             {
                 await _walletService.DepositAsync(transaction.PlayerId, transaction.Amount, cancellationToken);
+                await _paymentRevenueService.RecordSuccessfulPaymentAsync(
+                    PaymentTransactionType.Deposit,
+                    transaction.Id,
+                    transaction.PlayerId,
+                    transaction.Amount,
+                    transaction.Currency,
+                    transaction.UpdatedAt,
+                    cancellationToken);
                 _logger.LogInformation("Wallet updated: Deposit, TransactionId={TransactionId}, PlayerId={PlayerId}, Amount={Amount}",
                     transaction.Id, transaction.PlayerId, transaction.Amount);
             }
             if (transaction.Type == PaymentTransactionType.Withdrawal && transaction.Status == PaymentTransactionStatus.Success)
             {
                 await _walletService.WithdrawAsync(transaction.PlayerId, transaction.Amount, cancellationToken);
+                await _paymentRevenueService.RecordSuccessfulPaymentAsync(
+                    PaymentTransactionType.Withdrawal,
+                    transaction.Id,
+                    transaction.PlayerId,
+                    transaction.Amount,
+                    transaction.Currency,
+                    transaction.UpdatedAt,
+                    cancellationToken);
                 _logger.LogInformation("Wallet updated: Withdrawal, TransactionId={TransactionId}, PlayerId={PlayerId}, Amount={Amount}",
                     transaction.Id, transaction.PlayerId, transaction.Amount);
             }
@@ -241,12 +260,28 @@ public class MoMoPaymentService : IPaymentService
         if (transaction.Type == PaymentTransactionType.Deposit && transaction.Status == PaymentTransactionStatus.Success)
         {
             await _walletService.DepositAsync(transaction.PlayerId, transaction.Amount, cancellationToken);
+            await _paymentRevenueService.RecordSuccessfulPaymentAsync(
+                PaymentTransactionType.Deposit,
+                transaction.Id,
+                transaction.PlayerId,
+                transaction.Amount,
+                transaction.Currency,
+                transaction.UpdatedAt,
+                cancellationToken);
             _logger.LogInformation("Wallet updated: Deposit (callback), TransactionId={TransactionId}, PlayerId={PlayerId}, Amount={Amount}",
                 transaction.Id, transaction.PlayerId, transaction.Amount);
         }
         if (transaction.Type == PaymentTransactionType.Withdrawal && transaction.Status == PaymentTransactionStatus.Success)
         {
             await _walletService.WithdrawAsync(transaction.PlayerId, transaction.Amount, cancellationToken);
+            await _paymentRevenueService.RecordSuccessfulPaymentAsync(
+                PaymentTransactionType.Withdrawal,
+                transaction.Id,
+                transaction.PlayerId,
+                transaction.Amount,
+                transaction.Currency,
+                transaction.UpdatedAt,
+                cancellationToken);
             _logger.LogInformation("Wallet updated: Withdrawal (callback), TransactionId={TransactionId}, PlayerId={PlayerId}, Amount={Amount}",
                 transaction.Id, transaction.PlayerId, transaction.Amount);
         }

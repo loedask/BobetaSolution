@@ -1,0 +1,42 @@
+@namespace Bobeta.Web.Shared.Components
+
+@if (_open)
+{
+    <div class="fixed inset-0 z-40" @onclick="() => _open = false" aria-hidden="true"></div>
+}
+<div class="relative z-50">
+    <button type="button" @onclick="ToggleOpen"
+            class="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
+        <img src="@FlagUrl(Selected.CountryCode)" alt="@Selected.Name" class="h-5 w-7 rounded-sm object-cover" />
+        <span class="text-sm font-medium">@Selected.Dial</span>
+        <svg class="h-3.5 w-3.5 transition-transform @(_open ? "rotate-180" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+    </button>
+
+    @if (_open)
+    {
+        <div class="absolute left-0 top-full z-50 mt-2 w-64 rounded-xl border border-border bg-card shadow-xl overflow-hidden">
+            <div class="p-2">
+                <input type="text" placeholder="Search country..." @bind="_search" @bind:event="oninput"
+                       class="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground/50 focus:border-primary/50" />
+            </div>
+            <div class="max-h-48 overflow-y-auto">
+                @foreach (var c in FilteredCountries)
+                {
+                    var country = c;
+                    <button type="button" @onclick="() => SelectCountry(country)"
+                            class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-colors hover:bg-secondary @(c.CountryCode == Selected.CountryCode ? "bg-primary/10 text-primary" : "")">
+                        <img src="@FlagUrl(country.CountryCode)" alt="@country.Name" class="h-4 w-6 rounded-sm object-cover" />
+                        <span class="flex-1 truncate text-foreground">@country.Name</span>
+                        <span class="text-xs text-muted-foreground">@country.Dial</span>
+                    </button>
+                }
+                @if (!FilteredCountries.Any())
+                {
+                    <p class="px-3 py-4 text-center text-xs text-muted-foreground">No country found</p>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+

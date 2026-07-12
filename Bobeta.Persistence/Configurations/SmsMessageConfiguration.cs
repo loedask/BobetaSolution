@@ -14,6 +14,7 @@ public class SmsMessageConfiguration : IEntityTypeConfiguration<SmsMessage>
         builder.HasKey(s => s.Id);
         builder.Property(s => s.PhoneNumber).HasMaxLength(20).IsRequired();
         builder.Property(s => s.Message).HasMaxLength(1600).IsRequired();
+        builder.Property(s => s.Provider).HasMaxLength(50);
         builder.Property(s => s.ProviderMessageId).HasMaxLength(100);
         builder.Property(s => s.Status);
         builder.HasIndex(s => s.ProviderMessageId).HasFilter("\"ProviderMessageId\" IS NOT NULL");

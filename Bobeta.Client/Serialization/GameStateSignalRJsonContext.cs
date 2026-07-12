@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
 
 namespace Bobeta.Client.Serialization;
@@ -12,4 +13,8 @@ namespace Bobeta.Client.Serialization;
     PropertyNameCaseInsensitive = true)]
 [JsonSerializable(typeof(GameStateViewModel))]
 [JsonSerializable(typeof(List<string>))]
+[JsonSerializable(typeof(KopoStateDto))]
+[JsonSerializable(typeof(KopoPieceDto))]
+[JsonSerializable(typeof(List<KopoPieceDto>))]
+[JsonSerializable(typeof(GameVariant))]
 public partial class GameStateSignalRJsonContext : JsonSerializerContext;

@@ -1,0 +1,94 @@
+@page "/license-partners"
+@attribute [Authorize(Roles = "PlatformOwner")]
+@inject ILicensePartnerService LicensePartnerService
+@rendermode InteractiveServer
+
+<PageTitle>License partners - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <h1>License partners</h1>
+        <p class="portal-muted">Contracted holders licensed to operate in specific countries.</p>
+    </div>
+    <a class="portal-button portal-button-primary" href="/license-partners/register">Register partner</a>
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading...</p>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="portal-alert portal-alert-error">@_error</div>
+}
+else if (_partners.Count == 0)
+{
+    <p class="portal-muted">No license partners yet.</p>
+}
+else
+{
+    <div class="portal-table-wrap">
+        <table class="portal-table">
+            <thead>
+                <tr>
+                    <th>Legal name</th>
+                    <th>Contact</th>
+                    <th>Portal login</th>
+                    <th>Countries</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var partner in _partners)
+                {
+                    <tr>
+                        <td>@partner.LegalName</td>
+                        <td>@partner.ContactEmail</td>
+                        <td>@partner.PortalEmail</td>
+                        <td>
+                            @if (partner.Countries.Count == 0)
+                            {
+                                <span class="portal-muted">None</span>
+                            }
+                            else
+                            {
+                                @string.Join(", ", partner.Countries.Select(c => $"{c.CountryName} ({c.CurrentRevenueSharePercent:N1}%)"))
+                            }
+                        </td>
+                        <td>@(partner.IsActive ? "Active" : "Inactive")</td>
+                        <td>
+                            <a class="portal-link-button" href="@($"/license-partners/{partner.Id}")">Manage</a>
+                            ·
+                            <a class="portal-link-button" href="@($"/license-partners/{partner.Id}/revenue")">Revenue</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private readonly List<LicensePartnerListItemDto> _partners = [];
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var list = await LicensePartnerService.GetAllAsync();
+            _partners.Clear();
+            _partners.AddRange(list);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

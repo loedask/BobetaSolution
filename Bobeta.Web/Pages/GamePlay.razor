@@ -1,7 +1,8 @@
 @page "/game/{SessionId}"
 @layout MainLayout
+@using Bobeta.Client.Models.Api
 @using Bobeta.Web.Components.Game
-@using Bobeta.Web.Services.Realtime
+@using Bobeta.Web.Shared.Services.Realtime
 @inject GamePlayService GamePlayService
 @inject IGameService GameService
 @inject AppStateService AppState
@@ -17,7 +18,7 @@
     <div class="space-y-4 px-5 py-4">
         <ErrorBanner Message="@ViewModel.ErrorMessage" />
 
-        @if (ViewModel.IsLoading && ViewModel.PlayerCards.Count == 0)
+        @if (ViewModel.ShowLoadingShell)
         {
             <SkeletonLoader CssClass="h-12 rounded-xl mb-4" />
             <SkeletonLoader CssClass="h-24 rounded-2xl mb-4" />
@@ -31,42 +32,70 @@
             {
                 <p class="text-center text-xs text-muted-foreground">@ViewModel.MatchRoundScoreText</p>
             }
-            <details class="rounded-xl border border-border bg-card/60 px-4 py-3 text-sm text-foreground">
-                <summary class="cursor-pointer select-none font-semibold">@I18n.T("makopa_how_to_play_title")</summary>
-                <div class="mt-2 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">@I18n.T("makopa_rules_body")</div>
-            </details>
-            @if (!string.IsNullOrEmpty(ViewModel.TrickOutcomeMessage))
+            @if (ViewModel.Variant == GameVariant.Kopo)
             {
-                <p class="rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-center text-sm text-foreground">@ViewModel.TrickOutcomeMessage</p>
-            }
-            <div class="relative">
-                <OpponentHand CardCount="@ViewModel.OpponentCards.Count" />
-                <GameBoard LastPlayedCard="@ViewModel.LastPlayedCard" OnCardDropped="HandleCardDropped" />
-                <PlayerHand
-                    Cards="@ViewModel.PlayerCards"
-                    IsPlayerTurn="@ViewModel.IsPlayerTurn"
-                    CanInteract="@(ViewModel.IsPlayerTurn && !ViewModel.IsSendingMove && !ViewModel.ShowInactivityOverlay)"
-                    OnPlayCard="PlayCard"
-                    OnDragStart="HandleDragStart"
-                    OnDragEnd="HandleDragEnd" />
+                <details class="rounded-xl border border-border bg-card/60 px-4 py-3 text-sm text-foreground">
+                    <summary class="cursor-pointer select-none font-semibold">@I18n.T("kopo_how_to_play_title")</summary>
+                    <div class="mt-2 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">@I18n.T("kopo_rules_body")</div>
+                </details>
+                @if (ViewModel.Kopo?.MustContinueChain == true)
+                {
+                    <p class="text-center text-xs text-primary">@I18n.T("kopo_continue_capture")</p>
+                }
+                @if (ViewModel.Kopo != null && ViewModel.MyPlayerId is { } myId)
+                {
+                    <KopoBoard BoardSize="@ViewModel.Kopo.BoardSize"
+                                Pieces="@ViewModel.Kopo.Pieces"
+                                MyPlayerId="@myId"
+                                SelectionPath="@ViewModel.KopoSelectionPath"
+                                MustContinueChain="@ViewModel.Kopo.MustContinueChain"
+                                CanInteract="@(ViewModel.IsPlayerTurn && !ViewModel.IsSendingMove && !ViewModel.ShowInactivityOverlay)"
+                                OnCellClicked="OnKopoCellClicked" />
+                }
                 @if (ViewModel.IsSendingMove)
                 {
-                    <div class="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-background/75 backdrop-blur-sm">
-                        <p class="rounded-xl border border-primary/40 bg-card px-5 py-3 text-sm font-semibold text-foreground shadow-lg">
-                            @I18n.T("sending_move")
-                        </p>
-                    </div>
+                    <p class="text-center text-sm text-muted-foreground">@I18n.T("sending_move")</p>
                 }
-            </div>
-            <button type="button"
-                    class="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-55"
-                    disabled="@(!ViewModel.CanTakeCard || ViewModel.IsSendingMove || ViewModel.ShowInactivityOverlay)"
-                    @onclick="TakeCard">
-                @I18n.T("take_card")
-            </button>
-            <p class="text-center text-xs text-muted-foreground">
-                @(ViewModel.CanTakeCard ? I18n.T("take_card_hint_enabled") : I18n.T("take_card_hint_disabled"))
-            </p>
+            }
+            else
+            {
+                <details class="rounded-xl border border-border bg-card/60 px-4 py-3 text-sm text-foreground">
+                    <summary class="cursor-pointer select-none font-semibold">@I18n.T("makopa_how_to_play_title")</summary>
+                    <div class="mt-2 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">@I18n.T("makopa_rules_body")</div>
+                </details>
+                @if (!string.IsNullOrEmpty(ViewModel.TrickOutcomeMessage))
+                {
+                    <p class="rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-center text-sm text-foreground">@ViewModel.TrickOutcomeMessage</p>
+                }
+                <div class="relative">
+                    <OpponentHand CardCount="@ViewModel.OpponentCards.Count" />
+                    <GameBoard LastPlayedCard="@ViewModel.LastPlayedCard" OnCardDropped="HandleCardDropped" />
+                    <PlayerHand
+                        Cards="@ViewModel.PlayerCards"
+                        IsPlayerTurn="@ViewModel.IsPlayerTurn"
+                        CanInteract="@(ViewModel.IsPlayerTurn && !ViewModel.IsSendingMove && !ViewModel.ShowInactivityOverlay)"
+                        OnPlayCard="PlayCard"
+                        OnDragStart="HandleDragStart"
+                        OnDragEnd="HandleDragEnd" />
+                    @if (ViewModel.IsSendingMove)
+                    {
+                        <div class="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-background/75 backdrop-blur-sm">
+                            <p class="rounded-xl border border-primary/40 bg-card px-5 py-3 text-sm font-semibold text-foreground shadow-lg">
+                                @I18n.T("sending_move")
+                            </p>
+                        </div>
+                    }
+                </div>
+                <button type="button"
+                        class="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-55"
+                        disabled="@(!ViewModel.CanTakeCard || ViewModel.IsSendingMove || ViewModel.ShowInactivityOverlay)"
+                        @onclick="TakeCard">
+                    @I18n.T("take_card")
+                </button>
+                <p class="text-center text-xs text-muted-foreground">
+                    @(ViewModel.CanTakeCard ? I18n.T("take_card_hint_enabled") : I18n.T("take_card_hint_disabled"))
+                </p>
+            }
             <TurnIndicator IsPlayerTurn="@ViewModel.IsPlayerTurn" WaitingForOpponent="@ViewModel.WaitingForOpponent" />
         }
     </div>
@@ -155,4 +184,6 @@
     private async Task OnInactivityContinue() => await ViewModel.ContinueInactivityAsync();
 
     private async Task OnInactivityCancelGame() => await ViewModel.CancelGameFromInactivityAsync();
+
+    private async Task OnKopoCellClicked((int Row, int Col) cell) => await ViewModel.OnKopoSquareClickedAsync(cell.Row, cell.Col);
 }

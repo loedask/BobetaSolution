@@ -1,0 +1,159 @@
+@page "/users"
+@attribute [Authorize(Roles = "Member,PlatformOwner,LicensePartner")]
+@inject IPlayerQueryService PlayerQuery
+@inject ILicensePartnerAccessService PartnerAccess
+@inject PortalUserContext PortalUser
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<PageTitle>Players - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <h1>Players</h1>
+        <p class="portal-muted">
+            @if (PortalUser.IsLicensePartner)
+            {
+                <span>Players in your licensed countries@(_countryScopeLabel).</span>
+            }
+            else
+            {
+                <span>Registered game users on the platform.</span>
+            }
+        </p>
+    </div>
+    <div class="portal-search">
+        <input class="portal-input"
+               placeholder="Search phone or name"
+               @bind="_search"
+               @bind:event="oninput"
+               @onkeyup="HandleSearchKey" />
+        <button class="portal-button" type="button" @onclick="LoadPlayersAsync">Search</button>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading players...</p>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="portal-alert portal-alert-error">@_error</div>
+}
+else if (_players.Count == 0)
+{
+    <p class="portal-muted">No players found.</p>
+}
+else
+{
+    <div class="portal-table-wrap">
+        <table class="portal-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Country</th>
+                    <th>Status</th>
+                    <th>Verified</th>
+                    <th>Joined</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var player in _players)
+                {
+                    <tr class="portal-table-row-link" @onclick="() => OpenPlayer(player.Id)">
+                        <td><a href="@GetPlayerUrl(player.Id)" @onclick:preventDefault @onclick:stopPropagation="true">@player.PlayerName</a></td>
+                        <td>@player.PhoneNumber</td>
+                        <td>@(player.CountryName ?? player.CountryCode ?? "—")</td>
+                        <td><span class="portal-badge">@player.Status</span></td>
+                        <td>@(player.IsVerified ? "Yes" : "No")</td>
+                        <td>@player.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="portal-pagination">
+        <button class="portal-button" type="button" disabled="@(_page == 0)" @onclick="PreviousPage">Previous</button>
+        <span class="portal-muted">Page @(_page + 1) of @TotalPages (@_total total)</span>
+        <button class="portal-button" type="button" disabled="@((_page + 1) >= TotalPages)" @onclick="NextPage">Next</button>
+    </div>
+}
+
+@code {
+    private const int PageSize = 25;
+
+    private readonly List<PlayerListItemDto> _players = [];
+    private IReadOnlyList<string>? _countryFilter;
+    private string? _countryScopeLabel;
+    private string _search = string.Empty;
+    private int _page;
+    private int _total;
+    private bool _loading = true;
+    private string? _error;
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(_total / (double)PageSize));
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (PortalUser.IsLicensePartner && PortalUser.UserId is { } userId)
+        {
+            _countryFilter = await PartnerAccess.GetLicensedCountryCodesAsync(userId);
+            _countryScopeLabel = _countryFilter.Count > 0
+                ? $" ({string.Join(", ", _countryFilter)})"
+                : string.Empty;
+        }
+
+        await LoadPlayersAsync();
+    }
+
+    private async Task LoadPlayersAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            var (items, total) = await PlayerQuery.GetPlayersAsync(_page * PageSize, PageSize, _search, _countryFilter);
+            _players.Clear();
+            _players.AddRange(items);
+            _total = total;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task PreviousPage()
+    {
+        if (_page == 0) return;
+        _page--;
+        await LoadPlayersAsync();
+    }
+
+    private async Task NextPage()
+    {
+        if (_page + 1 >= TotalPages) return;
+        _page++;
+        await LoadPlayersAsync();
+    }
+
+    private async Task HandleSearchKey(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            _page = 0;
+            await LoadPlayersAsync();
+        }
+    }
+
+    private void OpenPlayer(Guid id) => Nav.NavigateTo(GetPlayerUrl(id));
+
+    private static string GetPlayerUrl(Guid id) => $"/users/{id}";
+}

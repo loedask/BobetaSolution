@@ -1,4 +1,5 @@
 using Bobeta.Client.Contracts;
+using Bobeta.Client.Json;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -7,18 +8,12 @@ using System.Text.Json;
 namespace Bobeta.Client.Services.Base;
 
 /// <summary>
-/// Base service that wraps the API client and provides generic HTTP helpers
-/// with standardized Response&lt;T&gt; and ApiException handling.
+/// HTTP helpers for Bobeta API calls with standardized <see cref="Response{T}"/> and bearer attachment for WASM.
 /// </summary>
-public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAccessTokenProvider? accessTokenProvider = null)
+public abstract class BaseHttpService(HttpClient httpClient, IAccessTokenProvider? accessTokenProvider = null)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ClientJsonSerializerOptions.Create();
 
-    protected IClient Client { get; } = client;
     protected HttpClient HttpClient { get; } = httpClient;
 
     /// <summary>Resolves relative paths (e.g. <c>api/History/player</c>) against <see cref="HttpClient.BaseAddress"/> so WASM/browser handlers always target the API host.</summary>
@@ -80,11 +75,17 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
         return last ?? Response<T>.Failure("Network error. Please check your connection and try again.", null);
     }
 
+    private static Response<T> NetworkFailure<T>() =>
+        Response<T>.Failure("Unable to reach the server. Please check your connection and try again.", null);
+
+    private static Response<T> DeserializeFailure<T>() =>
+        Response<T>.Failure("Unexpected response from the server. Please try again.", null);
+
     private async Task<Response<T>> SendGetOnceAsync<T>(string requestUri, CancellationToken cancellationToken)
     {
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, ResolveRequestUri(requestUri));
+        using var request = new HttpRequestMessage(HttpMethod.Get, ResolveRequestUri(requestUri));
             await AttachBearerAsync(request, cancellationToken).ConfigureAwait(false);
             using var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.Unauthorized)
@@ -101,12 +102,20 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
 
             if (!response.IsSuccessStatusCode)
                 return await ToErrorResponseAsync<T>(response, cancellationToken).ConfigureAwait(false);
-            var data = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken).ConfigureAwait(false);
-            return Response<T>.Success(data!);
+        var data = await ReadSuccessBodyAsync<T>(response, cancellationToken).ConfigureAwait(false);
+        return Response<T>.Success(data!);
         }
-        catch (ApiException ex)
+        catch (HttpRequestException)
         {
-            return Response<T>.Failure(ex.Message, ex.StatusCode);
+            return NetworkFailure<T>();
+        }
+        catch (JsonException)
+        {
+            return DeserializeFailure<T>();
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return NetworkFailure<T>();
         }
     }
 
@@ -114,7 +123,7 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
     {
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Post, ResolveRequestUri(requestUri));
+        using var request = new HttpRequestMessage(HttpMethod.Post, ResolveRequestUri(requestUri));
             if (body != null)
                 request.Content = JsonContent.Create(body, mediaType: null, options: JsonOptions);
             await AttachBearerAsync(request, cancellationToken).ConfigureAwait(false);
@@ -129,22 +138,26 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
                 using var response2 = await HttpClient.SendAsync(retry, cancellationToken).ConfigureAwait(false);
                 if (!response2.IsSuccessStatusCode)
                     return await ToErrorResponseAsync<T>(response2, cancellationToken).ConfigureAwait(false);
-                var data2 = response2.StatusCode == HttpStatusCode.NoContent
-                    ? default
-                    : await response2.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken).ConfigureAwait(false);
+                var data2 = await ReadSuccessBodyAsync<T>(response2, cancellationToken).ConfigureAwait(false);
                 return Response<T>.Success(data2!);
             }
 
-            if (!response.IsSuccessStatusCode)
-                return await ToErrorResponseAsync<T>(response, cancellationToken).ConfigureAwait(false);
-            var data = response.StatusCode == HttpStatusCode.NoContent
-                ? default
-                : await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken).ConfigureAwait(false);
-            return Response<T>.Success(data!);
+        if (!response.IsSuccessStatusCode)
+            return await ToErrorResponseAsync<T>(response, cancellationToken).ConfigureAwait(false);
+        var data = await ReadSuccessBodyAsync<T>(response, cancellationToken).ConfigureAwait(false);
+        return Response<T>.Success(data!);
         }
-        catch (ApiException ex)
+        catch (HttpRequestException)
         {
-            return Response<T>.Failure(ex.Message, ex.StatusCode);
+            return NetworkFailure<T>();
+        }
+        catch (JsonException)
+        {
+            return DeserializeFailure<T>();
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return NetworkFailure<T>();
         }
     }
 
@@ -152,7 +165,7 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
     {
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Put, ResolveRequestUri(requestUri));
+        using var request = new HttpRequestMessage(HttpMethod.Put, ResolveRequestUri(requestUri));
             if (body != null)
                 request.Content = JsonContent.Create(body, mediaType: null, options: JsonOptions);
             await AttachBearerAsync(request, cancellationToken).ConfigureAwait(false);
@@ -178,11 +191,19 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
             var data = response.StatusCode == HttpStatusCode.NoContent
                 ? default
                 : await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken).ConfigureAwait(false);
-            return Response<T>.Success(data!);
+        return Response<T>.Success(data!);
         }
-        catch (ApiException ex)
+        catch (HttpRequestException)
         {
-            return Response<T>.Failure(ex.Message, ex.StatusCode);
+            return NetworkFailure<T>();
+        }
+        catch (JsonException)
+        {
+            return DeserializeFailure<T>();
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return NetworkFailure<T>();
         }
     }
 
@@ -190,16 +211,24 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
     {
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Delete, ResolveRequestUri(requestUri));
+        using var request = new HttpRequestMessage(HttpMethod.Delete, ResolveRequestUri(requestUri));
             await AttachBearerAsync(request, cancellationToken).ConfigureAwait(false);
             using var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
                 return await ToErrorResponseAsync<bool>(response, cancellationToken).ConfigureAwait(false);
-            return Response<bool>.Success(true);
+        return Response<bool>.Success(true);
         }
-        catch (ApiException ex)
+        catch (HttpRequestException)
         {
-            return Response<bool>.Failure(ex.Message, ex.StatusCode);
+            return NetworkFailure<bool>();
+        }
+        catch (JsonException)
+        {
+            return DeserializeFailure<bool>();
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return NetworkFailure<bool>();
         }
     }
 
@@ -217,6 +246,8 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
                     code = codeEl.GetString();
                 if (doc.RootElement.TryGetProperty("message", out var msgEl))
                     message = msgEl.GetString() ?? body;
+                else if (doc.RootElement.TryGetProperty("title", out var titleEl))
+                    message = titleEl.GetString() ?? body;
                 else
                     message = body;
             }
@@ -228,6 +259,19 @@ public abstract class BaseHttpService(IClient client, HttpClient httpClient, IAc
         else
             message = string.IsNullOrEmpty(body) ? $"API error: {response.StatusCode}" : body;
 
+        if (response.StatusCode == HttpStatusCode.NotFound && message.StartsWith('{'))
+            message = "Game not found or no longer in progress.";
+
         return Response<T>.Failure(message, (int)response.StatusCode, code);
+    }
+
+    private static async Task<T?> ReadSuccessBodyAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        if (response.StatusCode == HttpStatusCode.NoContent)
+            return default;
+        var text = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(text))
+            return default;
+        return JsonSerializer.Deserialize<T>(text, JsonOptions);
     }
 }

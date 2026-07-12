@@ -1,3 +1,4 @@
+using Bobeta.Client.Models.Api;
 using Bobeta.Mobile.Services;
 using Bobeta.Mobile.ViewModels.Games;
 
@@ -21,10 +22,13 @@ public partial class CreateGamePage : ContentPage
         _vm.StateChanged += OnVmChanged;
 
         var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
-        HeaderLabel.Text = i18n.T("select_bet_amount");
+        HeaderLabel.Text = i18n.T("create_game_session");
+        GameTypeLabel.Text = i18n.T("select_game_type");
+        MakopaBtn.Text = "Makopa";
+        KopoBtn.Text = "Kopo";
         DescLabel.Text = i18n.T("choose_bet_desc");
         BetLabel.Text = i18n.T("your_bet");
-        CreateBtn.Text = i18n.T("create_game_session");
+        CreateBtn.Text = i18n.T("create_game");
         SyncUi();
     }
 
@@ -44,7 +48,15 @@ public partial class CreateGamePage : ContentPage
         ErrorLabel.IsVisible = !string.IsNullOrEmpty(_vm.ErrorMessage);
         Busy.IsRunning = _vm.IsLoading;
         CreateBtn.IsEnabled = _vm.CanSubmit && !_vm.IsLoading;
+        var sel = _vm.SelectedVariant == GameVariant.Makopa;
+        MakopaBtn.BackgroundColor = sel ? Color.FromArgb("#eab308") : Color.FromArgb("#2a3142");
+        MakopaBtn.TextColor = sel ? Color.FromArgb("#12151f") : Color.FromArgb("#e2e8f0");
+        KopoBtn.BackgroundColor = !sel ? Color.FromArgb("#eab308") : Color.FromArgb("#2a3142");
+        KopoBtn.TextColor = !sel ? Color.FromArgb("#12151f") : Color.FromArgb("#e2e8f0");
     }
+
+    private void OnMakopaVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Makopa);
+    private void OnKopoVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Kopo);
 
     private void OnPreset(object? sender, EventArgs e)
     {

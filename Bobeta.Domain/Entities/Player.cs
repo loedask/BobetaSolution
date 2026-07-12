@@ -14,6 +14,9 @@ public class Player
     /// <summary>Mobile Money phone number used for registration and login.</summary>
     public string PhoneNumber { get; set; } = string.Empty;
 
+    /// <summary>ISO 3166-1 alpha-2 country of operation (derived from phone prefix).</summary>
+    public string? CountryCode { get; set; }
+
     /// <summary>Display name chosen by the player.</summary>
     public string PlayerName { get; set; } = string.Empty;
 

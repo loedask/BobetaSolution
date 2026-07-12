@@ -145,6 +145,29 @@ public class GamePlayController(
         await _hubContext.Clients.User(playerId.ToString()).SendAsync("GameState", state, cancellationToken);
     }
 
+    /// <summary>Applies a Kopo move (path of squares: start, then each landing after a jump or quiet destination).</summary>
+    [HttpPost("kopo/move")]
+    public async Task<ActionResult<GameStateDto>> KopoMove([FromBody] KopoMoveRequest request, CancellationToken cancellationToken)
+    {
+        var path = request.Path.Select(p => (p.Row, p.Col)).ToList();
+        var move = await _gameEngineService.ApplyKopoMoveAsync(PlayerId, request.SessionId, path, cancellationToken);
+        if (!move.IsSuccess)
+            return BadRequest(new { code = move.ErrorCode, message = DescribeKopoMoveError(move.ErrorCode) });
+
+        var state = move.State!;
+        await _gameInactivityCoordinator.RecordGameplayActivityAsync(request.SessionId, cancellationToken);
+        if (state.GameOver)
+        {
+            _gameInactivityCoordinator.UnregisterSession(request.SessionId);
+            var groupName = GameHub.GroupPrefix + request.SessionId;
+            await _hubContext.Clients.Group(groupName).SendAsync("GameResult", state.WinnerPlayerId);
+        }
+
+        var sessionRow = await _sessionRepository.GetByIdAsync(request.SessionId, cancellationToken);
+        await PushGameStateToParticipantsAsync(sessionRow, request.SessionId, state, cancellationToken);
+        return Ok(state);
+    }
+
     /// <summary>Gets the current game state for the authenticated player (hand, last card, whose turn, game over, winner).</summary>
     [HttpGet("state")]
     public async Task<ActionResult<GameStateDto>> GetGameState([FromQuery] Guid sessionId, CancellationToken cancellationToken)
@@ -177,6 +200,16 @@ public class GamePlayController(
         GameMoveErrorCodes.MustTake => "You cannot play a card — use Take when you have no card in the led suit.",
         GameMoveErrorCodes.CardNotInHand => "That card is not in your hand.",
         GameMoveErrorCodes.InvalidTrick => "No valid trick to respond to.",
+        _ => "Invalid move or game state."
+    };
+
+    private static string DescribeKopoMoveError(string? code) => code switch
+    {
+        GameMoveErrorCodes.NotYourTurn => "It is not your turn.",
+        GameMoveErrorCodes.MustCapture => "You must capture when a capture is available.",
+        GameMoveErrorCodes.MustMaxCapture => "You must choose a capture that takes the maximum number of pieces.",
+        GameMoveErrorCodes.MustContinueChain => "You must continue capturing with the same piece.",
+        GameMoveErrorCodes.InvalidMove => "That move is not legal.",
         _ => "Invalid move or game state."
     };
 }

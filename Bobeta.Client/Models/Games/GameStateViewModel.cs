@@ -1,9 +1,12 @@
+using Bobeta.Client.Models.Api;
+
 namespace Bobeta.Client.Models.Games;
 
-/// <summary>Current game state view model. Placeholder for API response.</summary>
+/// <summary>Current game state view model.</summary>
 public class GameStateViewModel
 {
     public Guid SessionId { get; set; }
+    public GameVariant Variant { get; set; }
     /// <summary>Seat hand from API/SignalR. List for reliable System.Text.Json deserialization (incl. WASM/AOT).</summary>
     public List<string> MyCards { get; set; } = new();
     public string? LastPlayedCard { get; set; }
@@ -26,4 +29,6 @@ public class GameStateViewModel
 
     /// <summary>From server: we are responding to opponent&apos;s lead and must follow suit (or Take if void).</summary>
     public bool MustFollowLedSuit { get; set; }
+
+    public KopoStateDto? Kopo { get; set; }
 }

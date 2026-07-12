@@ -1,0 +1,49 @@
+@page "/license-partners/{PartnerId:guid}/revenue"
+@attribute [Authorize(Roles = "PlatformOwner")]
+@inject IPartnerRevenueReportService RevenueReports
+@inject ILicensePartnerService LicensePartnerService
+@rendermode InteractiveServer
+
+<PageTitle>Partner revenue - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <a class="portal-back-link" href="@($"/license-partners/{PartnerId}")">&larr; Back to partner</a>
+        <h1>@(_partnerName ?? "Revenue report")</h1>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading...</p>
+}
+else
+{
+    <PartnerRevenueReportView PartnerId="PartnerId" Report="_report" OnFilterChanged="OnFilterChangedAsync" />
+}
+
+@code {
+    [Parameter]
+    public Guid PartnerId { get; set; }
+
+    private string? _partnerName;
+    private PartnerRevenueReportDto? _report;
+    private bool _loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        var partners = await LicensePartnerService.GetAllAsync();
+        _partnerName = partners.FirstOrDefault(p => p.Id == PartnerId)?.LegalName;
+        await LoadReportAsync(null, null, null, null);
+        _loading = false;
+    }
+
+    private async Task OnFilterChangedAsync((DateTime? From, DateTime? To, string? Country, RevenueAllocationSourceType? Source) filter) =>
+        await LoadReportAsync(filter.From, filter.To, filter.Country, filter.Source);
+
+    private async Task LoadReportAsync(DateTime? from, DateTime? to, string? country, RevenueAllocationSourceType? source)
+    {
+        _report = await RevenueReports.GetReportAsync(PartnerId, from, to, country, source);
+    }
+}

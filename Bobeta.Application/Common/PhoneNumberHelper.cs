@@ -31,4 +31,13 @@ public static class PhoneNumberHelper
             return countryCode + p;
         return p;
     }
+
+    /// <summary>Formats a normalized number (e.g. 24267123456) as E.164 (+24267123456).</summary>
+    public static string ToE164(string normalizedPhone)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedPhone))
+            return string.Empty;
+        var digits = normalizedPhone.Trim().TrimStart('+');
+        return "+" + digits;
+    }
 }

@@ -28,4 +28,43 @@ public class PlayerRepository(BobetaDbContext db) : IPlayerRepository
         _db.Players.Update(player);
         await _db.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<(IReadOnlyList<Player> Items, int TotalCount)> GetPagedAsync(
+        int skip,
+        int take,
+        string? search = null,
+        IReadOnlyList<string>? countryCodes = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _db.Players.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(p =>
+                p.PhoneNumber.Contains(term) ||
+                p.PlayerName.Contains(term));
+        }
+
+        if (countryCodes is { Count: > 0 })
+        {
+            var normalized = countryCodes
+              .Where(c => !string.IsNullOrWhiteSpace(c))
+              .Select(c => c.Trim().ToUpperInvariant())
+              .Distinct()
+              .ToList();
+
+            query = query.Where(p =>
+                p.CountryCode != null && normalized.Contains(p.CountryCode));
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        return (items, total);
+    }
 }

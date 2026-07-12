@@ -4,19 +4,18 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bobeta.Web</title>
+    <title>Bobeta — Play Smart. Win Real Money.</title>
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
     <base href="/" />
-    <link rel="preload" id="webassembly" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="stylesheet" href="css/tailwind.css" />
+    <link rel="stylesheet" href="_content/Bobeta.Landing/css/landing.css" />
     <!-- If you add any scoped CSS files, uncomment the following to load them
     <link href="Bobeta.Web.styles.css" rel="stylesheet" /> -->
     <!-- Root-absolute path: works for any client route when <base href="/" /> is set. -->
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
-    <script type="importmap"></script>
 </head>
 
 <body>
@@ -33,7 +32,7 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
-    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+    <script src="_framework/blazor.webassembly.js"></script>
     <script>
         if (!location.hostname.includes('localhost') && !location.hostname.startsWith('127.'))
             navigator.serviceWorker.register('service-worker.js?v=5', { updateViaCache: 'none' });

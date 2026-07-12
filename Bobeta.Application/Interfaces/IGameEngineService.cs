@@ -15,6 +15,9 @@ public interface IGameEngineService
     /// <summary>Responder has no led suit: lead card is added to responder&apos;s hand; leader opens the next trick.</summary>
     Task<GameMoveResult> VoidFollowDrawAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default);
 
+    /// <summary>Applies a Kopo move path (start + landing squares).</summary>
+    Task<GameMoveResult> ApplyKopoMoveAsync(Guid playerId, Guid sessionId, IReadOnlyList<(int Row, int Col)> path, CancellationToken cancellationToken = default);
+
     /// <summary>Returns the current game state for the requesting player (their hand, last card, whose turn, game over, winner).</summary>
     Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default);
 }

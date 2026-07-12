@@ -1,3 +1,5 @@
+using Bobeta.Application.Games.Kopo;
+using Bobeta.Application.Games.Makopa;
 using Bobeta.Application.Interfaces;
 using Bobeta.Application.Services;
 using Bobeta.Application.Validators;
@@ -14,9 +16,15 @@ public static class ApplicationServiceCollectionExtensions
     {
         services.AddScoped<IWalletService, WalletService>();
         services.AddScoped<IGameSessionService, GameSessionService>();
+        services.AddScoped<MakopaGameEngine>();
+        services.AddScoped<KopoGameEngine>();
         services.AddScoped<IGameEngineService, GameEngineService>();
         services.AddScoped<IGameHistoryService, GameHistoryService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IGameRevenueService, GameRevenueService>();
+        services.AddScoped<IRevenueShareResolver, RevenueShareResolver>();
+        services.AddScoped<IPartnerRevenueAllocationService, PartnerRevenueAllocationService>();
+        services.AddScoped<IPaymentRevenueService, PaymentRevenueService>();
         services.AddValidatorsFromAssemblyContaining<CreateGameRequestValidator>();
         return services;
     }

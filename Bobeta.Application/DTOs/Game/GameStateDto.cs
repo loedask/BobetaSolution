@@ -1,3 +1,5 @@
+using Bobeta.Domain.Enums;
+
 namespace Bobeta.Application.DTOs.Game;
 
 /// <summary>Current in-game state for a player: hand, last played card, whose turn, game over, winner.</summary>
@@ -21,4 +23,6 @@ public record GameStateDto(
     Guid? LastTrickWinnerPlayerId = null,
     int MyRoundWins = 0,
     int OpponentRoundWins = 0,
-    bool MustFollowLedSuit = false);
+    bool MustFollowLedSuit = false,
+    GameVariant Variant = GameVariant.Makopa,
+    KopoStateDto? Kopo = null);

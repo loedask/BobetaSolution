@@ -1,4 +1,5 @@
 using Bobeta.Client.Contracts;
+using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
 
 namespace Bobeta.Client.Contracts.Interfaces;
@@ -10,6 +11,6 @@ public interface IGameService
     Task<Response<GameSessionViewModel?>> JoinGameAsync(JoinGameRequest request, CancellationToken cancellationToken = default);
     Task<Response<bool>> ProposeBetAsync(Guid gameId, double amount, CancellationToken cancellationToken = default);
     Task<Response<bool>> AcceptBetChangeAsync(Guid gameId, CancellationToken cancellationToken = default);
-    Task<Response<IReadOnlyList<GameSessionViewModel>>> GetOpenGamesAsync(CancellationToken cancellationToken = default);
+    Task<Response<IReadOnlyList<GameSessionViewModel>>> GetOpenGamesAsync(GameVariant? variant = null, CancellationToken cancellationToken = default);
     Task<Response<GameStateViewModel?>> GetGameStateAsync(Guid sessionId, CancellationToken cancellationToken = default);
 }

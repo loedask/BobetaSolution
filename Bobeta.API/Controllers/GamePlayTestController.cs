@@ -1,4 +1,4 @@
-using Bobeta.Application.Common;
+using Bobeta.Application.Games.Makopa;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Enums;
 using Bobeta.Domain.ValueObjects;

@@ -2,6 +2,8 @@
 
 This guide walks you through running the Bobeta platform and Makopa game locally.
 
+For authoritative game rules (Makopa, Kopo, platform/session), see **[GAME_RULES.md](./GAME_RULES.md)**.
+
 ## 1. Install prerequisites
 
 - **.NET 8+** (or .NET 10 if the solution targets it) — [Download](https://dotnet.microsoft.com/download)
@@ -95,7 +97,7 @@ Use your PC’s **LAN IP**: `http://192.168.x.x:5163`. Add that host under **`do
 - **Windows MAUI** on the same PC as the API: **`https://localhost:7029`** or **`http://localhost:5163`** in Development (no `adb reverse`).
 - **Release** builds use Production JSON and stay on **HTTPS** to Azure (no cleartext to the host).
 
-PostgreSQL must be running for a local API; migrations run on startup only when **`ASPNETCORE_ENVIRONMENT`** is **Development** or **Staging** — otherwise a missing database can surface as **500** on send-otp.
+PostgreSQL must be running for a local API. Pending EF Core migrations are applied automatically on API startup in every environment (including Production). Demo account seeding still runs only when **`ASPNETCORE_ENVIRONMENT`** is **Development** or **Staging**.
 
 ## 5. Open the browser
 
@@ -105,22 +107,22 @@ Navigate to:
 
 ## 6. Demo test accounts (Development / Staging)
 
-These accounts are for **local or non-production** environments only. Demo seeding and static OTP are **disabled in Production** (`DemoEnvironmentHelper`).
+These accounts are for **local or non-production** environments by default. Demo **seeding** still runs only in Development/Staging, but **static OTP** can be enabled in Production via `DemoAuth:EnableStaticOtp`.
 
 | Item | Value |
 |------|--------|
 | **Demo phone 1** | `+242700000001` (in the app: country **+242**, national **`700000001`**) |
 | **Demo phone 2** | `+242700000002` (national **`700000002`**) |
-| **Static OTP** (when enabled) | `123456` — see **`DemoAuth`** in `Bobeta.API/appsettings.Development.json` and `appsettings.Staging.json` |
+| **Static OTP** (when enabled) | `123456` — see **`DemoAuth`** in appsettings or Azure App Service settings |
 | **Wallet** | Each seeded player gets **100,000** balance (see `DemoAccountsSeeder`) |
 
 **How it works**
 
-1. On startup, the API runs migrations and **`DemoAccountsSeeder`** (Development / Staging only) and creates the two players if missing.
-2. **`OtpService`** accepts the configured **`DemoAuth:StaticOtp`** for numbers listed in **`DemoAuth:PhoneNumbers`** only when `EnableStaticOtp` is true and the host is Development or Staging.
+1. On startup, the API applies pending migrations in all environments. **`DemoAccountsSeeder`** runs only in Development / Staging and creates the two players if missing.
+2. **`OtpService`** accepts **`DemoAuth:StaticOtp`** for numbers in **`DemoAuth:PhoneNumbers`** when `EnableStaticOtp` is true — including Production when that flag is set in Azure.
 3. Source of truth for phone constants: `Bobeta.Persistence/Seeding/DemoAccountsSeeder.cs`.
 
-For any **new** number (not seeded), you still use a real SMS OTP unless you add that number to `DemoAuth:PhoneNumbers` (non-production only).
+For any other number, you still need a real SMS OTP unless you add it to `DemoAuth:PhoneNumbers` and keep `EnableStaticOtp` enabled.
 
 ## 7. Test flow
 
@@ -213,23 +215,113 @@ After configuration, the API will accept deposit and withdrawal requests via `/a
 
 ---
 
-## 10. SMS Gateway Setup (SendSMSGate)
+## 10. SMS providers (SMSPortal, Twilio, SendSMSGate)
 
-To send OTP and notification SMS (e.g. for phone verification) via SendSMSGate:
+Bobeta supports multiple SMS gateways with a **default provider** and optional **fallbacks**. If the default is down or misconfigured, the API tries the next provider in order (when `Sms:EnableFallback` is true).
 
-### 1. Create account at SendSMSGate
+### Provider routing (`Sms`)
 
-1. Go to [https://sendsmsgate.com](https://sendsmsgate.com).
-2. Sign up or sign in and obtain your API credentials (user/login and password).
+```json
+{
+  "Sms": {
+    "DefaultProvider": "SmsPortal",
+    "EnableFallback": true,
+    "FallbackProviders": [ "Twilio", "SendSmsGate" ]
+  }
+}
+```
 
-### 2. Generate API credentials
+| Setting | Description |
+|--------|-------------|
+| **DefaultProvider** | `SmsPortal`, `Twilio`, or `SendSmsGate` |
+| **EnableFallback** | When `true`, tries **FallbackProviders** after the default fails |
+| **FallbackProviders** | Ordered list of provider names |
 
-1. In your SendSMSGate account, note your **user** (login) and **password** for the HTTP API.
-2. Configure a **Sender ID** (alphanumeric, max 11 characters, or digital up to 15) that will appear as the SMS sender.
+**Switch providers without redeploying:** change `Sms__DefaultProvider` in Azure App Service (e.g. `SendSmsGate` while SendSMSGate is back, or `SmsPortal` as primary).
 
-### 3. Configure SmsGatewaySettings
+---
 
-Add or update the `SmsGatewaySettings` section in **Bobeta.API/appsettings.json** (use **User Secrets** or environment variables in production; do not commit real credentials):
+### SMSPortal (recommended default)
+
+Uses the [SMSPortal REST API](https://docs.smsportal.com/docs/rest) ([control panel](https://cp.smsportal.com/)).
+
+1. Sign in at [https://cp.smsportal.com/](https://cp.smsportal.com/).
+2. Create **API keys** (Client ID + secret) and ensure the account/sub-account has **API access** enabled ([API keys docs](https://docs.smsportal.com/docs/api-keys.md)).
+3. Configure **SmsPortalSettings** (User Secrets locally, App Service settings in production):
+
+```json
+{
+  "SmsPortalSettings": {
+    "BaseUrl": "https://rest.smsportal.com",
+    "ApiKey": "your-client-id",
+    "ApiSecret": "your-api-secret",
+    "SenderId": "Bobeta",
+    "CampaignName": "Bobeta",
+    "TestMode": false
+  }
+}
+```
+
+Azure application settings:
+
+| Setting | Example |
+|--------|---------|
+| `SmsPortalSettings__ApiKey` | your Client ID |
+| `SmsPortalSettings__ApiSecret` | your API secret |
+| `Sms__DefaultProvider` | `SmsPortal` |
+
+4. **Delivery reports (DLR):** In SMSPortal, configure a webhook for **SMS Delivery Receipts** pointing to:
+
+`https://your-api-host/api/sms/dlr/smsportal`
+
+Use the default JSON POST template (`customerId`, `id`, `status`, etc.). The API correlates DLRs via `customerId` (the internal SMS record id).
+
+5. **Test mode:** Set `SmsPortalSettings:TestMode` to `true` to validate the integration without sending real SMS ([quick start](https://docs.smsportal.com/docs/quickstart)).
+
+---
+
+### Twilio
+
+Uses [Twilio Programmable SMS](https://www.twilio.com/docs/sms).
+
+1. Sign in at [https://console.twilio.com/](https://console.twilio.com/).
+2. Note your **Account SID** and **Auth Token**.
+3. Buy or verify a **From** phone number in E.164, or create a **Messaging Service** and use its SID (`MG...`).
+4. Configure **TwilioSettings**:
+
+```json
+{
+  "TwilioSettings": {
+    "BaseUrl": "https://api.twilio.com",
+    "AccountSid": "ACxxxxxxxx",
+    "AuthToken": "your-auth-token",
+    "From": "+15017122661",
+    "MessagingServiceSid": "",
+    "StatusCallbackUrl": "https://your-api-host/api/sms/dlr/twilio"
+  }
+}
+```
+
+Use **either** `From` **or** `MessagingServiceSid` (not both required).
+
+Azure application settings:
+
+| Setting | Example |
+|--------|---------|
+| `TwilioSettings__AccountSid` | `ACxxxxxxxx` |
+| `TwilioSettings__AuthToken` | your auth token |
+| `TwilioSettings__From` | `+1...` or leave empty if using Messaging Service |
+| `TwilioSettings__MessagingServiceSid` | `MG...` (optional) |
+| `TwilioSettings__StatusCallbackUrl` | `https://bobeta-api.azurewebsites.net/api/sms/dlr/twilio` |
+| `Sms__DefaultProvider` | `Twilio` (to make Twilio primary) |
+
+5. **Status callbacks:** Set `StatusCallbackUrl` as above, or configure the same URL on your Twilio Messaging Service. Twilio POSTs `MessageSid` and `MessageStatus` to `/api/sms/dlr/twilio`.
+
+---
+
+### SendSMSGate (fallback)
+
+Legacy/alternate provider via [SendSMSGate](https://sendsmsgate.com).
 
 ```json
 {
@@ -243,17 +335,11 @@ Add or update the `SmsGatewaySettings` section in **Bobeta.API/appsettings.json*
 }
 ```
 
-- **BaseUrl**: SendSMSGate API base (default `https://cloud.sendsmsgate.com`).
-- **Username** / **Password**: Your SendSMSGate HTTP API credentials.
-- **SenderId**: Sender name/number shown on SMS (must pass moderation on SendSMSGate).
-- **DeliveryReportUrl**: Public URL where SendSMSGate will send delivery reports (DLR). Must be reachable from the internet (e.g. your deployed API URL + `/api/sms/dlr`). For local testing you can use a tunnel (e.g. ngrok) and set this to your tunnel URL plus `/api/sms/dlr`.
+- **DeliveryReportUrl** / DLR callback: `https://your-api-host/api/sms/dlr` (GET or POST with `smsid` and `status`).
 
-### 4. Configure Delivery Report (DLR) endpoint
+Keep SendSMSGate credentials configured even when SMSPortal is default so fallback works when you need it.
 
-1. In your SendSMSGate account, set the DLR callback URL to the same value as **DeliveryReportUrl** (e.g. `https://your-api-host/api/sms/dlr`).
-2. The API accepts both GET and POST at `/api/sms/dlr` with parameters `smsid` (provider message ID) and `status` (`send`, `deliver`, `not_deliver`, `expired`). When SendSMSGate calls this URL, the platform updates the corresponding SMS record status.
-
-After configuration, OTP messages (e.g. for login) are sent via SendSMSGate, and delivery status is updated when DLR callbacks are received.
+For longer-term provider strategy (e.g. device gateway at scale), see [SMS.md](./SMS.md).
 
 ---
 

@@ -9,6 +9,7 @@ public record GameSessionDto(
     Guid? OpponentPlayerId,
     decimal BetAmount,
     GameStatus Status,
+    GameVariant Variant,
     DateTime CreatedAt,
     DateTime? StartedAt,
     DateTime? FinishedAt);

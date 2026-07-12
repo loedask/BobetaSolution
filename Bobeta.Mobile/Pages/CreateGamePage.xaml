@@ -10,6 +10,11 @@
         <VerticalStackLayout Padding="16" Spacing="16">
             <Label x:Name="HeaderLabel" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
             <Label x:Name="DescLabel" FontSize="14" TextColor="{StaticResource MutedForeground}" />
+            <Label x:Name="GameTypeLabel" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Button x:Name="MakopaBtn" Clicked="OnMakopaVariant" CornerRadius="10" />
+                <Button x:Name="KopoBtn" Grid.Column="1" Clicked="OnKopoVariant" CornerRadius="10" />
+            </Grid>
             <Label x:Name="BetLabel" FontSize="12" TextColor="{StaticResource MutedForeground}" />
             <Entry
                 Text="{Binding BetAmount, Mode=TwoWay}"

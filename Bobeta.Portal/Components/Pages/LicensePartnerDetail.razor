@@ -1,0 +1,235 @@
+@page "/license-partners/{PartnerId:guid}"
+@attribute [Authorize(Roles = "PlatformOwner")]
+@inject ILicensePartnerService LicensePartnerService
+@inject AuthenticationStateProvider AuthState
+@using Bobeta.Application.Common
+@rendermode InteractiveServer
+
+<PageTitle>@(_partner?.LegalName ?? "License partner") - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <a class="portal-back-link" href="/license-partners">&larr; Back to license partners</a>
+        @if (_partner is not null)
+        {
+            <h1>@_partner.LegalName</h1>
+            <p class="portal-muted">@_partner.ContactEmail · Portal: @_partner.PortalEmail</p>
+        }
+    </div>
+    @if (_partner is not null)
+    {
+        <a class="portal-button portal-button-primary" href="@($"/license-partners/{PartnerId}/revenue")">Revenue report</a>
+    }
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading...</p>
+}
+else if (_partner is null)
+{
+    <div class="portal-alert portal-alert-error">License partner not found.</div>
+}
+else
+{
+    <section class="portal-card portal-section">
+        <h2>Licensed countries</h2>
+        @if (_partner.Countries.Count == 0)
+        {
+            <p class="portal-muted">No countries assigned yet.</p>
+        }
+        else
+        {
+            <div class="portal-table-wrap">
+                <table class="portal-table">
+                    <thead>
+                        <tr>
+                            <th>Country</th>
+                            <th>Revenue share</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var country in _partner.Countries)
+                        {
+                            <tr>
+                                <td>@country.CountryName (@country.CountryCode)</td>
+                                <td>@(country.CurrentRevenueSharePercent.HasValue ? $"{country.CurrentRevenueSharePercent:N2}%" : "—")</td>
+                                <td>@(country.IsActive ? "Active" : "Inactive")</td>
+                                <td>
+                                    <button class="portal-button" type="button" @onclick="() => StartEditRate(country)">Update rate</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
+  @if (_editingCountry is not null)
+  {
+    <section class="portal-card portal-section">
+      <h2>Update revenue share — @_editingCountry.CountryName</h2>
+      <p class="portal-muted">New rate applies from the effective date. Previous rates are kept for historical transactions.</p>
+      @if (!string.IsNullOrEmpty(_rateError))
+      {
+        <div class="portal-alert portal-alert-error">@_rateError</div>
+      }
+      <EditForm Model="_rateModel" OnValidSubmit="HandleUpdateRateAsync">
+        <div class="portal-field">
+          <label>Revenue share % (of platform commission)</label>
+          <InputNumber class="portal-input" @bind-Value="_rateModel.RevenueSharePercent" />
+        </div>
+        <div class="portal-field">
+          <label>Effective from (UTC)</label>
+          <InputDate Type="InputDateType.DateTimeLocal" class="portal-input" @bind-Value="_effectiveFromLocal" />
+        </div>
+        <div class="portal-form-actions">
+          <button class="portal-button portal-button-primary" type="submit" disabled="@_rateBusy">Save rate</button>
+          <button class="portal-button" type="button" @onclick="CancelEditRate">Cancel</button>
+        </div>
+      </EditForm>
+    </section>
+  }
+
+    <section class="portal-card portal-section">
+        <h2>Assign country</h2>
+        <p class="portal-muted">One active license partner per country. Revenue share is a percentage of platform commission per game transaction.</p>
+        @if (!string.IsNullOrEmpty(_assignError))
+        {
+            <div class="portal-alert portal-alert-error">@_assignError</div>
+        }
+        @if (!string.IsNullOrEmpty(_assignSuccess))
+        {
+            <div class="portal-alert portal-alert-success">@_assignSuccess</div>
+        }
+        <EditForm Model="_assignModel" OnValidSubmit="HandleAssignCountryAsync">
+            <div class="portal-field">
+                <label>Country</label>
+                <InputSelect class="portal-input" @bind-Value="_assignModel.CountryCode">
+                    <option value="">Select country</option>
+                    @foreach (var country in CountryCatalog.All)
+                    {
+                        <option value="@country.Code">@country.Name</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="portal-field">
+                <label>Revenue share % (of platform commission)</label>
+                <InputNumber class="portal-input" @bind-Value="_assignModel.RevenueSharePercent" />
+            </div>
+            <button class="portal-button portal-button-primary" type="submit" disabled="@_assignBusy">Assign country</button>
+        </EditForm>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid PartnerId { get; set; }
+
+    private LicensePartnerListItemDto? _partner;
+    private readonly AssignLicensePartnerCountryRequest _assignModel = new();
+    private readonly UpdateLicensePartnerRevenueShareRequest _rateModel = new();
+    private LicensePartnerCountryDto? _editingCountry;
+    private DateTime _effectiveFromLocal = DateTime.Now;
+    private bool _loading = true;
+    private bool _assignBusy;
+    private bool _rateBusy;
+    private string? _assignError;
+    private string? _assignSuccess;
+    private string? _rateError;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _assignModel.LicensePartnerId = PartnerId;
+        await LoadPartnerAsync();
+    }
+
+    private async Task LoadPartnerAsync()
+    {
+        _loading = true;
+        try
+        {
+            var all = await LicensePartnerService.GetAllAsync();
+            _partner = all.FirstOrDefault(p => p.Id == PartnerId);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task HandleAssignCountryAsync()
+    {
+        _assignBusy = true;
+        _assignError = null;
+        _assignSuccess = null;
+        try
+        {
+            var auth = await AuthState.GetAuthenticationStateAsync();
+            var userId = auth.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null || !Guid.TryParse(userId, out var createdById))
+            {
+                _assignError = "Could not determine the current user.";
+                return;
+            }
+
+            _assignModel.LicensePartnerId = PartnerId;
+            await LicensePartnerService.AssignCountryAsync(_assignModel, createdById);
+            _assignSuccess = $"Assigned {_assignModel.CountryCode} at {_assignModel.RevenueSharePercent:N2}%.";
+            _assignModel.CountryCode = string.Empty;
+            _assignModel.RevenueSharePercent = 0;
+            await LoadPartnerAsync();
+        }
+        catch (Exception ex)
+        {
+            _assignError = ex.Message;
+        }
+        finally
+        {
+            _assignBusy = false;
+        }
+    }
+
+    private void StartEditRate(LicensePartnerCountryDto country)
+    {
+        _editingCountry = country;
+        _rateModel.AssignmentId = country.AssignmentId;
+        _rateModel.RevenueSharePercent = country.CurrentRevenueSharePercent ?? 0;
+        _effectiveFromLocal = DateTime.Now;
+        _rateError = null;
+    }
+
+    private void CancelEditRate() => _editingCountry = null;
+
+    private async Task HandleUpdateRateAsync()
+    {
+        _rateBusy = true;
+        _rateError = null;
+        try
+        {
+            var auth = await AuthState.GetAuthenticationStateAsync();
+            var userId = auth.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null || !Guid.TryParse(userId, out var createdById))
+            {
+                _rateError = "Could not determine the current user.";
+                return;
+            }
+
+            _rateModel.EffectiveFrom = _effectiveFromLocal.ToUniversalTime();
+            await LicensePartnerService.UpdateRevenueShareAsync(_rateModel, createdById);
+            _editingCountry = null;
+            await LoadPartnerAsync();
+        }
+        catch (Exception ex)
+        {
+            _rateError = ex.Message;
+        }
+        finally
+        {
+            _rateBusy = false;
+        }
+    }
+}

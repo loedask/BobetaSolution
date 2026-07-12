@@ -66,8 +66,15 @@ namespace Bobeta.Persistence.Migrations
                     b.Property<Guid>("GameSessionId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("LicensePartnerId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("LoserPlayerId")
                         .HasColumnType("uuid");
+
+                    b.Property<decimal>("PartnerCommission")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<decimal>("PlatformCommission")
                         .HasPrecision(18, 2)
@@ -127,6 +134,11 @@ namespace Bobeta.Persistence.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Variant")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatorPlayerId");
@@ -134,6 +146,101 @@ namespace Bobeta.Persistence.Migrations
                     b.HasIndex("OpponentPlayerId");
 
                     b.ToTable("GameSessions", (string)null);
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.LicensePartner", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContactEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LegalName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PortalUserId")
+                        .IsUnique();
+
+                    b.ToTable("LicensePartners", (string)null);
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.LicensePartnerCountryAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CountryCode")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("LicensePartnerId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CountryCode", "IsActive");
+
+                    b.HasIndex("LicensePartnerId", "CountryCode")
+                        .IsUnique();
+
+                    b.ToTable("LicensePartnerCountryAssignments", (string)null);
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.LicensePartnerRevenueShareRate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AssignmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByPortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("RevenueSharePercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignmentId", "EffectiveFrom");
+
+                    b.ToTable("LicensePartnerRevenueShareRates", (string)null);
                 });
 
             modelBuilder.Entity("Bobeta.Domain.Entities.OtpCode", b =>
@@ -231,6 +338,10 @@ namespace Bobeta.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("CountryCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -263,6 +374,107 @@ namespace Bobeta.Persistence.Migrations
                     b.ToTable("Players", (string)null);
                 });
 
+            modelBuilder.Entity("Bobeta.Domain.Entities.PortalUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("PortalUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.RevenueAllocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CountryCode")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<decimal>("GrossPlatformRevenue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("LicensePartnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("PartnerAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("PartnerSharePercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<decimal>("PlatformRetainedAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SourceType")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LicensePartnerId");
+
+                    b.HasIndex("SourceType", "SourceId");
+
+                    b.ToTable("RevenueAllocations", (string)null);
+                });
+
             modelBuilder.Entity("Bobeta.Domain.Entities.SmsMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -281,6 +493,10 @@ namespace Bobeta.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Provider")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("ProviderMessageId")
                         .HasMaxLength(100)
@@ -426,6 +642,39 @@ namespace Bobeta.Persistence.Migrations
                     b.Navigation("OpponentPlayer");
                 });
 
+            modelBuilder.Entity("Bobeta.Domain.Entities.LicensePartner", b =>
+                {
+                    b.HasOne("Bobeta.Domain.Entities.PortalUser", "PortalUser")
+                        .WithOne("LicensePartner")
+                        .HasForeignKey("Bobeta.Domain.Entities.LicensePartner", "PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.LicensePartnerCountryAssignment", b =>
+                {
+                    b.HasOne("Bobeta.Domain.Entities.LicensePartner", "LicensePartner")
+                        .WithMany("CountryAssignments")
+                        .HasForeignKey("LicensePartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LicensePartner");
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.LicensePartnerRevenueShareRate", b =>
+                {
+                    b.HasOne("Bobeta.Domain.Entities.LicensePartnerCountryAssignment", "Assignment")
+                        .WithMany("RevenueShareRates")
+                        .HasForeignKey("AssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Assignment");
+                });
+
             modelBuilder.Entity("Bobeta.Domain.Entities.PaymentTransaction", b =>
                 {
                     b.HasOne("Bobeta.Domain.Entities.Player", "Player")
@@ -435,6 +684,27 @@ namespace Bobeta.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.PortalUser", b =>
+                {
+                    b.HasOne("Bobeta.Domain.Entities.PortalUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CreatedBy");
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.RevenueAllocation", b =>
+                {
+                    b.HasOne("Bobeta.Domain.Entities.LicensePartner", "LicensePartner")
+                        .WithMany()
+                        .HasForeignKey("LicensePartnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("LicensePartner");
                 });
 
             modelBuilder.Entity("Bobeta.Domain.Entities.Wallet", b =>
@@ -464,6 +734,21 @@ namespace Bobeta.Persistence.Migrations
                     b.Navigation("GameMoves");
 
                     b.Navigation("GameResult");
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.LicensePartner", b =>
+                {
+                    b.Navigation("CountryAssignments");
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.LicensePartnerCountryAssignment", b =>
+                {
+                    b.Navigation("RevenueShareRates");
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.PortalUser", b =>
+                {
+                    b.Navigation("LicensePartner");
                 });
 #pragma warning restore 612, 618
         }
