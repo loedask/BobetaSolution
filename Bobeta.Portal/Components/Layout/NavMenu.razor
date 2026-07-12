@@ -1,17 +1,20 @@
 <nav class="portal-nav">
     <AuthorizeView>
         <Authorized>
+            <div class="portal-nav-label">Overview</div>
             <NavLink class="portal-nav-link" href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
         </Authorized>
     </AuthorizeView>
     <AuthorizeView Roles="Influencer">
         <Authorized>
+            <div class="portal-nav-label">Influencer</div>
             <NavLink class="portal-nav-link" href="/my-influencer">My influencer</NavLink>
             <NavLink class="portal-nav-link" href="/my-influencer/revenue">Revenue</NavLink>
         </Authorized>
     </AuthorizeView>
     <AuthorizeView Roles="LicensePartner">
         <Authorized>
+            <div class="portal-nav-label">Operations</div>
             <NavLink class="portal-nav-link" href="/users">Players</NavLink>
             <NavLink class="portal-nav-link" href="/my-license">My license</NavLink>
             <NavLink class="portal-nav-link" href="/my-license/revenue">Revenue</NavLink>
@@ -19,6 +22,7 @@
     </AuthorizeView>
     <AuthorizeView Roles="PlatformOwner">
         <Authorized>
+            <div class="portal-nav-label">Platform</div>
             <NavLink class="portal-nav-link" href="/users">Players</NavLink>
             <NavLink class="portal-nav-link" href="/license-partners">License partners</NavLink>
             <NavLink class="portal-nav-link" href="/influencers">Influencers</NavLink>
@@ -28,6 +32,7 @@
     </AuthorizeView>
     <AuthorizeView Roles="Member">
         <Authorized>
+            <div class="portal-nav-label">Operations</div>
             <NavLink class="portal-nav-link" href="/users">Players</NavLink>
         </Authorized>
     </AuthorizeView>

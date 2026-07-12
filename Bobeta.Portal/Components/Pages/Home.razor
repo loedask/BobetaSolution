@@ -38,34 +38,34 @@
 @if (_stats is not null)
 {
     <div class="portal-detail-grid portal-section">
-        <section class="portal-card">
+        <section class="portal-card portal-stat-card">
             <h2>Players</h2>
             <p class="portal-stat">@_stats.Players.TotalPlayers</p>
             <p class="portal-muted">@_stats.Players.NewPlayers new in period · @_stats.Players.ActivePlayers active</p>
         </section>
         @if (_stats.ShowFinancials)
         {
-            <section class="portal-card">
+            <section class="portal-card portal-stat-card">
                 <h2>MoMo deposits</h2>
                 <p class="portal-stat">@FormatAmount(_stats.Payments.DepositVolume)</p>
                 <p class="portal-muted">@_stats.Payments.SuccessfulDeposits successful</p>
             </section>
-            <section class="portal-card">
+            <section class="portal-card portal-stat-card">
                 <h2>MoMo withdrawals</h2>
                 <p class="portal-stat">@FormatAmount(_stats.Payments.WithdrawalVolume)</p>
                 <p class="portal-muted">@_stats.Payments.SuccessfulWithdrawals successful</p>
             </section>
-            <section class="portal-card">
+            <section class="portal-card portal-stat-card">
                 <h2>Games played</h2>
                 <p class="portal-stat">@_stats.Games.GamesPlayed</p>
                 <p class="portal-muted">@FormatAmount(_stats.Games.TotalPot) total pot</p>
             </section>
-            <section class="portal-card">
+            <section class="portal-card portal-stat-card">
                 <h2>Platform revenue</h2>
                 <p class="portal-stat">@FormatAmount(_stats.Revenue.GrossPlatformRevenue)</p>
                 <p class="portal-muted">@FormatAmount(_stats.Revenue.PlatformRetained) retained · @_stats.Revenue.AllocationCount allocations</p>
             </section>
-            <section class="portal-card">
+            <section class="portal-card portal-stat-card">
                 <h2>Partner share paid</h2>
                 <p class="portal-stat">@FormatAmount(_stats.Revenue.PartnerSharePaid)</p>
                 <p class="portal-muted">License partner earnings in period</p>

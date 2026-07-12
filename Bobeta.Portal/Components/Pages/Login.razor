@@ -5,15 +5,23 @@
 <PageTitle>Sign in - Bobeta Portal</PageTitle>
 
 <div class="portal-login-card">
-    <h1>Bobeta Portal</h1>
-    <p class="portal-muted">Sign in with your employee account.</p>
+    <div class="portal-login-brand">
+        <span class="portal-brand-mark">B</span>
+        <div>
+            <div class="portal-brand-title"><span class="be">Bo</span>beta</div>
+            <div class="portal-brand-subtitle">Employee Portal</div>
+        </div>
+    </div>
+
+    <h1>Welcome back</h1>
+    <p class="portal-muted">Sign in with your employee account to manage the platform.</p>
 
     @if (Error == "invalid")
     {
         <div class="portal-alert portal-alert-error">Invalid email or password.</div>
     }
 
-    <form method="post" action="/account/login">
+    <form class="portal-login-form" method="post" action="/account/login">
         <AntiforgeryToken />
         <input type="hidden" name="returnUrl" value="@ReturnUrl" />
         <div class="portal-field">
