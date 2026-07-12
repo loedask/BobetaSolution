@@ -284,14 +284,15 @@
 
 .lp-hero__ring {
   position: absolute;
-  right: 8%;
-  top: 46%;
-  width: min(42vw, 26rem);
-  height: min(42vw, 26rem);
+  right: 12%;
+  top: 48%;
+  width: min(48vw, 28rem);
+  height: min(48vw, 28rem);
   border: 1px solid rgba(242, 140, 40, 0.22);
   border-radius: 50%;
   transform: translateY(-50%);
   animation: lp-ring 10s linear infinite;
+  z-index: 1;
 }
 
 .lp-hero__ring::after {
@@ -302,34 +303,23 @@
   border-radius: 50%;
 }
 
-.lp-hero__art {
-  position: absolute;
-  right: -4%;
-  top: 52%;
-  width: min(70vw, 46rem);
-  transform: translateY(-50%);
-  filter: drop-shadow(0 35px 70px rgba(0, 0, 0, 0.7));
-  animation: lp-float 8.5s ease-in-out infinite;
-  pointer-events: none;
-  user-select: none;
-  z-index: 1;
-}
-
 .lp-hero__suits {
   position: absolute;
-  right: 6%;
-  bottom: 14%;
+  right: 18%;
+  top: 48%;
+  transform: translateY(-50%);
   display: flex;
-  gap: 1.1rem;
-  font-size: 1.35rem;
-  color: rgba(247, 244, 239, 0.18);
+  gap: 1.35rem;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  color: rgba(247, 244, 239, 0.16);
   z-index: 2;
   animation: lp-suits 6s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .lp-hero__suits span:nth-child(2),
 .lp-hero__suits span:nth-child(3) {
-  color: rgba(242, 140, 40, 0.35);
+  color: rgba(242, 140, 40, 0.4);
 }
 
 .lp-hero__veil {
@@ -337,8 +327,8 @@
   inset: 0;
   z-index: 3;
   background:
-    linear-gradient(90deg, rgba(6, 6, 6, 0.97) 0%, rgba(6, 6, 6, 0.88) 28%, rgba(6, 6, 6, 0.25) 58%, transparent 72%),
-    linear-gradient(180deg, transparent 55%, rgba(6, 6, 6, 0.92) 100%);
+    linear-gradient(105deg, rgba(6, 6, 6, 0.92) 0%, rgba(6, 6, 6, 0.55) 42%, rgba(6, 6, 6, 0.2) 68%, transparent 85%),
+    linear-gradient(180deg, transparent 50%, rgba(6, 6, 6, 0.88) 100%);
   pointer-events: none;
 }
 
@@ -461,23 +451,27 @@
     padding-top: 2rem;
   }
 
-  .lp-hero__art {
-    right: 50%;
-    top: 10%;
-    width: min(120vw, 30rem);
-    transform: translate(50%, 0);
-    opacity: 0.34;
-    animation: lp-float-m 8s ease-in-out infinite;
-  }
-
   .lp-hero__veil {
     background:
-      linear-gradient(180deg, transparent 10%, rgba(6, 6, 6, 0.45) 38%, rgba(6, 6, 6, 0.96) 68%),
-      linear-gradient(90deg, transparent, transparent);
+      linear-gradient(180deg, transparent 20%, rgba(6, 6, 6, 0.35) 50%, rgba(6, 6, 6, 0.95) 78%),
+      radial-gradient(ellipse 80% 50% at 50% 20%, rgba(242, 140, 40, 0.12), transparent 55%);
   }
 
-  .lp-hero__ring { opacity: 0.4; right: 50%; transform: translate(50%, -30%); }
-  .lp-hero__suits { display: none; }
+  .lp-hero__ring {
+    opacity: 0.45;
+    right: 50%;
+    top: 28%;
+    transform: translate(50%, 0);
+    animation: lp-ring-m 10s linear infinite;
+  }
+
+  .lp-hero__suits {
+    right: 50%;
+    top: 28%;
+    transform: translate(50%, 0);
+    opacity: 0.55;
+  }
+
   .lp-hero__content { text-align: center; margin-inline: auto; }
   .lp-hero__lede { margin-inline: auto; }
   .lp-hero__cta { justify-content: center; }
@@ -1018,16 +1012,6 @@
 }
 
 /* —— Motion —— */
-@keyframes lp-float {
-  0%, 100% { transform: translateY(-50%) rotate(-1deg); }
-  50% { transform: translateY(calc(-50% - 14px)) rotate(1deg); }
-}
-
-@keyframes lp-float-m {
-  0%, 100% { transform: translate(50%, 0); }
-  50% { transform: translate(50%, -10px); }
-}
-
 @keyframes lp-rise {
   from { opacity: 0; transform: translateY(22px); }
   to { opacity: 1; transform: translateY(0); }
@@ -1046,9 +1030,13 @@
   to { transform: translateY(-50%) rotate(360deg); }
 }
 
+@keyframes lp-ring-m {
+  to { transform: translate(50%, 0) rotate(360deg); }
+}
+
 @keyframes lp-suits {
-  0%, 100% { transform: translateY(0); opacity: 0.7; }
-  50% { transform: translateY(-6px); opacity: 1; }
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
 @keyframes lp-ticker {
@@ -1068,7 +1056,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-hero__art,
   .lp-hero__beam,
   .lp-hero__ring,
   .lp-hero__suits,
