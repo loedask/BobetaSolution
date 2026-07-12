@@ -3,172 +3,133 @@
 @inject NavigationManager Nav
 @inject I18nService I18n
 
-<div class="landing-hero-bg">
-    <header class="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
-        <div class="landing-container flex items-center justify-between gap-4 py-4">
-            <a href="/" class="flex items-center gap-2.5">
-                <div class="flex h-9 w-9 items-center justify-center rounded-xl gold-gradient font-display text-sm font-bold text-primary-foreground shadow-md">B</div>
-                <span class="font-display text-lg font-bold tracking-tight">@I18n.T("app_name")</span>
-            </a>
-            <nav class="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
-                <a href="#games" class="transition-colors hover:text-foreground">@I18n.T("landing_nav_games")</a>
-                <a href="#how-it-works" class="transition-colors hover:text-foreground">@I18n.T("landing_nav_how")</a>
-            </nav>
-            <div class="flex items-center gap-2 sm:gap-3">
-                <button type="button" class="landing-btn landing-btn--ghost hidden !px-3 !py-2 !text-sm !font-medium sm:inline-flex" @onclick="GoToLogin">
-                    @I18n.T("landing_nav_sign_in")
-                </button>
-                <button type="button" class="landing-btn landing-btn--primary !px-4 !py-2.5 !text-sm" @onclick="GoToStart">
+<header class="landing-header">
+    <div class="landing-container landing-header__inner">
+        <a href="/" class="landing-wordmark landing-wordmark--nav" aria-label="BOBETA">
+            <span>BO</span><span class="landing-wordmark__be">BE</span><span>TA</span>
+        </a>
+        <nav class="landing-nav">
+            <a href="#games">@I18n.T("landing_nav_games")</a>
+            <a href="#how-it-works">@I18n.T("landing_nav_how")</a>
+        </nav>
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button type="button" class="landing-btn landing-btn--ghost hidden !px-3 !py-2 !text-sm !font-medium sm:inline-flex" @onclick="GoToLogin">
+                @I18n.T("landing_nav_sign_in")
+            </button>
+            <button type="button" class="landing-btn landing-btn--primary !px-4 !py-2.5 !text-sm" @onclick="GoToStart">
+                @I18n.T("landing_cta_play")
+            </button>
+        </div>
+    </div>
+</header>
+
+<section class="landing-hero">
+    <div class="landing-hero__atmosphere" aria-hidden="true">
+        <div class="landing-hero__orb landing-hero__orb--a"></div>
+        <div class="landing-hero__orb landing-hero__orb--b"></div>
+        <div class="landing-hero__grain"></div>
+        <div class="landing-hero__grid"></div>
+        <img class="landing-hero__shirts" src="_content/Bobeta.Landing/images/bobeta-shirts.png" alt="" width="840" height="560" />
+        <div class="landing-hero__shine"></div>
+    </div>
+
+    <div class="landing-container landing-hero__stage">
+        <div class="landing-hero__copy">
+            <h1 class="landing-wordmark landing-wordmark--hero" aria-label="BOBETA">
+                <span class="landing-wordmark__chunk landing-wordmark__chunk--1">BO</span><span class="landing-wordmark__chunk landing-wordmark__chunk--2 landing-wordmark__be">BE</span><span class="landing-wordmark__chunk landing-wordmark__chunk--3">TA</span>
+            </h1>
+            <p class="landing-slogan landing-slogan--hero">
+                <span>@I18n.T("landing_hero_line1")</span>
+                <span>@I18n.T("landing_hero_line2")</span>
+            </p>
+            <p class="landing-hero__sub">@I18n.T("landing_hero_sub")</p>
+            <div class="landing-cta-row">
+                <button type="button" class="landing-btn landing-btn--primary landing-btn--pulse" @onclick="GoToStart">
                     @I18n.T("landing_cta_play")
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </button>
+                <a href="#how-it-works" class="landing-btn landing-btn--ghost">
+                    @I18n.T("landing_cta_how")
+                </a>
+            </div>
+            <div class="landing-trust-row">
+                <span class="inline-flex items-center gap-1.5">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                    @I18n.T("secure")
+                </span>
+                <span>@I18n.T("fair_randomized")</span>
+                <span>@I18n.T("instant_payouts")</span>
             </div>
         </div>
-    </header>
+    </div>
 
-    <section class="landing-container pb-16 pt-10 md:pb-24 md:pt-16">
-        <div class="landing-hero-grid">
-            <div class="landing-hero-copy">
-                <div class="landing-badge">
-                    <span class="landing-badge-dot"></span>
-                    @I18n.T("secure_momo")
-                </div>
-                <h1 class="landing-hero-title">
-                    @I18n.T("landing_hero_line1")<br />
-                    <span class="gold-text">@I18n.T("landing_hero_line2")</span>
-                </h1>
-                <p class="landing-hero-sub">@I18n.T("landing_hero_sub")</p>
-                <div class="landing-cta-row">
-                    <button type="button" class="landing-btn landing-btn--primary" @onclick="GoToStart">
-                        @I18n.T("landing_cta_play")
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-                    </button>
-                    <a href="#how-it-works" class="landing-btn landing-btn--ghost">
-                        @I18n.T("landing_cta_how")
-                    </a>
-                </div>
-                <div class="landing-trust-row">
-                    <span class="inline-flex items-center gap-1.5">
-                        <svg class="h-3.5 w-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                        @I18n.T("secure")
-                    </span>
-                    <span>@I18n.T("fair_randomized")</span>
-                    <span>@I18n.T("instant_payouts")</span>
-                </div>
-            </div>
+    <a href="#features" class="landing-scroll-cue" aria-label="@I18n.T("landing_cta_how")">
+        <span></span>
+    </a>
+</section>
 
-            <div class="landing-float relative">
-                <div class="landing-phone">
-                    <div class="landing-phone-notch"></div>
-                    <div class="landing-phone-screen">
-                        <div class="mb-3 flex items-center justify-between">
-                            <div>
-                                <p class="text-[0.65rem] uppercase tracking-wide text-muted-foreground">@I18n.T("wallet_balance")</p>
-                                <p class="font-display text-xl font-bold text-primary">12,450 <span class="text-xs font-medium text-muted-foreground">FCFA</span></p>
-                            </div>
-                            <span class="green-gradient rounded-full px-2.5 py-0.5 text-[0.65rem] font-bold text-accent-foreground">@I18n.T("live")</span>
-                        </div>
-
-                        <div class="landing-game-tabs">
-                            <span class="landing-game-tab landing-game-tab--active">Makopa</span>
-                            <span class="landing-game-tab">Kopo</span>
-                        </div>
-
-                        <div class="mb-3 flex justify-center gap-2 py-2">
-                            <div class="landing-mini-card landing-mini-card--red">A♥</div>
-                            <div class="landing-mini-card landing-mini-card--black">K♠</div>
-                            <div class="landing-mini-card landing-mini-card--red">7♦</div>
-                            <div class="landing-mini-card landing-mini-card--black">Q♣</div>
-                        </div>
-
-                        <div class="mb-3 rounded-lg border border-border/80 bg-background/50 p-2">
-                            <p class="mb-1.5 text-[0.65rem] font-semibold text-muted-foreground">Kopo</p>
-                            <div class="landing-kopo-board">
-                                @for (var row = 0; row < 8; row++)
-                                {
-                                    @for (var col = 0; col < 8; col++)
-                                    {
-                                        var idx = row * 8 + col;
-                                        var dark = (row + col) % 2 == 0;
-                                        var hasGold = idx is 9 or 17 or 25 or 33 or 41;
-                                        var hasGreen = idx is 18 or 26 or 34 or 42 or 50;
-                                        <div class="landing-kopo-cell @(dark ? "landing-kopo-cell--dark" : "landing-kopo-cell--light")">
-                                            @if (hasGold)
-                                            {
-                                                <div class="landing-piece landing-piece--gold"></div>
-                                            }
-                                            else if (hasGreen)
-                                            {
-                                                <div class="landing-piece landing-piece--green"></div>
-                                            }
-                                        </div>
-                                    }
-                                }
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-between rounded-lg border border-primary/25 bg-primary/5 px-3 py-2.5">
-                            <div>
-                                <p class="text-[0.65rem] text-muted-foreground">@I18n.T("pot_table")</p>
-                                <p class="font-display text-base font-bold">800 FCFA</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-[0.65rem] font-medium text-accent">@I18n.T("potential_win")</p>
-                                <p class="font-display text-base font-bold gold-text">600 FCFA</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="landing-float-badge">
-                    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                    </div>
-                    <div>
-                        <p class="text-[0.65rem] text-muted-foreground">@I18n.T("instant_payouts")</p>
-                        <p class="text-sm font-semibold">@I18n.T("landing_trust_payout")</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+<div class="landing-marquee" aria-hidden="true">
+    <div class="landing-marquee__track">
+        @for (var i = 0; i < 2; i++)
+        {
+            <span>Makopa</span>
+            <span class="landing-marquee__dot">◆</span>
+            <span>Kopo</span>
+            <span class="landing-marquee__dot">◆</span>
+            <span>MoMo</span>
+            <span class="landing-marquee__dot">◆</span>
+            <span>@I18n.T("instant_payouts")</span>
+            <span class="landing-marquee__dot">◆</span>
+            <span>BOBETA</span>
+            <span class="landing-marquee__dot">◆</span>
+            <span>@I18n.T("landing_trust_payout")</span>
+            <span class="landing-marquee__dot">◆</span>
+        }
+    </div>
 </div>
 
-<section class="landing-section border-t border-border bg-card/30">
+<section id="features" class="landing-section landing-section--muted">
     <div class="landing-container">
         <div class="landing-section-header">
+            <p class="landing-kicker">Bobeta</p>
             <h2>@I18n.T("landing_features_title")</h2>
             <p>@I18n.T("landing_features_sub")</p>
         </div>
-        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <FeatureCard Icon="shield" Title="@I18n.T("landing_feat_secure_title")" Description="@I18n.T("landing_feat_secure_desc")" Accent="gold" />
-            <FeatureCard Icon="scale" Title="@I18n.T("landing_feat_fair_title")" Description="@I18n.T("landing_feat_fair_desc")" Accent="green" />
-            <FeatureCard Icon="bolt" Title="@I18n.T("landing_feat_payout_title")" Description="@I18n.T("landing_feat_payout_desc")" Accent="gold" />
-            <FeatureCard Icon="phone" Title="@I18n.T("landing_feat_mobile_title")" Description="@I18n.T("landing_feat_mobile_desc")" Accent="green" />
+        <div class="landing-feature-grid">
+            <FeatureCard Icon="shield" Title="@I18n.T("landing_feat_secure_title")" Description="@I18n.T("landing_feat_secure_desc")" Index="01" />
+            <FeatureCard Icon="scale" Title="@I18n.T("landing_feat_fair_title")" Description="@I18n.T("landing_feat_fair_desc")" Index="02" />
+            <FeatureCard Icon="bolt" Title="@I18n.T("landing_feat_payout_title")" Description="@I18n.T("landing_feat_payout_desc")" Index="03" />
+            <FeatureCard Icon="phone" Title="@I18n.T("landing_feat_mobile_title")" Description="@I18n.T("landing_feat_mobile_desc")" Index="04" />
         </div>
     </div>
 </section>
 
-<section id="games" class="landing-section">
+<section id="games" class="landing-section landing-section--games">
     <div class="landing-container">
         <div class="landing-section-header">
+            <p class="landing-kicker">@I18n.T("landing_nav_games")</p>
             <h2>@I18n.T("landing_games_title")</h2>
             <p>@I18n.T("landing_games_sub")</p>
         </div>
-        <div class="grid gap-6 md:grid-cols-2">
-            <div class="card-surface rounded-2xl border border-border p-6 transition-all hover:border-primary/40 hover:glow-gold">
-                <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-2xl">♠</div>
-                <h3 class="mb-2 font-display text-xl font-bold">@I18n.T("landing_game_makopa_title")</h3>
-                <p class="mb-5 text-sm leading-relaxed text-muted-foreground">@I18n.T("landing_game_makopa_desc")</p>
-                <div class="flex gap-2">
-                    <div class="landing-mini-card landing-mini-card--red">A♥</div>
-                    <div class="landing-mini-card landing-mini-card--black">K♠</div>
-                    <div class="landing-mini-card landing-mini-card--red">7♦</div>
-                    <div class="landing-mini-card landing-mini-card--black">Q♣</div>
+        <div class="landing-games">
+            <article class="landing-game landing-game--makopa">
+                <div class="landing-game__visual" aria-hidden="true">
+                    <div class="landing-fan">
+                        <div class="landing-mini-card landing-mini-card--red landing-fan__c1">A♥</div>
+                        <div class="landing-mini-card landing-mini-card--black landing-fan__c2">K♠</div>
+                        <div class="landing-mini-card landing-mini-card--red landing-fan__c3">7♦</div>
+                        <div class="landing-mini-card landing-mini-card--black landing-fan__c4">Q♣</div>
+                    </div>
                 </div>
-            </div>
-            <div class="card-surface rounded-2xl border border-border p-6 transition-all hover:border-accent/40 hover:glow-green">
-                <div class="mb-4 overflow-hidden rounded-xl border border-border p-2">
-                    <div class="landing-kopo-board" style="max-height: 9rem;">
+                <div class="landing-game__body">
+                    <p class="landing-game__label">01</p>
+                    <h3>@I18n.T("landing_game_makopa_title")</h3>
+                    <p>@I18n.T("landing_game_makopa_desc")</p>
+                </div>
+            </article>
+            <article class="landing-game landing-game--kopo">
+                <div class="landing-game__visual" aria-hidden="true">
+                    <div class="landing-kopo-board">
                         @for (var row = 0; row < 8; row++)
                         {
                             @for (var col = 0; col < 8; col++)
@@ -191,20 +152,24 @@
                         }
                     </div>
                 </div>
-                <h3 class="mb-2 font-display text-xl font-bold">@I18n.T("landing_game_kopo_title")</h3>
-                <p class="text-sm leading-relaxed text-muted-foreground">@I18n.T("landing_game_kopo_desc")</p>
-            </div>
+                <div class="landing-game__body">
+                    <p class="landing-game__label">02</p>
+                    <h3>@I18n.T("landing_game_kopo_title")</h3>
+                    <p>@I18n.T("landing_game_kopo_desc")</p>
+                </div>
+            </article>
         </div>
     </div>
 </section>
 
-<section id="how-it-works" class="landing-section border-t border-border bg-card/30">
+<section id="how-it-works" class="landing-section landing-section--muted">
     <div class="landing-container">
         <div class="landing-section-header">
+            <p class="landing-kicker">@I18n.T("landing_nav_how")</p>
             <h2>@I18n.T("landing_how_title")</h2>
             <p>@I18n.T("landing_how_sub")</p>
         </div>
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="landing-steps">
             <StepCard Number="1" Title="@I18n.T("landing_step1_title")" Description="@I18n.T("landing_step1_desc")" />
             <StepCard Number="2" Title="@I18n.T("landing_step2_title")" Description="@I18n.T("landing_step2_desc")" />
             <StepCard Number="3" Title="@I18n.T("landing_step3_title")" Description="@I18n.T("landing_step3_desc")" />
@@ -213,34 +178,24 @@
     </div>
 </section>
 
-<section class="border-t border-border px-5 py-10">
-    <div class="landing-container flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-        <div class="flex items-center gap-2">
-            <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <span>@I18n.T("landing_trust_payout")</span>
-        </div>
-        <span class="hidden sm:inline text-border">|</span>
-        <div class="flex items-center gap-2">
-            <svg class="h-4 w-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg>
-            <span>@I18n.T("landing_trust_languages")</span>
-        </div>
-        <span class="hidden sm:inline text-border">|</span>
-        <div class="flex items-center gap-2">
-            <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-            <span>@I18n.T("secure_momo")</span>
-        </div>
+<section class="landing-cta-section">
+    <div class="landing-cta-section__bg" aria-hidden="true">
+        <span class="landing-cta-section__ghost">BOBETA</span>
     </div>
-</section>
-
-<section class="landing-section">
     <div class="landing-container">
-        <div class="mx-auto max-w-3xl rounded-2xl border border-border card-surface glow-gold px-8 py-12 text-center">
-            <h2 class="mb-3 font-display text-3xl font-bold tracking-tight">@I18n.T("landing_cta_bottom_title")</h2>
-            <p class="mb-6 text-muted-foreground">@I18n.T("landing_cta_bottom_sub")</p>
+        <div class="landing-cta-band">
+            <p class="landing-slogan landing-slogan--cta">@I18n.T("landing_hero_line1") @I18n.T("landing_hero_line2")</p>
+            <h2>@I18n.T("landing_cta_bottom_title")</h2>
+            <p>@I18n.T("landing_cta_bottom_sub")</p>
+            <div class="landing-cta-band__meta">
+                <span>@I18n.T("landing_trust_payout")</span>
+                <span>@I18n.T("landing_trust_languages")</span>
+                <span>@I18n.T("secure_momo")</span>
+            </div>
             <div class="mb-6 flex justify-center">
                 <LanguageSelector />
             </div>
-            <button type="button" class="landing-btn landing-btn--primary" @onclick="GoToStart">
+            <button type="button" class="landing-btn landing-btn--primary landing-btn--xl" @onclick="GoToStart">
                 @I18n.T("get_started")
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </button>
@@ -248,16 +203,15 @@
     </div>
 </section>
 
-<footer class="border-t border-border px-5 py-10">
-    <div class="landing-container flex flex-col items-center justify-between gap-6 sm:flex-row">
-        <div class="flex items-center gap-2.5">
-            <div class="flex h-8 w-8 items-center justify-center rounded-lg gold-gradient text-xs font-bold text-primary-foreground">B</div>
-            <div>
-                <p class="font-display font-bold">@I18n.T("app_name")</p>
-                <p class="text-xs text-muted-foreground">@I18n.T("tagline")</p>
-            </div>
+<footer class="landing-footer">
+    <div class="landing-container landing-footer__inner">
+        <div class="landing-footer__brand">
+            <p class="landing-wordmark landing-wordmark--nav">
+                <span>BO</span><span class="landing-wordmark__be">BE</span><span>TA</span>
+            </p>
+            <p class="landing-slogan landing-slogan--footer">@I18n.T("landing_hero_line1") @I18n.T("landing_hero_line2")</p>
         </div>
-        <p class="text-xs text-muted-foreground">© @DateTime.UtcNow.Year Bobeta. @I18n.T("landing_footer_rights")</p>
+        <p class="landing-footer__copy">© @DateTime.UtcNow.Year Bobeta. @I18n.T("landing_footer_rights")</p>
     </div>
 </footer>
 
