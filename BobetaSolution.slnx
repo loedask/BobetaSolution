@@ -28,6 +28,7 @@
     <Project Path="Bobeta.Portal/Bobeta.Portal.csproj" />
   </Folder>
   <Folder Name="/UI/PWA/">
+    <Project Path="Bobeta.Landing/Bobeta.Landing.csproj" />
     <Project Path="Bobeta.Web.Deferred/Bobeta.Web.Deferred.csproj" />
     <Project Path="Bobeta.Web.Host/Bobeta.Web.Host.csproj" />
     <Project Path="Bobeta.Web.Shared/Bobeta.Web.Shared.csproj" />
