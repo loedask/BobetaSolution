@@ -1,0 +1,27 @@
+@inherits LayoutComponentBase
+
+<div class="portal-shell">
+    <aside class="portal-sidebar">
+        <div class="portal-brand">
+            <span class="portal-brand-mark">B</span>
+            <div>
+                <div class="portal-brand-title">Bobeta</div>
+                <div class="portal-brand-subtitle">Employee Portal</div>
+            </div>
+        </div>
+        <NavMenu />
+    </aside>
+    <div class="portal-main">
+        <header class="portal-header">
+            <AuthorizeView>
+                <Authorized>
+                    <span class="portal-user">@context.User.Identity?.Name</span>
+                    <a class="portal-link-button" href="/account/logout">Sign out</a>
+                </Authorized>
+            </AuthorizeView>
+        </header>
+        <main class="portal-content">
+            @Body
+        </main>
+    </div>
+</div>

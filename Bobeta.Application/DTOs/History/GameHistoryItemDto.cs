@@ -8,6 +8,7 @@ public record GameHistoryItemDto(
     Guid GameSessionId,
     decimal BetAmount,
     GameStatus Status,
+    GameVariant Variant,
     Guid? OpponentPlayerId,
     Guid? WinnerPlayerId,
     decimal? WonAmount,

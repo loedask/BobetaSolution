@@ -1,4 +1,5 @@
 using Bobeta.Client.Contracts.Interfaces;
+using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
 using Bobeta.Mobile.Services;
 
@@ -11,6 +12,9 @@ public class CreateGameViewModel(IGameService gameService, AppStateService appSt
     private readonly INavigationService _nav = nav;
 
     private string _betAmount = "1000";
+    private GameVariant _variant = GameVariant.Makopa;
+
+    public GameVariant SelectedVariant => _variant;
 
     public string BetAmount
     {
@@ -32,6 +36,13 @@ public class CreateGameViewModel(IGameService gameService, AppStateService appSt
         RaiseStateChanged();
     }
 
+    public void SetVariant(GameVariant variant)
+    {
+        if (_variant == variant) return;
+        _variant = variant;
+        RaiseStateChanged();
+    }
+
     public async Task CreateAsync()
     {
         if (!CanSubmit) return;
@@ -40,7 +51,7 @@ public class CreateGameViewModel(IGameService gameService, AppStateService appSt
         try
         {
             var amount = decimal.Parse(BetAmount);
-            var res = await _gameService.CreateGameAsync(new CreateGameRequest { BetAmount = amount });
+            var res = await _gameService.CreateGameAsync(new CreateGameRequest { BetAmount = amount, Variant = _variant });
             if (res.IsSuccess && res.Data != null)
             {
                 _appState.SetActiveGameSession(res.Data.Id);

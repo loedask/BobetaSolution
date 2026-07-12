@@ -128,11 +128,20 @@ public class GameHubClient
         {
             try
             {
-                var model = JsonSerializer.Deserialize<InactivityWarningPayload>(payload, JsonProtocolOptions);
-                if (model == null)
+                if (!payload.TryGetProperty("decisionDeadlineUtc", out var deadlineEl))
                     return;
-                if (model.DecisionDeadlineUtc.Kind == DateTimeKind.Unspecified)
-                    model.DecisionDeadlineUtc = DateTime.SpecifyKind(model.DecisionDeadlineUtc, DateTimeKind.Utc);
+                var deadline = deadlineEl.GetDateTime();
+                if (deadline.Kind == DateTimeKind.Unspecified)
+                    deadline = DateTime.SpecifyKind(deadline, DateTimeKind.Utc);
+                else if (deadline.Kind == DateTimeKind.Local)
+                    deadline = deadline.ToUniversalTime();
+
+                var model = new InactivityWarningPayload
+                {
+                    Phase = payload.TryGetProperty("phase", out var phaseEl) ? phaseEl.GetInt32() : 0,
+                    DecisionDeadlineUtc = deadline,
+                    ShowButtons = payload.TryGetProperty("showButtons", out var buttonsEl) && buttonsEl.GetBoolean()
+                };
                 OnInactivityWarning?.Invoke(model);
             }
             catch (Exception ex)

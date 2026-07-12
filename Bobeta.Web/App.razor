@@ -1,9 +1,17 @@
+@using System.Reflection
+@using Bobeta.Landing
+@using Microsoft.AspNetCore.Components.WebAssembly.Services
+@inject LazyAssemblyLoader LazyAssemblyLoader
+
 <ErrorBoundary>
     <ChildContent>
         <Bootstrap>
-            <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+            <Router AppAssembly="@typeof(App).Assembly"
+                    AdditionalAssemblies="@_additionalAssemblies"
+                    OnNavigateAsync="OnNavigateAsync"
+                    NotFoundPage="typeof(Pages.NotFound)">
                 <Found Context="routeData">
-                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(Bobeta.Web.Shared.Layout.MainLayout)" />
                 </Found>
             </Router>
         </Bootstrap>
@@ -18,3 +26,21 @@
         </div>
     </ErrorContent>
 </ErrorBoundary>
+
+@code {
+    private readonly List<Assembly> _additionalAssemblies = new()
+    {
+        typeof(LandingAssemblyMarker).Assembly
+    };
+
+    private async Task OnNavigateAsync(NavigationContext context)
+    {
+        if (!LazyRouteHelper.IsDeferredRoute(context.Path))
+            return;
+        if (_additionalAssemblies.Any(a => string.Equals(a.GetName()?.Name, "Bobeta.Web.Deferred", StringComparison.Ordinal)))
+            return;
+
+        var loaded = await LazyAssemblyLoader.LoadAssembliesAsync(new[] { LazyRouteHelper.DeferredAssemblyFileName });
+        _additionalAssemblies.AddRange(loaded);
+    }
+}

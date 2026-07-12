@@ -1,0 +1,48 @@
+@page "/my-license/revenue"
+@attribute [Authorize(Roles = "LicensePartner")]
+@inject ILicensePartnerService LicensePartnerService
+@inject IPartnerRevenueReportService RevenueReports
+@inject PortalUserContext PortalUser
+@rendermode InteractiveServer
+
+<PageTitle>Revenue report - Bobeta Portal</PageTitle>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading...</p>
+}
+else if (_partnerId is null)
+{
+    <div class="portal-alert portal-alert-error">No license partner profile linked to your account.</div>
+}
+else
+{
+    <PartnerRevenueReportView PartnerId="_partnerId.Value" Report="_report" OnFilterChanged="OnFilterChangedAsync" />
+}
+
+@code {
+    private Guid? _partnerId;
+    private PartnerRevenueReportDto? _report;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (PortalUser.UserId is { } userId)
+        {
+            var partner = await LicensePartnerService.GetByPortalUserIdAsync(userId);
+            _partnerId = partner?.Id;
+            if (_partnerId.HasValue)
+                await LoadReportAsync(null, null, null, null);
+        }
+        _loading = false;
+    }
+
+    private async Task OnFilterChangedAsync((DateTime? From, DateTime? To, string? Country, RevenueAllocationSourceType? Source) filter) =>
+        await LoadReportAsync(filter.From, filter.To, filter.Country, filter.Source);
+
+    private async Task LoadReportAsync(DateTime? from, DateTime? to, string? country, RevenueAllocationSourceType? source)
+    {
+        if (_partnerId is null) return;
+        _report = await RevenueReports.GetReportAsync(_partnerId.Value, from, to, country, source);
+    }
+}

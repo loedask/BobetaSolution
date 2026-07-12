@@ -1,8 +1,9 @@
 using System.IO.Compression;
 using Bobeta.API.App.Extensions;
 using Bobeta.API.App.Filters;
+using Bobeta.API.App.HostedServices;
+using Bobeta.API.App.Json;
 using Bobeta.API.Hubs;
-using Bobeta.Application.Common;
 using Microsoft.AspNetCore.ResponseCompression;
 
 // Build the web application and configure services.
@@ -10,13 +11,15 @@ var builder = WebApplication.CreateBuilder(args);
 var configuredCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
 
 // Controllers with global validation filter (FluentValidation on request DTOs).
-builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>());
+builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>())
+    .AddJsonOptions(options => ApiJsonSerializerOptions.Configure(options.JsonSerializerOptions));
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddBobetaSwagger();
 
 // Bobeta: persistence, application, identity, infrastructure, JWT, SignalR.
-builder.Services.AddBobetaServices(builder.Configuration);
+builder.Services.AddBobetaServices(builder.Configuration, builder.Environment);
+builder.Services.AddHostedService<DatabaseMigrationHostedService>();
 
 builder.Services.AddResponseCompression(options =>
 {
@@ -65,8 +68,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<GameHub>("/hubs/game"); // SignalR game hub for real-time gameplay.
-
-if (DemoEnvironmentHelper.AllowsDemoAuthFeatures(app.Environment))
-    await app.ApplyMigrationsAsync();
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" })).AllowAnonymous();
 
 app.Run();
+
+public partial class Program;

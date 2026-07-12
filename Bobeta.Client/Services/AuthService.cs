@@ -3,27 +3,24 @@ using Bobeta.Client.Contracts;
 using Bobeta.Client.Models.Auth;
 using Bobeta.Client.Models.Players;
 using Bobeta.Client.Services.Base;
-using BaseApiException = Bobeta.Client.Services.Base.ApiException;
 
 namespace Bobeta.Client.Services;
 
-/// <summary>Client service for auth (send OTP, verify, register) using the NSwag-generated client.</summary>
-public class AuthService(IClient client, HttpClient httpClient, IAccessTokenProvider? accessTokenProvider = null)
-    : BaseHttpService(client, httpClient, accessTokenProvider)
+/// <summary>Auth API: OTP, verify, register.</summary>
+public class AuthService(HttpClient httpClient, IAccessTokenProvider? accessTokenProvider = null)
+    : BaseHttpService(httpClient, accessTokenProvider)
 {
     public async Task<Response<bool>> SendOtpAsync(string phoneNumber, CancellationToken cancellationToken = default)
     {
         try
         {
-            await Client.SendOtpAsync(new SendOtpRequest { PhoneNumber = phoneNumber }, cancellationToken).ConfigureAwait(false);
-            return Response<bool>.Success(true);
-        }
-        catch (BaseApiException ex)
-        {
-            var detail = !string.IsNullOrWhiteSpace(ex.Response)
-                ? ex.Response
-                : ex.Message;
-            return Response<bool>.Failure(detail.Trim(), ex.StatusCode);
+            var res = await PostAsync<object>(
+                "api/Auth/send-otp",
+                new SendOtpApiRequest { PhoneNumber = phoneNumber },
+                cancellationToken).ConfigureAwait(false);
+            return res.IsSuccess
+                ? Response<bool>.Success(true)
+                : Response<bool>.Failure(res.ErrorMessage ?? "Failed to send code.", res.StatusCode);
         }
         catch (HttpRequestException ex)
         {
@@ -45,7 +42,7 @@ public class AuthService(IClient client, HttpClient httpClient, IAccessTokenProv
         {
             return await PostAsync<VerifyOtpApiResponse>(
                 "api/Auth/verify-otp",
-                new VerifyOtpRequest { PhoneNumber = phoneNumber, Code = code },
+                new VerifyOtpApiRequest { PhoneNumber = phoneNumber, Code = code },
                 cancellationToken).ConfigureAwait(false);
         }
         catch (HttpRequestException ex)
@@ -66,20 +63,15 @@ public class AuthService(IClient client, HttpClient httpClient, IAccessTokenProv
 
     public async Task<Response<AuthResponse>> RegisterAsync(CreatePlayerRequest request, CancellationToken cancellationToken = default)
     {
-        try
+        var body = new RegisterPlayerApiRequest
         {
-            var body = new RegisterPlayerRequest
-            {
-                PhoneNumber = request.PhoneNumber,
-                PlayerName = request.PlayerName
-            };
-            var result = await Client.RegisterAsync(body, cancellationToken).ConfigureAwait(false);
-            return Response<AuthResponse>.Success(result);
-        }
-        catch (BaseApiException ex)
-        {
-            return Response<AuthResponse>.Failure(ex.Message, ex.StatusCode);
-        }
+            PhoneNumber = request.PhoneNumber,
+            PlayerName = request.PlayerName
+        };
+        var res = await PostAsync<AuthResponse>("api/Auth/register", body, cancellationToken).ConfigureAwait(false);
+        if (!res.IsSuccess || res.Data == null)
+            return Response<AuthResponse>.Failure(res.ErrorMessage ?? "Registration failed.", res.StatusCode);
+        return Response<AuthResponse>.Success(res.Data);
     }
 
     private static string NetworkErrorMessage(Exception ex)

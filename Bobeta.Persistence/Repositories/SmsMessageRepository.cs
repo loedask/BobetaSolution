@@ -24,6 +24,10 @@ public class SmsMessageRepository(BobetaDbContext db) : ISmsMessageRepository
             .FirstOrDefaultAsync(s => s.ProviderMessageId == providerMessageId, cancellationToken);
 
     /// <inheritdoc />
+    public async Task<SmsMessage?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await _db.SmsMessages.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+
+    /// <inheritdoc />
     public async Task UpdateAsync(SmsMessage sms, CancellationToken cancellationToken = default)
     {
         _db.SmsMessages.Update(sms);

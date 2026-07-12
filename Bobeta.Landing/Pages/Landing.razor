@@ -1,0 +1,221 @@
+@page "/"
+@layout LandingLayout
+@inject NavigationManager Nav
+@inject I18nService I18n
+
+<header class="landing-header">
+    <div class="landing-container landing-header__inner">
+        <a href="/" class="landing-wordmark landing-wordmark--nav" aria-label="BOBETA">
+            <span>BO</span><span class="landing-wordmark__be">BE</span><span>TA</span>
+        </a>
+        <nav class="landing-nav">
+            <a href="#games">@I18n.T("landing_nav_games")</a>
+            <a href="#how-it-works">@I18n.T("landing_nav_how")</a>
+        </nav>
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button type="button" class="landing-btn landing-btn--ghost hidden !px-3 !py-2 !text-sm !font-medium sm:inline-flex" @onclick="GoToLogin">
+                @I18n.T("landing_nav_sign_in")
+            </button>
+            <button type="button" class="landing-btn landing-btn--primary !px-4 !py-2.5 !text-sm" @onclick="GoToStart">
+                @I18n.T("landing_cta_play")
+            </button>
+        </div>
+    </div>
+</header>
+
+<section class="landing-hero">
+    <div class="landing-hero__atmosphere" aria-hidden="true">
+        <div class="landing-hero__orb landing-hero__orb--a"></div>
+        <div class="landing-hero__orb landing-hero__orb--b"></div>
+        <div class="landing-hero__grain"></div>
+        <div class="landing-hero__grid"></div>
+        <img class="landing-hero__shirts" src="_content/Bobeta.Landing/images/bobeta-shirts.png" alt="" width="840" height="560" />
+        <div class="landing-hero__shine"></div>
+    </div>
+
+    <div class="landing-container landing-hero__stage">
+        <div class="landing-hero__copy">
+            <h1 class="landing-wordmark landing-wordmark--hero" aria-label="BOBETA">
+                <span class="landing-wordmark__chunk landing-wordmark__chunk--1">BO</span><span class="landing-wordmark__chunk landing-wordmark__chunk--2 landing-wordmark__be">BE</span><span class="landing-wordmark__chunk landing-wordmark__chunk--3">TA</span>
+            </h1>
+            <p class="landing-slogan landing-slogan--hero">
+                <span>@I18n.T("landing_hero_line1")</span>
+                <span>@I18n.T("landing_hero_line2")</span>
+            </p>
+            <p class="landing-hero__sub">@I18n.T("landing_hero_sub")</p>
+            <div class="landing-cta-row">
+                <button type="button" class="landing-btn landing-btn--primary landing-btn--pulse" @onclick="GoToStart">
+                    @I18n.T("landing_cta_play")
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </button>
+                <a href="#how-it-works" class="landing-btn landing-btn--ghost">
+                    @I18n.T("landing_cta_how")
+                </a>
+            </div>
+            <div class="landing-trust-row">
+                <span class="inline-flex items-center gap-1.5">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                    @I18n.T("secure")
+                </span>
+                <span>@I18n.T("fair_randomized")</span>
+                <span>@I18n.T("instant_payouts")</span>
+            </div>
+        </div>
+    </div>
+
+    <a href="#features" class="landing-scroll-cue" aria-label="@I18n.T("landing_cta_how")">
+        <span></span>
+    </a>
+</section>
+
+<div class="landing-marquee" aria-hidden="true">
+    <div class="landing-marquee__track">
+        @for (var i = 0; i < 2; i++)
+        {
+            <span>Makopa</span>
+            <span class="landing-marquee__dot">◆</span>
+            <span>Kopo</span>
+            <span class="landing-marquee__dot">◆</span>
+            <span>MoMo</span>
+            <span class="landing-marquee__dot">◆</span>
+            <span>@I18n.T("instant_payouts")</span>
+            <span class="landing-marquee__dot">◆</span>
+            <span>BOBETA</span>
+            <span class="landing-marquee__dot">◆</span>
+            <span>@I18n.T("landing_trust_payout")</span>
+            <span class="landing-marquee__dot">◆</span>
+        }
+    </div>
+</div>
+
+<section id="features" class="landing-section landing-section--muted">
+    <div class="landing-container">
+        <div class="landing-section-header">
+            <p class="landing-kicker">Bobeta</p>
+            <h2>@I18n.T("landing_features_title")</h2>
+            <p>@I18n.T("landing_features_sub")</p>
+        </div>
+        <div class="landing-feature-grid">
+            <FeatureCard Icon="shield" Title="@I18n.T("landing_feat_secure_title")" Description="@I18n.T("landing_feat_secure_desc")" Index="01" />
+            <FeatureCard Icon="scale" Title="@I18n.T("landing_feat_fair_title")" Description="@I18n.T("landing_feat_fair_desc")" Index="02" />
+            <FeatureCard Icon="bolt" Title="@I18n.T("landing_feat_payout_title")" Description="@I18n.T("landing_feat_payout_desc")" Index="03" />
+            <FeatureCard Icon="phone" Title="@I18n.T("landing_feat_mobile_title")" Description="@I18n.T("landing_feat_mobile_desc")" Index="04" />
+        </div>
+    </div>
+</section>
+
+<section id="games" class="landing-section landing-section--games">
+    <div class="landing-container">
+        <div class="landing-section-header">
+            <p class="landing-kicker">@I18n.T("landing_nav_games")</p>
+            <h2>@I18n.T("landing_games_title")</h2>
+            <p>@I18n.T("landing_games_sub")</p>
+        </div>
+        <div class="landing-games">
+            <article class="landing-game landing-game--makopa">
+                <div class="landing-game__visual" aria-hidden="true">
+                    <div class="landing-fan">
+                        <div class="landing-mini-card landing-mini-card--red landing-fan__c1">A♥</div>
+                        <div class="landing-mini-card landing-mini-card--black landing-fan__c2">K♠</div>
+                        <div class="landing-mini-card landing-mini-card--red landing-fan__c3">7♦</div>
+                        <div class="landing-mini-card landing-mini-card--black landing-fan__c4">Q♣</div>
+                    </div>
+                </div>
+                <div class="landing-game__body">
+                    <p class="landing-game__label">01</p>
+                    <h3>@I18n.T("landing_game_makopa_title")</h3>
+                    <p>@I18n.T("landing_game_makopa_desc")</p>
+                </div>
+            </article>
+            <article class="landing-game landing-game--kopo">
+                <div class="landing-game__visual" aria-hidden="true">
+                    <div class="landing-kopo-board">
+                        @for (var row = 0; row < 8; row++)
+                        {
+                            @for (var col = 0; col < 8; col++)
+                            {
+                                var idx = row * 8 + col;
+                                var dark = (row + col) % 2 == 0;
+                                var hasGold = idx is 9 or 17 or 25;
+                                var hasGreen = idx is 42 or 50 or 58;
+                                <div class="landing-kopo-cell @(dark ? "landing-kopo-cell--dark" : "landing-kopo-cell--light")">
+                                    @if (hasGold)
+                                    {
+                                        <div class="landing-piece landing-piece--gold"></div>
+                                    }
+                                    else if (hasGreen)
+                                    {
+                                        <div class="landing-piece landing-piece--green"></div>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="landing-game__body">
+                    <p class="landing-game__label">02</p>
+                    <h3>@I18n.T("landing_game_kopo_title")</h3>
+                    <p>@I18n.T("landing_game_kopo_desc")</p>
+                </div>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section id="how-it-works" class="landing-section landing-section--muted">
+    <div class="landing-container">
+        <div class="landing-section-header">
+            <p class="landing-kicker">@I18n.T("landing_nav_how")</p>
+            <h2>@I18n.T("landing_how_title")</h2>
+            <p>@I18n.T("landing_how_sub")</p>
+        </div>
+        <div class="landing-steps">
+            <StepCard Number="1" Title="@I18n.T("landing_step1_title")" Description="@I18n.T("landing_step1_desc")" />
+            <StepCard Number="2" Title="@I18n.T("landing_step2_title")" Description="@I18n.T("landing_step2_desc")" />
+            <StepCard Number="3" Title="@I18n.T("landing_step3_title")" Description="@I18n.T("landing_step3_desc")" />
+            <StepCard Number="4" Title="@I18n.T("landing_step4_title")" Description="@I18n.T("landing_step4_desc")" />
+        </div>
+    </div>
+</section>
+
+<section class="landing-cta-section">
+    <div class="landing-cta-section__bg" aria-hidden="true">
+        <span class="landing-cta-section__ghost">BOBETA</span>
+    </div>
+    <div class="landing-container">
+        <div class="landing-cta-band">
+            <p class="landing-slogan landing-slogan--cta">@I18n.T("landing_hero_line1") @I18n.T("landing_hero_line2")</p>
+            <h2>@I18n.T("landing_cta_bottom_title")</h2>
+            <p>@I18n.T("landing_cta_bottom_sub")</p>
+            <div class="landing-cta-band__meta">
+                <span>@I18n.T("landing_trust_payout")</span>
+                <span>@I18n.T("landing_trust_languages")</span>
+                <span>@I18n.T("secure_momo")</span>
+            </div>
+            <div class="mb-6 flex justify-center">
+                <LanguageSelector />
+            </div>
+            <button type="button" class="landing-btn landing-btn--primary landing-btn--xl" @onclick="GoToStart">
+                @I18n.T("get_started")
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+        </div>
+    </div>
+</section>
+
+<footer class="landing-footer">
+    <div class="landing-container landing-footer__inner">
+        <div class="landing-footer__brand">
+            <p class="landing-wordmark landing-wordmark--nav">
+                <span>BO</span><span class="landing-wordmark__be">BE</span><span>TA</span>
+            </p>
+            <p class="landing-slogan landing-slogan--footer">@I18n.T("landing_hero_line1") @I18n.T("landing_hero_line2")</p>
+        </div>
+        <p class="landing-footer__copy">© @DateTime.UtcNow.Year Bobeta. @I18n.T("landing_footer_rights")</p>
+    </div>
+</footer>
+
+@code {
+    private void GoToStart() => Nav.NavigateTo("/start");
+    private void GoToLogin() => Nav.NavigateTo("/login");
+}

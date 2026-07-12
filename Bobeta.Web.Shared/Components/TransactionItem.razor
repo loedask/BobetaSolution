@@ -1,0 +1,72 @@
+@inject I18nService I18n
+
+<article class="@CardClass flex items-center gap-3 rounded-2xl border p-4 transition-all">
+    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl @IconBgClass">
+        @IconContent
+    </div>
+
+    <div class="min-w-0 flex-1">
+        <p class="truncate text-sm font-semibold text-foreground">@Description</p>
+        <p class="mt-0.5 text-[11px] text-muted-foreground/80">@Time</p>
+    </div>
+
+    <div class="shrink-0 text-right">
+        <p class="font-display text-base font-bold @AmountClass">
+            @(Amount >= 0 ? "+" : "")@Amount.ToString("N0")
+        </p>
+        <p class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">FCFA</p>
+    </div>
+</article>
+
+@code {
+    [Parameter] public string Description { get; set; } = "";
+    [Parameter] public string Time { get; set; } = "";
+    [Parameter] public decimal Amount { get; set; }
+
+    private bool IsDeposit => Description == I18n.T("deposit_label");
+    private bool IsWithdrawal => Description == I18n.T("withdraw");
+    private bool IsStake => Description == I18n.T("tx_bet_lock");
+    private bool IsStakeReturn => Description == I18n.T("tx_bet_release");
+    private bool IsWinnings => Description == I18n.T("tx_winnings");
+    private bool IsInflow => Amount > 0;
+
+    private string CardClass =>
+        IsWinnings ? "bg-background/30 border-accent/25"
+        : IsStakeReturn || IsDeposit ? "bg-background/30 border-accent/15"
+        : IsStake || IsWithdrawal ? "bg-background/30 border-border/40"
+        : IsInflow ? "bg-background/30 border-accent/20"
+        : "bg-background/30 border-border/40";
+
+    private string IconBgClass =>
+        IsWinnings ? "bg-accent/15"
+        : IsStakeReturn ? "bg-accent/10"
+        : IsDeposit ? "bg-primary/15"
+        : IsStake || IsWithdrawal ? "bg-muted/25"
+        : IsInflow ? "bg-accent/10"
+        : "bg-muted/25";
+
+    private string AmountClass =>
+        IsWinnings ? "text-accent"
+        : IsInflow ? "text-accent"
+        : "text-foreground/80";
+
+    private RenderFragment IconContent => __builder =>
+    {
+        if (IsWinnings)
+        {
+            <svg class="h-5 w-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+        }
+        else if (IsStakeReturn || IsDeposit || (IsInflow && !IsWithdrawal))
+        {
+            <svg class="h-5 w-5 @(IsDeposit ? "text-primary" : "text-accent")" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+        }
+        else if (IsWithdrawal)
+        {
+            <svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        }
+        else
+        {
+            <svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+        }
+    };
+}

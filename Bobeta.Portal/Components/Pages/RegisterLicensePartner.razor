@@ -1,0 +1,84 @@
+@page "/license-partners/register"
+@attribute [Authorize(Roles = "PlatformOwner")]
+@inject ILicensePartnerService LicensePartnerService
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<PageTitle>Register license partner - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <h1>Register license partner</h1>
+        <p class="portal-muted">Creates a portal account and license partner profile.</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <div class="portal-alert portal-alert-error">@_error</div>
+}
+
+<EditForm class="portal-form portal-form-wide" Model="_model" OnValidSubmit="HandleRegisterAsync">
+    <div class="portal-field">
+        <label>Legal name</label>
+        <InputText class="portal-input" @bind-Value="_model.LegalName" />
+    </div>
+    <div class="portal-field">
+        <label>Contract contact email</label>
+        <InputText class="portal-input" @bind-Value="_model.ContactEmail" />
+    </div>
+    <div class="portal-field">
+        <label>Portal login email</label>
+        <InputText class="portal-input" @bind-Value="_model.PortalEmail" />
+    </div>
+    <div class="portal-field">
+        <label>First name</label>
+        <InputText class="portal-input" @bind-Value="_model.FirstName" autocomplete="given-name" />
+    </div>
+    <div class="portal-field">
+        <label>Last name</label>
+        <InputText class="portal-input" @bind-Value="_model.LastName" autocomplete="family-name" />
+    </div>
+    <div class="portal-field">
+        <label>Initial password</label>
+        <InputText type="password" class="portal-input" @bind-Value="_model.Password" />
+    </div>
+    <div class="portal-form-actions">
+        <button class="portal-button portal-button-primary" type="submit" disabled="@_busy">@(_busy ? "Creating..." : "Create partner")</button>
+        <a class="portal-button" href="/license-partners">Cancel</a>
+    </div>
+</EditForm>
+
+@code {
+    private readonly RegisterLicensePartnerRequest _model = new();
+    private string? _error;
+    private bool _busy;
+
+    private async Task HandleRegisterAsync()
+    {
+        _busy = true;
+        _error = null;
+        try
+        {
+            var auth = await AuthState.GetAuthenticationStateAsync();
+            var userId = auth.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null || !Guid.TryParse(userId, out var createdById))
+            {
+                _error = "Could not determine the current user.";
+                return;
+            }
+
+            var created = await LicensePartnerService.RegisterAsync(_model, createdById);
+            Nav.NavigateTo($"/license-partners/{created.Id}");
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

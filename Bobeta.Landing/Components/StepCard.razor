@@ -1,0 +1,13 @@
+<div class="landing-step">
+    <div class="landing-step__num">@Number</div>
+    <div class="landing-step__body">
+        <h3>@Title</h3>
+        <p>@Description</p>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Number { get; set; } = "";
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter, EditorRequired] public string Description { get; set; } = "";
+}

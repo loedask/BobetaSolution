@@ -1,4 +1,5 @@
 using Bobeta.Domain.Entities;
+using Bobeta.Domain.Enums;
 
 namespace Bobeta.Application.Interfaces;
 
@@ -12,7 +13,7 @@ public interface IGameSessionRepository
     Task<IReadOnlyList<GameSession>> GetWaitingSessionsAsync(decimal betAmount, CancellationToken cancellationToken = default);
 
     /// <summary>Waiting sessions with no opponent that the given player did not create (join lobby).</summary>
-    Task<IReadOnlyList<GameSession>> GetJoinableWaitingSessionsAsync(Guid forPlayerId, int skip, int take, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<GameSession>> GetJoinableWaitingSessionsAsync(Guid forPlayerId, int skip, int take, GameVariant? variant = null, CancellationToken cancellationToken = default);
 
     /// <summary>Gets sessions where the player is creator or opponent, for history; includes result. Ordered by created descending, with paging.</summary>
     Task<IReadOnlyList<GameSession>> GetByPlayerIdAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default);

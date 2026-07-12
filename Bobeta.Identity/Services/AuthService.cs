@@ -68,7 +68,17 @@ public class AuthService : IAuthService
         var normalized = PhoneNumberHelper.Normalize(phoneNumber);
         if (ShouldSkipSmsForConfiguredDemoNumber(normalized))
         {
-            _logger.LogInformation("Skipping SMS for demo number (use DemoAuth static OTP). Phone={Phone}", normalized);
+            if (_hostEnvironment.IsProduction())
+            {
+                _logger.LogWarning(
+                    "Static demo OTP enabled in Production: SMS skipped for Phone={Phone}. Set DemoAuth:EnableStaticOtp=false when testing is complete.",
+                    normalized);
+            }
+            else
+            {
+                _logger.LogInformation("Skipping SMS for demo number (use DemoAuth static OTP). Phone={Phone}", normalized);
+            }
+
             return;
         }
 
@@ -78,25 +88,10 @@ public class AuthService : IAuthService
             await _smsService.SendOtpAsync(normalized, message, cancellationToken);
     }
 
-    /// <summary>Matches <see cref="OtpService"/> demo rules: no SMS when static OTP is enabled for this number in Development/Staging.</summary>
-    private bool ShouldSkipSmsForConfiguredDemoNumber(string normalizedPhone)
-    {
-        if (!DemoEnvironmentHelper.AllowsDemoAuthFeatures(_hostEnvironment))
-            return false;
-        if (!_configuration.GetValue("DemoAuth:EnableStaticOtp", false))
-            return false;
-
-        foreach (var child in _configuration.GetSection("DemoAuth:PhoneNumbers").GetChildren())
-        {
-            var configured = child.Value;
-            if (string.IsNullOrEmpty(configured))
-                continue;
-            if (PhoneNumberHelper.Normalize(configured) == normalizedPhone)
-                return true;
-        }
-
-        return false;
-    }
+    /// <summary>No SMS when static OTP is enabled for this number (any environment when configured).</summary>
+    private bool ShouldSkipSmsForConfiguredDemoNumber(string normalizedPhone) =>
+        DemoEnvironmentHelper.IsStaticOtpEnabled(_configuration) &&
+        DemoEnvironmentHelper.IsConfiguredDemoPhoneNumber(_configuration, normalizedPhone);
 
     /// <inheritdoc />
     public async Task<VerifyOtpResult> VerifyOtpAsync(string phoneNumber, string code, CancellationToken cancellationToken = default)
@@ -120,6 +115,7 @@ public class AuthService : IAuthService
             Id = Guid.NewGuid(),
             PhoneNumber = phoneNumber,
             PlayerName = playerName,
+            CountryCode = CountryCatalog.ResolveCountryCodeFromPhone(phoneNumber),
             Language = "en",
             CreatedAt = DateTime.UtcNow,
             IsVerified = true,

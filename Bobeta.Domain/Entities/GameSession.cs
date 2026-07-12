@@ -3,7 +3,7 @@ using Bobeta.Domain.Enums;
 namespace Bobeta.Domain.Entities;
 
 /// <summary>
-/// A single Makopa game match between two players. Tracks bet, status, and serialized in-game state.
+/// A two-player game match. Tracks bet, variant rules, status, and serialized in-game state.
 /// </summary>
 public class GameSession
 {
@@ -19,6 +19,9 @@ public class GameSession
     /// <summary>Bet amount locked by each player for this game.</summary>
     public decimal BetAmount { get; set; }
 
+    /// <summary>Ruleset for this session (Makopa, Kopo, …).</summary>
+    public GameVariant Variant { get; set; } = GameVariant.Makopa;
+
     /// <summary>Current phase of the game (Waiting, InProgress, Finished, Cancelled).</summary>
     public GameStatus Status { get; set; }
 
@@ -31,7 +34,7 @@ public class GameSession
     /// <summary>When the game ended (winner determined).</summary>
     public DateTime? FinishedAt { get; set; }
 
-    /// <summary>JSON serialized in-game state: hands, current turn, current trick. Used by the Makopa engine.</summary>
+    /// <summary>JSON serialized variant-specific state (Makopa hands/tricks, Kopo board, …).</summary>
     public string? GameStateJson { get; set; }
 
     /// <summary>Navigation to the creator player.</summary>

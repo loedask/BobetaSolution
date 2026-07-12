@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:controls="clr-namespace:Bobeta.Mobile.Controls"
+    x:Name="PageRoot"
     BackgroundColor="{StaticResource PageBackground}">
 
     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Padding="16" RowSpacing="12">
@@ -90,7 +91,7 @@
             </VerticalStackLayout>
         </Border>
 
-        <VerticalStackLayout Grid.Row="1" Spacing="8">
+        <VerticalStackLayout x:Name="MakopaPanel" Grid.Row="1" Spacing="8" IsVisible="True">
             <HorizontalStackLayout Spacing="12" HorizontalOptions="Fill">
                 <Label
                     x:Name="RoundScoreLabel"
@@ -127,6 +128,13 @@
             FontAttributes="Bold"
             TextColor="{StaticResource AccentGreen}" />
 
+        <controls:KopoBoardView
+            x:Name="KopoBoard"
+            Grid.Row="3"
+            IsVisible="False"
+            VerticalOptions="Center"
+            HorizontalOptions="Center" />
+
         <CollectionView
             x:Name="HandView"
             Grid.Row="3"
@@ -146,6 +154,14 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
+
+        <Label
+            x:Name="KopoChainHint"
+            Grid.Row="4"
+            IsVisible="False"
+            FontSize="11"
+            TextColor="{StaticResource PrimaryGold}"
+            HorizontalTextAlignment="Center" />
 
         <Button
             x:Name="TakeCardButton"

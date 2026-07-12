@@ -4,7 +4,19 @@
 self.importScripts('./service-worker-assets.js');
 self.addEventListener('install', event => event.waitUntil(onInstall(event)));
 self.addEventListener('activate', event => event.waitUntil(onActivate(event)));
-self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
+self.addEventListener('fetch', event => {
+    // Do not intercept cross-origin or non-GET requests — the browser handles CORS preflight natively.
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
+    const url = new URL(event.request.url);
+    if (url.origin !== self.location.origin) {
+        return;
+    }
+
+    event.respondWith(onFetch(event));
+});
 
 const cacheNamePrefix = 'offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
@@ -49,15 +61,7 @@ function isOfflineStaticPath(pathname) {
 }
 
 async function onFetch(event) {
-    if (event.request.method !== 'GET') {
-        return fetch(event.request);
-    }
-
     const url = new URL(event.request.url);
-    if (url.origin !== self.location.origin) {
-        return fetch(event.request);
-    }
-
     const cache = await caches.open(cacheName);
     let cachedResponse = await cache.match(event.request);
     if (cachedResponse) {

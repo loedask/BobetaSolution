@@ -3,7 +3,7 @@ using Bobeta.Domain.Enums;
 namespace Bobeta.Domain.Entities;
 
 /// <summary>
-/// SMS message sent via the gateway (e.g. SendSMSGate). Tracks provider ID and status for delivery reports.
+/// SMS message sent via a gateway provider. Tracks provider name, provider ID, and status for delivery reports.
 /// </summary>
 public class SmsMessage
 {
@@ -16,7 +16,10 @@ public class SmsMessage
     /// <summary>Message body sent.</summary>
     public string Message { get; set; } = string.Empty;
 
-    /// <summary>Provider message ID (e.g. SendSMSGate smsid) for DLR correlation.</summary>
+    /// <summary>Provider that sent the message (e.g. SmsPortal, SendSmsGate).</summary>
+    public string? Provider { get; set; }
+
+    /// <summary>Provider message ID for DLR correlation.</summary>
     public string? ProviderMessageId { get; set; }
 
     /// <summary>Current status: Pending, Sent, Delivered, Failed.</summary>
