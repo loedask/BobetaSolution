@@ -210,6 +210,19 @@ public class I18nService(AppStateService appState)
             ["landing_cta_bottom_title"] = "Get started with Bobeta today",
             ["landing_cta_bottom_sub"] = "Skill games, real stakes, secure mobile money.",
             ["landing_footer_rights"] = "All rights reserved.",
+            ["invite_title"] = "Invite",
+            ["invite_saving"] = "Saving your invite…",
+            ["invite_invalid"] = "This invite code is not valid.",
+            ["invite_applied"] = "Invite code applied. Your next game stake is discounted.",
+            ["invite_saved_login"] = "Invite saved. Sign in to use it on your next game.",
+            ["invite_code"] = "Invite code",
+            ["invite_enter_code"] = "Enter code",
+            ["invite_apply"] = "Apply",
+            ["invite_enter_hint"] = "Have an influencer code? Apply it once for a cheaper next game.",
+            ["invite_pending_status"] = "Code {0} ready — {1}% off your next stake.",
+            ["invite_discount_banner"] = "{0}% off your next game stake with your invite code.",
+            ["invite_code_label"] = "Code: {0}",
+            ["invite_you_pay"] = "You pay {0} FCFA for this game",
         };
 
         var fr = new Dictionary<string, string>(en)
@@ -318,6 +331,19 @@ public class I18nService(AppStateService appState)
             ["landing_cta_bottom_title"] = "Commencez avec Bobeta aujourd'hui",
             ["landing_cta_bottom_sub"] = "Jeux d'adresse, vrais enjeux, mobile money sécurisé.",
             ["landing_footer_rights"] = "Tous droits réservés.",
+            ["invite_title"] = "Invitation",
+            ["invite_saving"] = "Enregistrement de votre invitation…",
+            ["invite_invalid"] = "Ce code d'invitation n'est pas valide.",
+            ["invite_applied"] = "Code appliqué. Votre prochaine mise sera réduite.",
+            ["invite_saved_login"] = "Invitation enregistrée. Connectez-vous pour l'utiliser.",
+            ["invite_code"] = "Code d'invitation",
+            ["invite_enter_code"] = "Entrer le code",
+            ["invite_apply"] = "Appliquer",
+            ["invite_enter_hint"] = "Vous avez un code influenceur ? Appliquez-le une fois pour une mise réduite.",
+            ["invite_pending_status"] = "Code {0} prêt — {1} % de réduction sur votre prochaine mise.",
+            ["invite_discount_banner"] = "{0} % de réduction sur votre prochaine mise avec votre code.",
+            ["invite_code_label"] = "Code : {0}",
+            ["invite_you_pay"] = "Vous payez {0} FCFA pour cette partie",
         };
 
         var kt = new Dictionary<string, string>(en);

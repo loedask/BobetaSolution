@@ -48,6 +48,27 @@
             <Label x:Name="LangSection" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
             <Picker x:Name="LanguagePicker" BackgroundColor="{StaticResource Card}" TextColor="{StaticResource Foreground}" />
 
+            <Label x:Name="InviteSection" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
+            <Label x:Name="InviteHint" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+            <Label x:Name="InviteStatusLabel" IsVisible="False" FontSize="12" TextColor="{StaticResource PrimaryGold}" />
+            <Label x:Name="InviteSuccessLabel" IsVisible="False" FontSize="12" TextColor="{StaticResource AccentGreen}" />
+            <Label x:Name="InviteErrorLabel" IsVisible="False" FontSize="12" TextColor="{StaticResource Destructive}" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Entry
+                    x:Name="InviteCodeEntry"
+                    Placeholder="CODE"
+                    Text="{Binding InviteCodeInput, Mode=TwoWay}"
+                    TextColor="{StaticResource Foreground}"
+                    BackgroundColor="{StaticResource Card}" />
+                <Button
+                    x:Name="InviteApplyBtn"
+                    Grid.Column="1"
+                    Clicked="OnApplyInvite"
+                    CornerRadius="10"
+                    BackgroundColor="{StaticResource PrimaryGold}"
+                    TextColor="{StaticResource PrimaryDarkText}" />
+            </Grid>
+
             <Button
                 x:Name="WalletBtn"
                 Clicked="OnWallet"

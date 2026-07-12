@@ -204,6 +204,9 @@ public class GameInactivityCoordinatorTests
             CancelledSessions.Add(sessionId);
             return Task.FromResult(true);
         }
+
+        public Task<bool> CancelWaitingGameAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(false);
     }
 
     private sealed class EmptyConnectionTracker : IGameSessionConnectionTracker

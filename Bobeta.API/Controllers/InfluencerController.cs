@@ -30,7 +30,7 @@ public class InfluencerController(IInfluencerAttributionService attribution) : C
     }
     catch (InvalidOperationException ex)
     {
-      return BadRequest(new { error = ex.Message });
+      return BadRequest(ex.Message);
     }
   }
 

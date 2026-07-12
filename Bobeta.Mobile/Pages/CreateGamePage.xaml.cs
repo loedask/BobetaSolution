@@ -13,7 +13,7 @@ public partial class CreateGamePage : ContentPage
         InitializeComponent();
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
         _vm = MauiProgram.Services.GetRequiredService<CreateGameViewModel>();
@@ -29,6 +29,7 @@ public partial class CreateGamePage : ContentPage
         DescLabel.Text = i18n.T("choose_bet_desc");
         BetLabel.Text = i18n.T("your_bet");
         CreateBtn.Text = i18n.T("create_game");
+        await _vm.LoadInviteStatusAsync();
         SyncUi();
     }
 
@@ -44,6 +45,7 @@ public partial class CreateGamePage : ContentPage
     private void SyncUi()
     {
         if (_vm == null) return;
+        var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
         ErrorLabel.Text = _vm.ErrorMessage ?? "";
         ErrorLabel.IsVisible = !string.IsNullOrEmpty(_vm.ErrorMessage);
         Busy.IsRunning = _vm.IsLoading;
@@ -53,6 +55,21 @@ public partial class CreateGamePage : ContentPage
         MakopaBtn.TextColor = sel ? Color.FromArgb("#12151f") : Color.FromArgb("#e2e8f0");
         KopoBtn.BackgroundColor = !sel ? Color.FromArgb("#eab308") : Color.FromArgb("#2a3142");
         KopoBtn.TextColor = !sel ? Color.FromArgb("#12151f") : Color.FromArgb("#e2e8f0");
+
+        var hasInvite = _vm.InviteStatus?.HasPendingCode == true;
+        InviteBanner.IsVisible = hasInvite;
+        if (hasInvite && _vm.InviteStatus != null)
+        {
+            InviteBannerLabel.Text = string.Format(
+                i18n.T("invite_discount_banner"),
+                _vm.InviteStatus.DiscountPercent.ToString("N0"));
+            YouPayLabel.IsVisible = _vm.EffectiveCharge < (decimal.TryParse(_vm.BetAmount, out var b) ? b : 0);
+            YouPayLabel.Text = string.Format(i18n.T("invite_you_pay"), _vm.EffectiveCharge.ToString("N0"));
+        }
+        else
+        {
+            YouPayLabel.IsVisible = false;
+        }
     }
 
     private void OnMakopaVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Makopa);

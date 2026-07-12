@@ -22,6 +22,7 @@ public class AppStateService(PreferencesStorageService storage)
         State.LockedBalance = loaded.LockedBalance;
         State.ActiveGameSessionId = loaded.ActiveGameSessionId;
         State.SelectedLanguage = loaded.SelectedLanguage;
+        State.PendingInviteCode = loaded.PendingInviteCode;
         RaiseStateChanged();
     }
 
@@ -63,6 +64,12 @@ public class AppStateService(PreferencesStorageService storage)
     public void SetLanguage(string language)
     {
         State.SelectedLanguage = language;
+        RaiseStateChanged();
+    }
+
+    public void SetPendingInviteCode(string? code)
+    {
+        State.PendingInviteCode = string.IsNullOrWhiteSpace(code) ? null : code.Trim().ToUpperInvariant();
         RaiseStateChanged();
     }
 

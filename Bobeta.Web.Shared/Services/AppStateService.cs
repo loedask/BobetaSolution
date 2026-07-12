@@ -24,6 +24,7 @@ public class AppStateService(LocalStorageService storage)
         State.LockedBalance = loaded.LockedBalance;
         State.ActiveGameSessionId = loaded.ActiveGameSessionId;
         State.SelectedLanguage = loaded.SelectedLanguage;
+        State.PendingInviteCode = loaded.PendingInviteCode;
         RaiseStateChanged();
     }
 
@@ -69,7 +70,13 @@ public class AppStateService(LocalStorageService storage)
         RaiseStateChanged();
     }
 
-    /// <summary>Clear auth and session; call PersistAsync after to save.</summary>
+    public void SetPendingInviteCode(string? code)
+    {
+        State.PendingInviteCode = string.IsNullOrWhiteSpace(code) ? null : code.Trim().ToUpperInvariant();
+        RaiseStateChanged();
+    }
+
+    /// <summary>Clear auth and session; call PersistAsync after to save. Keeps <see cref="AppState.PendingInviteCode"/>.</summary>
     public void ClearSession()
     {
         State.AccessToken = null;

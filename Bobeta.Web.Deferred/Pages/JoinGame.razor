@@ -18,6 +18,10 @@
 
     <div class="space-y-3 px-5">
         <ErrorBanner Message="@ViewModel.ErrorMessage" />
+        <InviteDiscountBanner
+            HasPendingCode="@(ViewModel.InviteStatus?.HasPendingCode == true)"
+            Title="@(ViewModel.InviteStatus is { HasPendingCode: true } ? string.Format(I18n.T("invite_discount_banner"), ViewModel.InviteStatus.DiscountPercent.ToString("N0")) : "")"
+            Detail="@(ViewModel.InviteStatus is { HasPendingCode: true, Code: not null } ? string.Format(I18n.T("invite_code_label"), ViewModel.InviteStatus.Code) : null)" />
         <div class="flex flex-wrap gap-2">
             <button type="button" class="@FilterClass(null)" @onclick="() => SetFilter(null)">@I18n.T("filter_all_games")</button>
             <button type="button" class="@FilterClass(GameVariant.Makopa)" @onclick="() => SetFilter(GameVariant.Makopa)">Makopa</button>
@@ -53,7 +57,10 @@
 
 @code {
     protected override void OnInitialized() => ViewModel.StateChanged += OnStateChanged;
-    protected override async Task OnInitializedAsync() => await ViewModel.LoadGamesAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(ViewModel.LoadGamesAsync(), ViewModel.LoadInviteStatusAsync());
+    }
     public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
     private async Task LoadGames() => await ViewModel.LoadGamesAsync(forceRefresh: true);

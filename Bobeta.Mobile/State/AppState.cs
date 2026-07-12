@@ -15,5 +15,8 @@ public class AppState
 
     public string SelectedLanguage { get; set; } = "en";
 
+    /// <summary>Invite code captured before login; kept across logout.</summary>
+    public string? PendingInviteCode { get; set; }
+
     public bool IsAuthenticated => !string.IsNullOrEmpty(AccessToken);
 }

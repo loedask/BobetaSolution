@@ -135,6 +135,27 @@ public class GameSessionService(
         return true;
     }
 
+    /// <inheritdoc />
+    public async Task<bool> CancelWaitingGameAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        if (session == null
+            || session.Status != GameStatus.Waiting
+            || session.OpponentPlayerId != null
+            || session.CreatorPlayerId != playerId)
+            return false;
+
+        var creatorCharged = ChargedAmount(session, session.CreatorPlayerId);
+        await _walletService.ReleaseBetAsync(session.CreatorPlayerId, creatorCharged, cancellationToken);
+        await _influencerAttribution.DetachGameRedemptionsAsync(sessionId, cancellationToken);
+
+        session.Status = GameStatus.Cancelled;
+        session.GameStateJson = null;
+        session.FinishedAt = DateTime.UtcNow;
+        await _sessionRepository.UpdateAsync(session, cancellationToken);
+        return true;
+    }
+
     internal static decimal ChargedAmount(GameSession session, Guid playerId)
     {
         if (playerId == session.CreatorPlayerId)

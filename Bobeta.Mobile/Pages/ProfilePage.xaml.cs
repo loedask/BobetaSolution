@@ -12,7 +12,7 @@ public partial class ProfilePage : ContentPage
         InitializeComponent();
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
         _vm = MauiProgram.Services.GetRequiredService<ProfileViewModel>();
@@ -27,6 +27,9 @@ public partial class ProfilePage : ContentPage
         WinsLabel.Text = i18n.T("wins");
         WinRateLabel.Text = i18n.T("win_rate");
         LangSection.Text = i18n.T("language");
+        InviteSection.Text = i18n.T("invite_code");
+        InviteHint.Text = i18n.T("invite_enter_hint");
+        InviteApplyBtn.Text = i18n.T("invite_apply");
         WalletBtn.Text = i18n.T("wallet_settings");
         SignOutBtn.Text = i18n.T("sign_out");
 
@@ -37,6 +40,9 @@ public partial class ProfilePage : ContentPage
         LanguagePicker.SelectedIndex = idx >= 0 ? idx : 0;
         LanguagePicker.SelectedIndexChanged -= OnLanguageChanged;
         LanguagePicker.SelectedIndexChanged += OnLanguageChanged;
+
+        await _vm.LoadInviteStatusAsync();
+        SyncInviteUi();
     }
 
     protected override void OnDisappearing()
@@ -47,7 +53,38 @@ public partial class ProfilePage : ContentPage
         base.OnDisappearing();
     }
 
-    private void OnVmChanged() => MainThread.BeginInvokeOnMainThread(() => { });
+    private void OnVmChanged() => MainThread.BeginInvokeOnMainThread(SyncInviteUi);
+
+    private void SyncInviteUi()
+    {
+        if (_vm == null) return;
+        var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
+        InviteErrorLabel.Text = _vm.ErrorMessage ?? "";
+        InviteErrorLabel.IsVisible = !string.IsNullOrEmpty(_vm.ErrorMessage);
+        InviteSuccessLabel.Text = _vm.InviteSuccessMessage ?? "";
+        InviteSuccessLabel.IsVisible = !string.IsNullOrEmpty(_vm.InviteSuccessMessage);
+        InviteApplyBtn.IsEnabled = !_vm.IsLoading;
+
+        if (_vm.InviteStatus is { HasPendingCode: true })
+        {
+            InviteStatusLabel.IsVisible = true;
+            InviteStatusLabel.Text = string.Format(
+                i18n.T("invite_pending_status"),
+                _vm.InviteStatus.Code ?? "",
+                _vm.InviteStatus.DiscountPercent.ToString("N0"));
+        }
+        else
+        {
+            InviteStatusLabel.IsVisible = false;
+        }
+    }
+
+    private async void OnApplyInvite(object? sender, EventArgs e)
+    {
+        if (_vm == null) return;
+        _vm.InviteCodeInput = InviteCodeEntry.Text ?? "";
+        await _vm.ApplyInviteCodeAsync();
+    }
 
     private async void OnLanguageChanged(object? sender, EventArgs e)
     {

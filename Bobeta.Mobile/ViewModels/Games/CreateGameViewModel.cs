@@ -1,20 +1,28 @@
 using Bobeta.Client.Contracts.Interfaces;
 using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
+using Bobeta.Client.Models.Influencer;
+using Bobeta.Client.Services;
 using Bobeta.Mobile.Services;
 
 namespace Bobeta.Mobile.ViewModels.Games;
 
-public class CreateGameViewModel(IGameService gameService, AppStateService appState, INavigationService nav) : ViewModelBase
+public class CreateGameViewModel(
+    IGameService gameService,
+    AppStateService appState,
+    INavigationService nav,
+    InfluencerService influencerService) : ViewModelBase
 {
     private readonly IGameService _gameService = gameService;
     private readonly AppStateService _appState = appState;
     private readonly INavigationService _nav = nav;
+    private readonly InfluencerService _influencerService = influencerService;
 
-    private string _betAmount = "1000";
+    private string _betAmount = "300";
     private GameVariant _variant = GameVariant.Makopa;
 
     public GameVariant SelectedVariant => _variant;
+    public InfluencerCodeStatusViewModel? InviteStatus { get; private set; }
 
     public string BetAmount
     {
@@ -28,7 +36,32 @@ public class CreateGameViewModel(IGameService gameService, AppStateService appSt
     }
 
     public bool CanSubmit =>
-        decimal.TryParse(BetAmount, out var v) && v >= 100 && !IsLoading;
+        decimal.TryParse(BetAmount, out var v) && v >= 200 && v <= 500 && !IsLoading;
+
+    public decimal EffectiveCharge
+    {
+        get
+        {
+            if (!decimal.TryParse(BetAmount, out var bet)) return 0;
+            if (InviteStatus is { HasPendingCode: true, DiscountPercent: > 0 })
+                return Math.Round(bet * (100m - InviteStatus.DiscountPercent) / 100m, 2, MidpointRounding.AwayFromZero);
+            return bet;
+        }
+    }
+
+    public async Task LoadInviteStatusAsync()
+    {
+        try
+        {
+            var res = await _influencerService.GetStatusAsync();
+            InviteStatus = res.IsSuccess ? res.Data : null;
+        }
+        catch
+        {
+            InviteStatus = null;
+        }
+        RaiseStateChanged();
+    }
 
     public void SetPresetAmount(int value)
     {

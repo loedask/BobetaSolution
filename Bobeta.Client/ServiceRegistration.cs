@@ -71,6 +71,12 @@ public static class ServiceRegistration
             return new HistoryService(http, TokenProvider(sp));
         });
 
+        services.AddScoped<InfluencerService>(sp =>
+        {
+            var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName);
+            return new InfluencerService(http, TokenProvider(sp));
+        });
+
         return services;
     }
 }

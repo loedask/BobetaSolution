@@ -175,6 +175,15 @@ public class I18nService(AppStateService appState)
             ["continue_play"] = "Continue",
             ["cancel_game"] = "Cancel Game",
             ["sending_move"] = "Sending move…",
+            ["invite_code"] = "Invite code",
+            ["invite_enter_code"] = "Enter code",
+            ["invite_apply"] = "Apply",
+            ["invite_enter_hint"] = "Have an influencer code? Apply it once for a cheaper next game.",
+            ["invite_pending_status"] = "Code {0} ready — {1}% off your next stake.",
+            ["invite_discount_banner"] = "{0}% off your next game stake with your invite code.",
+            ["invite_code_label"] = "Code: {0}",
+            ["invite_you_pay"] = "You pay {0} FCFA for this game",
+            ["invite_applied"] = "Invite code applied for your next game.",
         };
 
         var fr = new Dictionary<string, string>(en)

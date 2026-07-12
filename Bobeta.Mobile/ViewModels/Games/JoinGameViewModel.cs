@@ -1,27 +1,49 @@
 using Bobeta.Client.Contracts.Interfaces;
 using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
+using Bobeta.Client.Models.Influencer;
+using Bobeta.Client.Services;
 using Bobeta.Mobile.Services;
 
 namespace Bobeta.Mobile.ViewModels.Games;
 
-public class JoinGameViewModel(IGameService gameService, AppStateService appState, INavigationService nav) : ViewModelBase
+public class JoinGameViewModel(
+    IGameService gameService,
+    AppStateService appState,
+    INavigationService nav,
+    InfluencerService influencerService) : ViewModelBase
 {
     private readonly IGameService _gameService = gameService;
     private readonly AppStateService _appState = appState;
     private readonly INavigationService _nav = nav;
+    private readonly InfluencerService _influencerService = influencerService;
 
     private bool _joinBusy;
 
     public GameVariant? VariantFilter { get; private set; }
 
     public List<GameSessionViewModel> OpenGames { get; private set; } = new();
+    public InfluencerCodeStatusViewModel? InviteStatus { get; private set; }
 
     public void SetVariantFilter(GameVariant? variant)
     {
         VariantFilter = variant;
         RaiseStateChanged();
         _ = LoadGamesAsync();
+    }
+
+    public async Task LoadInviteStatusAsync()
+    {
+        try
+        {
+            var res = await _influencerService.GetStatusAsync();
+            InviteStatus = res.IsSuccess ? res.Data : null;
+        }
+        catch
+        {
+            InviteStatus = null;
+        }
+        RaiseStateChanged();
     }
 
     public async Task LoadGamesAsync()

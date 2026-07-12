@@ -6,13 +6,16 @@
     BackgroundColor="{StaticResource PageBackground}"
     Title="Join">
 
-    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
-        <HorizontalStackLayout Spacing="8">
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="16" RowSpacing="12">
+        <Border x:Name="InviteBanner" IsVisible="False" Padding="12" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 12">
+            <Label x:Name="InviteBannerLabel" FontSize="13" TextColor="{StaticResource PrimaryGold}" />
+        </Border>
+        <HorizontalStackLayout Grid.Row="1" Spacing="8">
             <Button x:Name="FilterAllBtn" Clicked="OnFilterAll" CornerRadius="8" FontSize="12" Padding="12,6" />
             <Button x:Name="FilterMakopaBtn" Clicked="OnFilterMakopa" CornerRadius="8" FontSize="12" Padding="12,6" />
             <Button x:Name="FilterKopoBtn" Clicked="OnFilterKopo" CornerRadius="8" FontSize="12" Padding="12,6" />
         </HorizontalStackLayout>
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
             <Label x:Name="Subtitle" FontSize="14" TextColor="{StaticResource MutedForeground}" VerticalOptions="Center" />
             <Button
                 x:Name="RefreshBtn"
@@ -22,7 +25,7 @@
                 TextColor="{StaticResource PrimaryGold}"
                 FontSize="13" />
         </Grid>
-        <CollectionView x:Name="GamesList" Grid.Row="2" ItemsSource="{Binding OpenGames}">
+        <CollectionView x:Name="GamesList" Grid.Row="3" ItemsSource="{Binding OpenGames}">
             <CollectionView.EmptyView>
                 <Label x:Name="EmptyLabel" TextColor="{StaticResource MutedForeground}" />
             </CollectionView.EmptyView>
@@ -51,7 +54,7 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-        <Label x:Name="ErrorLabel" Grid.Row="2" IsVisible="False" TextColor="{StaticResource Destructive}" VerticalOptions="Start" />
-        <ActivityIndicator x:Name="Busy" Grid.Row="2" IsRunning="False" Color="{StaticResource PrimaryGold}" VerticalOptions="Center" HorizontalOptions="Center" />
+        <Label x:Name="ErrorLabel" Grid.Row="3" IsVisible="False" TextColor="{StaticResource Destructive}" VerticalOptions="Start" />
+        <ActivityIndicator x:Name="Busy" Grid.Row="3" IsRunning="False" Color="{StaticResource PrimaryGold}" VerticalOptions="Center" HorizontalOptions="Center" />
     </Grid>
 </ContentPage>

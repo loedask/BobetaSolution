@@ -12,6 +12,11 @@
 
         <ErrorBanner Message="@ViewModel.ErrorMessage" />
 
+        <InviteDiscountBanner
+            HasPendingCode="@(ViewModel.InviteStatus?.HasPendingCode == true)"
+            Title="@DiscountTitle"
+            Detail="@DiscountDetail" />
+
         <div class="card-surface glow-gold overflow-hidden rounded-2xl border border-border/50">
             <section class="p-5">
                 <div class="mb-4 flex items-center gap-2.5">
@@ -60,6 +65,10 @@
                 <div class="mt-5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-4 text-center">
                     <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">@I18n.T("your_bet")</p>
                     <p class="gold-text mt-1 font-display text-3xl font-bold">@ViewModel.SelectedBet.ToString("N0") <span class="text-lg">FCFA</span></p>
+                    @if (ViewModel.InviteStatus is { HasPendingCode: true } && ViewModel.EffectiveCharge < ViewModel.SelectedBet)
+                    {
+                        <p class="mt-2 text-xs text-muted-foreground">@string.Format(I18n.T("invite_you_pay"), ViewModel.EffectiveCharge.ToString("N0"))</p>
+                    }
                 </div>
             </section>
         </div>
@@ -82,9 +91,24 @@
 </div>
 
 @code {
-    protected override void OnInitialized() => ViewModel.StateChanged += OnStateChanged;
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel.StateChanged += OnStateChanged;
+        await ViewModel.LoadInviteStatusAsync();
+    }
+
     public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    private string DiscountTitle =>
+        ViewModel.InviteStatus is { HasPendingCode: true }
+            ? string.Format(I18n.T("invite_discount_banner"), ViewModel.InviteStatus.DiscountPercent.ToString("N0"))
+            : "";
+
+    private string? DiscountDetail =>
+        ViewModel.InviteStatus is { HasPendingCode: true, Code: not null }
+            ? string.Format(I18n.T("invite_code_label"), ViewModel.InviteStatus.Code)
+            : null;
 
     private string VariantClass(GameVariant variant) =>
         ViewModel.SelectedVariant == variant
