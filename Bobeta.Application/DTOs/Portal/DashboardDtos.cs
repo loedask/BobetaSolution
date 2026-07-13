@@ -5,8 +5,11 @@ public sealed class DashboardStatsDto
   public DateTime? FromUtc { get; init; }
   public DateTime? ToUtc { get; init; }
   public bool ShowFinancials { get; init; }
+  public bool ShowPayments { get; init; }
   public bool ShowPartnerLeaderboard { get; init; }
   public bool ShowInfluencerLeaderboard { get; init; }
+  public bool IsInfluencerScoped { get; init; }
+  public bool IsPartnerScoped { get; init; }
   public PlayerDashboardStatsDto Players { get; init; } = new();
   public PaymentDashboardStatsDto Payments { get; init; } = new();
   public RevenueDashboardStatsDto Revenue { get; init; } = new();

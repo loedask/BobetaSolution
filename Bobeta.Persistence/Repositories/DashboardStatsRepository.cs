@@ -13,7 +13,7 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
       DashboardStatsFilter filter,
       CancellationToken cancellationToken = default)
   {
-    var query = FilterPlayersByCountry(filter);
+    var query = FilterPlayers(filter);
 
     var newPlayersQuery = query;
     if (filter.FromUtc.HasValue)
@@ -36,7 +36,7 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
       DashboardStatsFilter filter,
       CancellationToken cancellationToken = default)
   {
-    var rows = await FilterPlayersByCountry(filter)
+    var rows = await FilterPlayers(filter)
       .GroupBy(p => p.CountryCode ?? string.Empty)
       .Select(g => new { CountryCode = g.Key, Count = g.Count() })
       .OrderByDescending(x => x.Count)
@@ -86,6 +86,29 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
       DashboardStatsFilter filter,
       CancellationToken cancellationToken = default)
   {
+    if (filter.InfluencerId.HasValue)
+    {
+      var influencerQuery = FilterInfluencerCommissions(filter);
+      var influencerSummary = await influencerQuery
+        .GroupBy(_ => 1)
+        .Select(g => new
+        {
+          Gross = g.Sum(x => x.GrossPlatformRevenue),
+          Influencer = g.Sum(x => x.InfluencerAmount),
+          Count = g.Count()
+        })
+        .FirstOrDefaultAsync(cancellationToken);
+
+      return new RevenueDashboardStatsDto
+      {
+        GrossPlatformRevenue = influencerSummary?.Gross ?? 0,
+        PartnerSharePaid = 0,
+        InfluencerSharePaid = influencerSummary?.Influencer ?? 0,
+        PlatformRetained = 0,
+        AllocationCount = influencerSummary?.Count ?? 0
+      };
+    }
+
     var query = FilterRevenueAllocations(filter);
 
     var summary = await query
@@ -120,6 +143,24 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
       DashboardStatsFilter filter,
       CancellationToken cancellationToken = default)
   {
+    if (filter.InfluencerId.HasValue)
+    {
+      var influencerQuery = FilterInfluencerCommissions(filter);
+      var gamesPlayed = await influencerQuery
+        .Select(x => x.GameSessionId)
+        .Distinct()
+        .CountAsync(cancellationToken);
+      var attributedFees = await influencerQuery
+        .SumAsync(x => (decimal?)x.GrossPlatformRevenue, cancellationToken) ?? 0;
+
+      return new GameDashboardStatsDto
+      {
+        GamesPlayed = gamesPlayed,
+        TotalPot = 0,
+        PlatformCommission = attributedFees
+      };
+    }
+
     var query = FilterGameResults(filter);
 
     var summary = await query
@@ -175,6 +216,35 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
       DashboardStatsFilter filter,
       CancellationToken cancellationToken = default)
   {
+    if (filter.InfluencerId.HasValue)
+    {
+      var influencerRows = await FilterInfluencerCommissions(filter)
+        .GroupBy(_ => 1)
+        .Select(g => new
+        {
+          InfluencerAmount = g.Sum(x => x.InfluencerAmount),
+          Gross = g.Sum(x => x.GrossPlatformRevenue),
+          Count = g.Count()
+        })
+        .FirstOrDefaultAsync(cancellationToken);
+
+      if (influencerRows is null)
+        return [];
+
+      return
+      [
+        new PartnerRevenueBreakdownDto
+        {
+          Key = "GameCommission",
+          Label = "Game commission",
+          PartnerAmount = 0,
+          InfluencerAmount = influencerRows.InfluencerAmount,
+          GrossPlatformRevenue = influencerRows.Gross,
+          TransactionCount = influencerRows.Count
+        }
+      ];
+    }
+
     var rows = await FilterRevenueAllocations(filter)
       .GroupBy(a => a.SourceType)
       .Select(g => new
@@ -237,6 +307,43 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
       int take,
       CancellationToken cancellationToken = default)
   {
+    if (filter.InfluencerId.HasValue)
+    {
+      var influencerAllocations = await FilterInfluencerCommissions(filter)
+        .OrderByDescending(a => a.CreatedAt)
+        .Take(take)
+        .Select(a => new
+        {
+          a.Id,
+          a.GameSessionId,
+          a.GrossPlatformRevenue,
+          a.CommissionPercent,
+          a.InfluencerAmount,
+          a.Currency,
+          a.CreatedAt,
+          CountryCode = a.Player.CountryCode ?? string.Empty
+        })
+        .ToListAsync(cancellationToken);
+
+      return influencerAllocations
+        .Select(a => new PartnerRevenueAllocationItemDto
+        {
+          Id = a.Id,
+          SourceType = RevenueAllocationSourceType.GameCommission,
+          SourceId = a.GameSessionId,
+          CountryCode = a.CountryCode,
+          CountryName = CountryCatalog.GetByCode(a.CountryCode)?.Name ?? a.CountryCode,
+          GrossPlatformRevenue = a.GrossPlatformRevenue,
+          PartnerSharePercent = a.CommissionPercent,
+          PartnerAmount = 0,
+          InfluencerAmount = a.InfluencerAmount,
+          PlatformRetainedAmount = 0,
+          Currency = a.Currency,
+          CreatedAt = a.CreatedAt
+        })
+        .ToList();
+    }
+
     var allocations = await FilterRevenueAllocations(filter)
       .OrderByDescending(a => a.CreatedAt)
       .Take(take)
@@ -261,9 +368,16 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
       .ToList();
   }
 
-  private IQueryable<Domain.Entities.Player> FilterPlayersByCountry(DashboardStatsFilter filter)
+  private IQueryable<Domain.Entities.Player> FilterPlayers(DashboardStatsFilter filter)
   {
     var query = db.Players.AsNoTracking();
+
+    if (filter.InfluencerId.HasValue)
+    {
+      var influencerId = filter.InfluencerId.Value;
+      query = query.Where(p => db.InfluencerCodeRedemptions.Any(r =>
+          r.InfluencerId == influencerId && r.PlayerId == p.Id));
+    }
 
     if (filter.CountryCodes is { Count: > 0 })
     {
@@ -282,6 +396,13 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
       query = query.Where(p => p.CreatedAt >= filter.FromUtc.Value);
     if (filter.ToUtc.HasValue)
       query = query.Where(p => p.CreatedAt <= filter.ToUtc.Value);
+
+    if (filter.InfluencerId.HasValue)
+    {
+      var influencerId = filter.InfluencerId.Value;
+      query = query.Where(p => db.InfluencerCodeRedemptions.Any(r =>
+          r.InfluencerId == influencerId && r.PlayerId == p.PlayerId));
+    }
 
     if (filter.CountryCodes is { Count: > 0 })
     {
@@ -316,6 +437,9 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
   private IQueryable<Domain.Entities.InfluencerCommissionAllocation> FilterInfluencerCommissions(DashboardStatsFilter filter)
   {
     var query = db.InfluencerCommissionAllocations.AsNoTracking();
+
+    if (filter.InfluencerId.HasValue)
+      query = query.Where(a => a.InfluencerId == filter.InfluencerId.Value);
 
     if (filter.FromUtc.HasValue)
       query = query.Where(a => a.CreatedAt >= filter.FromUtc.Value);

@@ -8,6 +8,7 @@ namespace Bobeta.Application.Services;
 public sealed class DashboardService(
     IDashboardStatsRepository stats,
     ILicensePartnerRepository partners,
+    IInfluencerRepository influencers,
     ILicensePartnerAccessService access) : IDashboardService
 {
   public async Task<DashboardStatsDto> GetDashboardAsync(
@@ -31,7 +32,9 @@ public sealed class DashboardService(
 
     if (scope.ShowFinancials)
     {
-      payments = await stats.GetPaymentStatsAsync(filter, cancellationToken);
+      if (scope.ShowPayments)
+        payments = await stats.GetPaymentStatsAsync(filter, cancellationToken);
+
       revenue = await stats.GetRevenueStatsAsync(filter, cancellationToken);
       games = await stats.GetGameStatsAsync(filter, cancellationToken);
       revenueBySource = await stats.GetRevenueBySourceAsync(filter, cancellationToken);
@@ -48,8 +51,11 @@ public sealed class DashboardService(
       FromUtc = query.FromUtc,
       ToUtc = query.ToUtc,
       ShowFinancials = scope.ShowFinancials,
+      ShowPayments = scope.ShowPayments,
       ShowPartnerLeaderboard = scope.ShowPartnerLeaderboard,
       ShowInfluencerLeaderboard = scope.ShowInfluencerLeaderboard,
+      IsInfluencerScoped = scope.IsInfluencerScoped,
+      IsPartnerScoped = scope.IsPartnerScoped,
       Players = players,
       Payments = payments,
       Revenue = revenue,
@@ -115,6 +121,23 @@ public sealed class DashboardService(
     var filter = BuildFilter(query, scope);
     var allocations = await stats.GetRevenueAllocationsAsync(filter, take: 10_000, cancellationToken);
 
+    if (scope.IsInfluencerScoped)
+    {
+      return ExcelReportWriter.Build(
+        "Revenue detail",
+        ["Date (UTC)", "Source", "Country", "Gross game fee", "Your share %", "Your amount", "Currency"],
+        allocations.Select(a => new object?[]
+        {
+          a.CreatedAt,
+          FormatSourceType(a.SourceType),
+          a.CountryName,
+          a.GrossPlatformRevenue,
+          a.PartnerSharePercent,
+          a.InfluencerAmount,
+          a.Currency
+        }));
+    }
+
     return ExcelReportWriter.Build(
       "Revenue detail",
       ["Date (UTC)", "Source", "Country", "Gross revenue", "Partner rate %", "Partner amount", "Influencer amount", "Platform retained", "Currency"],
@@ -139,7 +162,7 @@ public sealed class DashboardService(
       CancellationToken cancellationToken = default)
   {
     var scope = await ResolveScopeAsync(role, portalUserId, cancellationToken);
-    if (!scope.ShowFinancials)
+    if (!scope.ShowPayments)
       throw new UnauthorizedAccessException("Payment reports are not available for this role.");
 
     var filter = BuildFilter(query, scope);
@@ -157,26 +180,54 @@ public sealed class DashboardService(
 
   private static List<(string Category, string Metric, object? Value)> BuildSummaryMetrics(DashboardStatsDto dashboard)
   {
+    var playerLabel = dashboard.IsInfluencerScoped
+      ? "Players who used your code"
+      : dashboard.IsPartnerScoped
+        ? "Players in licensed countries"
+        : "Players";
+
     var metrics = new List<(string Category, string Metric, object? Value)>
     {
-      ("Players", "Total players", dashboard.Players.TotalPlayers),
-      ("Players", "New players in period", dashboard.Players.NewPlayers),
-      ("Players", "Verified players", dashboard.Players.VerifiedPlayers),
-      ("Players", "Active players", dashboard.Players.ActivePlayers)
+      (playerLabel, "Total players", dashboard.Players.TotalPlayers),
+      (playerLabel, "New players in period", dashboard.Players.NewPlayers),
+      (playerLabel, "Verified players", dashboard.Players.VerifiedPlayers),
+      (playerLabel, "Active players", dashboard.Players.ActivePlayers)
     };
 
     if (!dashboard.ShowFinancials)
       return metrics;
 
+    if (dashboard.ShowPayments)
+    {
+      metrics.AddRange(
+      [
+        ("Payments", "Successful deposits", dashboard.Payments.SuccessfulDeposits),
+        ("Payments", "Deposit volume", dashboard.Payments.DepositVolume),
+        ("Payments", "Successful withdrawals", dashboard.Payments.SuccessfulWithdrawals),
+        ("Payments", "Withdrawal volume", dashboard.Payments.WithdrawalVolume)
+      ]);
+    }
+
     metrics.AddRange(
     [
-      ("Payments", "Successful deposits", dashboard.Payments.SuccessfulDeposits),
-      ("Payments", "Deposit volume", dashboard.Payments.DepositVolume),
-      ("Payments", "Successful withdrawals", dashboard.Payments.SuccessfulWithdrawals),
-      ("Payments", "Withdrawal volume", dashboard.Payments.WithdrawalVolume),
       ("Games", "Games played", dashboard.Games.GamesPlayed),
       ("Games", "Total pot", dashboard.Games.TotalPot),
-      ("Games", "Platform commission", dashboard.Games.PlatformCommission),
+      ("Games", dashboard.IsInfluencerScoped ? "Attributed game fees" : "Platform commission", dashboard.Games.PlatformCommission)
+    ]);
+
+    if (dashboard.IsInfluencerScoped)
+    {
+      metrics.AddRange(
+      [
+        ("Revenue", "Attributed gross game fees", dashboard.Revenue.GrossPlatformRevenue),
+        ("Revenue", "Your influencer share", dashboard.Revenue.InfluencerSharePaid),
+        ("Revenue", "Commission rows", dashboard.Revenue.AllocationCount)
+      ]);
+      return metrics;
+    }
+
+    metrics.AddRange(
+    [
       ("Revenue", "Gross platform revenue", dashboard.Revenue.GrossPlatformRevenue),
       ("Revenue", "Partner share paid", dashboard.Revenue.PartnerSharePaid),
       ("Revenue", "Influencer share paid", dashboard.Revenue.InfluencerSharePaid),
@@ -192,7 +243,8 @@ public sealed class DashboardService(
     FromUtc = query.FromUtc,
     ToUtc = query.ToUtc,
     CountryCodes = scope.CountryCodes,
-    LicensePartnerId = scope.LicensePartnerId
+    LicensePartnerId = scope.LicensePartnerId,
+    InfluencerId = scope.InfluencerId
   };
 
   private async Task<DashboardScope> ResolveScopeAsync(
@@ -205,30 +257,54 @@ public sealed class DashboardService(
       PortalUserRole.PlatformOwner => new DashboardScope
       {
         ShowFinancials = true,
+        ShowPayments = true,
         ShowPartnerLeaderboard = true,
         ShowInfluencerLeaderboard = true
       },
       PortalUserRole.Member => new DashboardScope
       {
         ShowFinancials = false,
+        ShowPayments = false,
         ShowPartnerLeaderboard = false,
         ShowInfluencerLeaderboard = false
       },
-      PortalUserRole.LicensePartner => new DashboardScope
-      {
-        ShowFinancials = true,
-        ShowPartnerLeaderboard = false,
-        ShowInfluencerLeaderboard = false,
-        CountryCodes = await access.GetLicensedCountryCodesAsync(portalUserId, cancellationToken),
-        LicensePartnerId = (await partners.GetByPortalUserIdAsync(portalUserId, cancellationToken))?.Id
-      },
-      PortalUserRole.Influencer => new DashboardScope
-      {
-        ShowFinancials = false,
-        ShowPartnerLeaderboard = false,
-        ShowInfluencerLeaderboard = false
-      },
+      PortalUserRole.LicensePartner => await ResolvePartnerScopeAsync(portalUserId, cancellationToken),
+      PortalUserRole.Influencer => await ResolveInfluencerScopeAsync(portalUserId, cancellationToken),
       _ => throw new UnauthorizedAccessException("Unknown portal role.")
+    };
+  }
+
+  private async Task<DashboardScope> ResolvePartnerScopeAsync(Guid portalUserId, CancellationToken cancellationToken)
+  {
+    var partner = await partners.GetByPortalUserIdAsync(portalUserId, cancellationToken);
+    var countries = await access.GetLicensedCountryCodesAsync(portalUserId, cancellationToken);
+
+    return new DashboardScope
+    {
+      ShowFinancials = true,
+      ShowPayments = true,
+      ShowPartnerLeaderboard = false,
+      ShowInfluencerLeaderboard = false,
+      IsPartnerScoped = true,
+      // Empty country list must not mean "all countries".
+      CountryCodes = countries.Count > 0 ? countries : ["__NONE__"],
+      LicensePartnerId = partner?.Id ?? Guid.Empty
+    };
+  }
+
+  private async Task<DashboardScope> ResolveInfluencerScopeAsync(Guid portalUserId, CancellationToken cancellationToken)
+  {
+    var influencer = await influencers.GetByPortalUserIdAsync(portalUserId, cancellationToken);
+
+    return new DashboardScope
+    {
+      ShowFinancials = true,
+      ShowPayments = false,
+      ShowPartnerLeaderboard = false,
+      ShowInfluencerLeaderboard = false,
+      IsInfluencerScoped = true,
+      // Always set an id so unlinked accounts never see platform-wide data.
+      InfluencerId = influencer?.Id ?? Guid.Empty
     };
   }
 
@@ -243,9 +319,13 @@ public sealed class DashboardService(
   private sealed class DashboardScope
   {
     public bool ShowFinancials { get; init; }
+    public bool ShowPayments { get; init; }
     public bool ShowPartnerLeaderboard { get; init; }
     public bool ShowInfluencerLeaderboard { get; init; }
+    public bool IsInfluencerScoped { get; init; }
+    public bool IsPartnerScoped { get; init; }
     public IReadOnlyList<string>? CountryCodes { get; init; }
     public Guid? LicensePartnerId { get; init; }
+    public Guid? InfluencerId { get; init; }
   }
 }

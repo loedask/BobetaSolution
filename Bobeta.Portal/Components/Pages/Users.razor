@@ -99,10 +99,12 @@ else
     {
         if (PortalUser.IsLicensePartner && PortalUser.UserId is { } userId)
         {
-            _countryFilter = await PartnerAccess.GetLicensedCountryCodesAsync(userId);
-            _countryScopeLabel = _countryFilter.Count > 0
-                ? $" ({string.Join(", ", _countryFilter)})"
-                : string.Empty;
+            var licensed = await PartnerAccess.GetLicensedCountryCodesAsync(userId);
+            // Empty list must not mean "all countries" for partners.
+            _countryFilter = licensed.Count > 0 ? licensed : ["__NONE__"];
+            _countryScopeLabel = licensed.Count > 0
+                ? $" ({string.Join(", ", licensed)})"
+                : " (none assigned)";
         }
 
         await LoadPlayersAsync();

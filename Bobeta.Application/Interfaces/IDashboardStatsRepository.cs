@@ -8,6 +8,7 @@ public sealed class DashboardStatsFilter
   public DateTime? ToUtc { get; init; }
   public IReadOnlyList<string>? CountryCodes { get; init; }
   public Guid? LicensePartnerId { get; init; }
+  public Guid? InfluencerId { get; init; }
 }
 
 public interface IDashboardStatsRepository
