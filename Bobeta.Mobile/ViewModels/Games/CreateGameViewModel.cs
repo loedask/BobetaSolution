@@ -23,6 +23,8 @@ public class CreateGameViewModel(
 
     public GameVariant SelectedVariant => _variant;
     public InfluencerCodeStatusViewModel? InviteStatus { get; private set; }
+    public string InviteCodeInput { get; set; } = "";
+    public string? InviteSuccessMessage { get; private set; }
 
     public string BetAmount
     {
@@ -61,6 +63,37 @@ public class CreateGameViewModel(
             InviteStatus = null;
         }
         RaiseStateChanged();
+    }
+
+    public async Task ApplyInviteCodeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(InviteCodeInput) || IsLoading) return;
+        SetLoading(true);
+        ClearError();
+        InviteSuccessMessage = null;
+        try
+        {
+            var res = await _influencerService.ApplyCodeAsync(InviteCodeInput);
+            if (res.IsSuccess && res.Data != null)
+            {
+                InviteStatus = res.Data;
+                InviteCodeInput = "";
+                InviteSuccessMessage = "Invite code applied for your next game.";
+                _appState.SetPendingInviteCode(null);
+                await _appState.PersistAsync();
+            }
+            else
+                SetError(res.ErrorMessage ?? "Could not apply invite code.");
+        }
+        catch
+        {
+            SetError("Something went wrong. Please try again.");
+        }
+        finally
+        {
+            SetLoading(false);
+            RaiseStateChanged();
+        }
     }
 
     public void SetPresetAmount(int value)

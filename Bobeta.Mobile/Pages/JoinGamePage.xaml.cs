@@ -30,6 +30,10 @@ public partial class JoinGamePage : ContentPage
         FilterAllBtn.Text = i18n.T("filter_all_games");
         FilterMakopaBtn.Text = "Makopa";
         FilterKopoBtn.Text = "Kopo";
+        InviteHaveCodeLabel.Text = i18n.T("invite_have_code");
+        InviteHintLabel.Text = i18n.T("invite_enter_hint");
+        InviteApplyBtn.Text = i18n.T("invite_apply");
+        InviteCodeEntry.Placeholder = i18n.T("invite_enter_code");
 
         await Task.WhenAll(_vm.LoadGamesAsync(), _vm.LoadInviteStatusAsync());
         SyncUi();
@@ -57,6 +61,10 @@ public partial class JoinGamePage : ContentPage
 
         var hasInvite = _vm.InviteStatus?.HasPendingCode == true;
         InviteBanner.IsVisible = hasInvite;
+        InviteEntryPanel.IsVisible = !hasInvite;
+        InviteSuccessLabel.IsVisible = !string.IsNullOrEmpty(_vm.InviteSuccessMessage);
+        InviteSuccessLabel.Text = _vm.InviteSuccessMessage ?? "";
+        InviteApplyBtn.IsEnabled = !_vm.IsLoading && !string.IsNullOrWhiteSpace(_vm.InviteCodeInput);
         if (hasInvite && _vm.InviteStatus != null)
         {
             InviteBannerLabel.Text = string.Format(
@@ -74,6 +82,12 @@ public partial class JoinGamePage : ContentPage
     private void OnFilterAll(object? sender, EventArgs e) => _vm?.SetVariantFilter(null);
     private void OnFilterMakopa(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Makopa);
     private void OnFilterKopo(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Kopo);
+
+    private async void OnApplyInvite(object? sender, EventArgs e)
+    {
+        if (_vm == null) return;
+        await _vm.ApplyInviteCodeAsync();
+    }
 
     private async void OnRefresh(object? sender, EventArgs e)
     {

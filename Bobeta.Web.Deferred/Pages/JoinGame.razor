@@ -18,10 +18,15 @@
 
     <div class="space-y-3 px-5">
         <ErrorBanner Message="@ViewModel.ErrorMessage" />
-        <InviteDiscountBanner
+        <InviteCodePanel
             HasPendingCode="@(ViewModel.InviteStatus?.HasPendingCode == true)"
-            Title="@(ViewModel.InviteStatus is { HasPendingCode: true } ? string.Format(I18n.T("invite_discount_banner"), ViewModel.InviteStatus.DiscountPercent.ToString("N0")) : "")"
-            Detail="@(ViewModel.InviteStatus is { HasPendingCode: true, Code: not null } ? string.Format(I18n.T("invite_code_label"), ViewModel.InviteStatus.Code) : null)" />
+            PendingTitle="@(ViewModel.InviteStatus is { HasPendingCode: true } ? string.Format(I18n.T("invite_discount_banner"), ViewModel.InviteStatus.DiscountPercent.ToString("N0")) : "")"
+            PendingDetail="@(ViewModel.InviteStatus is { HasPendingCode: true, Code: not null } ? string.Format(I18n.T("invite_code_label"), ViewModel.InviteStatus.Code) : null)"
+            CodeInput="@ViewModel.InviteCodeInput"
+            CodeInputChanged="OnInviteCodeChanged"
+            OnApply="ViewModel.ApplyInviteCodeAsync"
+            Disabled="@ViewModel.IsLoading"
+            SuccessMessage="@ViewModel.InviteSuccessMessage" />
         <div class="flex flex-wrap gap-2">
             <button type="button" class="@FilterClass(null)" @onclick="() => SetFilter(null)">@I18n.T("filter_all_games")</button>
             <button type="button" class="@FilterClass(GameVariant.Makopa)" @onclick="() => SetFilter(GameVariant.Makopa)">Makopa</button>
@@ -66,6 +71,7 @@
     private async Task LoadGames() => await ViewModel.LoadGamesAsync(forceRefresh: true);
     private async Task DoJoin(Guid gameId) => await ViewModel.JoinGameAsync(gameId);
     private void SetFilter(GameVariant? variant) => ViewModel.SetVariantFilter(variant);
+    private void OnInviteCodeChanged(string value) => ViewModel.InviteCodeInput = value;
 
     private string FilterClass(GameVariant? variant) =>
         ViewModel.VariantFilter == variant

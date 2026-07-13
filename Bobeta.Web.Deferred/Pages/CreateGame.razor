@@ -12,10 +12,15 @@
 
         <ErrorBanner Message="@ViewModel.ErrorMessage" />
 
-        <InviteDiscountBanner
+        <InviteCodePanel
             HasPendingCode="@(ViewModel.InviteStatus?.HasPendingCode == true)"
-            Title="@DiscountTitle"
-            Detail="@DiscountDetail" />
+            PendingTitle="@DiscountTitle"
+            PendingDetail="@DiscountDetail"
+            CodeInput="@ViewModel.InviteCodeInput"
+            CodeInputChanged="OnInviteCodeChanged"
+            OnApply="ViewModel.ApplyInviteCodeAsync"
+            Disabled="@ViewModel.IsLoading"
+            SuccessMessage="@ViewModel.InviteSuccessMessage" />
 
         <div class="card-surface glow-gold overflow-hidden rounded-2xl border border-border/50">
             <section class="p-5">
@@ -121,6 +126,8 @@
             : "choice-unselected flex flex-col items-center justify-center rounded-xl border border-border/80 py-4 text-foreground transition-all active:scale-[0.98]";
 
     private void Pick(decimal amount) => ViewModel.SetBet(amount);
+
+    private void OnInviteCodeChanged(string value) => ViewModel.InviteCodeInput = value;
 
     private async Task Submit() => await ViewModel.CreateAsync();
 }

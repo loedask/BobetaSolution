@@ -25,6 +25,7 @@ public class AppStateService(LocalStorageService storage)
         State.ActiveGameSessionId = loaded.ActiveGameSessionId;
         State.SelectedLanguage = loaded.SelectedLanguage;
         State.PendingInviteCode = loaded.PendingInviteCode;
+        State.InvitePromptDismissed = loaded.InvitePromptDismissed;
         RaiseStateChanged();
     }
 
@@ -76,7 +77,13 @@ public class AppStateService(LocalStorageService storage)
         RaiseStateChanged();
     }
 
-    /// <summary>Clear auth and session; call PersistAsync after to save. Keeps <see cref="AppState.PendingInviteCode"/>.</summary>
+    public void SetInvitePromptDismissed(bool dismissed)
+    {
+        State.InvitePromptDismissed = dismissed;
+        RaiseStateChanged();
+    }
+
+    /// <summary>Clear auth and session; call PersistAsync after to save. Keeps <see cref="AppState.PendingInviteCode"/> and <see cref="AppState.InvitePromptDismissed"/>.</summary>
     public void ClearSession()
     {
         State.AccessToken = null;

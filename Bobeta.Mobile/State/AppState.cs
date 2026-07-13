@@ -18,5 +18,8 @@ public class AppState
     /// <summary>Invite code captured before login; kept across logout.</summary>
     public string? PendingInviteCode { get; set; }
 
+    /// <summary>User dismissed the home invite tip; kept across logout.</summary>
+    public bool InvitePromptDismissed { get; set; }
+
     public bool IsAuthenticated => !string.IsNullOrEmpty(AccessToken);
 }

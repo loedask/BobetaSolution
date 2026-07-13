@@ -29,6 +29,10 @@ public partial class CreateGamePage : ContentPage
         DescLabel.Text = i18n.T("choose_bet_desc");
         BetLabel.Text = i18n.T("your_bet");
         CreateBtn.Text = i18n.T("create_game");
+        InviteHaveCodeLabel.Text = i18n.T("invite_have_code");
+        InviteHintLabel.Text = i18n.T("invite_enter_hint");
+        InviteApplyBtn.Text = i18n.T("invite_apply");
+        InviteCodeEntry.Placeholder = i18n.T("invite_enter_code");
         await _vm.LoadInviteStatusAsync();
         SyncUi();
     }
@@ -58,6 +62,10 @@ public partial class CreateGamePage : ContentPage
 
         var hasInvite = _vm.InviteStatus?.HasPendingCode == true;
         InviteBanner.IsVisible = hasInvite;
+        InviteEntryPanel.IsVisible = !hasInvite;
+        InviteSuccessLabel.IsVisible = !string.IsNullOrEmpty(_vm.InviteSuccessMessage);
+        InviteSuccessLabel.Text = _vm.InviteSuccessMessage ?? "";
+        InviteApplyBtn.IsEnabled = !_vm.IsLoading && !string.IsNullOrWhiteSpace(_vm.InviteCodeInput);
         if (hasInvite && _vm.InviteStatus != null)
         {
             InviteBannerLabel.Text = string.Format(
@@ -79,6 +87,12 @@ public partial class CreateGamePage : ContentPage
     {
         if (sender is Button b && int.TryParse(b.Text, out var n))
             _vm?.SetPresetAmount(n);
+    }
+
+    private async void OnApplyInvite(object? sender, EventArgs e)
+    {
+        if (_vm == null) return;
+        await _vm.ApplyInviteCodeAsync();
     }
 
     private async void OnCreate(object? sender, EventArgs e)

@@ -179,6 +179,8 @@ public class I18nService(AppStateService appState)
             ["invite_enter_code"] = "Enter code",
             ["invite_apply"] = "Apply",
             ["invite_enter_hint"] = "Have an influencer code? Apply it once for a cheaper next game.",
+            ["invite_have_code"] = "Have an invite code?",
+            ["invite_prompt_dismiss"] = "Not now",
             ["invite_pending_status"] = "Code {0} ready — {1}% off your next stake.",
             ["invite_discount_banner"] = "{0}% off your next game stake with your invite code.",
             ["invite_code_label"] = "Code: {0}",
@@ -241,6 +243,17 @@ public class I18nService(AppStateService appState)
             ["continue_play"] = "Continuer",
             ["cancel_game"] = "Annuler la partie",
             ["sending_move"] = "Envoi du coup…",
+            ["invite_code"] = "Code d'invitation",
+            ["invite_enter_code"] = "Entrer le code",
+            ["invite_apply"] = "Appliquer",
+            ["invite_enter_hint"] = "Vous avez un code influenceur ? Appliquez-le une fois pour une mise réduite.",
+            ["invite_have_code"] = "Vous avez un code d'invitation ?",
+            ["invite_prompt_dismiss"] = "Pas maintenant",
+            ["invite_pending_status"] = "Code {0} prêt — {1} % de réduction sur votre prochaine mise.",
+            ["invite_discount_banner"] = "{0} % de réduction sur votre prochaine mise avec votre code.",
+            ["invite_code_label"] = "Code : {0}",
+            ["invite_you_pay"] = "Vous payez {0} FCFA pour cette partie",
+            ["invite_applied"] = "Code appliqué pour votre prochaine partie.",
         };
 
         var kt = new Dictionary<string, string>(en);

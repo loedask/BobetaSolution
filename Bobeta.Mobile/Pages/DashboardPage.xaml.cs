@@ -32,6 +32,11 @@ public partial class DashboardPage : ContentPage
         SeeAllBtn.Text = i18n.T("see_all");
         TrustLabel.Text = i18n.T("trust_message");
         EmptyTx.Text = "No recent activity";
+        InviteHaveCodeLabel.Text = i18n.T("invite_have_code");
+        InviteHintLabel.Text = i18n.T("invite_enter_hint");
+        InviteDismissBtn.Text = i18n.T("invite_prompt_dismiss");
+        InviteApplyBtn.Text = i18n.T("invite_apply");
+        InviteCodeEntry.Placeholder = i18n.T("invite_enter_code");
 
         _ = _vm.LoadAsync();
         SyncUi();
@@ -49,9 +54,37 @@ public partial class DashboardPage : ContentPage
     private void SyncUi()
     {
         if (_vm == null) return;
+        var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
         ErrorLabel.Text = _vm.ErrorMessage ?? "";
         ErrorLabel.IsVisible = !string.IsNullOrEmpty(_vm.ErrorMessage);
         Busy.IsRunning = _vm.IsLoading && _vm.Transactions.Count == 0;
+
+        InvitePromptPanel.IsVisible = _vm.ShowInvitePrompt;
+        InviteSuccessLabel.IsVisible = !string.IsNullOrEmpty(_vm.InviteSuccessMessage);
+        InviteSuccessLabel.Text = _vm.InviteSuccessMessage ?? "";
+        InviteApplyBtn.IsEnabled = !_vm.IsLoading && !string.IsNullOrWhiteSpace(_vm.InviteCodeInput);
+
+        var hasPending = _vm.InviteStatus?.HasPendingCode == true;
+        InvitePendingBanner.IsVisible = hasPending && !_vm.ShowInvitePrompt;
+        if (hasPending && _vm.InviteStatus != null)
+        {
+            InvitePendingLabel.Text = string.Format(
+                i18n.T("invite_pending_status"),
+                _vm.InviteStatus.Code ?? "",
+                _vm.InviteStatus.DiscountPercent.ToString("N0"));
+        }
+    }
+
+    private async void OnApplyInvite(object? sender, EventArgs e)
+    {
+        if (_vm == null) return;
+        await _vm.ApplyInviteCodeAsync();
+    }
+
+    private async void OnDismissInvite(object? sender, EventArgs e)
+    {
+        if (_vm == null) return;
+        await _vm.DismissInvitePromptAsync();
     }
 
     private async void OnDeposit(object? sender, EventArgs e)

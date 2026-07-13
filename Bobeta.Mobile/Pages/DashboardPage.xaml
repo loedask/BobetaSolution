@@ -15,6 +15,43 @@
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Spacing="16">
                 <Label x:Name="ErrorLabel" IsVisible="False" TextColor="{StaticResource Destructive}" FontSize="13" />
+                <Border x:Name="InvitePromptPanel" IsVisible="False" Padding="14" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 14">
+                    <VerticalStackLayout Spacing="8">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Spacing="4">
+                                <Label x:Name="InviteHaveCodeLabel" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
+                                <Label x:Name="InviteHintLabel" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+                            </VerticalStackLayout>
+                            <Button
+                                x:Name="InviteDismissBtn"
+                                Grid.Column="1"
+                                Clicked="OnDismissInvite"
+                                BackgroundColor="Transparent"
+                                TextColor="{StaticResource MutedForeground}"
+                                FontSize="12"
+                                VerticalOptions="Start" />
+                        </Grid>
+                        <Label x:Name="InviteSuccessLabel" IsVisible="False" FontSize="12" TextColor="{StaticResource AccentGreen}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Entry
+                                x:Name="InviteCodeEntry"
+                                Placeholder="CODE"
+                                Text="{Binding InviteCodeInput, Mode=TwoWay}"
+                                TextColor="{StaticResource Foreground}"
+                                BackgroundColor="{StaticResource SecondaryCard}" />
+                            <Button
+                                x:Name="InviteApplyBtn"
+                                Grid.Column="1"
+                                Clicked="OnApplyInvite"
+                                CornerRadius="10"
+                                BackgroundColor="{StaticResource PrimaryGold}"
+                                TextColor="{StaticResource PrimaryDarkText}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+                <Border x:Name="InvitePendingBanner" IsVisible="False" Padding="12" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 12">
+                    <Label x:Name="InvitePendingLabel" FontSize="13" TextColor="{StaticResource PrimaryGold}" />
+                </Border>
                 <Border Padding="20" BackgroundColor="{StaticResource Card}" Stroke="{StaticResource Border}" StrokeThickness="1" StrokeShape="RoundRectangle 16">
                     <VerticalStackLayout Spacing="12">
                         <Label x:Name="WalletTitle" FontSize="13" TextColor="{StaticResource MutedForeground}" />

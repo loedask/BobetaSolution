@@ -23,6 +23,7 @@ public class AppStateService(PreferencesStorageService storage)
         State.ActiveGameSessionId = loaded.ActiveGameSessionId;
         State.SelectedLanguage = loaded.SelectedLanguage;
         State.PendingInviteCode = loaded.PendingInviteCode;
+        State.InvitePromptDismissed = loaded.InvitePromptDismissed;
         RaiseStateChanged();
     }
 
@@ -70,6 +71,12 @@ public class AppStateService(PreferencesStorageService storage)
     public void SetPendingInviteCode(string? code)
     {
         State.PendingInviteCode = string.IsNullOrWhiteSpace(code) ? null : code.Trim().ToUpperInvariant();
+        RaiseStateChanged();
+    }
+
+    public void SetInvitePromptDismissed(bool dismissed)
+    {
+        State.InvitePromptDismissed = dismissed;
         RaiseStateChanged();
     }
 
