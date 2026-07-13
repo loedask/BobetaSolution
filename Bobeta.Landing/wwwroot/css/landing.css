@@ -236,10 +236,10 @@
 /* —— Hero —— */
 .lp-hero {
   position: relative;
-  min-height: min(100svh, 58rem);
+  min-height: min(72svh, 40rem);
   display: grid;
   align-items: end;
-  padding: 5rem 0 4.5rem;
+  padding: 3.25rem 0 2.75rem;
   isolation: isolate;
 }
 
@@ -336,15 +336,15 @@
   position: relative;
   z-index: 4;
   max-width: 38rem;
-  padding-bottom: 1rem;
+  padding-bottom: 0.35rem;
 }
 
 .lp-eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  margin-bottom: 1.4rem;
-  padding: 0.4rem 0.85rem;
+  margin-bottom: 0.85rem;
+  padding: 0.35rem 0.8rem;
   border: 1px solid rgba(242, 140, 40, 0.28);
   border-radius: 999px;
   background: rgba(242, 140, 40, 0.08);
@@ -368,10 +368,10 @@
 
 .lp-hero__title {
   display: grid;
-  gap: 0.08em;
+  gap: 0.04em;
   margin: 0;
-  font-size: clamp(3.6rem, 14vw, 7.4rem);
-  line-height: 0.88;
+  font-size: clamp(3.1rem, 11vw, 6.1rem);
+  line-height: 0.86;
   letter-spacing: 0.04em;
 }
 
@@ -391,8 +391,8 @@
 .lp-hero__line--3 span { animation-delay: 0.45s; }
 
 .lp-hero__script {
-  margin: 1.15rem 0 1.2rem;
-  font-size: clamp(2rem, 5vw, 3.2rem);
+  margin: 0.7rem 0 0.75rem;
+  font-size: clamp(1.75rem, 4vw, 2.6rem);
   opacity: 0;
   animation: lp-rise 0.85s ease-out 0.7s both;
 }
@@ -404,10 +404,10 @@
 
 .lp-hero__lede {
   max-width: 28rem;
-  margin: 0 0 1.85rem;
+  margin: 0 0 1.25rem;
   color: var(--lp-mute);
-  font-size: 1.05rem;
-  line-height: 1.7;
+  font-size: 1rem;
+  line-height: 1.55;
   font-weight: 450;
   opacity: 0;
   animation: lp-rise 0.85s ease-out 0.85s both;
@@ -446,9 +446,9 @@
 
 @media (max-width: 767px) {
   .lp-hero {
-    min-height: 92svh;
+    min-height: min(78svh, 36rem);
     align-items: end;
-    padding-top: 2rem;
+    padding: 2rem 0 2.25rem;
   }
 
   .lp-hero__veil {
