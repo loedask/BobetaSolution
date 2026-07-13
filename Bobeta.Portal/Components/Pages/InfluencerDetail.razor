@@ -34,7 +34,7 @@ else
     <section class="portal-card portal-section">
         <dl class="portal-dl">
             <div><dt>Invite code</dt><dd><code>@_influencer.Code</code></dd></div>
-            <div><dt>Invite link</dt><dd><code>@InviteUrl</code></dd></div>
+            <div><dt>Invite link</dt><dd><CopyableText Text="@InviteUrl" /></dd></div>
             <div><dt>Commission</dt><dd>@_influencer.CommissionPercent.ToString("N2")% of half the game platform fee per attributed player</dd></div>
             <div><dt>Status</dt><dd>@(_influencer.IsActive ? "Active" : "Inactive")</dd></div>
         </dl>

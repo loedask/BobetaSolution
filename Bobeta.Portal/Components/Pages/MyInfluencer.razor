@@ -29,7 +29,7 @@ else
         <dl class="portal-dl">
             <div><dt>Display name</dt><dd>@_influencer.DisplayName</dd></div>
             <div><dt>Invite code</dt><dd><code>@_influencer.Code</code></dd></div>
-            <div><dt>Invite link</dt><dd><code>@InviteUrl</code></dd></div>
+            <div><dt>Invite link</dt><dd><CopyableText Text="@InviteUrl" /></dd></div>
             <div><dt>Your commission</dt><dd>@_influencer.CommissionPercent.ToString("N2")% of half the game platform fee per player who used your code</dd></div>
         </dl>
         <p class="portal-muted">Player discount is set by the platform owner and applied when a player uses your code on a game.</p>

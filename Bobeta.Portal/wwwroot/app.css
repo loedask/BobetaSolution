@@ -333,6 +333,23 @@ a {
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
+.portal-button-compact {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.82rem;
+  box-shadow: none;
+}
+
+.portal-copyable {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.portal-copyable-value {
+  word-break: break-all;
+}
+
 .portal-button-primary:hover:not(:disabled) {
   background: linear-gradient(145deg, #ffae60, #f08f2a 48%, #b85f0f);
   border-color: transparent;
