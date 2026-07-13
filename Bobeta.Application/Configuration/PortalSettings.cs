@@ -10,4 +10,7 @@ public class PortalSettings
 
   /// <summary>Initial password for newly provisioned admin accounts. Change after first login in production.</summary>
   public string BootstrapPassword { get; set; } = string.Empty;
+
+  /// <summary>Public player web (PWA) origin used to build influencer invite links, e.g. https://bobeta-pwa.azurewebsites.net.</summary>
+  public string PlayerWebBaseUrl { get; set; } = string.Empty;
 }
