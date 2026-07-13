@@ -2,6 +2,6 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ActiveDebugProfile>https</ActiveDebugProfile>
-    <NameOfLastUsedPublishProfile>C:\Users\Sanel\source\repos\BobetaSolution\Bobeta.Web.Host\Properties\PublishProfiles\bobeta-pwa - Zip Deploy.pubxml</NameOfLastUsedPublishProfile>
+    <NameOfLastUsedPublishProfile>C:\Users\Sanel\source\repos\BobetaSolution\Bobeta.Web.Host\Properties\PublishProfiles\bobeta-pwa - Zip Deploy1.pubxml</NameOfLastUsedPublishProfile>
   </PropertyGroup>
 </Project>

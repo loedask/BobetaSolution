@@ -70,6 +70,11 @@
                 <p class="portal-stat">@FormatAmount(_stats.Revenue.PartnerSharePaid)</p>
                 <p class="portal-muted">License partner earnings in period</p>
             </section>
+            <section class="portal-card portal-stat-card">
+                <h2>Influencer share paid</h2>
+                <p class="portal-stat">@FormatAmount(_stats.Revenue.InfluencerSharePaid)</p>
+                <p class="portal-muted">Influencer earnings from game fees</p>
+            </section>
         }
     </div>
 
@@ -128,7 +133,7 @@
                     <div class="portal-table-wrap">
                         <table class="portal-table">
                             <thead>
-                                <tr><th>Source</th><th>Gross</th><th>Partner share</th><th>Txns</th></tr>
+                                <tr><th>Source</th><th>Gross</th><th>Partner share</th><th>Influencer share</th><th>Txns</th></tr>
                             </thead>
                             <tbody>
                                 @foreach (var row in _stats.RevenueBySource)
@@ -137,6 +142,7 @@
                                         <td>@row.Label</td>
                                         <td>@FormatAmount(row.GrossPlatformRevenue)</td>
                                         <td>@FormatAmount(row.PartnerAmount)</td>
+                                        <td>@FormatAmount(row.InfluencerAmount)</td>
                                         <td>@row.TransactionCount</td>
                                     </tr>
                                 }
@@ -160,15 +166,48 @@
             {
                 <div class="portal-table-wrap">
                     <table class="portal-table">
+                            <thead>
+                                <tr><th>Partner</th><th>Partner share</th><th>Influencer share</th><th>Gross</th><th>Txns</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in _stats.RevenueByPartner)
+                                {
+                                    <tr>
+                                        <td>@row.Label</td>
+                                        <td>@FormatAmount(row.PartnerAmount)</td>
+                                        <td>@FormatAmount(row.InfluencerAmount)</td>
+                                        <td>@FormatAmount(row.GrossPlatformRevenue)</td>
+                                        <td>@row.TransactionCount</td>
+                                    </tr>
+                                }
+                            </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+
+    @if (_stats.ShowInfluencerLeaderboard)
+    {
+        <section class="portal-card portal-section">
+            <h2>Revenue by influencer</h2>
+            @if (_stats.RevenueByInfluencer.Count == 0)
+            {
+                <p class="portal-muted">No influencer revenue in this period.</p>
+            }
+            else
+            {
+                <div class="portal-table-wrap">
+                    <table class="portal-table">
                         <thead>
-                            <tr><th>Partner</th><th>Partner share</th><th>Gross</th><th>Txns</th></tr>
+                            <tr><th>Influencer</th><th>Influencer share</th><th>Gross</th><th>Txns</th></tr>
                         </thead>
                         <tbody>
-                            @foreach (var row in _stats.RevenueByPartner)
+                            @foreach (var row in _stats.RevenueByInfluencer)
                             {
                                 <tr>
                                     <td>@row.Label</td>
-                                    <td>@FormatAmount(row.PartnerAmount)</td>
+                                    <td>@FormatAmount(row.InfluencerAmount)</td>
                                     <td>@FormatAmount(row.GrossPlatformRevenue)</td>
                                     <td>@row.TransactionCount</td>
                                 </tr>

@@ -27,6 +27,7 @@ public sealed class DashboardService(
     GameDashboardStatsDto games = new();
     IReadOnlyList<PartnerRevenueBreakdownDto> revenueByPartner = [];
     IReadOnlyList<PartnerRevenueBreakdownDto> revenueBySource = [];
+    IReadOnlyList<PartnerRevenueBreakdownDto> revenueByInfluencer = [];
 
     if (scope.ShowFinancials)
     {
@@ -37,6 +38,9 @@ public sealed class DashboardService(
 
       if (scope.ShowPartnerLeaderboard)
         revenueByPartner = await stats.GetRevenueByPartnerAsync(filter, cancellationToken);
+
+      if (scope.ShowInfluencerLeaderboard)
+        revenueByInfluencer = await stats.GetRevenueByInfluencerAsync(filter, cancellationToken);
     }
 
     return new DashboardStatsDto
@@ -45,13 +49,15 @@ public sealed class DashboardService(
       ToUtc = query.ToUtc,
       ShowFinancials = scope.ShowFinancials,
       ShowPartnerLeaderboard = scope.ShowPartnerLeaderboard,
+      ShowInfluencerLeaderboard = scope.ShowInfluencerLeaderboard,
       Players = players,
       Payments = payments,
       Revenue = revenue,
       Games = games,
       PlayersByCountry = playersByCountry,
       RevenueByPartner = revenueByPartner,
-      RevenueBySource = revenueBySource
+      RevenueBySource = revenueBySource,
+      RevenueByInfluencer = revenueByInfluencer
     };
   }
 
@@ -70,10 +76,13 @@ public sealed class DashboardService(
       metrics,
       dashboard.PlayersByCountry.Select(r => (r.CountryCode, r.CountryName, r.Count)).ToList(),
       dashboard.ShowFinancials
-        ? dashboard.RevenueBySource.Select(r => (r.Label, r.GrossPlatformRevenue, r.PartnerAmount, r.TransactionCount)).ToList()
+        ? dashboard.RevenueBySource.Select(r => (r.Label, r.GrossPlatformRevenue, r.PartnerAmount, r.InfluencerAmount, r.TransactionCount)).ToList()
         : null,
       dashboard.ShowPartnerLeaderboard
-        ? dashboard.RevenueByPartner.Select(r => (r.Label, r.PartnerAmount, r.GrossPlatformRevenue, r.TransactionCount)).ToList()
+        ? dashboard.RevenueByPartner.Select(r => (r.Label, r.PartnerAmount, r.InfluencerAmount, r.GrossPlatformRevenue, r.TransactionCount)).ToList()
+        : null,
+      dashboard.ShowInfluencerLeaderboard
+        ? dashboard.RevenueByInfluencer.Select(r => (r.Label, r.InfluencerAmount, r.GrossPlatformRevenue, r.TransactionCount)).ToList()
         : null);
   }
 
@@ -108,7 +117,7 @@ public sealed class DashboardService(
 
     return ExcelReportWriter.Build(
       "Revenue detail",
-      ["Date (UTC)", "Source", "Country", "Gross revenue", "Partner rate %", "Partner amount", "Currency"],
+      ["Date (UTC)", "Source", "Country", "Gross revenue", "Partner rate %", "Partner amount", "Influencer amount", "Platform retained", "Currency"],
       allocations.Select(a => new object?[]
       {
         a.CreatedAt,
@@ -117,6 +126,8 @@ public sealed class DashboardService(
         a.GrossPlatformRevenue,
         a.PartnerSharePercent,
         a.PartnerAmount,
+        a.InfluencerAmount,
+        a.PlatformRetainedAmount,
         a.Currency
       }));
   }
@@ -168,6 +179,7 @@ public sealed class DashboardService(
       ("Games", "Platform commission", dashboard.Games.PlatformCommission),
       ("Revenue", "Gross platform revenue", dashboard.Revenue.GrossPlatformRevenue),
       ("Revenue", "Partner share paid", dashboard.Revenue.PartnerSharePaid),
+      ("Revenue", "Influencer share paid", dashboard.Revenue.InfluencerSharePaid),
       ("Revenue", "Platform retained", dashboard.Revenue.PlatformRetained),
       ("Revenue", "Revenue allocations", dashboard.Revenue.AllocationCount)
     ]);
@@ -193,24 +205,28 @@ public sealed class DashboardService(
       PortalUserRole.PlatformOwner => new DashboardScope
       {
         ShowFinancials = true,
-        ShowPartnerLeaderboard = true
+        ShowPartnerLeaderboard = true,
+        ShowInfluencerLeaderboard = true
       },
       PortalUserRole.Member => new DashboardScope
       {
         ShowFinancials = false,
-        ShowPartnerLeaderboard = false
+        ShowPartnerLeaderboard = false,
+        ShowInfluencerLeaderboard = false
       },
       PortalUserRole.LicensePartner => new DashboardScope
       {
         ShowFinancials = true,
         ShowPartnerLeaderboard = false,
+        ShowInfluencerLeaderboard = false,
         CountryCodes = await access.GetLicensedCountryCodesAsync(portalUserId, cancellationToken),
         LicensePartnerId = (await partners.GetByPortalUserIdAsync(portalUserId, cancellationToken))?.Id
       },
       PortalUserRole.Influencer => new DashboardScope
       {
         ShowFinancials = false,
-        ShowPartnerLeaderboard = false
+        ShowPartnerLeaderboard = false,
+        ShowInfluencerLeaderboard = false
       },
       _ => throw new UnauthorizedAccessException("Unknown portal role.")
     };
@@ -228,6 +244,7 @@ public sealed class DashboardService(
   {
     public bool ShowFinancials { get; init; }
     public bool ShowPartnerLeaderboard { get; init; }
+    public bool ShowInfluencerLeaderboard { get; init; }
     public IReadOnlyList<string>? CountryCodes { get; init; }
     public Guid? LicensePartnerId { get; init; }
   }

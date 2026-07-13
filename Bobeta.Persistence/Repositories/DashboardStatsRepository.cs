@@ -94,15 +94,23 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
       {
         Gross = g.Sum(x => x.GrossPlatformRevenue),
         Partner = g.Sum(x => x.PartnerAmount),
+        Influencer = g.Sum(x => x.InfluencerAmount),
         Retained = g.Sum(x => x.PlatformRetainedAmount),
         Count = g.Count()
       })
       .FirstOrDefaultAsync(cancellationToken);
 
+    // Authoritative influencer ledger for platform-wide totals (covers games with no partner row).
+    var influencerShare = filter.LicensePartnerId.HasValue
+      ? summary?.Influencer ?? 0
+      : await FilterInfluencerCommissions(filter)
+          .SumAsync(a => (decimal?)a.InfluencerAmount, cancellationToken) ?? 0;
+
     return new RevenueDashboardStatsDto
     {
       GrossPlatformRevenue = summary?.Gross ?? 0,
       PartnerSharePaid = summary?.Partner ?? 0,
+      InfluencerSharePaid = influencerShare,
       PlatformRetained = summary?.Retained ?? 0,
       AllocationCount = summary?.Count ?? 0
     };
@@ -143,6 +151,7 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
         g.Key.LicensePartnerId,
         g.Key.LegalName,
         PartnerAmount = g.Sum(x => x.PartnerAmount),
+        InfluencerAmount = g.Sum(x => x.InfluencerAmount),
         Gross = g.Sum(x => x.GrossPlatformRevenue),
         Count = g.Count()
       })
@@ -155,6 +164,7 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
         Key = x.LicensePartnerId.ToString(),
         Label = x.LegalName,
         PartnerAmount = x.PartnerAmount,
+        InfluencerAmount = x.InfluencerAmount,
         GrossPlatformRevenue = x.Gross,
         TransactionCount = x.Count
       })
@@ -171,6 +181,7 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
       {
         Source = g.Key,
         PartnerAmount = g.Sum(x => x.PartnerAmount),
+        InfluencerAmount = g.Sum(x => x.InfluencerAmount),
         Gross = g.Sum(x => x.GrossPlatformRevenue),
         Count = g.Count()
       })
@@ -183,6 +194,38 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
         Key = x.Source.ToString(),
         Label = FormatSourceType(x.Source),
         PartnerAmount = x.PartnerAmount,
+        InfluencerAmount = x.InfluencerAmount,
+        GrossPlatformRevenue = x.Gross,
+        TransactionCount = x.Count
+      })
+      .ToList();
+  }
+
+  public async Task<IReadOnlyList<PartnerRevenueBreakdownDto>> GetRevenueByInfluencerAsync(
+      DashboardStatsFilter filter,
+      CancellationToken cancellationToken = default)
+  {
+    var rows = await FilterInfluencerCommissions(filter)
+      .GroupBy(a => new { a.InfluencerId, a.Influencer.DisplayName, a.Influencer.Code })
+      .Select(g => new
+      {
+        g.Key.InfluencerId,
+        g.Key.DisplayName,
+        g.Key.Code,
+        InfluencerAmount = g.Sum(x => x.InfluencerAmount),
+        Gross = g.Sum(x => x.GrossPlatformRevenue),
+        Count = g.Count()
+      })
+      .OrderByDescending(x => x.InfluencerAmount)
+      .ToListAsync(cancellationToken);
+
+    return rows
+      .Select(x => new PartnerRevenueBreakdownDto
+      {
+        Key = x.InfluencerId.ToString(),
+        Label = $"{x.DisplayName} ({x.Code})",
+        PartnerAmount = 0,
+        InfluencerAmount = x.InfluencerAmount,
         GrossPlatformRevenue = x.Gross,
         TransactionCount = x.Count
       })
@@ -210,6 +253,8 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
         GrossPlatformRevenue = a.GrossPlatformRevenue,
         PartnerSharePercent = a.PartnerSharePercent,
         PartnerAmount = a.PartnerAmount,
+        InfluencerAmount = a.InfluencerAmount,
+        PlatformRetainedAmount = a.PlatformRetainedAmount,
         Currency = a.Currency,
         CreatedAt = a.CreatedAt
       })
@@ -263,6 +308,24 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
     {
       var codes = NormalizeCountryCodes(filter.CountryCodes);
       query = query.Where(a => codes.Contains(a.CountryCode));
+    }
+
+    return query;
+  }
+
+  private IQueryable<Domain.Entities.InfluencerCommissionAllocation> FilterInfluencerCommissions(DashboardStatsFilter filter)
+  {
+    var query = db.InfluencerCommissionAllocations.AsNoTracking();
+
+    if (filter.FromUtc.HasValue)
+      query = query.Where(a => a.CreatedAt >= filter.FromUtc.Value);
+    if (filter.ToUtc.HasValue)
+      query = query.Where(a => a.CreatedAt <= filter.ToUtc.Value);
+
+    if (filter.CountryCodes is { Count: > 0 })
+    {
+      var codes = NormalizeCountryCodes(filter.CountryCodes);
+      query = query.Where(a => a.Player.CountryCode != null && codes.Contains(a.Player.CountryCode));
     }
 
     return query;

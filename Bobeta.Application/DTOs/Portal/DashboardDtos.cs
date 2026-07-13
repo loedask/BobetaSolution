@@ -6,6 +6,7 @@ public sealed class DashboardStatsDto
   public DateTime? ToUtc { get; init; }
   public bool ShowFinancials { get; init; }
   public bool ShowPartnerLeaderboard { get; init; }
+  public bool ShowInfluencerLeaderboard { get; init; }
   public PlayerDashboardStatsDto Players { get; init; } = new();
   public PaymentDashboardStatsDto Payments { get; init; } = new();
   public RevenueDashboardStatsDto Revenue { get; init; } = new();
@@ -13,6 +14,7 @@ public sealed class DashboardStatsDto
   public IReadOnlyList<CountryCountDto> PlayersByCountry { get; init; } = [];
   public IReadOnlyList<PartnerRevenueBreakdownDto> RevenueByPartner { get; init; } = [];
   public IReadOnlyList<PartnerRevenueBreakdownDto> RevenueBySource { get; init; } = [];
+  public IReadOnlyList<PartnerRevenueBreakdownDto> RevenueByInfluencer { get; init; } = [];
 }
 
 public sealed class PlayerDashboardStatsDto
@@ -35,6 +37,7 @@ public sealed class RevenueDashboardStatsDto
 {
   public decimal GrossPlatformRevenue { get; init; }
   public decimal PartnerSharePaid { get; init; }
+  public decimal InfluencerSharePaid { get; init; }
   public decimal PlatformRetained { get; init; }
   public int AllocationCount { get; init; }
 }
