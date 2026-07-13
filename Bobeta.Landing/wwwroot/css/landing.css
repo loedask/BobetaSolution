@@ -891,7 +891,7 @@
 /* —— Finale —— */
 .lp-finale {
   position: relative;
-  padding: 6rem 0 7rem;
+  padding: 6rem 0 8.5rem;
   overflow: hidden;
   border-top: 1px solid var(--lp-line);
   text-align: center;
@@ -909,23 +909,32 @@
 .lp-finale__type {
   position: absolute;
   left: 50%;
-  top: 46%;
-  transform: translate(-50%, -50%);
+  top: auto;
+  bottom: -0.15em;
+  transform: translateX(-50%);
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 700;
-  font-size: clamp(4.5rem, 20vw, 14rem);
+  font-size: clamp(5rem, 22vw, 16rem);
   letter-spacing: 0.06em;
+  line-height: 0.82;
   color: transparent;
-  -webkit-text-stroke: 1px rgba(247, 244, 239, 0.07);
+  -webkit-text-stroke: 1px rgba(247, 244, 239, 0.08);
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
+  z-index: 0;
+}
+
+/* Keep brand BE orange, but translucent so headline stays readable */
+.lp-finale__type .lp-mark__be {
+  color: rgba(242, 140, 40, 0.16);
+  -webkit-text-stroke: 1px rgba(242, 140, 40, 0.35);
 }
 
 .lp-finale__panel {
   position: relative;
   z-index: 1;
-  max-width: 40rem;
+  max-width: 42rem;
 }
 
 .lp-finale__panel .lp-script {
@@ -934,15 +943,19 @@
 }
 
 .lp-finale__panel h2 {
-  margin: 0 0 0.85rem;
-  font-size: clamp(2rem, 4vw, 3rem);
-  line-height: 1.1;
+  margin: 0 auto 0.85rem;
+  max-width: 12.5em;
+  font-size: clamp(2rem, 4.2vw, 3.15rem);
+  line-height: 1.12;
+  text-wrap: balance;
+  text-shadow: 0 0 24px rgba(6, 6, 6, 0.65);
 }
 
 .lp-finale__sub {
   margin: 0 0 1.5rem;
   color: var(--lp-mute);
   line-height: 1.65;
+  text-shadow: 0 0 18px rgba(6, 6, 6, 0.55);
 }
 
 .lp-finale__trust {
@@ -951,6 +964,7 @@
   padding: 0;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
   gap: 0.65rem 1.4rem;
   font-size: 0.74rem;
@@ -962,6 +976,7 @@
 .lp-finale__trust li {
   position: relative;
   padding-left: 0.9rem;
+  line-height: 1.2;
 }
 
 .lp-finale__trust li::before {
