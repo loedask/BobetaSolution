@@ -7,7 +7,7 @@
 <div class="min-h-screen bg-background pb-24">
     <AppHeader Title="@I18n.T("game_history")" ShowBack="true" BackHref="/dashboard" />
 
-    <div class="space-y-4 px-5">
+    <div class="space-y-5 px-5">
         <ErrorBanner Message="@ViewModel.ErrorMessage" />
 
         @if (ViewModel.IsLoading && ViewModel.Items.Count == 0)
@@ -50,7 +50,7 @@
                 </div>
             }
 
-            <div class="space-y-3">
+            <div class="flex flex-col gap-4 pt-1">
                 @foreach (var item in ViewModel.Items)
                 {
                     <article class="@RowCardClass(item) overflow-hidden rounded-2xl border p-4 transition-all">
