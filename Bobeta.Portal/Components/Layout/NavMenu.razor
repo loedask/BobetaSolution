@@ -1,25 +1,38 @@
 <nav class="portal-nav">
     <AuthorizeView>
         <Authorized>
+            <div class="portal-nav-label">Overview</div>
             <NavLink class="portal-nav-link" href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
+        </Authorized>
+    </AuthorizeView>
+    <AuthorizeView Roles="Influencer">
+        <Authorized>
+            <div class="portal-nav-label">Your account</div>
+            <NavLink class="portal-nav-link" href="/my-influencer">My profile</NavLink>
+            <NavLink class="portal-nav-link" href="/my-influencer/revenue">My revenue</NavLink>
         </Authorized>
     </AuthorizeView>
     <AuthorizeView Roles="LicensePartner">
         <Authorized>
+            <div class="portal-nav-label">Your license</div>
             <NavLink class="portal-nav-link" href="/users">Players</NavLink>
             <NavLink class="portal-nav-link" href="/my-license">My license</NavLink>
-            <NavLink class="portal-nav-link" href="/my-license/revenue">Revenue</NavLink>
+            <NavLink class="portal-nav-link" href="/my-license/revenue">My revenue</NavLink>
         </Authorized>
     </AuthorizeView>
     <AuthorizeView Roles="PlatformOwner">
         <Authorized>
+            <div class="portal-nav-label">Platform</div>
             <NavLink class="portal-nav-link" href="/users">Players</NavLink>
             <NavLink class="portal-nav-link" href="/license-partners">License partners</NavLink>
+            <NavLink class="portal-nav-link" href="/influencers">Influencers</NavLink>
+            <NavLink class="portal-nav-link" href="/influencer-settings">Influencer settings</NavLink>
             <NavLink class="portal-nav-link" href="/staff">Staff</NavLink>
         </Authorized>
     </AuthorizeView>
     <AuthorizeView Roles="Member">
         <Authorized>
+            <div class="portal-nav-label">Operations</div>
             <NavLink class="portal-nav-link" href="/users">Players</NavLink>
         </Authorized>
     </AuthorizeView>

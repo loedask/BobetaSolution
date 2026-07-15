@@ -14,6 +14,8 @@ public class GameSessionConfiguration : IEntityTypeConfiguration<GameSession>
         builder.ToTable("GameSessions");
         builder.HasKey(s => s.Id);
         builder.Property(s => s.BetAmount).HasPrecision(18, 2);
+        builder.Property(s => s.CreatorChargedAmount).HasPrecision(18, 2);
+        builder.Property(s => s.OpponentChargedAmount).HasPrecision(18, 2);
         builder.Property(s => s.Variant).HasConversion<int>().HasDefaultValue(GameVariant.Makopa);
         builder.Property(s => s.GameStateJson).HasColumnType("jsonb");
         builder.HasOne(s => s.CreatorPlayer).WithMany().HasForeignKey(s => s.CreatorPlayerId).OnDelete(DeleteBehavior.Restrict);

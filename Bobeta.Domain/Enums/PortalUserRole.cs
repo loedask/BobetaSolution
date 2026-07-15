@@ -5,5 +5,6 @@ public enum PortalUserRole
 {
   Member = 0,
   PlatformOwner = 1,
-  LicensePartner = 2
+  LicensePartner = 2,
+  Influencer = 3
 }

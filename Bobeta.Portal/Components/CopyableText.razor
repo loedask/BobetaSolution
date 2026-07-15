@@ -1,0 +1,61 @@
+@inject IJSRuntime Js
+@implements IDisposable
+
+<div class="portal-copyable">
+    <code class="portal-copyable-value">@Text</code>
+    <button class="portal-button portal-button-compact"
+            type="button"
+            @onclick="CopyAsync"
+            disabled="@string.IsNullOrWhiteSpace(Text)"
+            title="Copy to clipboard">
+        @(_copied ? "Copied" : "Copy")
+    </button>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Text { get; set; } = "";
+
+    private bool _copied;
+    private CancellationTokenSource? _resetCts;
+
+    private async Task CopyAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Text))
+            return;
+
+        try
+        {
+            await Js.InvokeVoidAsync("navigator.clipboard.writeText", Text);
+            _copied = true;
+            _resetCts?.Cancel();
+            _resetCts?.Dispose();
+            _resetCts = new CancellationTokenSource();
+            var token = _resetCts.Token;
+            _ = ResetLabelAsync(token);
+        }
+        catch (JSException)
+        {
+            _copied = false;
+        }
+    }
+
+    private async Task ResetLabelAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(2000, token);
+            _copied = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    public void Dispose()
+    {
+        _resetCts?.Cancel();
+        _resetCts?.Dispose();
+    }
+}

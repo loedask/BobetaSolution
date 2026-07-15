@@ -17,4 +17,5 @@ public class PortalUser
   public Guid? CreatedById { get; set; }
   public PortalUser? CreatedBy { get; set; }
   public LicensePartner? LicensePartner { get; set; }
+  public Influencer? Influencer { get; set; }
 }

@@ -1,11 +1,12 @@
 ﻿using Bobeta.Mobile.Pages;
 using Bobeta.Mobile.Services;
+using Bobeta.Mobile.ViewModels.Notifications;
 
 namespace Bobeta.Mobile;
 
 public partial class AppShell : Shell
 {
-    public AppShell(AppStateService appState)
+    public AppShell(AppStateService appState, NotificationInboxViewModel inbox)
     {
         InitializeComponent();
 
@@ -20,7 +21,10 @@ public partial class AppShell : Shell
         {
             await appState.LoadAsync();
             if (appState.State.IsAuthenticated)
+            {
+                await inbox.InitializeAsync();
                 await GoToAsync("//MainTabs/Dashboard");
+            }
         };
     }
 }

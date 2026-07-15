@@ -3,99 +3,98 @@
 @inject NavigationManager Nav
 @inject I18nService I18n
 
-<header class="landing-header">
-    <div class="landing-container landing-header__inner">
-        <a href="/" class="landing-wordmark landing-wordmark--nav" aria-label="BOBETA">
-            <span>BO</span><span class="landing-wordmark__be">BE</span><span>TA</span>
+<header class="lp-header">
+    <div class="lp-shell lp-header__row">
+        <a href="/" class="lp-mark" aria-label="BOBETA">
+            <span>BO</span><span class="lp-mark__be">BE</span><span>TA</span>
         </a>
-        <nav class="landing-nav">
+        <nav class="lp-nav">
             <a href="#games">@I18n.T("landing_nav_games")</a>
             <a href="#how-it-works">@I18n.T("landing_nav_how")</a>
         </nav>
-        <div class="flex items-center gap-2 sm:gap-3">
-            <button type="button" class="landing-btn landing-btn--ghost hidden !px-3 !py-2 !text-sm !font-medium sm:inline-flex" @onclick="GoToLogin">
+        <div class="lp-header__actions">
+            <button type="button" class="lp-btn lp-btn--ghost lp-btn--sm lp-hide-sm" @onclick="GoToLogin">
                 @I18n.T("landing_nav_sign_in")
             </button>
-            <button type="button" class="landing-btn landing-btn--primary !px-4 !py-2.5 !text-sm" @onclick="GoToStart">
+            <button type="button" class="lp-btn lp-btn--solid lp-btn--sm" @onclick="GoToStart">
                 @I18n.T("landing_cta_play")
             </button>
         </div>
     </div>
 </header>
 
-<section class="landing-hero">
-    <div class="landing-hero__atmosphere" aria-hidden="true">
-        <div class="landing-hero__orb landing-hero__orb--a"></div>
-        <div class="landing-hero__orb landing-hero__orb--b"></div>
-        <div class="landing-hero__grain"></div>
-        <div class="landing-hero__grid"></div>
-        <img class="landing-hero__shirts" src="_content/Bobeta.Landing/images/bobeta-shirts.png" alt="" width="840" height="560" />
-        <div class="landing-hero__shine"></div>
+<section class="lp-hero">
+    <div class="lp-hero__canvas" aria-hidden="true">
+        <div class="lp-hero__wash"></div>
+        <div class="lp-hero__beam"></div>
+        <div class="lp-hero__noise"></div>
+        <div class="lp-hero__ring"></div>
+        <div class="lp-hero__suits">
+            <span>♠</span><span>♥</span><span>♦</span><span>♣</span>
+        </div>
+        <div class="lp-hero__veil"></div>
     </div>
 
-    <div class="landing-container landing-hero__stage">
-        <div class="landing-hero__copy">
-            <h1 class="landing-wordmark landing-wordmark--hero" aria-label="BOBETA">
-                <span class="landing-wordmark__chunk landing-wordmark__chunk--1">BO</span><span class="landing-wordmark__chunk landing-wordmark__chunk--2 landing-wordmark__be">BE</span><span class="landing-wordmark__chunk landing-wordmark__chunk--3">TA</span>
-            </h1>
-            <p class="landing-slogan landing-slogan--hero">
-                <span>@I18n.T("landing_hero_line1")</span>
-                <span>@I18n.T("landing_hero_line2")</span>
-            </p>
-            <p class="landing-hero__sub">@I18n.T("landing_hero_sub")</p>
-            <div class="landing-cta-row">
-                <button type="button" class="landing-btn landing-btn--primary landing-btn--pulse" @onclick="GoToStart">
-                    @I18n.T("landing_cta_play")
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-                </button>
-                <a href="#how-it-works" class="landing-btn landing-btn--ghost">
-                    @I18n.T("landing_cta_how")
-                </a>
-            </div>
-            <div class="landing-trust-row">
-                <span class="inline-flex items-center gap-1.5">
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                    @I18n.T("secure")
-                </span>
-                <span>@I18n.T("fair_randomized")</span>
-                <span>@I18n.T("instant_payouts")</span>
-            </div>
+    <div class="lp-shell lp-hero__content">
+        <p class="lp-eyebrow">
+            <span class="lp-eyebrow__pulse"></span>
+            @I18n.T("secure_momo")
+        </p>
+        <h1 class="lp-hero__title" aria-label="BOBETA">
+            <span class="lp-hero__line lp-hero__line--1"><span>BO</span></span>
+            <span class="lp-hero__line lp-hero__line--2"><span class="lp-mark__be">BE</span></span>
+            <span class="lp-hero__line lp-hero__line--3"><span>TA</span></span>
+        </h1>
+        <p class="lp-script lp-hero__script">
+            @I18n.T("landing_hero_line1")
+            <em>@I18n.T("landing_hero_line2")</em>
+        </p>
+        <p class="lp-hero__lede">@I18n.T("landing_hero_sub")</p>
+        <div class="lp-hero__cta">
+            <button type="button" class="lp-btn lp-btn--solid lp-btn--glow" @onclick="GoToStart">
+                @I18n.T("landing_cta_play")
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 5l7 7-7 7" /></svg>
+            </button>
+            <a href="#how-it-works" class="lp-btn lp-btn--ghost">@I18n.T("landing_cta_how")</a>
         </div>
     </div>
 
-    <a href="#features" class="landing-scroll-cue" aria-label="@I18n.T("landing_cta_how")">
-        <span></span>
-    </a>
+    <div class="lp-hero__rail" aria-hidden="true">
+        <span>@I18n.T("landing_trust_payout")</span>
+        <span>@I18n.T("fair_randomized")</span>
+        <span>@I18n.T("instant_payouts")</span>
+    </div>
 </section>
 
-<div class="landing-marquee" aria-hidden="true">
-    <div class="landing-marquee__track">
+<div class="lp-ticker" aria-hidden="true">
+    <div class="lp-ticker__track">
         @for (var i = 0; i < 2; i++)
         {
-            <span>Makopa</span>
-            <span class="landing-marquee__dot">◆</span>
-            <span>Kopo</span>
-            <span class="landing-marquee__dot">◆</span>
-            <span>MoMo</span>
-            <span class="landing-marquee__dot">◆</span>
-            <span>@I18n.T("instant_payouts")</span>
-            <span class="landing-marquee__dot">◆</span>
-            <span>BOBETA</span>
-            <span class="landing-marquee__dot">◆</span>
-            <span>@I18n.T("landing_trust_payout")</span>
-            <span class="landing-marquee__dot">◆</span>
+            <span class="lp-ticker__item">Makopa</span>
+            <span class="lp-ticker__sep"></span>
+            <span class="lp-ticker__item">Kopo</span>
+            <span class="lp-ticker__sep"></span>
+            <span class="lp-ticker__item lp-ticker__item--accent">BOBETA</span>
+            <span class="lp-ticker__sep"></span>
+            <span class="lp-ticker__item">MoMo</span>
+            <span class="lp-ticker__sep"></span>
+            <span class="lp-ticker__item">@I18n.T("landing_trust_payout")</span>
+            <span class="lp-ticker__sep"></span>
+            <span class="lp-ticker__item">@I18n.T("instant_payouts")</span>
+            <span class="lp-ticker__sep"></span>
         }
     </div>
 </div>
 
-<section id="features" class="landing-section landing-section--muted">
-    <div class="landing-container">
-        <div class="landing-section-header">
-            <p class="landing-kicker">Bobeta</p>
+<section id="features" class="lp-manifesto">
+    <div class="lp-shell lp-manifesto__grid">
+        <div class="lp-manifesto__intro">
+            <p class="lp-script lp-script--dark">Bobeta</p>
             <h2>@I18n.T("landing_features_title")</h2>
-            <p>@I18n.T("landing_features_sub")</p>
+            <p class="lp-manifesto__sub">@I18n.T("landing_features_sub")</p>
+            <div class="lp-manifesto__rule" aria-hidden="true"></div>
         </div>
-        <div class="landing-feature-grid">
+        <div class="lp-manifesto__list">
             <FeatureCard Icon="shield" Title="@I18n.T("landing_feat_secure_title")" Description="@I18n.T("landing_feat_secure_desc")" Index="01" />
             <FeatureCard Icon="scale" Title="@I18n.T("landing_feat_fair_title")" Description="@I18n.T("landing_feat_fair_desc")" Index="02" />
             <FeatureCard Icon="bolt" Title="@I18n.T("landing_feat_payout_title")" Description="@I18n.T("landing_feat_payout_desc")" Index="03" />
@@ -104,114 +103,127 @@
     </div>
 </section>
 
-<section id="games" class="landing-section landing-section--games">
-    <div class="landing-container">
-        <div class="landing-section-header">
-            <p class="landing-kicker">@I18n.T("landing_nav_games")</p>
+<section id="games" class="lp-arena">
+    <div class="lp-shell">
+        <header class="lp-section-head">
+            <p class="lp-script">@I18n.T("landing_nav_games")</p>
             <h2>@I18n.T("landing_games_title")</h2>
             <p>@I18n.T("landing_games_sub")</p>
-        </div>
-        <div class="landing-games">
-            <article class="landing-game landing-game--makopa">
-                <div class="landing-game__visual" aria-hidden="true">
-                    <div class="landing-fan">
-                        <div class="landing-mini-card landing-mini-card--red landing-fan__c1">A♥</div>
-                        <div class="landing-mini-card landing-mini-card--black landing-fan__c2">K♠</div>
-                        <div class="landing-mini-card landing-mini-card--red landing-fan__c3">7♦</div>
-                        <div class="landing-mini-card landing-mini-card--black landing-fan__c4">Q♣</div>
+        </header>
+
+        <article class="lp-showcase lp-showcase--makopa">
+            <div class="lp-showcase__stage" aria-hidden="true">
+                <div class="lp-felt">
+                    <div class="lp-fan">
+                        <div class="lp-card lp-card--red lp-fan__1">A♥</div>
+                        <div class="lp-card lp-card--ink lp-fan__2">K♠</div>
+                        <div class="lp-card lp-card--red lp-fan__3">7♦</div>
+                        <div class="lp-card lp-card--ink lp-fan__4">Q♣</div>
                     </div>
+                    <p class="lp-felt__label">Makopa</p>
                 </div>
-                <div class="landing-game__body">
-                    <p class="landing-game__label">01</p>
-                    <h3>@I18n.T("landing_game_makopa_title")</h3>
-                    <p>@I18n.T("landing_game_makopa_desc")</p>
-                </div>
-            </article>
-            <article class="landing-game landing-game--kopo">
-                <div class="landing-game__visual" aria-hidden="true">
-                    <div class="landing-kopo-board">
+            </div>
+            <div class="lp-showcase__copy">
+                <span class="lp-showcase__num">01</span>
+                <h3>@I18n.T("landing_game_makopa_title")</h3>
+                <p>@I18n.T("landing_game_makopa_desc")</p>
+                <button type="button" class="lp-link" @onclick="GoToStart">
+                    @I18n.T("landing_cta_play")
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 5l7 7-7 7" /></svg>
+                </button>
+            </div>
+        </article>
+
+        <article class="lp-showcase lp-showcase--kopo">
+            <div class="lp-showcase__copy">
+                <span class="lp-showcase__num">02</span>
+                <h3>@I18n.T("landing_game_kopo_title")</h3>
+                <p>@I18n.T("landing_game_kopo_desc")</p>
+                <button type="button" class="lp-link" @onclick="GoToStart">
+                    @I18n.T("landing_cta_play")
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 5l7 7-7 7" /></svg>
+                </button>
+            </div>
+            <div class="lp-showcase__stage" aria-hidden="true">
+                <div class="lp-board-wrap">
+                    <div class="lp-board">
                         @for (var row = 0; row < 8; row++)
                         {
                             @for (var col = 0; col < 8; col++)
                             {
                                 var idx = row * 8 + col;
                                 var dark = (row + col) % 2 == 0;
-                                var hasGold = idx is 9 or 17 or 25;
-                                var hasGreen = idx is 42 or 50 or 58;
-                                <div class="landing-kopo-cell @(dark ? "landing-kopo-cell--dark" : "landing-kopo-cell--light")">
-                                    @if (hasGold)
+                                var hasOrange = idx is 9 or 17 or 25 or 33;
+                                var hasWhite = idx is 30 or 38 or 46 or 54;
+                                <div class="lp-board__cell @(dark ? "is-dark" : "is-light")">
+                                    @if (hasOrange)
                                     {
-                                        <div class="landing-piece landing-piece--gold"></div>
+                                        <span class="lp-piece lp-piece--orange"></span>
                                     }
-                                    else if (hasGreen)
+                                    else if (hasWhite)
                                     {
-                                        <div class="landing-piece landing-piece--green"></div>
+                                        <span class="lp-piece lp-piece--white"></span>
                                     }
                                 </div>
                             }
                         }
                     </div>
+                    <p class="lp-felt__label">Kopo</p>
                 </div>
-                <div class="landing-game__body">
-                    <p class="landing-game__label">02</p>
-                    <h3>@I18n.T("landing_game_kopo_title")</h3>
-                    <p>@I18n.T("landing_game_kopo_desc")</p>
-                </div>
-            </article>
-        </div>
+            </div>
+        </article>
     </div>
 </section>
 
-<section id="how-it-works" class="landing-section landing-section--muted">
-    <div class="landing-container">
-        <div class="landing-section-header">
-            <p class="landing-kicker">@I18n.T("landing_nav_how")</p>
+<section id="how-it-works" class="lp-path">
+    <div class="lp-shell">
+        <header class="lp-section-head">
+            <p class="lp-script">@I18n.T("landing_nav_how")</p>
             <h2>@I18n.T("landing_how_title")</h2>
             <p>@I18n.T("landing_how_sub")</p>
-        </div>
-        <div class="landing-steps">
+        </header>
+        <ol class="lp-path__list">
             <StepCard Number="1" Title="@I18n.T("landing_step1_title")" Description="@I18n.T("landing_step1_desc")" />
             <StepCard Number="2" Title="@I18n.T("landing_step2_title")" Description="@I18n.T("landing_step2_desc")" />
             <StepCard Number="3" Title="@I18n.T("landing_step3_title")" Description="@I18n.T("landing_step3_desc")" />
             <StepCard Number="4" Title="@I18n.T("landing_step4_title")" Description="@I18n.T("landing_step4_desc")" />
-        </div>
+        </ol>
     </div>
 </section>
 
-<section class="landing-cta-section">
-    <div class="landing-cta-section__bg" aria-hidden="true">
-        <span class="landing-cta-section__ghost">BOBETA</span>
+<section class="lp-finale">
+    <div class="lp-finale__wash" aria-hidden="true"></div>
+    <div class="lp-finale__type" aria-hidden="true">
+        <span>BO</span><span class="lp-mark__be">BE</span><span>TA</span>
     </div>
-    <div class="landing-container">
-        <div class="landing-cta-band">
-            <p class="landing-slogan landing-slogan--cta">@I18n.T("landing_hero_line1") @I18n.T("landing_hero_line2")</p>
-            <h2>@I18n.T("landing_cta_bottom_title")</h2>
-            <p>@I18n.T("landing_cta_bottom_sub")</p>
-            <div class="landing-cta-band__meta">
-                <span>@I18n.T("landing_trust_payout")</span>
-                <span>@I18n.T("landing_trust_languages")</span>
-                <span>@I18n.T("secure_momo")</span>
-            </div>
-            <div class="mb-6 flex justify-center">
-                <LanguageSelector />
-            </div>
-            <button type="button" class="landing-btn landing-btn--primary landing-btn--xl" @onclick="GoToStart">
-                @I18n.T("get_started")
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-            </button>
+    <div class="lp-shell lp-finale__panel">
+        <p class="lp-script">@I18n.T("landing_hero_line1") @I18n.T("landing_hero_line2")</p>
+        <h2>@I18n.T("landing_cta_bottom_title")</h2>
+        <p class="lp-finale__sub">@I18n.T("landing_cta_bottom_sub")</p>
+        <ul class="lp-finale__trust">
+            <li>@I18n.T("landing_trust_payout")</li>
+            <li>@I18n.T("landing_trust_languages")</li>
+            <li>@I18n.T("secure_momo")</li>
+        </ul>
+        <div class="lp-finale__lang">
+            <LanguageSelector />
         </div>
+        <button type="button" class="lp-btn lp-btn--solid lp-btn--lg lp-btn--glow" @onclick="GoToStart">
+            @I18n.T("get_started")
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 5l7 7-7 7" /></svg>
+        </button>
     </div>
 </section>
 
-<footer class="landing-footer">
-    <div class="landing-container landing-footer__inner">
-        <div class="landing-footer__brand">
-            <p class="landing-wordmark landing-wordmark--nav">
-                <span>BO</span><span class="landing-wordmark__be">BE</span><span>TA</span>
+<footer class="lp-footer">
+    <div class="lp-shell lp-footer__row">
+        <div>
+            <p class="lp-mark lp-mark--sm">
+                <span>BO</span><span class="lp-mark__be">BE</span><span>TA</span>
             </p>
-            <p class="landing-slogan landing-slogan--footer">@I18n.T("landing_hero_line1") @I18n.T("landing_hero_line2")</p>
+            <p class="lp-script lp-script--sm">@I18n.T("landing_hero_line1") @I18n.T("landing_hero_line2")</p>
         </div>
-        <p class="landing-footer__copy">© @DateTime.UtcNow.Year Bobeta. @I18n.T("landing_footer_rights")</p>
+        <p class="lp-footer__copy">© @DateTime.UtcNow.Year Bobeta. @I18n.T("landing_footer_rights")</p>
     </div>
 </footer>
 

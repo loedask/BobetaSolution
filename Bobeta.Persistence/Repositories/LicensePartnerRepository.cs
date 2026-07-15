@@ -144,4 +144,15 @@ public class LicensePartnerRepository(BobetaDbContext db) : ILicensePartnerRepos
       .Take(take)
       .ToListAsync(cancellationToken);
   }
+
+  public async Task<decimal> GetMaxActiveRevenueSharePercentAsync(CancellationToken cancellationToken = default)
+  {
+    var now = DateTime.UtcNow;
+    var rates = await db.LicensePartnerRevenueShareRates
+      .AsNoTracking()
+      .Where(r => r.EffectiveFrom <= now && (r.EffectiveTo == null || r.EffectiveTo > now))
+      .Select(r => r.RevenueSharePercent)
+      .ToListAsync(cancellationToken);
+    return rates.Count == 0 ? 0 : rates.Max();
+  }
 }

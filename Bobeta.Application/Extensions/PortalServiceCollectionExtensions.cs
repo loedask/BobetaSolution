@@ -19,6 +19,9 @@ public static class PortalServiceCollectionExtensions
     services.AddScoped<IWalletService, WalletService>();
     services.AddScoped<IGameHistoryService, GameHistoryService>();
     services.AddScoped<ILicensePartnerService, LicensePartnerService>();
+    services.AddScoped<IInfluencerService, InfluencerService>();
+    services.AddScoped<IInfluencerAttributionService, InfluencerAttributionService>();
+    services.AddScoped<IInfluencerProgramSettingsService, InfluencerProgramSettingsService>();
     services.AddScoped<IRevenueShareResolver, RevenueShareResolver>();
     services.AddScoped<IPartnerRevenueAllocationService, PartnerRevenueAllocationService>();
     services.AddScoped<IPaymentRevenueService, PaymentRevenueService>();

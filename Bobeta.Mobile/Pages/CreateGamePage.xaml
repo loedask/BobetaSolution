@@ -10,6 +10,29 @@
         <VerticalStackLayout Padding="16" Spacing="16">
             <Label x:Name="HeaderLabel" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
             <Label x:Name="DescLabel" FontSize="14" TextColor="{StaticResource MutedForeground}" />
+            <Border x:Name="InviteBanner" IsVisible="False" Padding="12" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 12">
+                <Label x:Name="InviteBannerLabel" FontSize="13" TextColor="{StaticResource PrimaryGold}" />
+            </Border>
+            <VerticalStackLayout x:Name="InviteEntryPanel" Spacing="8" IsVisible="False">
+                <Label x:Name="InviteHaveCodeLabel" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
+                <Label x:Name="InviteHintLabel" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+                <Label x:Name="InviteSuccessLabel" IsVisible="False" FontSize="12" TextColor="{StaticResource AccentGreen}" />
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Entry
+                        x:Name="InviteCodeEntry"
+                        Placeholder="CODE"
+                        Text="{Binding InviteCodeInput, Mode=TwoWay}"
+                        TextColor="{StaticResource Foreground}"
+                        BackgroundColor="{StaticResource Card}" />
+                    <Button
+                        x:Name="InviteApplyBtn"
+                        Grid.Column="1"
+                        Clicked="OnApplyInvite"
+                        CornerRadius="10"
+                        BackgroundColor="{StaticResource PrimaryGold}"
+                        TextColor="{StaticResource PrimaryDarkText}" />
+                </Grid>
+            </VerticalStackLayout>
             <Label x:Name="GameTypeLabel" FontSize="12" TextColor="{StaticResource MutedForeground}" />
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                 <Button x:Name="MakopaBtn" Clicked="OnMakopaVariant" CornerRadius="10" />
@@ -24,11 +47,12 @@
                 TextColor="{StaticResource Foreground}"
                 BackgroundColor="{StaticResource Card}" />
             <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
-                <Button Clicked="OnPreset" Text="500" CornerRadius="10" BackgroundColor="{StaticResource SecondaryCard}" TextColor="{StaticResource Foreground}" />
-                <Button Grid.Column="1" Clicked="OnPreset" Text="1000" CornerRadius="10" BackgroundColor="{StaticResource SecondaryCard}" TextColor="{StaticResource Foreground}" />
-                <Button Grid.Column="2" Clicked="OnPreset" Text="2000" CornerRadius="10" BackgroundColor="{StaticResource SecondaryCard}" TextColor="{StaticResource Foreground}" />
-                <Button Grid.Column="3" Clicked="OnPreset" Text="5000" CornerRadius="10" BackgroundColor="{StaticResource SecondaryCard}" TextColor="{StaticResource Foreground}" />
+                <Button Clicked="OnPreset" Text="200" CornerRadius="10" BackgroundColor="{StaticResource SecondaryCard}" TextColor="{StaticResource Foreground}" />
+                <Button Grid.Column="1" Clicked="OnPreset" Text="300" CornerRadius="10" BackgroundColor="{StaticResource SecondaryCard}" TextColor="{StaticResource Foreground}" />
+                <Button Grid.Column="2" Clicked="OnPreset" Text="400" CornerRadius="10" BackgroundColor="{StaticResource SecondaryCard}" TextColor="{StaticResource Foreground}" />
+                <Button Grid.Column="3" Clicked="OnPreset" Text="500" CornerRadius="10" BackgroundColor="{StaticResource SecondaryCard}" TextColor="{StaticResource Foreground}" />
             </Grid>
+            <Label x:Name="YouPayLabel" IsVisible="False" FontSize="12" TextColor="{StaticResource MutedForeground}" HorizontalTextAlignment="Center" />
             <Label x:Name="ErrorLabel" IsVisible="False" TextColor="{StaticResource Destructive}" />
             <Button
                 x:Name="CreateBtn"

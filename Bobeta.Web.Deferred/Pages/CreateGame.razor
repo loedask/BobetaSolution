@@ -4,7 +4,7 @@
 @inject CreateGameViewModel ViewModel
 @inject I18nService I18n
 
-<div class="min-h-screen bg-background pb-32">
+<div class="min-h-screen bg-background pb-44">
     <AppHeader Title="@I18n.T("create_game_session")" ShowBack="true" BackHref="/dashboard" />
 
     <div class="space-y-4 px-5">
@@ -12,8 +12,18 @@
 
         <ErrorBanner Message="@ViewModel.ErrorMessage" />
 
+        <InviteCodePanel
+            HasPendingCode="@(ViewModel.InviteStatus?.HasPendingCode == true)"
+            PendingTitle="@DiscountTitle"
+            PendingDetail="@DiscountDetail"
+            CodeInput="@ViewModel.InviteCodeInput"
+            CodeInputChanged="OnInviteCodeChanged"
+            OnApply="ViewModel.ApplyInviteCodeAsync"
+            Disabled="@ViewModel.IsLoading"
+            SuccessMessage="@ViewModel.InviteSuccessMessage" />
+
         <div class="card-surface glow-gold overflow-hidden rounded-2xl border border-border/50">
-            <section class="p-5">
+            <section class="px-5 pb-6 pt-5">
                 <div class="mb-4 flex items-center gap-2.5">
                     <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">1</span>
                     <h2 class="font-display text-sm font-semibold text-foreground">@I18n.T("select_game_type")</h2>
@@ -21,23 +31,49 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <button type="button" class="@VariantClass(GameVariant.Makopa)" @onclick="() => ViewModel.SetVariant(GameVariant.Makopa)">
-                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-background/40">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 7h16M4 12h16M4 17h10" /></svg>
+                        <span class="game-preview game-preview--makopa" aria-hidden="true">
+                            <span class="game-preview__fan">
+                                <span class="game-preview__card game-preview__card--red game-preview__card--1">A♥</span>
+                                <span class="game-preview__card game-preview__card--ink game-preview__card--2">K♠</span>
+                                <span class="game-preview__card game-preview__card--red game-preview__card--3">7♦</span>
+                                <span class="game-preview__card game-preview__card--ink game-preview__card--4">Q♣</span>
+                            </span>
                         </span>
-                        <span class="font-display text-sm font-semibold">Makopa</span>
+                        <span class="text-center font-display text-sm font-semibold">Makopa</span>
                     </button>
                     <button type="button" class="@VariantClass(GameVariant.Kopo)" @onclick="() => ViewModel.SetVariant(GameVariant.Kopo)">
-                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-background/40">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span class="game-preview game-preview--kopo" aria-hidden="true">
+                            <span class="game-preview__board">
+                                @for (var row = 0; row < 8; row++)
+                                {
+                                    @for (var col = 0; col < 8; col++)
+                                    {
+                                        var idx = row * 8 + col;
+                                        var dark = (row + col) % 2 == 0;
+                                        var hasGold = idx is 9 or 17 or 25 or 33;
+                                        var hasWhite = idx is 30 or 38 or 46 or 54;
+                                        <span class="game-preview__cell @(dark ? "game-preview__cell--dark" : "game-preview__cell--light")">
+                                            @if (hasGold)
+                                            {
+                                                <span class="game-preview__piece game-preview__piece--gold"></span>
+                                            }
+                                            else if (hasWhite)
+                                            {
+                                                <span class="game-preview__piece game-preview__piece--white"></span>
+                                            }
+                                        </span>
+                                    }
+                                }
+                            </span>
                         </span>
-                        <span class="font-display text-sm font-semibold">Kopo</span>
+                        <span class="text-center font-display text-sm font-semibold">Kopo</span>
                     </button>
                 </div>
             </section>
 
             <div class="mx-5 h-px bg-border/60"></div>
 
-            <section class="p-5">
+            <section class="px-5 pb-5 pt-10">
                 <div class="mb-1 flex items-center gap-2.5">
                     <span class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">2</span>
                     <h2 class="font-display text-sm font-semibold text-foreground">@I18n.T("select_bet_amount")</h2>
@@ -57,9 +93,13 @@
                     }
                 </div>
 
-                <div class="mt-5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-4 text-center">
+                <div class="mt-5 mb-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-4 text-center">
                     <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">@I18n.T("your_bet")</p>
                     <p class="gold-text mt-1 font-display text-3xl font-bold">@ViewModel.SelectedBet.ToString("N0") <span class="text-lg">FCFA</span></p>
+                    @if (ViewModel.InviteStatus is { HasPendingCode: true } && ViewModel.EffectiveCharge < ViewModel.SelectedBet)
+                    {
+                        <p class="mt-2 text-xs text-muted-foreground">@string.Format(I18n.T("invite_you_pay"), ViewModel.EffectiveCharge.ToString("N0"))</p>
+                    }
                 </div>
             </section>
         </div>
@@ -82,14 +122,29 @@
 </div>
 
 @code {
-    protected override void OnInitialized() => ViewModel.StateChanged += OnStateChanged;
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel.StateChanged += OnStateChanged;
+        await ViewModel.LoadInviteStatusAsync();
+    }
+
     public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
 
+    private string DiscountTitle =>
+        ViewModel.InviteStatus is { HasPendingCode: true }
+            ? string.Format(I18n.T("invite_discount_banner"), ViewModel.InviteStatus.DiscountPercent.ToString("N0"))
+            : "";
+
+    private string? DiscountDetail =>
+        ViewModel.InviteStatus is { HasPendingCode: true, Code: not null }
+            ? string.Format(I18n.T("invite_code_label"), ViewModel.InviteStatus.Code)
+            : null;
+
     private string VariantClass(GameVariant variant) =>
         ViewModel.SelectedVariant == variant
-            ? "choice-selected flex flex-col items-center gap-2 rounded-xl border border-primary/40 px-3 py-4 text-primary transition-all active:scale-[0.98]"
-            : "choice-unselected flex flex-col items-center gap-2 rounded-xl border border-border/80 px-3 py-4 text-foreground transition-all active:scale-[0.98]";
+            ? "choice-selected flex flex-col items-stretch gap-2.5 rounded-xl border border-primary/40 px-2.5 pb-3 pt-2.5 text-primary transition-all active:scale-[0.98]"
+            : "choice-unselected flex flex-col items-stretch gap-2.5 rounded-xl border border-border/80 px-2.5 pb-3 pt-2.5 text-foreground transition-all active:scale-[0.98]";
 
     private string PresetClass(decimal amount) =>
         ViewModel.SelectedBet == amount
@@ -97,6 +152,8 @@
             : "choice-unselected flex flex-col items-center justify-center rounded-xl border border-border/80 py-4 text-foreground transition-all active:scale-[0.98]";
 
     private void Pick(decimal amount) => ViewModel.SetBet(amount);
+
+    private void OnInviteCodeChanged(string value) => ViewModel.InviteCodeInput = value;
 
     private async Task Submit() => await ViewModel.CreateAsync();
 }

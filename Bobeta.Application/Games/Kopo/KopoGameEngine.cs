@@ -3,6 +3,7 @@ using Bobeta.Application.Common;
 using Bobeta.Application.DTOs.Game;
 using Bobeta.Application.Games;
 using Bobeta.Application.Interfaces;
+using Bobeta.Application.Services;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,8 @@ public class KopoGameEngine(
     IWalletService walletService,
     IPlayerRepository playerRepository,
     IGameRevenueService gameRevenueService,
+    IInfluencerAttributionService influencerAttribution,
+    INotificationService notificationService,
     ILogger<KopoGameEngine> logger) : IGameEngine
 {
     private const decimal CommissionRate = 0.25m;
@@ -169,7 +172,13 @@ public class KopoGameEngine(
         var totalPot = session.BetAmount * 2;
         var commission = totalPot * CommissionRate;
         var winnerAmount = totalPot - commission;
-        await walletService.SettleGameAsync(winnerId, loserId, session.BetAmount, cancellationToken);
+        await walletService.SettleGameAsync(
+            winnerId,
+            loserId,
+            session.BetAmount,
+            GameSessionService.ChargedAmount(session, winnerId),
+            GameSessionService.ChargedAmount(session, loserId),
+            cancellationToken);
         var result = new GameResult
         {
             Id = Guid.NewGuid(),
@@ -184,14 +193,18 @@ public class KopoGameEngine(
         await gameRevenueService.EnrichWithPartnerShareAsync(result, winnerId, cancellationToken);
         await resultRepository.AddAsync(result, cancellationToken);
         session.GameResult = result;
+
+        await notificationService.NotifyGameResultAsync(winnerId, session.Id, won: true, winnerAmount, cancellationToken);
+        await notificationService.NotifyGameResultAsync(loserId, session.Id, won: false, session.BetAmount, cancellationToken);
     }
 
     private async Task ReleaseBetsAsync(GameSession session, CancellationToken cancellationToken)
     {
         if (session.OpponentPlayerId is not { } opponentId)
             return;
-        await walletService.ReleaseBetAsync(session.CreatorPlayerId, session.BetAmount, cancellationToken);
-        await walletService.ReleaseBetAsync(opponentId, session.BetAmount, cancellationToken);
+        await walletService.ReleaseBetAsync(session.CreatorPlayerId, GameSessionService.ChargedAmount(session, session.CreatorPlayerId), cancellationToken);
+        await walletService.ReleaseBetAsync(opponentId, GameSessionService.ChargedAmount(session, opponentId), cancellationToken);
+        await influencerAttribution.DetachGameRedemptionsAsync(session.Id, cancellationToken);
     }
 
     private static Guid PickFirstTurn(Guid sessionId, Guid creatorId, Guid opponentId)

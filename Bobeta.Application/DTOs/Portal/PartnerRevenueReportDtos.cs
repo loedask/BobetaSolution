@@ -21,6 +21,7 @@ public sealed class PartnerRevenueBreakdownDto
   public string Key { get; init; } = string.Empty;
   public string Label { get; init; } = string.Empty;
   public decimal PartnerAmount { get; init; }
+  public decimal InfluencerAmount { get; init; }
   public decimal GrossPlatformRevenue { get; init; }
   public int TransactionCount { get; init; }
 }
@@ -35,6 +36,8 @@ public sealed class PartnerRevenueAllocationItemDto
   public decimal GrossPlatformRevenue { get; init; }
   public decimal PartnerSharePercent { get; init; }
   public decimal PartnerAmount { get; init; }
+  public decimal InfluencerAmount { get; init; }
+  public decimal PlatformRetainedAmount { get; init; }
   public string Currency { get; init; } = string.Empty;
   public DateTime CreatedAt { get; init; }
 }

@@ -16,6 +16,7 @@
     <Project Path="Bobeta.API.Tests/Bobeta.API.Tests.csproj" />
     <Project Path="Bobeta.Application.Tests/Bobeta.Application.Tests.csproj" />
     <Project Path="Bobeta.Client.Tests/Bobeta.Client.Tests.csproj" />
+    <Project Path="Bobeta.Web.Shared.Tests/Bobeta.Web.Shared.Tests.csproj" />
   </Folder>
   <Folder Name="/UI/" />
   <Folder Name="/UI/Core/">
@@ -28,6 +29,7 @@
     <Project Path="Bobeta.Portal/Bobeta.Portal.csproj" />
   </Folder>
   <Folder Name="/UI/PWA/">
+    <Project Path="Bobeta.Landing/Bobeta.Landing.csproj" />
     <Project Path="Bobeta.Web.Deferred/Bobeta.Web.Deferred.csproj" />
     <Project Path="Bobeta.Web.Host/Bobeta.Web.Host.csproj" />
     <Project Path="Bobeta.Web.Shared/Bobeta.Web.Shared.csproj" />

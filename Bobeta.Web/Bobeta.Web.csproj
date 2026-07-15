@@ -9,6 +9,8 @@
     <BlazorWebAssemblyHostEnvironment Condition="'$(Configuration)'=='Release'">Production</BlazorWebAssemblyHostEnvironment>
     <BlazorWebAssemblyHostEnvironment Condition="'$(Configuration)'=='Debug'">Development</BlazorWebAssemblyHostEnvironment>
     <BlazorEnableCompression>true</BlazorEnableCompression>
+    <!-- Keep publish output out of Content/None so builds don't copy it into bin/ -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);publish-out\**;publish-out2\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

@@ -9,7 +9,7 @@
 <div class="portal-page-header">
     <div>
         <h1>Dashboard</h1>
-        <p class="portal-muted">Platform overview and downloadable reports.</p>
+        <p class="portal-muted">@_subtitle</p>
     </div>
 </div>
 
@@ -38,58 +38,107 @@
 @if (_stats is not null)
 {
     <div class="portal-detail-grid portal-section">
-        <section class="portal-card">
-            <h2>Players</h2>
+        <section class="portal-card portal-stat-card">
+            <h2>@_playersHeading</h2>
             <p class="portal-stat">@_stats.Players.TotalPlayers</p>
             <p class="portal-muted">@_stats.Players.NewPlayers new in period · @_stats.Players.ActivePlayers active</p>
         </section>
         @if (_stats.ShowFinancials)
         {
-            <section class="portal-card">
-                <h2>MoMo deposits</h2>
-                <p class="portal-stat">@FormatAmount(_stats.Payments.DepositVolume)</p>
-                <p class="portal-muted">@_stats.Payments.SuccessfulDeposits successful</p>
-            </section>
-            <section class="portal-card">
-                <h2>MoMo withdrawals</h2>
-                <p class="portal-stat">@FormatAmount(_stats.Payments.WithdrawalVolume)</p>
-                <p class="portal-muted">@_stats.Payments.SuccessfulWithdrawals successful</p>
-            </section>
-            <section class="portal-card">
+            @if (_stats.ShowPayments)
+            {
+                <section class="portal-card portal-stat-card">
+                    <h2>MoMo deposits</h2>
+                    <p class="portal-stat">@FormatAmount(_stats.Payments.DepositVolume)</p>
+                    <p class="portal-muted">@_stats.Payments.SuccessfulDeposits successful</p>
+                </section>
+                <section class="portal-card portal-stat-card">
+                    <h2>MoMo withdrawals</h2>
+                    <p class="portal-stat">@FormatAmount(_stats.Payments.WithdrawalVolume)</p>
+                    <p class="portal-muted">@_stats.Payments.SuccessfulWithdrawals successful</p>
+                </section>
+            }
+            <section class="portal-card portal-stat-card">
                 <h2>Games played</h2>
                 <p class="portal-stat">@_stats.Games.GamesPlayed</p>
-                <p class="portal-muted">@FormatAmount(_stats.Games.TotalPot) total pot</p>
+                <p class="portal-muted">
+                    @if (_stats.IsInfluencerScoped)
+                    {
+                        <span>@FormatAmount(_stats.Games.PlatformCommission) attributed game fees</span>
+                    }
+                    else
+                    {
+                        <span>@FormatAmount(_stats.Games.TotalPot) total pot</span>
+                    }
+                </p>
             </section>
-            <section class="portal-card">
-                <h2>Platform revenue</h2>
-                <p class="portal-stat">@FormatAmount(_stats.Revenue.GrossPlatformRevenue)</p>
-                <p class="portal-muted">@FormatAmount(_stats.Revenue.PlatformRetained) retained · @_stats.Revenue.AllocationCount allocations</p>
-            </section>
-            <section class="portal-card">
-                <h2>Partner share paid</h2>
-                <p class="portal-stat">@FormatAmount(_stats.Revenue.PartnerSharePaid)</p>
-                <p class="portal-muted">License partner earnings in period</p>
-            </section>
+            @if (_stats.IsInfluencerScoped)
+            {
+                <section class="portal-card portal-stat-card">
+                    <h2>Your influencer share</h2>
+                    <p class="portal-stat">@FormatAmount(_stats.Revenue.InfluencerSharePaid)</p>
+                    <p class="portal-muted">@_stats.Revenue.AllocationCount commission rows in period</p>
+                </section>
+                <section class="portal-card portal-stat-card">
+                    <h2>Attributed game fees</h2>
+                    <p class="portal-stat">@FormatAmount(_stats.Revenue.GrossPlatformRevenue)</p>
+                    <p class="portal-muted">Gross fees on games where your code was used</p>
+                </section>
+            }
+            else if (_stats.IsPartnerScoped)
+            {
+                <section class="portal-card portal-stat-card">
+                    <h2>Your partner share</h2>
+                    <p class="portal-stat">@FormatAmount(_stats.Revenue.PartnerSharePaid)</p>
+                    <p class="portal-muted">Earnings from your licensed countries</p>
+                </section>
+                <section class="portal-card portal-stat-card">
+                    <h2>Gross in your countries</h2>
+                    <p class="portal-stat">@FormatAmount(_stats.Revenue.GrossPlatformRevenue)</p>
+                    <p class="portal-muted">@_stats.Revenue.AllocationCount allocations · @FormatAmount(_stats.Revenue.InfluencerSharePaid) influencer share</p>
+                </section>
+            }
+            else
+            {
+                <section class="portal-card portal-stat-card">
+                    <h2>Platform revenue</h2>
+                    <p class="portal-stat">@FormatAmount(_stats.Revenue.GrossPlatformRevenue)</p>
+                    <p class="portal-muted">@FormatAmount(_stats.Revenue.PlatformRetained) retained · @_stats.Revenue.AllocationCount allocations</p>
+                </section>
+                <section class="portal-card portal-stat-card">
+                    <h2>Partner share paid</h2>
+                    <p class="portal-stat">@FormatAmount(_stats.Revenue.PartnerSharePaid)</p>
+                    <p class="portal-muted">License partner earnings in period</p>
+                </section>
+                <section class="portal-card portal-stat-card">
+                    <h2>Influencer share paid</h2>
+                    <p class="portal-stat">@FormatAmount(_stats.Revenue.InfluencerSharePaid)</p>
+                    <p class="portal-muted">Influencer earnings from game fees</p>
+                </section>
+            }
         }
     </div>
 
     <div class="portal-card portal-section">
         <h2>Download reports</h2>
-        <p class="portal-muted">Excel workbooks with filter dropdowns on each column.</p>
+        <p class="portal-muted">Excel workbooks scoped to your account.</p>
         <div class="portal-downloads">
             <a class="portal-button" href="@ReportUrl("summary.xlsx")">Summary Excel</a>
             <a class="portal-button" href="@ReportUrl("players.xlsx")">Players by country</a>
             @if (_stats.ShowFinancials)
             {
                 <a class="portal-button" href="@ReportUrl("revenue.xlsx")">Revenue detail</a>
-                <a class="portal-button" href="@ReportUrl("payments.xlsx")">Payments summary</a>
+                @if (_stats.ShowPayments)
+                {
+                    <a class="portal-button" href="@ReportUrl("payments.xlsx")">Payments summary</a>
+                }
             }
         </div>
     </div>
 
     <div class="portal-detail-grid portal-section">
         <section class="portal-card">
-            <h2>Players by country</h2>
+            <h2>@_playersByCountryHeading</h2>
             @if (_stats.PlayersByCountry.Count == 0)
             {
                 <p class="portal-muted">No players in this scope.</p>
@@ -118,7 +167,7 @@
         @if (_stats.ShowFinancials)
         {
             <section class="portal-card">
-                <h2>Revenue by source</h2>
+                <h2>@_revenueBySourceHeading</h2>
                 @if (_stats.RevenueBySource.Count == 0)
                 {
                     <p class="portal-muted">No revenue in this period.</p>
@@ -128,7 +177,16 @@
                     <div class="portal-table-wrap">
                         <table class="portal-table">
                             <thead>
-                                <tr><th>Source</th><th>Gross</th><th>Partner share</th><th>Txns</th></tr>
+                                <tr>
+                                    <th>Source</th>
+                                    <th>Gross</th>
+                                    @if (!_stats.IsInfluencerScoped)
+                                    {
+                                        <th>Partner share</th>
+                                    }
+                                    <th>@(_stats.IsInfluencerScoped ? "Your share" : "Influencer share")</th>
+                                    <th>Txns</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 @foreach (var row in _stats.RevenueBySource)
@@ -136,7 +194,11 @@
                                     <tr>
                                         <td>@row.Label</td>
                                         <td>@FormatAmount(row.GrossPlatformRevenue)</td>
-                                        <td>@FormatAmount(row.PartnerAmount)</td>
+                                        @if (!_stats.IsInfluencerScoped)
+                                        {
+                                            <td>@FormatAmount(row.PartnerAmount)</td>
+                                        }
+                                        <td>@FormatAmount(row.InfluencerAmount)</td>
                                         <td>@row.TransactionCount</td>
                                     </tr>
                                 }
@@ -160,15 +222,48 @@
             {
                 <div class="portal-table-wrap">
                     <table class="portal-table">
+                            <thead>
+                                <tr><th>Partner</th><th>Partner share</th><th>Influencer share</th><th>Gross</th><th>Txns</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in _stats.RevenueByPartner)
+                                {
+                                    <tr>
+                                        <td>@row.Label</td>
+                                        <td>@FormatAmount(row.PartnerAmount)</td>
+                                        <td>@FormatAmount(row.InfluencerAmount)</td>
+                                        <td>@FormatAmount(row.GrossPlatformRevenue)</td>
+                                        <td>@row.TransactionCount</td>
+                                    </tr>
+                                }
+                            </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+
+    @if (_stats.ShowInfluencerLeaderboard)
+    {
+        <section class="portal-card portal-section">
+            <h2>Revenue by influencer</h2>
+            @if (_stats.RevenueByInfluencer.Count == 0)
+            {
+                <p class="portal-muted">No influencer revenue in this period.</p>
+            }
+            else
+            {
+                <div class="portal-table-wrap">
+                    <table class="portal-table">
                         <thead>
-                            <tr><th>Partner</th><th>Partner share</th><th>Gross</th><th>Txns</th></tr>
+                            <tr><th>Influencer</th><th>Influencer share</th><th>Gross</th><th>Txns</th></tr>
                         </thead>
                         <tbody>
-                            @foreach (var row in _stats.RevenueByPartner)
+                            @foreach (var row in _stats.RevenueByInfluencer)
                             {
                                 <tr>
                                     <td>@row.Label</td>
-                                    <td>@FormatAmount(row.PartnerAmount)</td>
+                                    <td>@FormatAmount(row.InfluencerAmount)</td>
                                     <td>@FormatAmount(row.GrossPlatformRevenue)</td>
                                     <td>@row.TransactionCount</td>
                                 </tr>
@@ -187,6 +282,34 @@
     private DateTime? _toDate = DateTime.UtcNow.Date;
     private bool _loading = true;
     private string? _error;
+
+    private string _subtitle => _stats switch
+    {
+        { IsInfluencerScoped: true } => "Your invite performance and earnings only.",
+        { IsPartnerScoped: true } => "Players and revenue in your licensed countries only.",
+        _ => "Platform overview and downloadable reports."
+    };
+
+    private string _playersHeading => _stats switch
+    {
+        { IsInfluencerScoped: true } => "Players with your code",
+        { IsPartnerScoped: true } => "Players in your countries",
+        _ => "Players"
+    };
+
+    private string _playersByCountryHeading => _stats switch
+    {
+        { IsInfluencerScoped: true } => "Your players by country",
+        { IsPartnerScoped: true } => "Players in licensed countries",
+        _ => "Players by country"
+    };
+
+    private string _revenueBySourceHeading => _stats switch
+    {
+        { IsInfluencerScoped: true } => "Your earnings by source",
+        { IsPartnerScoped: true } => "Revenue in your countries",
+        _ => "Revenue by source"
+    };
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 

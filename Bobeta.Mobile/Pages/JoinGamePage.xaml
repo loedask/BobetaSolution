@@ -6,13 +6,36 @@
     BackgroundColor="{StaticResource PageBackground}"
     Title="Join">
 
-    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
-        <HorizontalStackLayout Spacing="8">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="16" RowSpacing="12">
+        <Border x:Name="InviteBanner" IsVisible="False" Padding="12" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 12">
+            <Label x:Name="InviteBannerLabel" FontSize="13" TextColor="{StaticResource PrimaryGold}" />
+        </Border>
+        <VerticalStackLayout x:Name="InviteEntryPanel" Grid.Row="1" Spacing="8" IsVisible="False">
+            <Label x:Name="InviteHaveCodeLabel" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
+            <Label x:Name="InviteHintLabel" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+            <Label x:Name="InviteSuccessLabel" IsVisible="False" FontSize="12" TextColor="{StaticResource AccentGreen}" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Entry
+                    x:Name="InviteCodeEntry"
+                    Placeholder="CODE"
+                    Text="{Binding InviteCodeInput, Mode=TwoWay}"
+                    TextColor="{StaticResource Foreground}"
+                    BackgroundColor="{StaticResource Card}" />
+                <Button
+                    x:Name="InviteApplyBtn"
+                    Grid.Column="1"
+                    Clicked="OnApplyInvite"
+                    CornerRadius="10"
+                    BackgroundColor="{StaticResource PrimaryGold}"
+                    TextColor="{StaticResource PrimaryDarkText}" />
+            </Grid>
+        </VerticalStackLayout>
+        <HorizontalStackLayout Grid.Row="2" Spacing="8">
             <Button x:Name="FilterAllBtn" Clicked="OnFilterAll" CornerRadius="8" FontSize="12" Padding="12,6" />
             <Button x:Name="FilterMakopaBtn" Clicked="OnFilterMakopa" CornerRadius="8" FontSize="12" Padding="12,6" />
             <Button x:Name="FilterKopoBtn" Clicked="OnFilterKopo" CornerRadius="8" FontSize="12" Padding="12,6" />
         </HorizontalStackLayout>
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto">
             <Label x:Name="Subtitle" FontSize="14" TextColor="{StaticResource MutedForeground}" VerticalOptions="Center" />
             <Button
                 x:Name="RefreshBtn"
@@ -22,7 +45,7 @@
                 TextColor="{StaticResource PrimaryGold}"
                 FontSize="13" />
         </Grid>
-        <CollectionView x:Name="GamesList" Grid.Row="2" ItemsSource="{Binding OpenGames}">
+        <CollectionView x:Name="GamesList" Grid.Row="4" ItemsSource="{Binding OpenGames}">
             <CollectionView.EmptyView>
                 <Label x:Name="EmptyLabel" TextColor="{StaticResource MutedForeground}" />
             </CollectionView.EmptyView>
@@ -51,7 +74,7 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-        <Label x:Name="ErrorLabel" Grid.Row="2" IsVisible="False" TextColor="{StaticResource Destructive}" VerticalOptions="Start" />
-        <ActivityIndicator x:Name="Busy" Grid.Row="2" IsRunning="False" Color="{StaticResource PrimaryGold}" VerticalOptions="Center" HorizontalOptions="Center" />
+        <Label x:Name="ErrorLabel" Grid.Row="4" IsVisible="False" TextColor="{StaticResource Destructive}" VerticalOptions="Start" />
+        <ActivityIndicator x:Name="Busy" Grid.Row="4" IsRunning="False" Color="{StaticResource PrimaryGold}" VerticalOptions="Center" HorizontalOptions="Center" />
     </Grid>
 </ContentPage>

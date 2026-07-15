@@ -68,6 +68,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<GameHub>("/hubs/game"); // SignalR game hub for real-time gameplay.
+app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" })).AllowAnonymous();
 
 app.Run();

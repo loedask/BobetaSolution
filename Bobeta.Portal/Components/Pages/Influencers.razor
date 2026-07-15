@@ -1,0 +1,85 @@
+@page "/influencers"
+@attribute [Authorize(Roles = "PlatformOwner")]
+@inject IInfluencerService InfluencerService
+@rendermode InteractiveServer
+
+<PageTitle>Influencers - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <h1>Influencers</h1>
+        <p class="portal-muted">Invite-code partners who earn a share of game platform commission.</p>
+    </div>
+    <a class="portal-button portal-button-primary" href="/influencers/register">Register influencer</a>
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading...</p>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="portal-alert portal-alert-error">@_error</div>
+}
+else if (_influencers.Count == 0)
+{
+    <p class="portal-muted">No influencers yet.</p>
+}
+else
+{
+    <div class="portal-table-wrap">
+        <table class="portal-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Commission</th>
+                    <th>Portal login</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var influencer in _influencers)
+                {
+                    <tr>
+                        <td>@influencer.DisplayName</td>
+                        <td><code>@influencer.Code</code></td>
+                        <td>@influencer.CommissionPercent.ToString("N2")%</td>
+                        <td>@influencer.PortalEmail</td>
+                        <td>@(influencer.IsActive ? "Active" : "Inactive")</td>
+                        <td>
+                            <a class="portal-link-button" href="@($"/influencers/{influencer.Id}")">Manage</a>
+                            ·
+                            <a class="portal-link-button" href="@($"/influencers/{influencer.Id}/revenue")">Revenue</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private readonly List<InfluencerListItemDto> _influencers = [];
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var list = await InfluencerService.GetAllAsync();
+            _influencers.Clear();
+            _influencers.AddRange(list);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

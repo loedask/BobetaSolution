@@ -9,7 +9,7 @@
     var hash = relative.IndexOf('#', StringComparison.Ordinal);
     if (hash >= 0) relative = relative[..hash];
     var path = relative.Split('/', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
-    var hide = path is "" or "login" or "verify" or "create-player";
+    var hide = path is "" or "login" or "verify" or "create-player" or "invite";
 }
 
 @if (!hide)

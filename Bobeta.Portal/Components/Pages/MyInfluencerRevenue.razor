@@ -1,0 +1,102 @@
+@page "/my-influencer/revenue"
+@attribute [Authorize(Roles = "Influencer")]
+@inject IInfluencerService InfluencerService
+@inject AuthenticationStateProvider AuthState
+@rendermode InteractiveServer
+
+<PageTitle>My revenue - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <a class="portal-back-link" href="/my-influencer">&larr; Back</a>
+        <h1>My revenue</h1>
+        <p class="portal-muted">Earnings from game fees only.</p>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading...</p>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="portal-alert portal-alert-error">@_error</div>
+}
+else if (_report is not null)
+{
+    <section class="portal-card portal-section">
+        <dl class="portal-dl">
+            <div><dt>Total earnings</dt><dd>@_report.TotalInfluencerAmount.ToString("N2") XAF</dd></div>
+            <div><dt>Games</dt><dd>@_report.TransactionCount</dd></div>
+        </dl>
+    </section>
+
+    <section class="portal-card portal-section">
+        <h2>Recent</h2>
+        @if (_report.RecentAllocations.Count == 0)
+        {
+            <p class="portal-muted">No earnings yet.</p>
+        }
+        else
+        {
+            <div class="portal-table-wrap">
+                <table class="portal-table">
+                    <thead>
+                        <tr>
+                            <th>When (UTC)</th>
+                            <th>%</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in _report.RecentAllocations)
+                        {
+                            <tr>
+                                <td>@row.CreatedAt.ToString("u")</td>
+                                <td>@row.CommissionPercent.ToString("N2")%</td>
+                                <td>@row.InfluencerAmount.ToString("N2") @row.Currency</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+}
+
+@code {
+    private InfluencerRevenueReportDto? _report;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var auth = await AuthState.GetAuthenticationStateAsync();
+            var userId = auth.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null || !Guid.TryParse(userId, out var portalUserId))
+            {
+                _error = "Could not determine the current user.";
+                return;
+            }
+
+            var influencer = await InfluencerService.GetByPortalUserIdAsync(portalUserId);
+            if (influencer is null)
+            {
+                _error = "No influencer profile linked to your account.";
+                return;
+            }
+
+            _report = await InfluencerService.GetRevenueReportAsync(influencer.Id);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

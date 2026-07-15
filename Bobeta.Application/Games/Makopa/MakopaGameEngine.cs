@@ -3,6 +3,7 @@ using Bobeta.Application.Common;
 using Bobeta.Application.DTOs.Game;
 using Bobeta.Application.Games;
 using Bobeta.Application.Interfaces;
+using Bobeta.Application.Services;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
 using Bobeta.Domain.ValueObjects;
@@ -24,6 +25,7 @@ public class MakopaGameEngine(
     IWalletService walletService,
     IPlayerRepository playerRepository,
     IGameRevenueService gameRevenueService,
+    INotificationService notificationService,
     ILogger<MakopaGameEngine> logger) : IGameEngine
 {
     public GameVariant Variant => GameVariant.Makopa;
@@ -367,7 +369,13 @@ public class MakopaGameEngine(
         var totalPot = session.BetAmount * 2;
         var commission = totalPot * CommissionRate;
         var winnerAmount = totalPot - commission;
-        await _walletService.SettleGameAsync(winnerId, loserId, session.BetAmount, cancellationToken);
+        await _walletService.SettleGameAsync(
+            winnerId,
+            loserId,
+            session.BetAmount,
+            GameSessionService.ChargedAmount(session, winnerId),
+            GameSessionService.ChargedAmount(session, loserId),
+            cancellationToken);
         var result = new GameResult
         {
             Id = Guid.NewGuid(),
@@ -382,6 +390,9 @@ public class MakopaGameEngine(
         await gameRevenueService.EnrichWithPartnerShareAsync(result, winnerId, cancellationToken);
         await _resultRepository.AddAsync(result, cancellationToken);
         session.GameResult = result;
+
+        await notificationService.NotifyGameResultAsync(winnerId, session.Id, won: true, winnerAmount, cancellationToken);
+        await notificationService.NotifyGameResultAsync(loserId, session.Id, won: false, session.BetAmount, cancellationToken);
     }
 
     private static int GetHandCount(MakopaGameState state, Guid playerId, Guid creatorId) =>

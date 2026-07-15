@@ -42,7 +42,46 @@ public sealed class PartnerRevenueAllocationService(
       GrossPlatformRevenue = grossPlatformRevenue,
       PartnerSharePercent = split.PartnerSharePercent,
       PartnerAmount = split.PartnerAmount,
+      InfluencerAmount = 0,
       PlatformRetainedAmount = split.PlatformRetainedAmount,
+      Currency = currency,
+      CreatedAt = atUtc
+    }, cancellationToken);
+  }
+
+  public async Task TryAllocateGameAsync(
+      Guid gameSessionId,
+      Guid winnerPlayerId,
+      decimal grossPlatformRevenue,
+      RevenueShareSplit partnerSplit,
+      decimal influencerAmount,
+      decimal platformRetainedAmount,
+      string? fallbackCountryCode,
+      string currency,
+      DateTime atUtc,
+      CancellationToken cancellationToken = default)
+  {
+    if (grossPlatformRevenue <= 0)
+      return;
+
+    if (await licensePartners.AllocationExistsAsync(RevenueAllocationSourceType.GameCommission, gameSessionId, cancellationToken))
+      return;
+
+    if (partnerSplit.LicensePartnerId is null || partnerSplit.PartnerAmount <= 0)
+      return;
+
+    await licensePartners.AddAllocationAsync(new RevenueAllocation
+    {
+      Id = Guid.NewGuid(),
+      SourceType = RevenueAllocationSourceType.GameCommission,
+      SourceId = gameSessionId,
+      CountryCode = partnerSplit.CountryCode ?? fallbackCountryCode ?? string.Empty,
+      LicensePartnerId = partnerSplit.LicensePartnerId.Value,
+      GrossPlatformRevenue = grossPlatformRevenue,
+      PartnerSharePercent = partnerSplit.PartnerSharePercent,
+      PartnerAmount = partnerSplit.PartnerAmount,
+      InfluencerAmount = influencerAmount,
+      PlatformRetainedAmount = platformRetainedAmount,
       Currency = currency,
       CreatedAt = atUtc
     }, cancellationToken);

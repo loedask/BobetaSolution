@@ -4,11 +4,16 @@ using Bobeta.Mobile.Services;
 
 namespace Bobeta.Mobile.ViewModels.Auth;
 
-public class CreatePlayerViewModel(AuthService authService, AppStateService appState, INavigationService nav) : ViewModelBase
+public class CreatePlayerViewModel(
+    AuthService authService,
+    AppStateService appState,
+    INavigationService nav,
+    InfluencerService influencerService) : ViewModelBase
 {
     private readonly AuthService _authService = authService;
     private readonly AppStateService _appState = appState;
     private readonly INavigationService _nav = nav;
+    private readonly InfluencerService _influencerService = influencerService;
 
     private string _playerName = "";
 
@@ -42,6 +47,11 @@ public class CreatePlayerViewModel(AuthService authService, AppStateService appS
             {
                 _appState.SetPlayer(res.Data.PlayerId, res.Data.PlayerName, res.Data.Token);
                 await _appState.PersistAsync();
+                await PendingInviteApplicator.TryApplyAsync(
+                    _influencerService,
+                    _appState.State.PendingInviteCode,
+                    () => _appState.SetPendingInviteCode(null),
+                    () => _appState.PersistAsync());
                 await _nav.ToMainTabsAsync("Dashboard");
             }
             else

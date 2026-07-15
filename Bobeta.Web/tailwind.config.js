@@ -7,6 +7,7 @@ module.exports = {
     './App.razor',
     './wwwroot/**/*.html',
     '../Bobeta.Web.Shared/**/*.{razor,html}',
+    '../Bobeta.Web.Deferred/**/*.{razor,html}',
     '../Bobeta.Landing/**/*.{razor,html}',
   ],
   darkMode: 'class',

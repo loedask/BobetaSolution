@@ -1,0 +1,99 @@
+@page "/influencers/{InfluencerId:guid}/revenue"
+@attribute [Authorize(Roles = "PlatformOwner")]
+@inject IInfluencerService InfluencerService
+@rendermode InteractiveServer
+
+<PageTitle>Influencer revenue - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <a class="portal-back-link" href="@($"/influencers/{InfluencerId}")">&larr; Back to influencer</a>
+        <h1>Revenue — @(_report?.DisplayName ?? "…")</h1>
+        <p class="portal-muted">Game commission share only (no MoMo).</p>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading...</p>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="portal-alert portal-alert-error">@_error</div>
+}
+else if (_report is not null)
+{
+    <section class="portal-card portal-section">
+        <dl class="portal-dl">
+            <div><dt>Code</dt><dd><code>@_report.Code</code></dd></div>
+            <div><dt>Total earnings</dt><dd>@_report.TotalInfluencerAmount.ToString("N2") XAF</dd></div>
+            <div><dt>Games</dt><dd>@_report.TransactionCount</dd></div>
+        </dl>
+    </section>
+
+    <section class="portal-card portal-section">
+        <h2>Recent allocations</h2>
+        @if (_report.RecentAllocations.Count == 0)
+        {
+            <p class="portal-muted">No earnings yet.</p>
+        }
+        else
+        {
+            <div class="portal-table-wrap">
+                <table class="portal-table">
+                    <thead>
+                        <tr>
+                            <th>When (UTC)</th>
+                            <th>Game</th>
+                            <th>Player</th>
+                            <th>Base (G/2)</th>
+                            <th>%</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in _report.RecentAllocations)
+                        {
+                            <tr>
+                                <td>@row.CreatedAt.ToString("u")</td>
+                                <td><code>@row.GameSessionId.ToString()[..8]</code></td>
+                                <td><code>@row.PlayerId.ToString()[..8]</code></td>
+                                <td>@row.AttributionBase.ToString("N2")</td>
+                                <td>@row.CommissionPercent.ToString("N2")%</td>
+                                <td>@row.InfluencerAmount.ToString("N2") @row.Currency</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid InfluencerId { get; set; }
+
+    private InfluencerRevenueReportDto? _report;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            _report = await InfluencerService.GetRevenueReportAsync(InfluencerId);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            _report = null;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

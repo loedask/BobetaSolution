@@ -1,0 +1,95 @@
+@page "/influencer-settings"
+@attribute [Authorize(Roles = "PlatformOwner")]
+@inject IInfluencerProgramSettingsService SettingsService
+@inject AuthenticationStateProvider AuthState
+@rendermode InteractiveServer
+
+<PageTitle>Influencer settings - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <h1>Influencer settings</h1>
+        <p class="portal-muted">Global player discount when an invite code is used on a game.</p>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading...</p>
+}
+else
+{
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="portal-alert portal-alert-error">@_error</div>
+    }
+    @if (!string.IsNullOrEmpty(_success))
+    {
+        <div class="portal-alert portal-alert-success">@_success</div>
+    }
+
+    <section class="portal-card portal-section">
+        <EditForm Model="_model" OnValidSubmit="HandleSaveAsync">
+            <div class="portal-field">
+                <label>Player discount % (entry stake reduction)</label>
+                <InputNumber class="portal-input" @bind-Value="_model.PlayerDiscountPercent" />
+            </div>
+            <p class="portal-muted">Example: 5% means a 500 bet locks 475 when a code is attached. Pot and commission still use the full 500.</p>
+            <button class="portal-button portal-button-primary" type="submit" disabled="@_busy">@(_busy ? "Saving..." : "Save")</button>
+        </EditForm>
+    </section>
+}
+
+@code {
+    private readonly UpdateInfluencerProgramSettingsRequest _model = new() { PlayerDiscountPercent = 5 };
+    private bool _loading = true;
+    private bool _busy;
+    private string? _error;
+    private string? _success;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var settings = await SettingsService.GetAsync();
+            _model.PlayerDiscountPercent = settings.PlayerDiscountPercent;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task HandleSaveAsync()
+    {
+        _busy = true;
+        _error = null;
+        _success = null;
+        try
+        {
+            var auth = await AuthState.GetAuthenticationStateAsync();
+            var userId = auth.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null || !Guid.TryParse(userId, out var updatedById))
+            {
+                _error = "Could not determine the current user.";
+                return;
+            }
+
+            var saved = await SettingsService.UpdateAsync(_model, updatedById);
+            _model.PlayerDiscountPercent = saved.PlayerDiscountPercent;
+            _success = $"Player discount set to {saved.PlayerDiscountPercent:N2}%.";
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

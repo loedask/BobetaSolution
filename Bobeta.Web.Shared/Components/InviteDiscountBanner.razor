@@ -1,0 +1,23 @@
+@namespace Bobeta.Web.Shared.Components
+
+@if (HasPendingCode)
+{
+    <div class="rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-foreground">
+        <p class="font-medium">@Title</p>
+        @if (!string.IsNullOrEmpty(Detail))
+        {
+            <p class="mt-1 text-xs text-muted-foreground">@Detail</p>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool HasPendingCode { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public string? Detail { get; set; }
+}

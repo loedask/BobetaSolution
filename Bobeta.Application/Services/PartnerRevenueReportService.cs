@@ -29,6 +29,7 @@ public sealed class PartnerRevenueReportService(
         Key = g.Key,
         Label = CountryCatalog.GetByCode(g.Key)?.Name ?? g.Key,
         PartnerAmount = g.Sum(x => x.PartnerAmount),
+        InfluencerAmount = g.Sum(x => x.InfluencerAmount),
         GrossPlatformRevenue = g.Sum(x => x.GrossPlatformRevenue),
         TransactionCount = g.Count()
       })
@@ -42,6 +43,7 @@ public sealed class PartnerRevenueReportService(
         Key = g.Key.ToString(),
         Label = FormatSourceType(g.Key),
         PartnerAmount = g.Sum(x => x.PartnerAmount),
+        InfluencerAmount = g.Sum(x => x.InfluencerAmount),
         GrossPlatformRevenue = g.Sum(x => x.GrossPlatformRevenue),
         TransactionCount = g.Count()
       })
@@ -79,6 +81,8 @@ public sealed class PartnerRevenueReportService(
     GrossPlatformRevenue = a.GrossPlatformRevenue,
     PartnerSharePercent = a.PartnerSharePercent,
     PartnerAmount = a.PartnerAmount,
+    InfluencerAmount = a.InfluencerAmount,
+    PlatformRetainedAmount = a.PlatformRetainedAmount,
     Currency = a.Currency,
     CreatedAt = a.CreatedAt
   };

@@ -14,7 +14,7 @@ public partial class JoinGamePage : ContentPage
         InitializeComponent();
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
         _vm = MauiProgram.Services.GetRequiredService<JoinGameViewModel>();
@@ -30,15 +30,23 @@ public partial class JoinGamePage : ContentPage
         FilterAllBtn.Text = i18n.T("filter_all_games");
         FilterMakopaBtn.Text = "Makopa";
         FilterKopoBtn.Text = "Kopo";
+        InviteHaveCodeLabel.Text = i18n.T("invite_have_code");
+        InviteHintLabel.Text = i18n.T("invite_enter_hint");
+        InviteApplyBtn.Text = i18n.T("invite_apply");
+        InviteCodeEntry.Placeholder = i18n.T("invite_enter_code");
 
-        _ = _vm.LoadGamesAsync();
+        await Task.WhenAll(_vm.LoadGamesAsync(), _vm.LoadInviteStatusAsync());
+        _vm.StartLiveRefresh();
         SyncUi();
     }
 
     protected override void OnDisappearing()
     {
         if (_vm != null)
+        {
+            _vm.StopLiveRefresh();
             _vm.StateChanged -= OnVmChanged;
+        }
         base.OnDisappearing();
     }
 
@@ -47,12 +55,26 @@ public partial class JoinGamePage : ContentPage
     private void SyncUi()
     {
         if (_vm == null) return;
+        var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
         ErrorLabel.Text = _vm.ErrorMessage ?? "";
         ErrorLabel.IsVisible = !string.IsNullOrEmpty(_vm.ErrorMessage);
         Busy.IsRunning = _vm.IsLoading && _vm.OpenGames.Count == 0;
         StyleFilter(FilterAllBtn, _vm.VariantFilter == null);
         StyleFilter(FilterMakopaBtn, _vm.VariantFilter == GameVariant.Makopa);
         StyleFilter(FilterKopoBtn, _vm.VariantFilter == GameVariant.Kopo);
+
+        var hasInvite = _vm.InviteStatus?.HasPendingCode == true;
+        InviteBanner.IsVisible = hasInvite;
+        InviteEntryPanel.IsVisible = !hasInvite;
+        InviteSuccessLabel.IsVisible = !string.IsNullOrEmpty(_vm.InviteSuccessMessage);
+        InviteSuccessLabel.Text = _vm.InviteSuccessMessage ?? "";
+        InviteApplyBtn.IsEnabled = !_vm.IsLoading && !string.IsNullOrWhiteSpace(_vm.InviteCodeInput);
+        if (hasInvite && _vm.InviteStatus != null)
+        {
+            InviteBannerLabel.Text = string.Format(
+                i18n.T("invite_discount_banner"),
+                _vm.InviteStatus.DiscountPercent.ToString("N0"));
+        }
     }
 
     private static void StyleFilter(Button btn, bool selected)
@@ -64,6 +86,12 @@ public partial class JoinGamePage : ContentPage
     private void OnFilterAll(object? sender, EventArgs e) => _vm?.SetVariantFilter(null);
     private void OnFilterMakopa(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Makopa);
     private void OnFilterKopo(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Kopo);
+
+    private async void OnApplyInvite(object? sender, EventArgs e)
+    {
+        if (_vm == null) return;
+        await _vm.ApplyInviteCodeAsync();
+    }
 
     private async void OnRefresh(object? sender, EventArgs e)
     {
