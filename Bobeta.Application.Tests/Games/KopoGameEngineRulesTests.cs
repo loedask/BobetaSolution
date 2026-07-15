@@ -117,5 +117,6 @@ public class KopoGameEngineRulesTests
                 new Player { Id = session.OpponentPlayerId!.Value, PlayerName = "Opponent" }),
             NoOpGameRevenueService.Instance,
             NoOpInfluencerAttributionService.Instance,
+            NoOpNotificationService.Instance,
             NullLogger<KopoGameEngine>.Instance);
 }

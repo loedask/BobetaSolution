@@ -45,6 +45,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IInfluencerRepository, InfluencerRepository>();
         services.AddScoped<IPlatformSettingsRepository, PlatformSettingsRepository>();
         services.AddScoped<IDashboardStatsRepository, DashboardStatsRepository>();
+        services.AddScoped<IPlayerNotificationRepository, PlayerNotificationRepository>();
         return services;
     }
 

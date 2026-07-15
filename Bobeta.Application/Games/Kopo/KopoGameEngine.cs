@@ -18,6 +18,7 @@ public class KopoGameEngine(
     IPlayerRepository playerRepository,
     IGameRevenueService gameRevenueService,
     IInfluencerAttributionService influencerAttribution,
+    INotificationService notificationService,
     ILogger<KopoGameEngine> logger) : IGameEngine
 {
     private const decimal CommissionRate = 0.25m;
@@ -192,6 +193,9 @@ public class KopoGameEngine(
         await gameRevenueService.EnrichWithPartnerShareAsync(result, winnerId, cancellationToken);
         await resultRepository.AddAsync(result, cancellationToken);
         session.GameResult = result;
+
+        await notificationService.NotifyGameResultAsync(winnerId, session.Id, won: true, winnerAmount, cancellationToken);
+        await notificationService.NotifyGameResultAsync(loserId, session.Id, won: false, session.BetAmount, cancellationToken);
     }
 
     private async Task ReleaseBetsAsync(GameSession session, CancellationToken cancellationToken)

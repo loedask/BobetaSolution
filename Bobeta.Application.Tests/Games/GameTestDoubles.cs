@@ -58,6 +58,22 @@ internal sealed class NoOpGameRevenueService : IGameRevenueService
         => Task.CompletedTask;
 }
 
+internal sealed class NoOpNotificationService : INotificationService
+{
+    public static NoOpNotificationService Instance { get; } = new();
+
+    public Task NotifyOpponentJoinedAsync(Guid creatorPlayerId, Guid gameSessionId, string opponentName, decimal betAmount, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task NotifyGameResultAsync(Guid playerId, Guid gameSessionId, bool won, decimal amount, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task NotifyPaymentAsync(Guid playerId, bool isDeposit, bool success, decimal amount, Guid? paymentTransactionId = null, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task SendGameInviteAsync(Guid recipientPlayerId, Guid gameSessionId, string inviterName, decimal betAmount, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task SendBetProposalAsync(Guid recipientPlayerId, Guid gameSessionId, decimal proposedAmount, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task<IReadOnlyList<Bobeta.Application.DTOs.Notifications.NotificationDto>> GetInboxAsync(Guid playerId, int skip = 0, int take = 30, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<Bobeta.Application.DTOs.Notifications.NotificationDto>>(Array.Empty<Bobeta.Application.DTOs.Notifications.NotificationDto>());
+    public Task<int> GetUnreadCountAsync(Guid playerId, CancellationToken cancellationToken = default) => Task.FromResult(0);
+    public Task MarkReadAsync(Guid playerId, Guid notificationId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task MarkAllReadAsync(Guid playerId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+}
+
 internal sealed class NoOpInfluencerAttributionService : IInfluencerAttributionService
 {
     public static NoOpInfluencerAttributionService Instance { get; } = new();

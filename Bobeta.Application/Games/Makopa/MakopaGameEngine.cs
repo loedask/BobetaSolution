@@ -25,6 +25,7 @@ public class MakopaGameEngine(
     IWalletService walletService,
     IPlayerRepository playerRepository,
     IGameRevenueService gameRevenueService,
+    INotificationService notificationService,
     ILogger<MakopaGameEngine> logger) : IGameEngine
 {
     public GameVariant Variant => GameVariant.Makopa;
@@ -389,6 +390,9 @@ public class MakopaGameEngine(
         await gameRevenueService.EnrichWithPartnerShareAsync(result, winnerId, cancellationToken);
         await _resultRepository.AddAsync(result, cancellationToken);
         session.GameResult = result;
+
+        await notificationService.NotifyGameResultAsync(winnerId, session.Id, won: true, winnerAmount, cancellationToken);
+        await notificationService.NotifyGameResultAsync(loserId, session.Id, won: false, session.BetAmount, cancellationToken);
     }
 
     private static int GetHandCount(MakopaGameState state, Guid playerId, Guid creatorId) =>

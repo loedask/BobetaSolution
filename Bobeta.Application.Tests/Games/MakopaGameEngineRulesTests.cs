@@ -296,6 +296,7 @@ public class MakopaGameEngineRulesTests
                 new Player { Id = session.CreatorPlayerId, PlayerName = "Creator" },
                 new Player { Id = session.OpponentPlayerId!.Value, PlayerName = "Opponent" }),
             NoOpGameRevenueService.Instance,
+            NoOpNotificationService.Instance,
             NullLogger<MakopaGameEngine>.Instance);
     }
 }

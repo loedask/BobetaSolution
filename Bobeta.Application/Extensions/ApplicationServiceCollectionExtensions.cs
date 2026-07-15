@@ -20,6 +20,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<KopoGameEngine>();
         services.AddScoped<IGameEngineService, GameEngineService>();
         services.AddScoped<IGameHistoryService, GameHistoryService>();
+        services.AddScoped<INotificationRealtimePublisher, NullNotificationRealtimePublisher>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IGameRevenueService, GameRevenueService>();
         services.AddScoped<IRevenueShareResolver, RevenueShareResolver>();

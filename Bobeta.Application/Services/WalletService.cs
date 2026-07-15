@@ -10,13 +10,16 @@ public class WalletService : IWalletService
 {
     private readonly IWalletRepository _walletRepository;
     private readonly IWalletTransactionRepository _transactionRepository;
+    private readonly INotificationService _notificationService;
 
     public WalletService(
         IWalletRepository walletRepository,
-        IWalletTransactionRepository transactionRepository)
+        IWalletTransactionRepository transactionRepository,
+        INotificationService notificationService)
     {
         _walletRepository = walletRepository;
         _transactionRepository = transactionRepository;
+        _notificationService = notificationService;
     }
 
     public async Task<WalletBalanceDto> GetBalanceAsync(Guid playerId, CancellationToken cancellationToken = default)
@@ -45,6 +48,7 @@ public class WalletService : IWalletService
             CreatedAt = DateTime.UtcNow
         };
         await _transactionRepository.AddAsync(tx, cancellationToken);
+        await _notificationService.NotifyPaymentAsync(playerId, isDeposit: true, success: true, amount, tx.Id, cancellationToken);
         return Map(tx);
     }
 
@@ -69,6 +73,7 @@ public class WalletService : IWalletService
             CreatedAt = DateTime.UtcNow
         };
         await _transactionRepository.AddAsync(tx, cancellationToken);
+        await _notificationService.NotifyPaymentAsync(playerId, isDeposit: false, success: true, amount, tx.Id, cancellationToken);
         return Map(tx);
     }
 

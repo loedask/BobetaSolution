@@ -44,6 +44,7 @@ public static class ApiServiceCollectionExtensions
         services.AddBobetaPersistence(connectionString);
         services.AddBobetaApplication();
         services.AddScoped<IGameSessionNotifier, GameSessionSignalRNotifier>();
+        services.AddScoped<INotificationRealtimePublisher, SignalRNotificationRealtimePublisher>();
         services.AddSingleton<IGameSessionConnectionTracker, GameSessionConnectionTracker>();
         services.AddSingleton<IGameInactivityCoordinator, GameInactivityCoordinator>();
         services.AddHostedService<GameInactivityHostedService>();

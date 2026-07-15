@@ -1,11 +1,13 @@
 using Bobeta.Mobile.Services;
 using Bobeta.Mobile.ViewModels.Dashboard;
+using Bobeta.Mobile.ViewModels.Notifications;
 
 namespace Bobeta.Mobile.Pages;
 
 public partial class DashboardPage : ContentPage
 {
     private DashboardViewModel? _vm;
+    private NotificationInboxViewModel? _inbox;
 
     public DashboardPage()
     {
@@ -16,9 +18,12 @@ public partial class DashboardPage : ContentPage
     {
         base.OnAppearing();
         _vm = MauiProgram.Services.GetRequiredService<DashboardViewModel>();
+        _inbox = MauiProgram.Services.GetRequiredService<NotificationInboxViewModel>();
         BindingContext = _vm;
         _vm.StateChanged -= OnVmChanged;
         _vm.StateChanged += OnVmChanged;
+        _inbox.StateChanged -= OnInboxChanged;
+        _inbox.StateChanged += OnInboxChanged;
 
         var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
         WelcomePrefix.Text = i18n.T("welcome_back");
@@ -37,8 +42,13 @@ public partial class DashboardPage : ContentPage
         InviteDismissBtn.Text = i18n.T("invite_prompt_dismiss");
         InviteApplyBtn.Text = i18n.T("invite_apply");
         InviteCodeEntry.Placeholder = i18n.T("invite_enter_code");
+        InboxTitle.Text = i18n.T("notifications");
+        MarkAllBtn.Text = i18n.T("notif_mark_all_read");
+        InboxEmptyTitle.Text = i18n.T("notif_empty_title");
+        InboxEmptyBody.Text = i18n.T("notif_empty_body");
+        BellBtn.Text = "🔔";
 
-        _ = _vm.LoadAsync();
+        _ = LoadAsync();
         SyncUi();
     }
 
@@ -46,10 +56,22 @@ public partial class DashboardPage : ContentPage
     {
         if (_vm != null)
             _vm.StateChanged -= OnVmChanged;
+        if (_inbox != null)
+            _inbox.StateChanged -= OnInboxChanged;
         base.OnDisappearing();
     }
 
+    private async Task LoadAsync()
+    {
+        if (_vm != null)
+            await _vm.LoadAsync();
+        if (_inbox != null)
+            await _inbox.InitializeAsync();
+        SyncUi();
+    }
+
     private void OnVmChanged() => MainThread.BeginInvokeOnMainThread(SyncUi);
+    private void OnInboxChanged() => MainThread.BeginInvokeOnMainThread(SyncUi);
 
     private void SyncUi()
     {
@@ -73,6 +95,40 @@ public partial class DashboardPage : ContentPage
                 _vm.InviteStatus.Code ?? "",
                 _vm.InviteStatus.DiscountPercent.ToString("N0"));
         }
+
+        if (_inbox == null) return;
+        UnreadDot.IsVisible = _inbox.UnreadCount > 0;
+        InboxOverlay.IsVisible = _inbox.IsOpen;
+        InboxList.ItemsSource = _inbox.Rows;
+        MarkAllBtn.IsVisible = _inbox.UnreadCount > 0;
+        InboxUnread.Text = _inbox.UnreadCount > 0
+            ? string.Format(i18n.T("notif_unread_count"), _inbox.UnreadCount)
+            : "";
+        InboxError.Text = _inbox.ErrorMessage ?? "";
+        InboxError.IsVisible = !string.IsNullOrEmpty(_inbox.ErrorMessage);
+    }
+
+    private async void OnOpenInbox(object? sender, EventArgs e)
+    {
+        if (_inbox == null) return;
+        await _inbox.OpenAsync();
+    }
+
+    private void OnCloseInbox(object? sender, EventArgs e) => _inbox?.Close();
+
+    private async void OnMarkAllRead(object? sender, EventArgs e)
+    {
+        if (_inbox == null) return;
+        await _inbox.MarkAllReadAsync();
+    }
+
+    private async void OnInboxSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_inbox == null) return;
+        if (e.CurrentSelection.FirstOrDefault() is not NotificationRow row)
+            return;
+        InboxList.SelectedItem = null;
+        await _inbox.OpenItemAsync(row.Source);
     }
 
     private async void OnApplyInvite(object? sender, EventArgs e)

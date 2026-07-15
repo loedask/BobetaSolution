@@ -7,10 +7,31 @@
     Title="Home">
 
     <Grid RowDefinitions="Auto,*" Padding="16,8" RowSpacing="12">
-        <VerticalStackLayout Spacing="4">
-            <Label x:Name="WelcomePrefix" FontSize="13" TextColor="{StaticResource MutedForeground}" />
-            <Label Text="{Binding PlayerName}" FontSize="22" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
-        </VerticalStackLayout>
+        <Grid ColumnDefinitions="*,Auto">
+            <VerticalStackLayout Spacing="4">
+                <Label x:Name="WelcomePrefix" FontSize="13" TextColor="{StaticResource MutedForeground}" />
+                <Label Text="{Binding PlayerName}" FontSize="22" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
+            </VerticalStackLayout>
+            <Grid Grid.Column="1" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+                <Button
+                    x:Name="BellBtn"
+                    Clicked="OnOpenInbox"
+                    CornerRadius="12"
+                    BackgroundColor="{StaticResource Card}"
+                    Text="🔔"
+                    FontSize="16"
+                    TextColor="{StaticResource MutedForeground}" />
+                <Ellipse
+                    x:Name="UnreadDot"
+                    WidthRequest="10"
+                    HeightRequest="10"
+                    Fill="{StaticResource AccentGreen}"
+                    HorizontalOptions="End"
+                    VerticalOptions="Start"
+                    Margin="0,2,2,0"
+                    IsVisible="False" />
+            </Grid>
+        </Grid>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Spacing="16">
@@ -138,5 +159,67 @@
                 <Label x:Name="TrustLabel" FontSize="11" TextColor="{StaticResource AccentGreen}" LineBreakMode="WordWrap" />
             </VerticalStackLayout>
         </ScrollView>
+
+        <Grid
+            x:Name="InboxOverlay"
+            Grid.RowSpan="2"
+            IsVisible="False"
+            BackgroundColor="#CC0D0D0F">
+            <Border
+                Margin="16,48"
+                Padding="0"
+                VerticalOptions="Center"
+                BackgroundColor="{StaticResource Card}"
+                StrokeShape="RoundRectangle 16"
+                MaximumHeightRequest="520">
+                <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12">
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <VerticalStackLayout Spacing="2">
+                            <Label x:Name="InboxTitle" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
+                            <Label x:Name="InboxUnread" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+                        </VerticalStackLayout>
+                        <Button
+                            x:Name="MarkAllBtn"
+                            Grid.Column="1"
+                            Clicked="OnMarkAllRead"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource PrimaryGold}"
+                            FontSize="12"
+                            Margin="0,0,8,0" />
+                        <Button
+                            x:Name="CloseInboxBtn"
+                            Grid.Column="2"
+                            Clicked="OnCloseInbox"
+                            Text="✕"
+                            BackgroundColor="{StaticResource SecondaryCard}"
+                            TextColor="{StaticResource Foreground}"
+                            WidthRequest="36"
+                            HeightRequest="36"
+                            CornerRadius="10"
+                            Padding="0" />
+                    </Grid>
+                    <CollectionView x:Name="InboxList" Grid.Row="1" SelectionMode="Single" SelectionChanged="OnInboxSelectionChanged">
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="16" Spacing="6">
+                                <Label x:Name="InboxEmptyTitle" HorizontalTextAlignment="Center" TextColor="{StaticResource Foreground}" FontAttributes="Bold" />
+                                <Label x:Name="InboxEmptyBody" HorizontalTextAlignment="Center" TextColor="{StaticResource MutedForeground}" FontSize="12" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,8" Padding="12" BackgroundColor="{StaticResource SecondaryCard}" StrokeShape="RoundRectangle 12">
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{Binding Title}" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
+                                        <Label Text="{Binding Body}" FontSize="12" TextColor="{StaticResource MutedForeground}" LineBreakMode="WordWrap" />
+                                        <Label Text="{Binding Time}" FontSize="11" TextColor="{StaticResource MutedForeground}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                    <Label x:Name="InboxError" Grid.Row="2" IsVisible="False" TextColor="{StaticResource Destructive}" FontSize="12" />
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </ContentPage>

@@ -61,6 +61,9 @@ public class BobetaDbContext(DbContextOptions<BobetaDbContext> options) : DbCont
     /// <summary>Platform key/value settings.</summary>
     public DbSet<PlatformSetting> PlatformSettings => Set<PlatformSetting>();
 
+    /// <summary>In-app player notification inbox.</summary>
+    public DbSet<PlayerNotification> PlayerNotifications => Set<PlayerNotification>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

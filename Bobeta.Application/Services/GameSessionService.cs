@@ -12,7 +12,8 @@ public class GameSessionService(
     IWalletService walletService,
     IGameEngineService gameEngine,
     IGameSessionNotifier sessionNotifier,
-    IInfluencerAttributionService influencerAttribution) : IGameSessionService
+    IInfluencerAttributionService influencerAttribution,
+    INotificationService notificationService) : IGameSessionService
 {
     private readonly IGameSessionRepository _sessionRepository = sessionRepository;
     private readonly IPlayerRepository _playerRepository = playerRepository;
@@ -20,6 +21,7 @@ public class GameSessionService(
     private readonly IGameEngineService _gameEngine = gameEngine;
     private readonly IGameSessionNotifier _sessionNotifier = sessionNotifier;
     private readonly IInfluencerAttributionService _influencerAttribution = influencerAttribution;
+    private readonly INotificationService _notificationService = notificationService;
 
     public async Task<GameSessionDto> CreateGameAsync(Guid playerId, decimal betAmount, GameVariant variant = GameVariant.Makopa, CancellationToken cancellationToken = default)
     {
@@ -92,6 +94,16 @@ public class GameSessionService(
             return null;
 
         await _sessionNotifier.NotifySessionAsync(gameId, cancellationToken);
+
+        var joiner = await _playerRepository.GetByIdAsync(playerId, cancellationToken);
+        var joinerName = string.IsNullOrWhiteSpace(joiner?.PlayerName) ? "Opponent" : joiner!.PlayerName.Trim();
+        await _notificationService.NotifyOpponentJoinedAsync(
+            session.CreatorPlayerId,
+            gameId,
+            joinerName,
+            session.BetAmount,
+            cancellationToken);
+
         return Map(session);
     }
 
