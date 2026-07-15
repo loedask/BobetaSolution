@@ -19,6 +19,8 @@ public class JoinGameViewModel(
     private readonly InfluencerService _influencerService = influencerService;
 
     private bool _joinBusy;
+    private static readonly TimeSpan LiveRefreshInterval = TimeSpan.FromSeconds(12);
+    private CancellationTokenSource? _liveRefreshCts;
 
     public GameVariant? VariantFilter { get; private set; }
 
@@ -79,25 +81,62 @@ public class JoinGameViewModel(
         }
     }
 
-    public async Task LoadGamesAsync()
+    public void StartLiveRefresh()
     {
-        SetLoading(true);
-        ClearError();
+        StopLiveRefresh();
+        _liveRefreshCts = new CancellationTokenSource();
+        _ = RunLiveRefreshAsync(_liveRefreshCts.Token);
+    }
+
+    public void StopLiveRefresh()
+    {
+        _liveRefreshCts?.Cancel();
+        _liveRefreshCts?.Dispose();
+        _liveRefreshCts = null;
+    }
+
+    private async Task RunLiveRefreshAsync(CancellationToken token)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(LiveRefreshInterval);
+            while (await timer.WaitForNextTickAsync(token))
+                await LoadGamesAsync(quiet: true);
+        }
+        catch (OperationCanceledException)
+        {
+            // Page left / refresh stopped.
+        }
+    }
+
+    public async Task LoadGamesAsync(bool quiet = false)
+    {
+        if (!quiet)
+        {
+            SetLoading(true);
+            ClearError();
+        }
         try
         {
             var res = await _gameService.GetOpenGamesAsync(VariantFilter);
             if (res.IsSuccess && res.Data != null)
+            {
                 OpenGames = res.Data.Where(x => x.OpponentPlayerId == null).ToList();
-            else if (!res.IsSuccess)
+                if (quiet)
+                    RaiseStateChanged();
+            }
+            else if (!res.IsSuccess && !quiet)
                 SetError(res.ErrorMessage ?? "Failed to load games.");
         }
         catch (Exception)
         {
-            SetError("Something went wrong. Please try again.");
+            if (!quiet)
+                SetError("Something went wrong. Please try again.");
         }
         finally
         {
-            SetLoading(false);
+            if (!quiet)
+                SetLoading(false);
         }
     }
 

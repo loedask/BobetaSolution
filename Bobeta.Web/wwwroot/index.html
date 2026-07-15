@@ -37,6 +37,24 @@
         window.bobeta = {
             getBrowserLanguage: function () {
                 return navigator.language || navigator.userLanguage || null;
+            },
+            // Join Game live list: refresh when the tab becomes visible again.
+            onVisibilityVisible: function (dotNetRef) {
+                if (this._visibilityHandler) {
+                    document.removeEventListener('visibilitychange', this._visibilityHandler);
+                    this._visibilityHandler = null;
+                }
+                this._visibilityHandler = function () {
+                    if (document.visibilityState === 'visible')
+                        dotNetRef.invokeMethodAsync('OnTabBecameVisible');
+                };
+                document.addEventListener('visibilitychange', this._visibilityHandler);
+            },
+            clearVisibilityVisible: function () {
+                if (this._visibilityHandler) {
+                    document.removeEventListener('visibilitychange', this._visibilityHandler);
+                    this._visibilityHandler = null;
+                }
             }
         };
         if (!location.hostname.includes('localhost') && !location.hostname.startsWith('127.'))

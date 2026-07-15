@@ -1,8 +1,10 @@
 @page "/join"
 @using Bobeta.Client.Models.Api
-@implements IDisposable
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
 @inject JoinGameViewModel ViewModel
 @inject I18nService I18n
+@inject IJSRuntime JS
 
 <div class="min-h-screen bg-background pb-24">
     <div class="flex items-center gap-3 px-5 pt-6 pb-4">
@@ -126,12 +128,57 @@
 </div>
 
 @code {
+    private DotNetObjectReference<JoinGame>? _dotNetRef;
+    private bool _visibilityHooked;
+
     protected override void OnInitialized() => ViewModel.StateChanged += OnStateChanged;
+
     protected override async Task OnInitializedAsync()
     {
         await Task.WhenAll(ViewModel.LoadGamesAsync(), ViewModel.LoadInviteStatusAsync());
+        ViewModel.StartLiveRefresh();
     }
-    public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _visibilityHooked)
+            return;
+        _visibilityHooked = true;
+        _dotNetRef = DotNetObjectReference.Create(this);
+        try
+        {
+            await JS.InvokeVoidAsync("bobeta.onVisibilityVisible", _dotNetRef);
+        }
+        catch (JSException)
+        {
+            // Older cached index.html without the helper — polling alone still works.
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+
+    [JSInvokable]
+    public Task OnTabBecameVisible() => ViewModel.LoadGamesAsync(forceRefresh: true, quiet: true);
+
+    public async ValueTask DisposeAsync()
+    {
+        ViewModel.StopLiveRefresh();
+        ViewModel.StateChanged -= OnStateChanged;
+        try
+        {
+            await JS.InvokeVoidAsync("bobeta.clearVisibilityVisible");
+        }
+        catch (JSException)
+        {
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+        _dotNetRef?.Dispose();
+        _dotNetRef = null;
+    }
+
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
     private async Task LoadGames() => await ViewModel.LoadGamesAsync(forceRefresh: true);
     private async Task DoJoin(Guid gameId) => await ViewModel.JoinGameAsync(gameId);
