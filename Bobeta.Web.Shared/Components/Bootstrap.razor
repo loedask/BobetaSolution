@@ -3,7 +3,12 @@
 
 @if (_loaded)
 {
-    @ChildContent
+    @* Key forces the full route tree to remount when language changes so I18n.T() re-evaluates. *@
+    <CascadingValue Name="AppLocale" Value="@AppState.State.SelectedLanguage">
+        <div @key="AppState.State.SelectedLanguage" style="display: contents">
+            @ChildContent
+        </div>
+    </CascadingValue>
 }
 
 @code {

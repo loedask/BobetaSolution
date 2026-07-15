@@ -1,6 +1,16 @@
 @inherits LayoutComponentBase
+@implements IDisposable
+@inject AppStateService AppState
 
 <div class="mx-auto max-w-lg min-h-screen bg-background flex flex-col">
     @Body
     <BottomNavigation />
 </div>
+
+@code {
+    protected override void OnInitialized() => AppState.StateChanged += OnStateChanged;
+
+    private void OnStateChanged() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => AppState.StateChanged -= OnStateChanged;
+}
