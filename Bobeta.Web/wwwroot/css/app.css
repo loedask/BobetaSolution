@@ -305,3 +305,109 @@ button.playing-card.playing-card--btn:active:not(:disabled) {
 .confetti-piece {
   will-change: transform, opacity;
 }
+
+/* Compact game previews (Create Game choice cards) */
+.game-preview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.game-preview--makopa {
+  background:
+    radial-gradient(ellipse at 50% 30%, hsl(45 90% 55% / 0.08), transparent 55%),
+    linear-gradient(160deg, #1a120c, #0d0a08);
+  border: 1px solid hsl(45 90% 55% / 0.22);
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.45);
+}
+
+.game-preview--kopo {
+  background: linear-gradient(160deg, hsl(220 25% 14%), hsl(220 30% 8%));
+  border: 1px solid hsl(220 20% 22%);
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.35);
+}
+
+.game-preview__fan {
+  position: relative;
+  width: 5.75rem;
+  height: 3.75rem;
+}
+
+.game-preview__card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.55rem;
+  height: 2.15rem;
+  margin: -1.075rem 0 0 -0.775rem;
+  border-radius: 0.22rem;
+  background: linear-gradient(165deg, #fffefb, #ece7df);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  display: grid;
+  place-items: center;
+  font-family: 'Space Grotesk', Georgia, serif;
+  font-size: 0.5rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.game-preview__card--red { color: #c41e1e; }
+.game-preview__card--ink { color: #151515; }
+
+.game-preview__card--1 { transform: translate(-1.35rem, 0.2rem) rotate(-18deg); }
+.game-preview__card--2 { transform: translate(-0.45rem, -0.1rem) rotate(-6deg); }
+.game-preview__card--3 { transform: translate(0.45rem, -0.1rem) rotate(6deg); }
+.game-preview__card--4 { transform: translate(1.35rem, 0.2rem) rotate(18deg); }
+
+.choice-selected .game-preview__card--1 { transform: translate(-1.55rem, 0.05rem) rotate(-24deg); }
+.choice-selected .game-preview__card--2 { transform: translate(-0.55rem, -0.25rem) rotate(-9deg); }
+.choice-selected .game-preview__card--3 { transform: translate(0.55rem, -0.25rem) rotate(9deg); }
+.choice-selected .game-preview__card--4 { transform: translate(1.55rem, 0.05rem) rotate(24deg); }
+
+.game-preview__board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 1px;
+  width: 4.25rem;
+  aspect-ratio: 1;
+  padding: 3px;
+  background: #2a2a2a;
+  border-radius: 0.28rem;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+}
+
+.game-preview__cell {
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+
+.game-preview__cell--dark { background: #121212; }
+.game-preview__cell--light { background: #1d1d1d; }
+
+.game-preview__piece {
+  width: 62%;
+  height: 62%;
+  border-radius: 50%;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.game-preview__piece--gold {
+  background: linear-gradient(135deg, hsl(45 90% 60%), hsl(35 85% 42%));
+}
+
+.game-preview__piece--white {
+  background: linear-gradient(135deg, #f7f4ef, #cfc9bf);
+}
+
+.choice-selected .game-preview--makopa,
+.choice-selected .game-preview--kopo {
+  border-color: hsl(45 90% 55% / 0.45);
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.45), 0 0 14px hsl(45 90% 55% / 0.12);
+}
