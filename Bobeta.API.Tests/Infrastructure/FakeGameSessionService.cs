@@ -42,4 +42,7 @@ internal sealed class FakeGameSessionService : IGameSessionService
 
   public Task<bool> CancelInProgressGameAsync(Guid sessionId, CancellationToken cancellationToken = default) =>
     throw new NotSupportedException();
+
+  public Task<bool> CancelWaitingGameAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
+    throw new NotSupportedException();
 }

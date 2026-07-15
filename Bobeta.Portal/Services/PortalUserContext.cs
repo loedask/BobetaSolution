@@ -27,4 +27,5 @@ public sealed class PortalUserContext(IHttpContextAccessor httpContextAccessor)
 
   public bool IsPlatformOwner => User.IsInRole(nameof(PortalUserRole.PlatformOwner));
   public bool IsLicensePartner => User.IsInRole(nameof(PortalUserRole.LicensePartner));
+  public bool IsInfluencer => User.IsInRole(nameof(PortalUserRole.Influencer));
 }

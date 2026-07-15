@@ -5,8 +5,8 @@
         <div class="portal-brand">
             <span class="portal-brand-mark">B</span>
             <div>
-                <div class="portal-brand-title">Bobeta</div>
-                <div class="portal-brand-subtitle">Employee Portal</div>
+                <div class="portal-brand-title"><span class="be">Bo</span>beta</div>
+                <div class="portal-brand-subtitle">Staff · Partners · Influencers</div>
             </div>
         </div>
         <NavMenu />
@@ -15,7 +15,16 @@
         <header class="portal-header">
             <AuthorizeView>
                 <Authorized>
-                    <span class="portal-user">@context.User.Identity?.Name</span>
+                    @{
+                        var name = context.User.Identity?.Name ?? "User";
+                        var initial = string.IsNullOrWhiteSpace(name)
+                            ? 'U'
+                            : char.ToUpperInvariant(name.Trim()[0]);
+                    }
+                    <div class="portal-user-chip">
+                        <span class="portal-user-avatar">@initial</span>
+                        <span class="portal-user">@name</span>
+                    </div>
                     <a class="portal-link-button" href="/account/logout">Sign out</a>
                 </Authorized>
             </AuthorizeView>

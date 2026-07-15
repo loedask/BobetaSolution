@@ -3,6 +3,7 @@ using Bobeta.Web.Shared.Services.Realtime;
 using Bobeta.Web.Shared.ViewModels.Auth;
 using Bobeta.Web.Shared.ViewModels.Dashboard;
 using Bobeta.Web.Shared.ViewModels.Games;
+using Bobeta.Web.Shared.ViewModels.Notifications;
 using Bobeta.Web.Shared.ViewModels.Profile;
 using Bobeta.Web.Shared.ViewModels.Wallet;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,7 @@ public static class WebSharedServiceExtensions
         services.AddScoped<AppStateService>();
         services.AddScoped<I18nService>();
         services.AddScoped<GameHubClient>();
+        services.AddScoped<NotificationHubClient>();
 
         services.AddScoped<PhoneLoginViewModel>();
         services.AddScoped<OtpVerificationViewModel>();
@@ -29,6 +31,7 @@ public static class WebSharedServiceExtensions
         services.AddScoped<CreateGameViewModel>();
         services.AddScoped<GameHistoryViewModel>();
         services.AddScoped<ProfileViewModel>();
+        services.AddScoped<NotificationInboxViewModel>();
 
         return services;
     }

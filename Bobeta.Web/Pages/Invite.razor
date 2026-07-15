@@ -1,0 +1,66 @@
+@page "/invite/{Code}"
+@inject AppStateService AppState
+@inject InfluencerService InfluencerService
+@inject NavigationManager Nav
+@inject I18nService I18n
+@using Bobeta.Client.Services
+
+<PageTitle>@I18n.T("invite_title") - Bobeta</PageTitle>
+
+<div class="flex min-h-screen items-center justify-center bg-background px-5">
+    <div class="card-surface w-full max-w-sm rounded-2xl border border-border/50 p-6 text-center">
+        @if (_busy)
+        {
+            <LoadingSpinner />
+            <p class="mt-3 text-sm text-muted-foreground">@I18n.T("invite_saving")</p>
+        }
+        else if (!string.IsNullOrEmpty(_message))
+        {
+            <p class="text-sm text-foreground">@_message</p>
+            <PrimaryButton CssClass="mt-5 w-full" OnClick="Continue">@I18n.T("continue")</PrimaryButton>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Code { get; set; } = "";
+
+    private bool _busy = true;
+    private string? _message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var code = (Code ?? "").Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            _message = I18n.T("invite_invalid");
+            _busy = false;
+            return;
+        }
+
+        AppState.SetPendingInviteCode(code);
+        await AppState.PersistAsync();
+
+        if (AppState.State.IsAuthenticated)
+        {
+            var res = await InfluencerService.ApplyCodeAsync(code);
+            AppState.SetPendingInviteCode(null);
+            await AppState.PersistAsync();
+            _message = res.IsSuccess
+                ? I18n.T("invite_applied")
+                : (res.ErrorMessage ?? I18n.T("invite_invalid"));
+        }
+        else
+        {
+            _message = I18n.T("invite_saved_login");
+        }
+
+        _busy = false;
+    }
+
+    private void Continue()
+    {
+        Nav.NavigateTo(AppState.State.IsAuthenticated ? "/dashboard" : "/login", replace: true);
+    }
+}

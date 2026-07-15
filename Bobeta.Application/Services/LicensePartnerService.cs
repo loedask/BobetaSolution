@@ -8,6 +8,7 @@ namespace Bobeta.Application.Services;
 
 public sealed class LicensePartnerService(
     ILicensePartnerRepository partners,
+    IInfluencerRepository influencers,
     IPortalUserRepository portalUsers,
     PortalPasswordHasher passwordHasher) : ILicensePartnerService
 {
@@ -74,6 +75,11 @@ public sealed class LicensePartnerService(
     if (request.RevenueSharePercent is < 0 or > 100)
       throw new InvalidOperationException("Revenue share must be between 0 and 100.");
 
+    var maxInfluencer = await influencers.GetMaxCommissionPercentAsync(cancellationToken);
+    if (request.RevenueSharePercent + maxInfluencer > 100)
+      throw new InvalidOperationException(
+          $"Partner share plus the highest influencer commission ({maxInfluencer:N2}%) cannot exceed 100%.");
+
     var partner = await partners.GetByIdAsync(request.LicensePartnerId, cancellationToken)
       ?? throw new InvalidOperationException("License partner not found.");
 
@@ -125,6 +131,11 @@ public sealed class LicensePartnerService(
   {
     if (request.RevenueSharePercent is < 0 or > 100)
       throw new InvalidOperationException("Revenue share must be between 0 and 100.");
+
+    var maxInfluencer = await influencers.GetMaxCommissionPercentAsync(cancellationToken);
+    if (request.RevenueSharePercent + maxInfluencer > 100)
+      throw new InvalidOperationException(
+          $"Partner share plus the highest influencer commission ({maxInfluencer:N2}%) cannot exceed 100%.");
 
     var partnerList = await partners.GetAllAsync(cancellationToken);
     var assignment = partnerList

@@ -7,7 +7,7 @@
     <AppHeader Title="@I18n.T("profile")" ShowBack="true" BackHref="/dashboard" />
 
     <div class="space-y-4 px-5">
-        <div class="card-surface glow-gold overflow-hidden rounded-2xl border border-border/50 p-5">
+        <div class="card-surface glow-gold overflow-hidden rounded-2xl border border-border/50 px-6 py-5">
             <div class="flex items-center gap-4">
                 <div class="gold-gradient flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl shadow-lg">
                     <span class="font-display text-xl font-bold text-primary-foreground">@ViewModel.Initials</span>
@@ -18,8 +18,8 @@
                 </div>
             </div>
 
-            <div class="mt-5 grid grid-cols-3 divide-x divide-border/50 rounded-xl border border-border/40 bg-background/30">
-                <div class="px-2 py-3 text-center">
+            <div class="mt-5 flex divide-x divide-border/50 rounded-xl border border-border/40 bg-background/30">
+                <div class="min-w-0 flex-1 px-2 py-3 text-center">
                     @if (ViewModel.IsLoading)
                     {
                         <SkeletonLoader CssClass="mx-auto mb-1.5 h-6 w-8" />
@@ -30,7 +30,7 @@
                     }
                     <p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">@I18n.T("games")</p>
                 </div>
-                <div class="px-2 py-3 text-center">
+                <div class="min-w-0 flex-1 px-2 py-3 text-center">
                     @if (ViewModel.IsLoading)
                     {
                         <SkeletonLoader CssClass="mx-auto mb-1.5 h-6 w-8" />
@@ -41,7 +41,7 @@
                     }
                     <p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">@I18n.T("wins")</p>
                 </div>
-                <div class="px-2 py-3 text-center">
+                <div class="min-w-0 flex-1 px-2 py-3 text-center">
                     @if (ViewModel.IsLoading)
                     {
                         <SkeletonLoader CssClass="mx-auto mb-1.5 h-6 w-10" />
@@ -55,8 +55,42 @@
             </div>
         </div>
 
-        <div class="card-surface rounded-2xl border border-border/50 p-5">
-            <div class="mb-3 flex items-center gap-2">
+        <div class="card-surface rounded-2xl border border-border/50 px-6 py-6">
+            <div class="mb-4 flex items-center gap-2">
+                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                </div>
+                <span class="font-display text-sm font-semibold text-foreground">@I18n.T("invite_code")</span>
+            </div>
+            @if (ViewModel.InviteStatus is { HasPendingCode: true })
+            {
+                <p class="mb-3 text-sm text-muted-foreground">@string.Format(I18n.T("invite_pending_status"), ViewModel.InviteStatus.Code ?? "", ViewModel.InviteStatus.DiscountPercent.ToString("N0"))</p>
+            }
+            else
+            {
+                <p class="mb-3 text-sm text-muted-foreground">@I18n.T("invite_enter_hint")</p>
+            }
+            @if (!string.IsNullOrEmpty(ViewModel.InviteSuccessMessage))
+            {
+                <div class="portal-alert mb-3 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2 text-sm text-accent">@ViewModel.InviteSuccessMessage</div>
+            }
+            <ErrorBanner Message="@ViewModel.ErrorMessage" />
+            <div class="flex gap-2">
+                <input class="flex-1 rounded-xl border border-border/60 bg-background/40 px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50"
+                       placeholder="@I18n.T("invite_enter_code")"
+                       @bind="ViewModel.InviteCodeInput"
+                       @bind:event="oninput" />
+                <button type="button"
+                        class="rounded-xl bg-primary/15 px-4 py-2.5 text-sm font-semibold text-primary disabled:opacity-50"
+                        disabled="@(ViewModel.IsLoading || string.IsNullOrWhiteSpace(ViewModel.InviteCodeInput))"
+                        @onclick="ViewModel.ApplyInviteCodeAsync">
+                    @I18n.T("invite_apply")
+                </button>
+            </div>
+        </div>
+
+        <div class="card-surface rounded-2xl border border-border/50 px-6 py-6">
+            <div class="mb-4 flex items-center gap-2">
                 <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
                     <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0h.5a2.5 2.5 0 002.5-2.5V8.935M12 12a2 2 0 100 4 2 2 0 000-4z" /></svg>
                 </div>
@@ -66,7 +100,7 @@
         </div>
 
         <div class="overflow-hidden rounded-2xl border border-border/50 card-surface">
-            <a href="/dashboard" class="flex w-full items-center justify-between border-b border-border/40 p-4 transition-colors hover:bg-secondary/40 active:bg-secondary/60">
+            <a href="/dashboard" class="flex w-full items-center justify-between border-b border-border/40 px-6 py-4 transition-colors hover:bg-secondary/40 active:bg-secondary/60">
                 <div class="flex items-center gap-3">
                     <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                         <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
@@ -75,7 +109,7 @@
                 </div>
                 <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             </a>
-            <button type="button" class="flex w-full items-center justify-between p-4 transition-colors hover:bg-destructive/5 active:bg-destructive/10" @onclick="ViewModel.ShowSignOut">
+            <button type="button" class="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-destructive/5 active:bg-destructive/10" @onclick="ViewModel.ShowSignOut">
                 <div class="flex items-center gap-3">
                     <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10">
                         <svg class="h-4 w-4 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>

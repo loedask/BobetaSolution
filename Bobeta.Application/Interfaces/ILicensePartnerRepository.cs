@@ -27,4 +27,5 @@ public interface ILicensePartnerRepository
       int skip,
       int take,
       CancellationToken cancellationToken = default);
+  Task<decimal> GetMaxActiveRevenueSharePercentAsync(CancellationToken cancellationToken = default);
 }

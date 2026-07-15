@@ -1,5 +1,15 @@
 @inherits LayoutComponentBase
+@implements IDisposable
+@inject AppStateService AppState
 
-<div class="landing-page min-h-screen">
+<div class="landing-page">
     @Body
 </div>
+
+@code {
+    protected override void OnInitialized() => AppState.StateChanged += OnStateChanged;
+
+    private void OnStateChanged() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => AppState.StateChanged -= OnStateChanged;
+}

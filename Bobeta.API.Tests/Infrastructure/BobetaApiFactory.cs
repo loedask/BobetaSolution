@@ -1,8 +1,4 @@
-using System.Text;
-using System.Text.Json;
-using Bobeta.Application.DTOs.Game;
 using Bobeta.Application.Interfaces;
-using Bobeta.Domain.Enums;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +15,12 @@ public sealed class BobetaApiFactory : WebApplicationFactory<Program>
     {
       services.RemoveAll<IGameSessionService>();
       services.AddSingleton<IGameSessionService, FakeGameSessionService>();
+      services.RemoveAll<INotificationService>();
+      services.AddSingleton<INotificationService, FakeNotificationService>();
     });
   }
+
+  public FakeNotificationService Notifications =>
+    Services.GetRequiredService<INotificationService>() as FakeNotificationService
+    ?? throw new InvalidOperationException("FakeNotificationService is not registered.");
 }

@@ -72,6 +72,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<I18nService>();
         builder.Services.AddSingleton<INavigationService, ShellNavigationService>();
         builder.Services.AddSingleton<GameHubClient>();
+        builder.Services.AddSingleton<NotificationHubClient>();
         builder.Services.AddSingleton<GamePlayTestService>();
 
 #if ANDROID
@@ -95,6 +96,7 @@ public static class MauiProgram
         builder.Services.AddTransient<GameHistoryViewModel>();
         builder.Services.AddTransient<ProfileViewModel>();
         builder.Services.AddTransient<GamePlayViewModel>();
+        builder.Services.AddSingleton<Bobeta.Mobile.ViewModels.Notifications.NotificationInboxViewModel>();
 
         builder.Services.AddSingleton<AppShell>();
 

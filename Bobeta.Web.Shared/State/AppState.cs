@@ -15,5 +15,11 @@ public class AppState
 
     public string SelectedLanguage { get; set; } = "en";
 
+    /// <summary>Invite code captured from /invite/{code} before login; kept across logout.</summary>
+    public string? PendingInviteCode { get; set; }
+
+    /// <summary>User dismissed the home invite tip; kept across logout.</summary>
+    public bool InvitePromptDismissed { get; set; }
+
     public bool IsAuthenticated => !string.IsNullOrEmpty(AccessToken);
 }

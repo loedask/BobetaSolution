@@ -14,6 +14,7 @@ public class RevenueAllocationConfiguration : IEntityTypeConfiguration<RevenueAl
     builder.Property(a => a.GrossPlatformRevenue).HasPrecision(18, 2);
     builder.Property(a => a.PartnerSharePercent).HasPrecision(5, 2);
     builder.Property(a => a.PartnerAmount).HasPrecision(18, 2);
+    builder.Property(a => a.InfluencerAmount).HasPrecision(18, 2);
     builder.Property(a => a.PlatformRetainedAmount).HasPrecision(18, 2);
     builder.Property(a => a.Currency).HasMaxLength(3);
     builder.HasIndex(a => new { a.SourceType, a.SourceId });

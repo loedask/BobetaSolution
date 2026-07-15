@@ -70,4 +70,13 @@ public class GameController(IGameSessionService gameSessionService) : Controller
         await _gameSessionService.AcceptBetChangeAsync(gameId, cancellationToken);
         return Accepted();
     }
+
+    /// <summary>Cancels a waiting game you created (releases stake and unused invite code).</summary>
+    [HttpPost("cancel-waiting")]
+    public async Task<IActionResult> CancelWaiting([FromQuery] Guid gameId, CancellationToken cancellationToken)
+    {
+        var ok = await _gameSessionService.CancelWaitingGameAsync(PlayerId, gameId, cancellationToken);
+        if (!ok) return BadRequest("Game cannot be cancelled.");
+        return NoContent();
+    }
 }

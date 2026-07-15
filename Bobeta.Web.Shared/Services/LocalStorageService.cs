@@ -40,4 +40,17 @@ public class LocalStorageService
     {
         return await _js.InvokeAsync<string?>("localStorage.getItem", ct, LocaleKey);
     }
+
+    /// <summary>Reads the browser UI language (navigator.language).</summary>
+    public async Task<string?> GetBrowserLanguageAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            return await _js.InvokeAsync<string?>("bobeta.getBrowserLanguage", ct);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

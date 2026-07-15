@@ -40,8 +40,9 @@ public static class ExcelReportWriter
       DateTime? toUtc,
       IReadOnlyList<(string Category, string Metric, object? Value)> metrics,
       IReadOnlyList<(string CountryCode, string CountryName, int Count)>? playersByCountry = null,
-      IReadOnlyList<(string Source, decimal Gross, decimal PartnerAmount, int TransactionCount)>? revenueBySource = null,
-      IReadOnlyList<(string Partner, decimal PartnerAmount, decimal Gross, int TransactionCount)>? revenueByPartner = null)
+      IReadOnlyList<(string Source, decimal Gross, decimal PartnerAmount, decimal InfluencerAmount, int TransactionCount)>? revenueBySource = null,
+      IReadOnlyList<(string Partner, decimal PartnerAmount, decimal InfluencerAmount, decimal Gross, int TransactionCount)>? revenueByPartner = null,
+      IReadOnlyList<(string Influencer, decimal InfluencerAmount, decimal Gross, int TransactionCount)>? revenueByInfluencer = null)
   {
     using var workbook = new XLWorkbook();
 
@@ -54,13 +55,18 @@ public static class ExcelReportWriter
 
     if (revenueBySource is { Count: > 0 })
       WriteDataSheet(workbook, "Revenue by source",
-        ["Source", "Gross revenue", "Partner share", "Transactions"],
-        revenueBySource.Select(r => new object?[] { r.Source, r.Gross, r.PartnerAmount, r.TransactionCount }));
+        ["Source", "Gross revenue", "Partner share", "Influencer share", "Transactions"],
+        revenueBySource.Select(r => new object?[] { r.Source, r.Gross, r.PartnerAmount, r.InfluencerAmount, r.TransactionCount }));
 
     if (revenueByPartner is { Count: > 0 })
       WriteDataSheet(workbook, "Revenue by partner",
-        ["Partner", "Partner share", "Gross revenue", "Transactions"],
-        revenueByPartner.Select(r => new object?[] { r.Partner, r.PartnerAmount, r.Gross, r.TransactionCount }));
+        ["Partner", "Partner share", "Influencer share", "Gross revenue", "Transactions"],
+        revenueByPartner.Select(r => new object?[] { r.Partner, r.PartnerAmount, r.InfluencerAmount, r.Gross, r.TransactionCount }));
+
+    if (revenueByInfluencer is { Count: > 0 })
+      WriteDataSheet(workbook, "Revenue by influencer",
+        ["Influencer", "Influencer share", "Gross revenue", "Transactions"],
+        revenueByInfluencer.Select(r => new object?[] { r.Influencer, r.InfluencerAmount, r.Gross, r.TransactionCount }));
 
     return Save(workbook);
   }

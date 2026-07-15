@@ -8,6 +8,7 @@ public sealed class DashboardStatsFilter
   public DateTime? ToUtc { get; init; }
   public IReadOnlyList<string>? CountryCodes { get; init; }
   public Guid? LicensePartnerId { get; init; }
+  public Guid? InfluencerId { get; init; }
 }
 
 public interface IDashboardStatsRepository
@@ -19,5 +20,6 @@ public interface IDashboardStatsRepository
   Task<GameDashboardStatsDto> GetGameStatsAsync(DashboardStatsFilter filter, CancellationToken cancellationToken = default);
   Task<IReadOnlyList<PartnerRevenueBreakdownDto>> GetRevenueByPartnerAsync(DashboardStatsFilter filter, CancellationToken cancellationToken = default);
   Task<IReadOnlyList<PartnerRevenueBreakdownDto>> GetRevenueBySourceAsync(DashboardStatsFilter filter, CancellationToken cancellationToken = default);
+  Task<IReadOnlyList<PartnerRevenueBreakdownDto>> GetRevenueByInfluencerAsync(DashboardStatsFilter filter, CancellationToken cancellationToken = default);
   Task<IReadOnlyList<PartnerRevenueAllocationItemDto>> GetRevenueAllocationsAsync(DashboardStatsFilter filter, int take, CancellationToken cancellationToken = default);
 }

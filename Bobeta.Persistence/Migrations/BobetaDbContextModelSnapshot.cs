@@ -66,6 +66,10 @@ namespace Bobeta.Persistence.Migrations
                     b.Property<Guid>("GameSessionId")
                         .HasColumnType("uuid");
 
+                    b.Property<decimal>("InfluencerCommission")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<Guid?>("LicensePartnerId")
                         .HasColumnType("uuid");
 
@@ -116,6 +120,10 @@ namespace Bobeta.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<decimal>("CreatorChargedAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<Guid>("CreatorPlayerId")
                         .HasColumnType("uuid");
 
@@ -124,6 +132,10 @@ namespace Bobeta.Persistence.Migrations
 
                     b.Property<string>("GameStateJson")
                         .HasColumnType("jsonb");
+
+                    b.Property<decimal?>("OpponentChargedAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<Guid?>("OpponentPlayerId")
                         .HasColumnType("uuid");
@@ -146,6 +158,143 @@ namespace Bobeta.Persistence.Migrations
                     b.HasIndex("OpponentPlayerId");
 
                     b.ToTable("GameSessions", (string)null);
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.Influencer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<decimal>("CommissionPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<string>("ContactEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("PortalUserId")
+                        .IsUnique();
+
+                    b.ToTable("Influencers", (string)null);
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.InfluencerCodeRedemption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AppliedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("AttachedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime?>("ConsumedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("GameSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("InfluencerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PlayerId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameSessionId");
+
+                    b.HasIndex("InfluencerId", "PlayerId")
+                        .IsUnique();
+
+                    b.HasIndex("PlayerId", "GameSessionId");
+
+                    b.ToTable("InfluencerCodeRedemptions", (string)null);
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.InfluencerCommissionAllocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AttributionBase")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("CommissionPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<Guid>("GameSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("GrossPlatformRevenue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("InfluencerAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("InfluencerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PlayerId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InfluencerId");
+
+                    b.HasIndex("PlayerId");
+
+                    b.HasIndex("GameSessionId", "PlayerId")
+                        .IsUnique();
+
+                    b.ToTable("InfluencerCommissionAllocations", (string)null);
                 });
 
             modelBuilder.Entity("Bobeta.Domain.Entities.LicensePartner", b =>
@@ -332,6 +481,28 @@ namespace Bobeta.Persistence.Migrations
                     b.ToTable("PaymentTransactions", (string)null);
                 });
 
+            modelBuilder.Entity("Bobeta.Domain.Entities.PlatformSetting", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByPortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("PlatformSettings", (string)null);
+                });
+
             modelBuilder.Entity("Bobeta.Domain.Entities.Player", b =>
                 {
                     b.Property<Guid>("Id")
@@ -372,6 +543,48 @@ namespace Bobeta.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Players", (string)null);
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.PlayerNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActorName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeepLink")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PlayerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("RelatedEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerId", "CreatedAt");
+
+                    b.HasIndex("PlayerId", "IsRead");
+
+                    b.ToTable("PlayerNotifications", (string)null);
                 });
 
             modelBuilder.Entity("Bobeta.Domain.Entities.PortalUser", b =>
@@ -442,6 +655,10 @@ namespace Bobeta.Persistence.Migrations
                         .HasColumnType("character varying(3)");
 
                     b.Property<decimal>("GrossPlatformRevenue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("InfluencerAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
@@ -642,6 +859,70 @@ namespace Bobeta.Persistence.Migrations
                     b.Navigation("OpponentPlayer");
                 });
 
+            modelBuilder.Entity("Bobeta.Domain.Entities.Influencer", b =>
+                {
+                    b.HasOne("Bobeta.Domain.Entities.PortalUser", "PortalUser")
+                        .WithOne("Influencer")
+                        .HasForeignKey("Bobeta.Domain.Entities.Influencer", "PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.InfluencerCodeRedemption", b =>
+                {
+                    b.HasOne("Bobeta.Domain.Entities.GameSession", "GameSession")
+                        .WithMany()
+                        .HasForeignKey("GameSessionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Bobeta.Domain.Entities.Influencer", "Influencer")
+                        .WithMany("Redemptions")
+                        .HasForeignKey("InfluencerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Bobeta.Domain.Entities.Player", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("GameSession");
+
+                    b.Navigation("Influencer");
+
+                    b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.InfluencerCommissionAllocation", b =>
+                {
+                    b.HasOne("Bobeta.Domain.Entities.GameSession", "GameSession")
+                        .WithMany()
+                        .HasForeignKey("GameSessionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Bobeta.Domain.Entities.Influencer", "Influencer")
+                        .WithMany()
+                        .HasForeignKey("InfluencerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Bobeta.Domain.Entities.Player", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("GameSession");
+
+                    b.Navigation("Influencer");
+
+                    b.Navigation("Player");
+                });
+
             modelBuilder.Entity("Bobeta.Domain.Entities.LicensePartner", b =>
                 {
                     b.HasOne("Bobeta.Domain.Entities.PortalUser", "PortalUser")
@@ -736,6 +1017,11 @@ namespace Bobeta.Persistence.Migrations
                     b.Navigation("GameResult");
                 });
 
+            modelBuilder.Entity("Bobeta.Domain.Entities.Influencer", b =>
+                {
+                    b.Navigation("Redemptions");
+                });
+
             modelBuilder.Entity("Bobeta.Domain.Entities.LicensePartner", b =>
                 {
                     b.Navigation("CountryAssignments");
@@ -748,6 +1034,8 @@ namespace Bobeta.Persistence.Migrations
 
             modelBuilder.Entity("Bobeta.Domain.Entities.PortalUser", b =>
                 {
+                    b.Navigation("Influencer");
+
                     b.Navigation("LicensePartner");
                 });
 #pragma warning restore 612, 618

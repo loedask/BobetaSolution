@@ -10,13 +10,16 @@ public class WalletService : IWalletService
 {
     private readonly IWalletRepository _walletRepository;
     private readonly IWalletTransactionRepository _transactionRepository;
+    private readonly INotificationService _notificationService;
 
     public WalletService(
         IWalletRepository walletRepository,
-        IWalletTransactionRepository transactionRepository)
+        IWalletTransactionRepository transactionRepository,
+        INotificationService notificationService)
     {
         _walletRepository = walletRepository;
         _transactionRepository = transactionRepository;
+        _notificationService = notificationService;
     }
 
     public async Task<WalletBalanceDto> GetBalanceAsync(Guid playerId, CancellationToken cancellationToken = default)
@@ -45,6 +48,7 @@ public class WalletService : IWalletService
             CreatedAt = DateTime.UtcNow
         };
         await _transactionRepository.AddAsync(tx, cancellationToken);
+        await _notificationService.NotifyPaymentAsync(playerId, isDeposit: true, success: true, amount, tx.Id, cancellationToken);
         return Map(tx);
     }
 
@@ -69,6 +73,7 @@ public class WalletService : IWalletService
             CreatedAt = DateTime.UtcNow
         };
         await _transactionRepository.AddAsync(tx, cancellationToken);
+        await _notificationService.NotifyPaymentAsync(playerId, isDeposit: false, success: true, amount, tx.Id, cancellationToken);
         return Map(tx);
     }
 
@@ -120,7 +125,13 @@ public class WalletService : IWalletService
         await _transactionRepository.AddAsync(tx, cancellationToken);
     }
 
-    public async Task SettleGameAsync(Guid winnerId, Guid loserId, decimal betAmountPerPlayer, CancellationToken cancellationToken = default)
+    public async Task SettleGameAsync(
+        Guid winnerId,
+        Guid loserId,
+        decimal betAmountPerPlayer,
+        decimal winnerChargedAmount,
+        decimal loserChargedAmount,
+        CancellationToken cancellationToken = default)
     {
         const decimal commissionRate = 0.25m;
         var totalPot = betAmountPerPlayer * 2;
@@ -129,12 +140,12 @@ public class WalletService : IWalletService
 
         var winnerWallet = await _walletRepository.GetByPlayerIdAsync(winnerId, cancellationToken) ?? throw new InvalidOperationException("Wallet not found.");
         var loserWallet = await _walletRepository.GetByPlayerIdAsync(loserId, cancellationToken) ?? throw new InvalidOperationException("Wallet not found.");
-        if (winnerWallet.LockedBalance < betAmountPerPlayer || loserWallet.LockedBalance < betAmountPerPlayer)
+        if (winnerWallet.LockedBalance < winnerChargedAmount || loserWallet.LockedBalance < loserChargedAmount)
             throw new InvalidOperationException("Insufficient locked balance for settlement.");
-        winnerWallet.LockedBalance -= betAmountPerPlayer;
+        winnerWallet.LockedBalance -= winnerChargedAmount;
         winnerWallet.Balance += winnerAmount;
         winnerWallet.UpdatedAt = DateTime.UtcNow;
-        loserWallet.LockedBalance -= betAmountPerPlayer;
+        loserWallet.LockedBalance -= loserChargedAmount;
         loserWallet.UpdatedAt = DateTime.UtcNow;
         await _walletRepository.UpdateAsync(winnerWallet, cancellationToken);
         await _walletRepository.UpdateAsync(loserWallet, cancellationToken);

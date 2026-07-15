@@ -25,6 +25,7 @@ public class MoMoPaymentService : IPaymentService
     private readonly IPaymentTransactionRepository _paymentRepository;
     private readonly IWalletService _walletService;
     private readonly IPaymentRevenueService _paymentRevenueService;
+    private readonly INotificationService _notificationService;
     private readonly ILogger<MoMoPaymentService> _logger;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     /// <summary>Part 4 — Retry: up to 3 times for network/transient failures.</summary>
@@ -45,9 +46,11 @@ public class MoMoPaymentService : IPaymentService
         IPaymentTransactionRepository paymentRepository,
         IWalletService walletService,
         IPaymentRevenueService paymentRevenueService,
+        INotificationService notificationService,
         ILogger<MoMoPaymentService> logger)
     {
         _httpClientFactory = httpClientFactory;
+        _notificationService = notificationService;
         _settings = settings.Value;
         _paymentRepository = paymentRepository;
         _walletService = walletService;
@@ -228,6 +231,10 @@ public class MoMoPaymentService : IPaymentService
                 _logger.LogInformation("Wallet updated: Withdrawal, TransactionId={TransactionId}, PlayerId={PlayerId}, Amount={Amount}",
                     transaction.Id, transaction.PlayerId, transaction.Amount);
             }
+            if (transaction.Status == PaymentTransactionStatus.Failed)
+            {
+                await NotifyPaymentFailedAsync(transaction, cancellationToken);
+            }
             transaction.UpdatedAt = DateTime.UtcNow;
             await _paymentRepository.UpdateAsync(transaction, cancellationToken);
         }
@@ -285,8 +292,19 @@ public class MoMoPaymentService : IPaymentService
             _logger.LogInformation("Wallet updated: Withdrawal (callback), TransactionId={TransactionId}, PlayerId={PlayerId}, Amount={Amount}",
                 transaction.Id, transaction.PlayerId, transaction.Amount);
         }
+        if (transaction.Status == PaymentTransactionStatus.Failed)
+            await NotifyPaymentFailedAsync(transaction, cancellationToken);
         return CallbackHandleResult.Processed;
     }
+
+    private Task NotifyPaymentFailedAsync(PaymentTransaction transaction, CancellationToken cancellationToken) =>
+        _notificationService.NotifyPaymentAsync(
+            transaction.PlayerId,
+            isDeposit: transaction.Type == PaymentTransactionType.Deposit,
+            success: false,
+            transaction.Amount,
+            transaction.Id,
+            cancellationToken);
 
     private async Task<string> GetCollectionTokenAsync(CancellationToken cancellationToken)
     {

@@ -5,11 +5,16 @@ using Bobeta.Web.Shared.Services;
 
 namespace Bobeta.Web.Shared.ViewModels.Auth;
 
-public class OtpVerificationViewModel(AuthService authService, AppStateService appState, NavigationManager nav) : ViewModelBase
+public class OtpVerificationViewModel(
+    AuthService authService,
+    AppStateService appState,
+    NavigationManager nav,
+    InfluencerService influencerService) : ViewModelBase
 {
     private readonly AuthService _authService = authService;
     private readonly AppStateService _appState = appState;
     private readonly NavigationManager _nav = nav;
+    private readonly InfluencerService _influencerService = influencerService;
 
     public string Otp { get; set; } = "";
 
@@ -43,6 +48,11 @@ public class OtpVerificationViewModel(AuthService authService, AppStateService a
             {
                 _appState.SetPlayer(playerId, res.Data.PlayerName, res.Data.Token);
                 await _appState.PersistAsync();
+                await PendingInviteApplicator.TryApplyAsync(
+                    _influencerService,
+                    _appState.State.PendingInviteCode,
+                    () => _appState.SetPendingInviteCode(null),
+                    () => _appState.PersistAsync());
                 _nav.NavigateTo("/dashboard");
             }
             else

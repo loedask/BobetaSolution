@@ -1,0 +1,92 @@
+@page "/influencers/register"
+@attribute [Authorize(Roles = "PlatformOwner")]
+@inject IInfluencerService InfluencerService
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<PageTitle>Register influencer - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <h1>Register influencer</h1>
+        <p class="portal-muted">Creates a portal account, unique invite code, and commission rate.</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <div class="portal-alert portal-alert-error">@_error</div>
+}
+
+<EditForm class="portal-form portal-form-wide" Model="_model" OnValidSubmit="HandleRegisterAsync">
+    <div class="portal-field">
+        <label>Display name</label>
+        <InputText class="portal-input" @bind-Value="_model.DisplayName" />
+    </div>
+    <div class="portal-field">
+        <label>Contact email</label>
+        <InputText class="portal-input" @bind-Value="_model.ContactEmail" />
+    </div>
+    <div class="portal-field">
+        <label>Portal login email</label>
+        <InputText class="portal-input" @bind-Value="_model.PortalEmail" />
+    </div>
+    <div class="portal-field">
+        <label>First name</label>
+        <InputText class="portal-input" @bind-Value="_model.FirstName" autocomplete="given-name" />
+    </div>
+    <div class="portal-field">
+        <label>Last name</label>
+        <InputText class="portal-input" @bind-Value="_model.LastName" autocomplete="family-name" />
+    </div>
+    <div class="portal-field">
+        <label>Initial password</label>
+        <InputText type="password" class="portal-input" @bind-Value="_model.Password" />
+    </div>
+    <div class="portal-field">
+        <label>Commission % (of platform game fee; each attributed player gets this % of half the fee)</label>
+        <InputNumber class="portal-input" @bind-Value="_model.CommissionPercent" />
+    </div>
+    <div class="portal-field">
+        <label>Custom invite code (optional)</label>
+        <InputText class="portal-input" @bind-Value="_model.Code" />
+    </div>
+    <div class="portal-form-actions">
+        <button class="portal-button portal-button-primary" type="submit" disabled="@_busy">@(_busy ? "Creating..." : "Create influencer")</button>
+        <a class="portal-button" href="/influencers">Cancel</a>
+    </div>
+</EditForm>
+
+@code {
+    private readonly RegisterInfluencerRequest _model = new();
+    private string? _error;
+    private bool _busy;
+
+    private async Task HandleRegisterAsync()
+    {
+        _busy = true;
+        _error = null;
+        try
+        {
+            var auth = await AuthState.GetAuthenticationStateAsync();
+            var userId = auth.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null || !Guid.TryParse(userId, out var createdById))
+            {
+                _error = "Could not determine the current user.";
+                return;
+            }
+
+            var created = await InfluencerService.RegisterAsync(_model, createdById);
+            Nav.NavigateTo($"/influencers/{created.Id}");
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}
