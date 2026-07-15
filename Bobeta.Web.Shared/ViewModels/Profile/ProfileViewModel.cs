@@ -12,13 +12,15 @@ public class ProfileViewModel(
     NavigationManager nav,
     GameHubClient hub,
     HistoryService historyService,
-    InfluencerService influencerService) : ViewModelBase
+    InfluencerService influencerService,
+    I18nService i18n) : ViewModelBase
 {
     private readonly AppStateService _appState = appState;
     private readonly NavigationManager _nav = nav;
     private readonly GameHubClient _hub = hub;
     private readonly HistoryService _historyService = historyService;
     private readonly InfluencerService _influencerService = influencerService;
+    private readonly I18nService _i18n = i18n;
 
     public string PlayerName => _appState.State.CurrentPlayerName ?? "Player";
     public string? PhoneNumber => _appState.State.PhoneNumber ?? "—";
@@ -92,7 +94,7 @@ public class ProfileViewModel(
             {
                 InviteStatus = res.Data;
                 InviteCodeInput = "";
-                InviteSuccessMessage = "Invite code applied for your next game.";
+                InviteSuccessMessage = _i18n.T("invite_applied");
                 _appState.SetPendingInviteCode(null);
                 await _appState.PersistAsync();
             }

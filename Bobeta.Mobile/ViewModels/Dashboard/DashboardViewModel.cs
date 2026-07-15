@@ -85,7 +85,7 @@ public class DashboardViewModel(
             {
                 InviteStatus = res.Data;
                 InviteCodeInput = "";
-                InviteSuccessMessage = "Invite code applied for your next game.";
+                InviteSuccessMessage = _i18n.T("invite_applied");
                 _appState.SetPendingInviteCode(null);
                 _appState.SetInvitePromptDismissed(true);
                 await _appState.PersistAsync();

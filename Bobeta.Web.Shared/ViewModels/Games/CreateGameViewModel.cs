@@ -12,12 +12,14 @@ public class CreateGameViewModel(
     IGameService gameService,
     AppStateService appState,
     NavigationManager nav,
-    InfluencerService influencerService) : ViewModelBase
+    InfluencerService influencerService,
+    I18nService i18n) : ViewModelBase
 {
     private readonly IGameService _gameService = gameService;
     private readonly AppStateService _appState = appState;
     private readonly NavigationManager _nav = nav;
     private readonly InfluencerService _influencerService = influencerService;
+    private readonly I18nService _i18n = i18n;
 
     /// <summary>Platform limits (must match API validation).</summary>
     public const decimal MinBet = 200;
@@ -63,7 +65,7 @@ public class CreateGameViewModel(
             {
                 InviteStatus = res.Data;
                 InviteCodeInput = "";
-                InviteSuccessMessage = "Invite code applied for your next game.";
+                InviteSuccessMessage = _i18n.T("invite_applied");
                 _appState.SetPendingInviteCode(null);
                 await _appState.PersistAsync();
             }

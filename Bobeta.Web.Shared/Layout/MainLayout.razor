@@ -1,6 +1,7 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject AppStateService AppState
+@inject NotificationInboxViewModel Inbox
 
 <div class="mx-auto max-w-lg min-h-screen bg-background flex flex-col">
     @Body
@@ -9,6 +10,12 @@
 
 @code {
     protected override void OnInitialized() => AppState.StateChanged += OnStateChanged;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(AppState.State.AccessToken))
+            await Inbox.InitializeAsync();
+    }
 
     private void OnStateChanged() => _ = InvokeAsync(StateHasChanged);
 

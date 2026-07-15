@@ -96,7 +96,7 @@ public static class MauiProgram
         builder.Services.AddTransient<GameHistoryViewModel>();
         builder.Services.AddTransient<ProfileViewModel>();
         builder.Services.AddTransient<GamePlayViewModel>();
-        builder.Services.AddTransient<Bobeta.Mobile.ViewModels.Notifications.NotificationInboxViewModel>();
+        builder.Services.AddSingleton<Bobeta.Mobile.ViewModels.Notifications.NotificationInboxViewModel>();
 
         builder.Services.AddSingleton<AppShell>();
 
