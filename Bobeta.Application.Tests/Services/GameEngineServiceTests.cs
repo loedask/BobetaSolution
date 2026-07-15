@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Bobeta.Application.Games.Makopa;
+using Bobeta.Application.Interfaces;
 using Bobeta.Application.Tests.Games;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
@@ -37,7 +38,8 @@ public class GameEngineServiceTests
 
         var session = CreateSession(sessionId, creatorId, opponentId, pendingState);
         var wallet = new RecordingWalletService();
-        var sut = CreateEngine(session, wallet);
+        var notifications = new RecordingNotificationService();
+        var sut = CreateEngine(session, wallet, notifications);
 
         var move = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.Queen));
 
@@ -51,6 +53,39 @@ public class GameEngineServiceTests
         Assert.Equal(opponentId, session.GameResult!.WinnerPlayerId);
         Assert.Equal(creatorId, session.GameResult.LoserPlayerId);
         Assert.Single(wallet.Settlements);
+        Assert.Equal(2, notifications.GameResults.Count);
+        Assert.Contains(notifications.GameResults, r => r.PlayerId == opponentId && r.Won && r.Amount == 150m && r.GameSessionId == sessionId);
+        Assert.Contains(notifications.GameResults, r => r.PlayerId == creatorId && !r.Won && r.Amount == 100m && r.GameSessionId == sessionId);
+    }
+
+    [Fact]
+    public async Task PlayCardAsync_WhenGameEnds_NotifiesWinnerAndLoser()
+    {
+        var sessionId = Guid.NewGuid();
+        var creatorId = Guid.NewGuid();
+        var opponentId = Guid.NewGuid();
+        var pendingState = new MakopaGameState
+        {
+            CreatorHand = new List<string>(),
+            OpponentHand = new List<string> { "Spade_12", "Heart_10" },
+            LeadPlayerId = creatorId,
+            CurrentTurnPlayerId = opponentId,
+            TrickSuit = "Spade",
+            TrickPlays = new List<PlayedInTrick>
+            {
+                new() { PlayerId = creatorId, Card = "Spade_5" }
+            }
+        };
+
+        var session = CreateSession(sessionId, creatorId, opponentId, pendingState);
+        var notifications = new RecordingNotificationService();
+        var sut = CreateEngine(session, new RecordingWalletService(), notifications);
+
+        await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.Queen));
+
+        Assert.Equal(2, notifications.GameResults.Count);
+        Assert.Contains(notifications.GameResults, r => r is { Won: true, Amount: 150m });
+        Assert.Contains(notifications.GameResults, r => r is { Won: false, Amount: 100m });
     }
 
     [Fact]
@@ -130,7 +165,10 @@ public class GameEngineServiceTests
         GameStateJson = JsonSerializer.Serialize(state, JsonOptions)
     };
 
-    private static MakopaGameEngine CreateEngine(GameSession session, RecordingWalletService wallet)
+    private static MakopaGameEngine CreateEngine(
+        GameSession session,
+        RecordingWalletService wallet,
+        INotificationService? notifications = null)
     {
         return new MakopaGameEngine(
             new InMemoryGameSessionRepository(session),
@@ -141,7 +179,7 @@ public class GameEngineServiceTests
                 new Player { Id = session.CreatorPlayerId, PlayerName = "Creator" },
                 new Player { Id = session.OpponentPlayerId!.Value, PlayerName = "Opponent" }),
             NoOpGameRevenueService.Instance,
-            NoOpNotificationService.Instance,
+            notifications ?? NoOpNotificationService.Instance,
             NullLogger<MakopaGameEngine>.Instance);
     }
 }

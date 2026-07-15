@@ -34,6 +34,11 @@
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
     <script>
+        window.bobeta = {
+            getBrowserLanguage: function () {
+                return navigator.language || navigator.userLanguage || null;
+            }
+        };
         if (!location.hostname.includes('localhost') && !location.hostname.startsWith('127.'))
             navigator.serviceWorker.register('service-worker.js?v=5', { updateViaCache: 'none' });
     </script>

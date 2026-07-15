@@ -28,6 +28,26 @@ public class I18nService(AppStateService appState)
         ("sw", "Kiswahili", "SW"),
     };
 
+    /// <summary>Maps a BCP-47 / culture tag (e.g. fr-FR) to a supported app locale code.</summary>
+    public static string ResolveSupportedLocale(string? languageTag, string fallback = "en")
+    {
+        if (string.IsNullOrWhiteSpace(languageTag))
+            return fallback;
+
+        var primary = languageTag.Split('-', '_')[0].Trim().ToLowerInvariant();
+        foreach (var (code, _, _) in SupportedLocales)
+        {
+            if (primary == code)
+                return code;
+        }
+
+        return primary switch
+        {
+            "kg" => "kt", // Kongo → Kituba
+            _ => fallback,
+        };
+    }
+
     private static FrozenDictionary<string, FrozenDictionary<string, string>> BuildTranslations()
     {
         var en = new Dictionary<string, string>

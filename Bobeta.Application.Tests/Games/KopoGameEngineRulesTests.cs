@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text.Json;
 using Bobeta.Application.Games.Kopo;
+using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -85,7 +86,8 @@ public class KopoGameEngineRulesTests
         };
 
         var wallet = new RecordingWalletService();
-        var sut = CreateEngine(session, wallet);
+        var notifications = new RecordingNotificationService();
+        var sut = CreateEngine(session, wallet, notifications);
 
         var move = await sut.ApplyMoveAsync(_creator, sessionId, new[] { (4, 3), (2, 1) });
 
@@ -97,6 +99,9 @@ public class KopoGameEngineRulesTests
         Assert.NotNull(session.GameResult);
         Assert.Equal(400m, session.GameResult!.TotalPot);
         Assert.Equal(100m, session.GameResult.PlatformCommission);
+        Assert.Equal(2, notifications.GameResults.Count);
+        Assert.Contains(notifications.GameResults, r => r.PlayerId == _creator && r.Won && r.Amount == 300m);
+        Assert.Contains(notifications.GameResults, r => r.PlayerId == _opponent && !r.Won && r.Amount == 200m);
     }
 
     private static async Task InvokeReleaseBetsAsync(KopoGameEngine engine, GameSession session)
@@ -106,7 +111,10 @@ public class KopoGameEngineRulesTests
         await (Task)method.Invoke(engine, [session, CancellationToken.None])!;
     }
 
-    private static KopoGameEngine CreateEngine(GameSession session, RecordingWalletService wallet) =>
+    private static KopoGameEngine CreateEngine(
+        GameSession session,
+        RecordingWalletService wallet,
+        INotificationService? notifications = null) =>
         new(
             new InMemoryGameSessionRepository(session),
             new InMemoryGameMoveRepository(),
@@ -117,6 +125,6 @@ public class KopoGameEngineRulesTests
                 new Player { Id = session.OpponentPlayerId!.Value, PlayerName = "Opponent" }),
             NoOpGameRevenueService.Instance,
             NoOpInfluencerAttributionService.Instance,
-            NoOpNotificationService.Instance,
+            notifications ?? NoOpNotificationService.Instance,
             NullLogger<KopoGameEngine>.Instance);
 }

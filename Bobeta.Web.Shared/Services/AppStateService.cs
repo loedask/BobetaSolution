@@ -15,17 +15,25 @@ public class AppStateService(LocalStorageService storage)
     public async Task LoadAsync(CancellationToken ct = default)
     {
         var loaded = await _storage.LoadStateAsync(ct).ConfigureAwait(false);
-        if (loaded == null) return;
-        State.CurrentPlayerName = loaded.CurrentPlayerName;
-        State.CurrentPlayerId = loaded.CurrentPlayerId;
-        State.PhoneNumber = loaded.PhoneNumber;
-        State.AccessToken = loaded.AccessToken;
-        State.WalletBalance = loaded.WalletBalance;
-        State.LockedBalance = loaded.LockedBalance;
-        State.ActiveGameSessionId = loaded.ActiveGameSessionId;
-        State.SelectedLanguage = loaded.SelectedLanguage;
-        State.PendingInviteCode = loaded.PendingInviteCode;
-        State.InvitePromptDismissed = loaded.InvitePromptDismissed;
+        if (loaded != null)
+        {
+            State.CurrentPlayerName = loaded.CurrentPlayerName;
+            State.CurrentPlayerId = loaded.CurrentPlayerId;
+            State.PhoneNumber = loaded.PhoneNumber;
+            State.AccessToken = loaded.AccessToken;
+            State.WalletBalance = loaded.WalletBalance;
+            State.LockedBalance = loaded.LockedBalance;
+            State.ActiveGameSessionId = loaded.ActiveGameSessionId;
+            State.SelectedLanguage = I18nService.ResolveSupportedLocale(loaded.SelectedLanguage);
+            State.PendingInviteCode = loaded.PendingInviteCode;
+            State.InvitePromptDismissed = loaded.InvitePromptDismissed;
+            RaiseStateChanged();
+            return;
+        }
+
+        // First visit: follow the browser language until the user picks another.
+        var browserLanguage = await _storage.GetBrowserLanguageAsync(ct).ConfigureAwait(false);
+        State.SelectedLanguage = I18nService.ResolveSupportedLocale(browserLanguage);
         RaiseStateChanged();
     }
 
@@ -67,7 +75,7 @@ public class AppStateService(LocalStorageService storage)
 
     public void SetLanguage(string language)
     {
-        State.SelectedLanguage = language;
+        State.SelectedLanguage = I18nService.ResolveSupportedLocale(language);
         RaiseStateChanged();
     }
 

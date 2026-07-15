@@ -20,18 +20,8 @@ public partial class ProfilePage : ContentPage
         _vm.StateChanged -= OnVmChanged;
         _vm.StateChanged += OnVmChanged;
 
-        var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
         var appState = MauiProgram.Services.GetRequiredService<AppStateService>();
-        Title = i18n.T("profile");
-        GamesLabel.Text = i18n.T("games");
-        WinsLabel.Text = i18n.T("wins");
-        WinRateLabel.Text = i18n.T("win_rate");
-        LangSection.Text = i18n.T("language");
-        InviteSection.Text = i18n.T("invite_code");
-        InviteHint.Text = i18n.T("invite_enter_hint");
-        InviteApplyBtn.Text = i18n.T("invite_apply");
-        WalletBtn.Text = i18n.T("wallet_settings");
-        SignOutBtn.Text = i18n.T("sign_out");
+        RefreshTexts();
 
         LanguagePicker.Items.Clear();
         foreach (var (code, label, _) in I18nService.SupportedLocales)
@@ -43,6 +33,21 @@ public partial class ProfilePage : ContentPage
 
         await _vm.LoadInviteStatusAsync();
         SyncInviteUi();
+    }
+
+    private void RefreshTexts()
+    {
+        var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
+        Title = i18n.T("profile");
+        GamesLabel.Text = i18n.T("games");
+        WinsLabel.Text = i18n.T("wins");
+        WinRateLabel.Text = i18n.T("win_rate");
+        LangSection.Text = i18n.T("language");
+        InviteSection.Text = i18n.T("invite_code");
+        InviteHint.Text = i18n.T("invite_enter_hint");
+        InviteApplyBtn.Text = i18n.T("invite_apply");
+        WalletBtn.Text = i18n.T("wallet_settings");
+        SignOutBtn.Text = i18n.T("sign_out");
     }
 
     protected override void OnDisappearing()
@@ -93,6 +98,8 @@ public partial class ProfilePage : ContentPage
         if (i < 0 || i >= I18nService.SupportedLocales.Count) return;
         appState.SetLanguage(I18nService.SupportedLocales[i].Code);
         await appState.PersistAsync();
+        RefreshTexts();
+        SyncInviteUi();
     }
 
     private async void OnWallet(object? sender, EventArgs e) =>

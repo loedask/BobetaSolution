@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bobeta.Mobile.State;
 
 namespace Bobeta.Mobile.Services;
@@ -13,17 +14,25 @@ public class AppStateService(PreferencesStorageService storage)
     public async Task LoadAsync(CancellationToken ct = default)
     {
         var loaded = await _storage.LoadStateAsync(ct).ConfigureAwait(false);
-        if (loaded == null) return;
-        State.CurrentPlayerName = loaded.CurrentPlayerName;
-        State.CurrentPlayerId = loaded.CurrentPlayerId;
-        State.PhoneNumber = loaded.PhoneNumber;
-        State.AccessToken = loaded.AccessToken;
-        State.WalletBalance = loaded.WalletBalance;
-        State.LockedBalance = loaded.LockedBalance;
-        State.ActiveGameSessionId = loaded.ActiveGameSessionId;
-        State.SelectedLanguage = loaded.SelectedLanguage;
-        State.PendingInviteCode = loaded.PendingInviteCode;
-        State.InvitePromptDismissed = loaded.InvitePromptDismissed;
+        if (loaded != null)
+        {
+            State.CurrentPlayerName = loaded.CurrentPlayerName;
+            State.CurrentPlayerId = loaded.CurrentPlayerId;
+            State.PhoneNumber = loaded.PhoneNumber;
+            State.AccessToken = loaded.AccessToken;
+            State.WalletBalance = loaded.WalletBalance;
+            State.LockedBalance = loaded.LockedBalance;
+            State.ActiveGameSessionId = loaded.ActiveGameSessionId;
+            State.SelectedLanguage = I18nService.ResolveSupportedLocale(loaded.SelectedLanguage);
+            State.PendingInviteCode = loaded.PendingInviteCode;
+            State.InvitePromptDismissed = loaded.InvitePromptDismissed;
+            RaiseStateChanged();
+            return;
+        }
+
+        // First launch: follow the device UI language until the user picks another.
+        var deviceLanguage = CultureInfo.CurrentUICulture.Name;
+        State.SelectedLanguage = I18nService.ResolveSupportedLocale(deviceLanguage);
         RaiseStateChanged();
     }
 
@@ -64,7 +73,7 @@ public class AppStateService(PreferencesStorageService storage)
 
     public void SetLanguage(string language)
     {
-        State.SelectedLanguage = language;
+        State.SelectedLanguage = I18nService.ResolveSupportedLocale(language);
         RaiseStateChanged();
     }
 

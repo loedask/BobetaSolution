@@ -1,6 +1,8 @@
+using Bobeta.Application.DTOs.Notifications;
 using Bobeta.Application.DTOs.Wallet;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
+using Bobeta.Domain.Enums;
 
 namespace Bobeta.Application.Tests.Games;
 
@@ -67,11 +69,180 @@ internal sealed class NoOpNotificationService : INotificationService
     public Task NotifyPaymentAsync(Guid playerId, bool isDeposit, bool success, decimal amount, Guid? paymentTransactionId = null, CancellationToken cancellationToken = default) => Task.CompletedTask;
     public Task SendGameInviteAsync(Guid recipientPlayerId, Guid gameSessionId, string inviterName, decimal betAmount, CancellationToken cancellationToken = default) => Task.CompletedTask;
     public Task SendBetProposalAsync(Guid recipientPlayerId, Guid gameSessionId, decimal proposedAmount, CancellationToken cancellationToken = default) => Task.CompletedTask;
-    public Task<IReadOnlyList<Bobeta.Application.DTOs.Notifications.NotificationDto>> GetInboxAsync(Guid playerId, int skip = 0, int take = 30, CancellationToken cancellationToken = default) =>
-        Task.FromResult<IReadOnlyList<Bobeta.Application.DTOs.Notifications.NotificationDto>>(Array.Empty<Bobeta.Application.DTOs.Notifications.NotificationDto>());
+    public Task<IReadOnlyList<NotificationDto>> GetInboxAsync(Guid playerId, int skip = 0, int take = 30, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<NotificationDto>>(Array.Empty<NotificationDto>());
     public Task<int> GetUnreadCountAsync(Guid playerId, CancellationToken cancellationToken = default) => Task.FromResult(0);
     public Task MarkReadAsync(Guid playerId, Guid notificationId, CancellationToken cancellationToken = default) => Task.CompletedTask;
     public Task MarkAllReadAsync(Guid playerId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+}
+
+internal sealed class RecordingNotificationService : INotificationService
+{
+    public List<(Guid CreatorPlayerId, Guid GameSessionId, string OpponentName, decimal BetAmount)> OpponentJoined { get; } = new();
+    public List<(Guid PlayerId, Guid GameSessionId, bool Won, decimal Amount)> GameResults { get; } = new();
+    public List<(Guid PlayerId, bool IsDeposit, bool Success, decimal Amount, Guid? PaymentTransactionId)> Payments { get; } = new();
+    public List<(Guid RecipientPlayerId, Guid GameSessionId, string InviterName, decimal BetAmount)> GameInvites { get; } = new();
+    public List<(Guid RecipientPlayerId, Guid GameSessionId, decimal ProposedAmount)> BetProposals { get; } = new();
+
+    public Task NotifyOpponentJoinedAsync(Guid creatorPlayerId, Guid gameSessionId, string opponentName, decimal betAmount, CancellationToken cancellationToken = default)
+    {
+        OpponentJoined.Add((creatorPlayerId, gameSessionId, opponentName, betAmount));
+        return Task.CompletedTask;
+    }
+
+    public Task NotifyGameResultAsync(Guid playerId, Guid gameSessionId, bool won, decimal amount, CancellationToken cancellationToken = default)
+    {
+        GameResults.Add((playerId, gameSessionId, won, amount));
+        return Task.CompletedTask;
+    }
+
+    public Task NotifyPaymentAsync(Guid playerId, bool isDeposit, bool success, decimal amount, Guid? paymentTransactionId = null, CancellationToken cancellationToken = default)
+    {
+        Payments.Add((playerId, isDeposit, success, amount, paymentTransactionId));
+        return Task.CompletedTask;
+    }
+
+    public Task SendGameInviteAsync(Guid recipientPlayerId, Guid gameSessionId, string inviterName, decimal betAmount, CancellationToken cancellationToken = default)
+    {
+        GameInvites.Add((recipientPlayerId, gameSessionId, inviterName, betAmount));
+        return Task.CompletedTask;
+    }
+
+    public Task SendBetProposalAsync(Guid recipientPlayerId, Guid gameSessionId, decimal proposedAmount, CancellationToken cancellationToken = default)
+    {
+        BetProposals.Add((recipientPlayerId, gameSessionId, proposedAmount));
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<NotificationDto>> GetInboxAsync(Guid playerId, int skip = 0, int take = 30, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<NotificationDto>>(Array.Empty<NotificationDto>());
+
+    public Task<int> GetUnreadCountAsync(Guid playerId, CancellationToken cancellationToken = default) => Task.FromResult(0);
+    public Task MarkReadAsync(Guid playerId, Guid notificationId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task MarkAllReadAsync(Guid playerId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+}
+
+internal sealed class InMemoryPlayerNotificationRepository : IPlayerNotificationRepository
+{
+    private readonly List<PlayerNotification> _items = new();
+
+    public IReadOnlyList<PlayerNotification> Items => _items;
+
+    public Task<PlayerNotification> AddAsync(PlayerNotification notification, CancellationToken cancellationToken = default)
+    {
+        _items.Add(notification);
+        return Task.FromResult(notification);
+    }
+
+    public Task<IReadOnlyList<PlayerNotification>> GetForPlayerAsync(
+        Guid playerId,
+        int skip,
+        int take,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<PlayerNotification>>(
+            _items.Where(n => n.PlayerId == playerId)
+                .OrderByDescending(n => n.CreatedAt)
+                .Skip(skip)
+                .Take(take)
+                .ToList());
+
+    public Task<int> CountUnreadAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+        Task.FromResult(_items.Count(n => n.PlayerId == playerId && !n.IsRead));
+
+    public Task<PlayerNotification?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        Task.FromResult(_items.FirstOrDefault(n => n.Id == id));
+
+    public Task UpdateAsync(PlayerNotification notification, CancellationToken cancellationToken = default)
+    {
+        var idx = _items.FindIndex(n => n.Id == notification.Id);
+        if (idx >= 0)
+            _items[idx] = notification;
+        return Task.CompletedTask;
+    }
+
+    public Task MarkAllReadAsync(Guid playerId, CancellationToken cancellationToken = default)
+    {
+        foreach (var item in _items.Where(n => n.PlayerId == playerId && !n.IsRead))
+            item.IsRead = true;
+        return Task.CompletedTask;
+    }
+}
+
+internal sealed class RecordingNotificationRealtimePublisher : INotificationRealtimePublisher
+{
+    public List<(Guid PlayerId, NotificationDto Dto)> Published { get; } = new();
+
+    public Task PublishAsync(Guid playerId, NotificationDto notification, CancellationToken cancellationToken = default)
+    {
+        Published.Add((playerId, notification));
+        return Task.CompletedTask;
+    }
+}
+
+internal sealed class ThrowingPlayerNotificationRepository : IPlayerNotificationRepository
+{
+    public Task<PlayerNotification> AddAsync(PlayerNotification notification, CancellationToken cancellationToken = default) =>
+        throw new InvalidOperationException("repository failed");
+
+    public Task<IReadOnlyList<PlayerNotification>> GetForPlayerAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default) =>
+        throw new InvalidOperationException("repository failed");
+
+    public Task<int> CountUnreadAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+        throw new InvalidOperationException("repository failed");
+
+    public Task<PlayerNotification?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        throw new InvalidOperationException("repository failed");
+
+    public Task UpdateAsync(PlayerNotification notification, CancellationToken cancellationToken = default) =>
+        throw new InvalidOperationException("repository failed");
+
+    public Task MarkAllReadAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+        throw new InvalidOperationException("repository failed");
+}
+
+internal sealed class InMemoryWalletRepository : IWalletRepository
+{
+    private readonly Dictionary<Guid, Wallet> _wallets = new();
+
+    public InMemoryWalletRepository(params Wallet[] wallets)
+    {
+        foreach (var wallet in wallets)
+            _wallets[wallet.PlayerId] = wallet;
+    }
+
+    public Task<Wallet?> GetByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+        Task.FromResult(_wallets.TryGetValue(playerId, out var wallet) ? wallet : null);
+
+    public Task<Wallet> AddAsync(Wallet wallet, CancellationToken cancellationToken = default)
+    {
+        _wallets[wallet.PlayerId] = wallet;
+        return Task.FromResult(wallet);
+    }
+
+    public Task UpdateAsync(Wallet wallet, CancellationToken cancellationToken = default)
+    {
+        _wallets[wallet.PlayerId] = wallet;
+        return Task.CompletedTask;
+    }
+}
+
+internal sealed class InMemoryWalletTransactionRepository : IWalletTransactionRepository
+{
+    public List<WalletTransaction> Items { get; } = new();
+
+    public Task<WalletTransaction> AddAsync(WalletTransaction transaction, CancellationToken cancellationToken = default)
+    {
+        Items.Add(transaction);
+        return Task.FromResult(transaction);
+    }
+
+    public Task<IReadOnlyList<WalletTransaction>> GetByPlayerIdAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<WalletTransaction>>(
+            Items.Where(t => t.PlayerId == playerId)
+                .OrderByDescending(t => t.CreatedAt)
+                .Skip(skip)
+                .Take(take)
+                .ToList());
 }
 
 internal sealed class NoOpInfluencerAttributionService : IInfluencerAttributionService
@@ -96,7 +267,14 @@ internal sealed class RecordingWalletService : IWalletService
     public Task<WalletBalanceDto> GetBalanceAsync(Guid playerId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public Task<WalletTransactionDto> DepositAsync(Guid playerId, decimal amount, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public Task<WalletTransactionDto> WithdrawAsync(Guid playerId, decimal amount, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-    public Task LockBetAsync(Guid playerId, decimal amount, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public List<(Guid PlayerId, decimal Amount)> Locks { get; } = new();
+
+    public Task LockBetAsync(Guid playerId, decimal amount, CancellationToken cancellationToken = default)
+    {
+        Locks.Add((playerId, amount));
+        return Task.CompletedTask;
+    }
+
     public Task ReleaseBetAsync(Guid playerId, decimal amount, CancellationToken cancellationToken = default)
     {
         Releases.Add((playerId, amount));
