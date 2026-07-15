@@ -26,6 +26,29 @@ public sealed class I18nServiceTests
         Assert.Equal("Langue", i18n.T("language"));
         Assert.Equal("Commencer", i18n.T("get_started"));
         Assert.Equal("Jouez malin. Gagnez de l'argent réel.", i18n.T("tagline"));
+        Assert.Equal("Paramètres du portefeuille", i18n.T("wallet_settings"));
+        Assert.Equal("Se déconnecter", i18n.T("sign_out"));
+        Assert.Equal("Code d'invitation", i18n.T("invite_code"));
+        Assert.Equal("Accueil", i18n.T("home"));
+        Assert.Equal("Historique", i18n.T("history"));
+    }
+
+    [Fact]
+    public void T_SwitchingEnToFr_ChangesProfileVisibleLabels()
+    {
+        var js = new FakeJsRuntime();
+        var appState = new AppStateService(new LocalStorageService(js));
+        var i18n = new I18nService(appState);
+
+        Assert.Equal("Language", i18n.T("language"));
+        Assert.Equal("Wallet Settings", i18n.T("wallet_settings"));
+        Assert.Equal("Sign Out", i18n.T("sign_out"));
+
+        appState.SetLanguage("fr");
+
+        Assert.Equal("Langue", i18n.T("language"));
+        Assert.Equal("Paramètres du portefeuille", i18n.T("wallet_settings"));
+        Assert.Equal("Se déconnecter", i18n.T("sign_out"));
     }
 
     [Theory]
