@@ -52,15 +52,16 @@ public sealed class I18nServiceTests
     }
 
     [Theory]
-    [InlineData("kt")]
-    [InlineData("ln")]
-    [InlineData("sw")]
-    public void T_LocalesWithoutOverrides_FallBackToEnglishCopy(string locale)
+    [InlineData("kt", "Sola monoko", "Bandisa")]
+    [InlineData("ln", "Pona monoko", "Bandela")]
+    [InlineData("sw", "Chagua lugha", "Anza")]
+    public void T_Locales_UseNativeTranslations(string locale, string chooseLanguage, string getStarted)
     {
         var i18n = CreateI18n(locale);
 
-        Assert.Equal("Choose Language", i18n.T("choose_language"));
-        Assert.Equal("Get Started", i18n.T("get_started"));
+        Assert.Equal(chooseLanguage, i18n.T("choose_language"));
+        Assert.Equal(getStarted, i18n.T("get_started"));
+        Assert.NotEqual("Choose Language", i18n.T("choose_language"));
     }
 
     [Fact]
