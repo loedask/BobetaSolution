@@ -1,5 +1,6 @@
 @inject NavigationManager Nav
 @inject I18nService I18n
+@implements IDisposable
 
 @{
     // ToBaseRelativePath avoids BaseUri string mismatches (trailing slash, casing) that left the wrong segment and highlighted the wrong tab.
@@ -38,4 +39,13 @@
             </a>
         </div>
     </nav>
+}
+
+@code {
+    protected override void OnInitialized() => Nav.LocationChanged += OnLocationChanged;
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) =>
+        _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
 }
