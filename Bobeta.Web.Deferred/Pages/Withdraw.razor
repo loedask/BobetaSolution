@@ -6,43 +6,91 @@
 <div class="min-h-screen bg-background pb-24">
     <AppHeader Title="@I18n.T("withdraw")" ShowBack="true" BackHref="/dashboard" />
 
-    <div class="space-y-6 px-5">
+    <div class="space-y-5 px-5">
         <ErrorBanner Message="@ViewModel.ErrorMessage" />
-        <div class="card-surface rounded-2xl p-5">
-            <div class="mb-1 flex items-center gap-2 text-sm text-muted-foreground">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-                <span>@I18n.T("available_balance")</span>
+
+        <div class="card-surface glow-gold overflow-hidden rounded-2xl border border-border/50 px-5 py-5">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <div class="mb-2 flex items-center gap-2">
+                        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                            <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                        </span>
+                        <span class="text-xs font-medium uppercase tracking-wider text-muted-foreground">@I18n.T("available_balance")</span>
+                    </div>
+                    <p class="gold-text font-display text-3xl font-bold tracking-tight">@ViewModel.AvailableBalance.ToString("N0") <span class="text-lg">FCFA</span></p>
+                </div>
+                <span class="rounded-full border border-accent/25 bg-accent/10 px-2.5 py-1 text-[11px] font-semibold text-accent">MoMo</span>
             </div>
-            <span class="gold-text font-display text-3xl font-bold">@ViewModel.AvailableBalance.ToString("N0") FCFA</span>
         </div>
 
         @if (ViewModel.IsSuccess)
         {
-            <div class="flex flex-col items-center gap-4 py-10">
-                <svg class="h-16 w-16 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div class="card-surface flex flex-col items-center gap-3 rounded-2xl border border-accent/30 px-6 py-12 text-center">
+                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/15 ring-1 ring-accent/30">
+                    <svg class="h-8 w-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
                 <p class="font-display text-xl font-bold text-foreground">@I18n.T("withdrawal_successful")</p>
-                <p class="text-sm text-muted-foreground">@ViewModel.SuccessAmount.ToString("N0") FCFA @I18n.T("sent_to_momo")</p>
+                <p class="text-sm text-muted-foreground">
+                    <span class="font-semibold text-accent">@ViewModel.SuccessAmount.ToString("N0") FCFA</span>
+                    @I18n.T("sent_to_momo")
+                </p>
             </div>
         }
         else
         {
-            <div class="space-y-5">
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-foreground">@I18n.T("amount_fcfa")</label>
-                    <input type="number" @bind="ViewModel.Amount" @bind:event="oninput" placeholder="@I18n.T("enter_amount")" disabled="@ViewModel.IsProcessing"
-                           class="h-14 w-full rounded-xl border border-border bg-card text-center font-display text-2xl font-bold text-foreground placeholder:text-muted-foreground" />
-                    <p class="text-xs text-muted-foreground">@I18n.T("min_withdrawal"): 200 FCFA · @I18n.T("max_withdrawal"): @ViewModel.AvailableBalance.ToString("N0") FCFA</p>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-foreground">@I18n.T("momo_number")</label>
-                    <div class="flex items-center gap-3 rounded-xl border border-border bg-card px-4">
-                        <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                        <input type="tel" @bind="ViewModel.MomoNumber" disabled="@ViewModel.IsProcessing" class="h-12 flex-1 border-0 bg-transparent px-0 text-foreground outline-none" />
+            <div class="card-surface space-y-6 rounded-2xl border border-border/50 px-5 py-6">
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-foreground">@I18n.T("amount_fcfa")</label>
+                    <div class="rounded-2xl border border-border/60 bg-background/40 px-4 py-5 focus-within:border-primary/45 focus-within:shadow-[0_0_0_3px_hsl(45_90%_55%/0.08)]">
+                        <input type="number"
+                               @bind="ViewModel.Amount"
+                               @bind:event="oninput"
+                               placeholder="@I18n.T("enter_amount")"
+                               disabled="@ViewModel.IsProcessing"
+                               class="w-full border-0 bg-transparent text-center font-display text-3xl font-bold text-foreground outline-none placeholder:text-muted-foreground/50" />
+                    </div>
+                    <p class="mt-2 text-center text-xs text-muted-foreground">
+                        @I18n.T("min_withdrawal"): 200 FCFA · @I18n.T("max_withdrawal"): @ViewModel.AvailableBalance.ToString("N0") FCFA
+                    </p>
+                    <div class="mt-3 grid grid-cols-3 gap-2">
+                        <button type="button" class="@QuickClass" disabled="@ViewModel.IsProcessing" @onclick="() => SetQuick(0.25m)">25%</button>
+                        <button type="button" class="@QuickClass" disabled="@ViewModel.IsProcessing" @onclick="() => SetQuick(0.5m)">50%</button>
+                        <button type="button" class="@QuickClass" disabled="@ViewModel.IsProcessing" @onclick="() => SetQuick(1m)">Max</button>
                     </div>
                 </div>
-                <PrimaryButton OnClick="Submit" Disabled="@(!ViewModel.CanSubmit)" CssClass="w-full">
-                    @if (ViewModel.IsProcessing) { <span class="inline-flex items-center gap-2"><LoadingSpinner /> @I18n.T("processing")</span> }
-                    else { @I18n.T("confirm_withdrawal") }
+
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-foreground">@I18n.T("momo_number")</label>
+                    <div class="flex items-center gap-3 rounded-2xl border border-border/60 bg-background/40 px-4 focus-within:border-primary/45">
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                            <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                        </span>
+                        <input type="tel"
+                               @bind="ViewModel.MomoNumber"
+                               disabled="@ViewModel.IsProcessing"
+                               placeholder="6XXXXXXXX"
+                               class="h-12 flex-1 border-0 bg-transparent px-0 text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground" />
+                    </div>
+                </div>
+
+                @if (ParsedAmount is { } amount && amount > 0)
+                {
+                    <div class="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+                        <span class="text-xs font-medium uppercase tracking-wider text-muted-foreground">@I18n.T("confirm_withdrawal")</span>
+                        <span class="gold-text font-display text-lg font-bold">@amount.ToString("N0") FCFA</span>
+                    </div>
+                }
+
+                <PrimaryButton OnClick="Submit" Disabled="@(!ViewModel.CanSubmit)" CssClass="w-full !py-3.5 !text-sm">
+                    @if (ViewModel.IsProcessing)
+                    {
+                        <span class="inline-flex items-center gap-2"><LoadingSpinner /> @I18n.T("processing")</span>
+                    }
+                    else
+                    {
+                        @I18n.T("confirm_withdrawal")
+                    }
                 </PrimaryButton>
             </div>
         }
@@ -50,8 +98,24 @@
 </div>
 
 @code {
+    private const string QuickClass =
+        "rounded-xl border border-border/70 bg-background/35 py-2.5 text-xs font-semibold text-foreground transition-all hover:border-primary/40 hover:bg-primary/10 hover:text-primary active:scale-[0.97] disabled:opacity-50";
+
+    private decimal? ParsedAmount =>
+        decimal.TryParse(ViewModel.Amount, out var value) ? value : null;
+
     protected override void OnInitialized() => ViewModel.StateChanged += OnStateChanged;
     public void Dispose() => ViewModel.StateChanged -= OnStateChanged;
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
     private async Task Submit() => await ViewModel.SubmitAsync();
+
+    private void SetQuick(decimal fraction)
+    {
+        if (ViewModel.AvailableBalance <= 0) return;
+        var raw = Math.Floor(ViewModel.AvailableBalance * fraction);
+        var value = Math.Max(0, Math.Min(ViewModel.AvailableBalance, raw));
+        if (fraction < 1m && value < 200 && ViewModel.AvailableBalance >= 200)
+            value = 200;
+        ViewModel.Amount = value.ToString("0");
+    }
 }

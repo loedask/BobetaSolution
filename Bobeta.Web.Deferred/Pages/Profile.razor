@@ -18,8 +18,8 @@
                 </div>
             </div>
 
-            <div class="mt-5 grid grid-cols-3 divide-x divide-border/50 rounded-xl border border-border/40 bg-background/30">
-                <div class="px-2 py-3 text-center">
+            <div class="mt-5 flex divide-x divide-border/50 rounded-xl border border-border/40 bg-background/30">
+                <div class="min-w-0 flex-1 px-2 py-3 text-center">
                     @if (ViewModel.IsLoading)
                     {
                         <SkeletonLoader CssClass="mx-auto mb-1.5 h-6 w-8" />
@@ -30,7 +30,7 @@
                     }
                     <p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">@I18n.T("games")</p>
                 </div>
-                <div class="px-2 py-3 text-center">
+                <div class="min-w-0 flex-1 px-2 py-3 text-center">
                     @if (ViewModel.IsLoading)
                     {
                         <SkeletonLoader CssClass="mx-auto mb-1.5 h-6 w-8" />
@@ -41,7 +41,7 @@
                     }
                     <p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">@I18n.T("wins")</p>
                 </div>
-                <div class="px-2 py-3 text-center">
+                <div class="min-w-0 flex-1 px-2 py-3 text-center">
                     @if (ViewModel.IsLoading)
                     {
                         <SkeletonLoader CssClass="mx-auto mb-1.5 h-6 w-10" />
@@ -55,8 +55,8 @@
             </div>
         </div>
 
-        <div class="card-surface rounded-2xl border border-border/50 px-6 py-5">
-            <div class="mb-3 flex items-center gap-2">
+        <div class="card-surface rounded-2xl border border-border/50 px-6 py-6">
+            <div class="mb-4 flex items-center gap-2">
                 <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
                     <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
                 </div>
@@ -89,8 +89,8 @@
             </div>
         </div>
 
-        <div class="card-surface rounded-2xl border border-border/50 px-6 py-5">
-            <div class="mb-3 flex items-center gap-2">
+        <div class="card-surface rounded-2xl border border-border/50 px-6 py-6">
+            <div class="mb-4 flex items-center gap-2">
                 <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
                     <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0h.5a2.5 2.5 0 002.5-2.5V8.935M12 12a2 2 0 100 4 2 2 0 000-4z" /></svg>
                 </div>
