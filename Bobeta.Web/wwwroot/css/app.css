@@ -519,3 +519,11 @@ button:has(.game-filter-icon).filter-selected .game-filter-icon--kopo,
 button:has(.game-filter-icon).filter-selected .game-filter-icon--all {
   border-color: hsl(45 90% 55% / 0.45);
 }
+
+.history-scroll {
+  scrollbar-width: none;
+}
+
+.history-scroll::-webkit-scrollbar {
+  display: none;
+}
