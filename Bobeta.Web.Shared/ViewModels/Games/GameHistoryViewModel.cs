@@ -7,6 +7,8 @@ namespace Bobeta.Web.Shared.ViewModels.Games;
 
 public class GameHistoryViewModel(HistoryService historyService, AppStateService appState, NavigationManager nav) : ViewModelBase
 {
+    private const int PageSize = 50;
+
     private readonly HistoryService _historyService = historyService;
     private readonly AppStateService _appState = appState;
     private readonly NavigationManager _nav = nav;
@@ -19,15 +21,30 @@ public class GameHistoryViewModel(HistoryService historyService, AppStateService
         ClearError();
         try
         {
-            var res = await _historyService.GetGameHistoryAsync(0, 50);
-            if (res.IsSuccess && res.Data != null)
-                Items = res.Data.ToList();
-            else if (!res.IsSuccess)
+            var all = new List<GameHistoryItemDto>();
+            var skip = 0;
+            while (true)
             {
-                if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
-                    return;
-                SetError(res.ErrorMessage ?? "Failed to load history.");
+                var res = await _historyService.GetGameHistoryAsync(skip, PageSize);
+                if (!res.IsSuccess)
+                {
+                    if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
+                        return;
+                    if (all.Count == 0)
+                        SetError(res.ErrorMessage ?? "Failed to load history.");
+                    break;
+                }
+
+                if (res.Data == null || res.Data.Count == 0)
+                    break;
+
+                all.AddRange(res.Data);
+                if (res.Data.Count < PageSize)
+                    break;
+                skip += PageSize;
             }
+
+            Items = all;
         }
         catch (Exception)
         {
