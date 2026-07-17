@@ -8,6 +8,10 @@ using Microsoft.AspNetCore.ResponseCompression;
 
 // Build the web application and configure services.
 var builder = WebApplication.CreateBuilder(args);
+// Windows often reserves default Kestrel port 5000 (Hyper-V / excluded ranges). Without a launch
+// profile ASPNETCORE_URLS, binding fails with SocketException 10013 and the process exits 0xffffffff.
+if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")))
+    builder.WebHost.UseUrls("http://127.0.0.1:5163");
 var configuredCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
 
 // Controllers with global validation filter (FluentValidation on request DTOs).
