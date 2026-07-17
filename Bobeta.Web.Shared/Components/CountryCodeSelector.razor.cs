@@ -46,7 +46,6 @@ namespace Bobeta.Web.Shared.Components
         [Parameter] public string Dial { get; set; } = "+242";
         [Parameter] public EventCallback<(string Dial, int Digits)> DialChanged { get; set; }
 
-        private ElementReference _containerRef;
         private bool _open;
         private string _search = "";
         private Country _selected = Countries.First(c => c.CountryCode == DefaultCountryCode);

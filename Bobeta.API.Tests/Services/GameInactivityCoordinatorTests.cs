@@ -73,7 +73,7 @@ public class GameInactivityCoordinatorTests
 
         await coordinator.TickAsync();
 
-        Assert.True(cancels.CancelledSessions.Contains(_sessionId));
+        Assert.Contains(_sessionId, cancels.CancelledSessions);
         Assert.Contains(hub.GroupMessages, m => m.Method == "GameEndedByInactivity");
     }
 
@@ -245,9 +245,8 @@ public class GameInactivityCoordinatorTests
     {
         public Task SendCoreAsync(string method, object?[] args, CancellationToken cancellationToken = default)
         {
-            if (method == "InactivityWarning" && args[0] is not null)
+            if (method == "InactivityWarning" && args[0] is { } payload)
             {
-                var payload = args[0];
                 var phase = (int)payload.GetType().GetProperty("phase")!.GetValue(payload)!;
                 var showButtons = (bool)payload.GetType().GetProperty("showButtons")!.GetValue(payload)!;
                 context.GroupMessages.Add((sessionId, method, phase, showButtons));

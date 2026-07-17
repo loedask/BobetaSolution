@@ -56,10 +56,10 @@
                 </div>
             }
 
-            <div class="flex flex-col gap-4 pt-1">
+            <div class="history-scroll flex max-h-[34rem] flex-col gap-4 overflow-y-auto overscroll-contain pt-1">
                 @foreach (var item in ViewModel.Items)
                 {
-                    <article class="@RowCardClass(item) overflow-hidden rounded-2xl border p-4 transition-all">
+                    <article class="@RowCardClass(item) shrink-0 overflow-hidden rounded-2xl border p-4 transition-all">
                         <div class="flex items-start gap-3">
                             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl @RowIconBgClass(item)">
                                 @RowIcon(item)

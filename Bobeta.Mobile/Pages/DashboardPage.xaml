@@ -137,7 +137,7 @@
                 </Grid>
 
                 <ActivityIndicator x:Name="Busy" IsRunning="False" Color="{StaticResource PrimaryGold}" />
-                <CollectionView x:Name="TxList" ItemsSource="{Binding Transactions}" HeightRequest="280">
+                <CollectionView x:Name="TxList" ItemsSource="{Binding Transactions}" HeightRequest="360">
                     <CollectionView.EmptyView>
                         <Label x:Name="EmptyTx" TextColor="{StaticResource MutedForeground}" FontSize="13" />
                     </CollectionView.EmptyView>
