@@ -31,4 +31,5 @@ public class GameStateViewModel
     public bool MustFollowLedSuit { get; set; }
 
     public KopoStateDto? Kopo { get; set; }
+    public NgolaStateDto? Ngola { get; set; }
 }

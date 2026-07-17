@@ -6,5 +6,6 @@ namespace Bobeta.Client.Models.Api;
 public enum GameVariant
 {
     Makopa = 0,
-    Kopo = 1
+    Kopo = 1,
+    Ngola = 2
 }

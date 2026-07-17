@@ -1,5 +1,6 @@
 using Bobeta.Application.Games.Kopo;
 using Bobeta.Application.Games.Makopa;
+using Bobeta.Application.Games.Ngola;
 using Bobeta.Application.Interfaces;
 using Bobeta.Application.Services;
 using Bobeta.Application.Validators;
@@ -18,6 +19,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IGameSessionService, GameSessionService>();
         services.AddScoped<MakopaGameEngine>();
         services.AddScoped<KopoGameEngine>();
+        services.AddScoped<NgolaGameEngine>();
         services.AddScoped<IGameEngineService, GameEngineService>();
         services.AddScoped<IGameHistoryService, GameHistoryService>();
         services.AddScoped<INotificationRealtimePublisher, NullNotificationRealtimePublisher>();

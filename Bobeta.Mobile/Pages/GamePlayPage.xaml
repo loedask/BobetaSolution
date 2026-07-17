@@ -136,6 +136,13 @@
             VerticalOptions="Center"
             HorizontalOptions="Center" />
 
+        <controls:NgolaBoardView
+            x:Name="NgolaBoard"
+            Grid.Row="3"
+            IsVisible="False"
+            VerticalOptions="Center"
+            HorizontalOptions="Fill" />
+
         <CollectionView
             x:Name="HandView"
             Grid.Row="3"

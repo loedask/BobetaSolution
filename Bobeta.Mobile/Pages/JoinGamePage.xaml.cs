@@ -62,6 +62,7 @@ public partial class JoinGamePage : ContentPage
         StyleFilter(FilterAllBtn, _vm.VariantFilter == null);
         StyleFilter(FilterMakopaBtn, _vm.VariantFilter == GameVariant.Makopa);
         StyleFilter(FilterKopoBtn, _vm.VariantFilter == GameVariant.Kopo);
+        StyleFilter(FilterNgolaBtn, _vm.VariantFilter == GameVariant.Ngola);
 
         var hasInvite = _vm.InviteStatus?.HasPendingCode == true;
         InviteBanner.IsVisible = hasInvite;
@@ -86,6 +87,7 @@ public partial class JoinGamePage : ContentPage
     private void OnFilterAll(object? sender, EventArgs e) => _vm?.SetVariantFilter(null);
     private void OnFilterMakopa(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Makopa);
     private void OnFilterKopo(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Kopo);
+    private void OnFilterNgola(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Ngola);
 
     private async void OnApplyInvite(object? sender, EventArgs e)
     {

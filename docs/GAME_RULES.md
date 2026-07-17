@@ -2,7 +2,7 @@
 
 Authoritative rule logic lives in `Bobeta.Application/Games/`. This document mirrors that implementation so rules stay stable when code changes. Each section lists the source files and regression tests that lock the behavior in place.
 
-**When you change game rules:** update the code, this document, the i18n strings (`makopa_rules_body`, `kopo_rules_body`), and the tests listed below.
+**When you change game rules:** update the code, this document, the i18n strings (`makopa_rules_body`, `kopo_rules_body`, `ngola_rules_body`), and the tests listed below.
 
 ---
 
@@ -108,7 +108,62 @@ Authoritative rule logic lives in `Bobeta.Application/Games/`. This document mir
 
 ---
 
-## Platform / session rules (both games)
+## Ngola (2×8 seed-sowing / Mancala)
+
+**Source:** `Bobeta.Application/Games/Ngola/NgolaRules.cs`, `NgolaGameEngine.cs`  
+**Tests:** `Bobeta.Application.Tests/Games/NgolaRulesTests.cs`
+
+Bobeta Ngola is a custom **two-row, eight-pit** ruleset (not the 4×8 Ludii variant).
+
+### Board setup
+
+| Rule | Detail |
+|------|--------|
+| Players | Exactly 2 |
+| Board | 16 pits in two parallel rows of 8 |
+| Ownership | Creator owns pits `0–7`; opponent owns pits `8–15` |
+| Initial seeds | 4 seeds in every pit (64 total) |
+| First turn | Chosen at random (session-seeded) |
+| Viewer layout | Each seat sees its own row at the bottom, left-to-right as local pit indices `0–7` |
+
+### Movement (sowing)
+
+| Rule | Detail |
+|------|--------|
+| Legal start | On your turn, choose one of **your** pits containing **at least 2** seeds |
+| Illegal start | Pits with 0 or 1 seed cannot start a move |
+| Sowing | Empty the chosen pit, then drop one seed into each following pit **counter-clockwise** around the oval (`index → (index + 1) % 16`) |
+| Turn switch | After a completed sow (and optional capture), turn passes to the opponent |
+
+### Capture
+
+| Rule | Detail |
+|------|--------|
+| Trigger | The **last** sown seed lands in an **opponent** pit |
+| Occupied | That opponent pit already had seeds before the landing seed was placed (`count after sow > 1`) |
+| Effect | Capture **all** seeds now in that landing pit (previous seeds + landing seed); add them to the mover's score; empty the pit |
+| Empty landing | Landing in an empty opponent pit captures nothing |
+| Own landing | Landing in your own row never captures |
+
+### Outcomes
+
+| Rule | Detail |
+|------|--------|
+| End condition | After a move, the player about to move has **no** pit with ≥ 2 seeds |
+| Remaining seeds | Each side adds the seeds still sitting in its own row to its capture score; pits are cleared |
+| Win | Higher capture score wins; loser is the other seat |
+| Draw | Equal capture scores → bets are **released** (no winner settlement) |
+
+### Economy
+
+| Rule | Detail |
+|------|--------|
+| Win | Same 25% platform commission on the pot as Makopa / Kopo |
+| Draw | Both players' locked bets are released |
+
+---
+
+## Platform / session rules (all games)
 
 **Source:** `CreateGameRequestValidator.cs`, `GameSessionService.cs`, `GameInactivityCoordinator.cs`  
 **Tests:** `Bobeta.Application.Tests/Validators/CreateGameRequestValidatorTests.cs`, `Bobeta.API.Tests/Services/GameInactivityCoordinatorTests.cs`
@@ -120,7 +175,7 @@ Authoritative rule logic lives in `Bobeta.Application/Games/`. This document mir
 | Join game | Locks opponent's bet; game auto-starts |
 | Inactivity | 60 s idle → first warning (10 s to Continue or Cancel); after Continue, 40 s idle → second warning; deadline expires → game cancelled, bets released |
 | Real moves | Reset idle timer and dismiss warnings |
-| API routing | `play-card` / `void-follow` → Makopa only; `kopo/move` → Kopo only |
+| API routing | `play-card` / `void-follow` → Makopa only; `kopo/move` → Kopo only; `ngola/move` → Ngola only |
 
 ---
 
@@ -128,8 +183,8 @@ Authoritative rule logic lives in `Bobeta.Application/Games/`. This document mir
 
 Player-facing rule text is in:
 
-- `Bobeta.Web.Shared/Services/I18nService.cs` — keys `makopa_rules_body`, `kopo_rules_body`
-- `Bobeta.Mobile/Services/I18nService.cs` — same keys (EN + FR)
+- `Bobeta.Web.Shared/Services/I18nService.cs` — keys `makopa_rules_body`, `kopo_rules_body`, `ngola_rules_body`
+- `Bobeta.Mobile/Services/I18nService.cs` — same keys
 
 Displayed in `Bobeta.Web/Pages/GamePlay.razor` and `Bobeta.Mobile/Pages/GamePlayPage.xaml.cs`.
 

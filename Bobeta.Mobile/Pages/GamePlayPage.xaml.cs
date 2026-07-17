@@ -45,6 +45,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
 
         KopoBoard.CellTapped -= OnKopoCellTapped;
         KopoBoard.CellTapped += OnKopoCellTapped;
+        NgolaBoard.PitTapped -= OnNgolaPitTapped;
+        NgolaBoard.PitTapped += OnNgolaPitTapped;
 
         if (!string.IsNullOrEmpty(_sessionId))
             await _vm.LoadGameAsync(_sessionId);
@@ -62,6 +64,7 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         }
 
         KopoBoard.CellTapped -= OnKopoCellTapped;
+        NgolaBoard.PitTapped -= OnNgolaPitTapped;
 
         base.OnDisappearing();
     }
@@ -76,11 +79,14 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         Busy.IsRunning = _vm.ShowLoadingShell;
 
         var isKopo = _vm.IsKopo;
-        MakopaPanel.IsVisible = !isKopo;
-        HandView.IsVisible = !isKopo;
-        TakeCardButton.IsVisible = !isKopo;
-        TakeCardHintLabel.IsVisible = !isKopo;
+        var isNgola = _vm.IsNgola;
+        var isMakopa = !isKopo && !isNgola;
+        MakopaPanel.IsVisible = isMakopa;
+        HandView.IsVisible = isMakopa;
+        TakeCardButton.IsVisible = isMakopa;
+        TakeCardHintLabel.IsVisible = isMakopa;
         KopoBoard.IsVisible = isKopo && _vm.Kopo != null;
+        NgolaBoard.IsVisible = isNgola && _vm.Ngola != null;
         KopoChainHint.IsVisible = isKopo && (_vm.Kopo?.MustContinueChain ?? false);
 
         var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
@@ -111,6 +117,15 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
             RulesLink.IsVisible = true;
             RulesLink.Text = i18n.T("kopo_rules_link");
             RoundScoreLabel.IsVisible = false;
+        }
+        else if (isNgola && _vm.Ngola != null)
+        {
+            NgolaBoard.MyPits = _vm.Ngola.MyPits;
+            NgolaBoard.OpponentPits = _vm.Ngola.OpponentPits;
+            NgolaBoard.MyScore = _vm.Ngola.MyScore;
+            NgolaBoard.OpponentScore = _vm.Ngola.OpponentScore;
+            NgolaBoard.CanInteract = _vm.IsPlayerTurn && !_vm.ShowGameResult
+                && !_vm.ShowInactivityOverlay && !_vm.IsSendingMove;
         }
         else if (_vm.WaitingForOpponent)
         {
@@ -227,6 +242,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
         if (_vm?.IsKopo == true)
             await DisplayAlertAsync(i18n.T("kopo_how_to_play_title"), i18n.T("kopo_rules_body"), i18n.T("done_short"));
+        else if (_vm?.IsNgola == true)
+            await DisplayAlertAsync(i18n.T("ngola_how_to_play_title"), i18n.T("ngola_rules_body"), i18n.T("done_short"));
         else
             await DisplayAlertAsync(i18n.T("makopa_how_to_play_title"), i18n.T("makopa_rules_body"), i18n.T("done_short"));
     }
@@ -235,5 +252,11 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
     {
         if (_vm == null) return;
         await _vm.OnKopoSquareClickedAsync(e.Row, e.Col);
+    }
+
+    private async void OnNgolaPitTapped(object? sender, int pitIndex)
+    {
+        if (_vm == null) return;
+        await _vm.OnNgolaPitClickedAsync(pitIndex);
     }
 }

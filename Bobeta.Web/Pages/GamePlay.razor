@@ -57,6 +57,26 @@
                     <p class="text-center text-sm text-muted-foreground">@I18n.T("sending_move")</p>
                 }
             }
+            else if (ViewModel.Variant == GameVariant.Ngola)
+            {
+                <details class="rounded-xl border border-border bg-card/60 px-4 py-3 text-sm text-foreground">
+                    <summary class="cursor-pointer select-none font-semibold">@I18n.T("ngola_how_to_play_title")</summary>
+                    <div class="mt-2 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">@I18n.T("ngola_rules_body")</div>
+                </details>
+                @if (ViewModel.Ngola != null)
+                {
+                    <NgolaBoard MyPits="@ViewModel.Ngola.MyPits"
+                                OpponentPits="@ViewModel.Ngola.OpponentPits"
+                                MyScore="@ViewModel.Ngola.MyScore"
+                                OpponentScore="@ViewModel.Ngola.OpponentScore"
+                                CanInteract="@(ViewModel.IsPlayerTurn && !ViewModel.IsSendingMove && !ViewModel.ShowInactivityOverlay)"
+                                OnPitClicked="OnNgolaPitClicked" />
+                }
+                @if (ViewModel.IsSendingMove)
+                {
+                    <p class="text-center text-sm text-muted-foreground">@I18n.T("sending_move")</p>
+                }
+            }
             else
             {
                 <details class="rounded-xl border border-border bg-card/60 px-4 py-3 text-sm text-foreground">
@@ -186,4 +206,5 @@
     private async Task OnInactivityCancelGame() => await ViewModel.CancelGameFromInactivityAsync();
 
     private async Task OnKopoCellClicked((int Row, int Col) cell) => await ViewModel.OnKopoSquareClickedAsync(cell.Row, cell.Col);
+    private async Task OnNgolaPitClicked(int pitIndex) => await ViewModel.OnNgolaPitClickedAsync(pitIndex);
 }

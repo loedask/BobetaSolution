@@ -7,5 +7,8 @@ public enum GameVariant
     Makopa = 0,
 
     /// <summary>10×10 international-style checkers (flying kings).</summary>
-    Kopo = 1
+    Kopo = 1,
+
+    /// <summary>Two-row, eight-pit Mancala game.</summary>
+    Ngola = 2
 }

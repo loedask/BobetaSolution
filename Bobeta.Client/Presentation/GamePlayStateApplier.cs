@@ -23,12 +23,13 @@ public static class GamePlayStateApplier
 
         table.Variant = state.Variant;
         table.Kopo = state.Kopo;
+        table.Ngola = state.Ngola;
         table.WaitingForOpponent = state.WaitingForGameStart;
         table.PotAmount = state.LobbyPotAmount;
         table.OpponentDisplayName = state.OpponentDisplayName;
         table.CurrentPlayerId = state.CurrentTurnPlayerId;
         table.IsPlayerTurn = !table.WaitingForOpponent && state.CurrentTurnPlayerId == myPlayerId;
-        if (state.Variant == GameVariant.Kopo)
+        if (state.Variant is GameVariant.Kopo or GameVariant.Ngola)
         {
             table.PlayerCards = new List<CardViewModel>();
             table.LastPlayedCard = null;
@@ -53,7 +54,7 @@ public static class GamePlayStateApplier
         table.TrickOutcomeMessage = FormatTrickOutcome(
             state.LastTrickWinnerPlayerId, myPlayerId, trickOutcomeYou, trickOutcomeOpponent);
         ApplyMatchRoundScore(table, state, roundScoreFormat);
-        if (state.Variant != GameVariant.Kopo)
+        if (state.Variant == GameVariant.Makopa)
             RefreshHandPlayability(table, blockInteraction);
         return state.GameOver ? ApplyResult.GameOver : ApplyResult.Applied;
     }

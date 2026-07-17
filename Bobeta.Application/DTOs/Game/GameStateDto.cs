@@ -25,4 +25,5 @@ public record GameStateDto(
     int OpponentRoundWins = 0,
     bool MustFollowLedSuit = false,
     GameVariant Variant = GameVariant.Makopa,
-    KopoStateDto? Kopo = null);
+    KopoStateDto? Kopo = null,
+    NgolaStateDto? Ngola = null);

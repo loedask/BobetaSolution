@@ -26,6 +26,7 @@ public partial class CreateGamePage : ContentPage
         GameTypeLabel.Text = i18n.T("select_game_type");
         MakopaBtn.Text = "Makopa";
         KopoBtn.Text = "Kopo";
+        NgolaBtn.Text = "Ngola";
         DescLabel.Text = i18n.T("choose_bet_desc");
         BetLabel.Text = i18n.T("your_bet");
         CreateBtn.Text = i18n.T("create_game");
@@ -54,11 +55,9 @@ public partial class CreateGamePage : ContentPage
         ErrorLabel.IsVisible = !string.IsNullOrEmpty(_vm.ErrorMessage);
         Busy.IsRunning = _vm.IsLoading;
         CreateBtn.IsEnabled = _vm.CanSubmit && !_vm.IsLoading;
-        var sel = _vm.SelectedVariant == GameVariant.Makopa;
-        MakopaBtn.BackgroundColor = sel ? Color.FromArgb("#eab308") : Color.FromArgb("#2a3142");
-        MakopaBtn.TextColor = sel ? Color.FromArgb("#12151f") : Color.FromArgb("#e2e8f0");
-        KopoBtn.BackgroundColor = !sel ? Color.FromArgb("#eab308") : Color.FromArgb("#2a3142");
-        KopoBtn.TextColor = !sel ? Color.FromArgb("#12151f") : Color.FromArgb("#e2e8f0");
+        StyleVariant(MakopaBtn, _vm.SelectedVariant == GameVariant.Makopa);
+        StyleVariant(KopoBtn, _vm.SelectedVariant == GameVariant.Kopo);
+        StyleVariant(NgolaBtn, _vm.SelectedVariant == GameVariant.Ngola);
 
         var hasInvite = _vm.InviteStatus?.HasPendingCode == true;
         InviteBanner.IsVisible = hasInvite;
@@ -82,6 +81,13 @@ public partial class CreateGamePage : ContentPage
 
     private void OnMakopaVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Makopa);
     private void OnKopoVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Kopo);
+    private void OnNgolaVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Ngola);
+
+    private static void StyleVariant(Button button, bool selected)
+    {
+        button.BackgroundColor = selected ? Color.FromArgb("#eab308") : Color.FromArgb("#2a3142");
+        button.TextColor = selected ? Color.FromArgb("#12151f") : Color.FromArgb("#e2e8f0");
+    }
 
     private void OnPreset(object? sender, EventArgs e)
     {

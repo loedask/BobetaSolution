@@ -168,6 +168,29 @@ public class GamePlayController(
         return Ok(state);
     }
 
+    /// <summary>Sows the seeds from one pit in the current player's Ngola row.</summary>
+    [HttpPost("ngola/move")]
+    public async Task<ActionResult<GameStateDto>> NgolaMove([FromBody] NgolaMoveRequest request, CancellationToken cancellationToken)
+    {
+        var move = await _gameEngineService.ApplyNgolaMoveAsync(
+            PlayerId, request.SessionId, request.PitIndex, cancellationToken);
+        if (!move.IsSuccess)
+            return BadRequest(new { code = move.ErrorCode, message = DescribeNgolaMoveError(move.ErrorCode) });
+
+        var state = move.State!;
+        await _gameInactivityCoordinator.RecordGameplayActivityAsync(request.SessionId, cancellationToken);
+        if (state.GameOver)
+        {
+            _gameInactivityCoordinator.UnregisterSession(request.SessionId);
+            await _hubContext.Clients.Group(GameHub.GroupPrefix + request.SessionId)
+                .SendAsync("GameResult", state.WinnerPlayerId);
+        }
+
+        var sessionRow = await _sessionRepository.GetByIdAsync(request.SessionId, cancellationToken);
+        await PushGameStateToParticipantsAsync(sessionRow, request.SessionId, state, cancellationToken);
+        return Ok(state);
+    }
+
     /// <summary>Gets the current game state for the authenticated player (hand, last card, whose turn, game over, winner).</summary>
     [HttpGet("state")]
     public async Task<ActionResult<GameStateDto>> GetGameState([FromQuery] Guid sessionId, CancellationToken cancellationToken)
@@ -210,6 +233,13 @@ public class GamePlayController(
         GameMoveErrorCodes.MustMaxCapture => "You must choose a capture that takes the maximum number of pieces.",
         GameMoveErrorCodes.MustContinueChain => "You must continue capturing with the same piece.",
         GameMoveErrorCodes.InvalidMove => "That move is not legal.",
+        _ => "Invalid move or game state."
+    };
+
+    private static string DescribeNgolaMoveError(string? code) => code switch
+    {
+        GameMoveErrorCodes.NotYourTurn => "It is not your turn.",
+        GameMoveErrorCodes.InvalidMove => "Choose one of your pits containing at least two seeds.",
         _ => "Invalid move or game state."
     };
 }

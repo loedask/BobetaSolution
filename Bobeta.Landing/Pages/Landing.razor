@@ -74,6 +74,8 @@
             <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item">Kopo</span>
             <span class="lp-ticker__sep"></span>
+            <span class="lp-ticker__item">Ngola</span>
+            <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item lp-ticker__item--accent">BOBETA</span>
             <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item">MoMo</span>
@@ -170,6 +172,29 @@
                     </div>
                     <p class="lp-felt__label">Kopo</p>
                 </div>
+            </div>
+        </article>
+
+        <article class="lp-showcase lp-showcase--ngola">
+            <div class="lp-showcase__stage" aria-hidden="true">
+                <div class="lp-ngola-wrap">
+                    <div class="lp-ngola">
+                        @for (var pit = 0; pit < 16; pit++)
+                        {
+                            <span class="lp-ngola__pit"></span>
+                        }
+                    </div>
+                    <p class="lp-felt__label">Ngola</p>
+                </div>
+            </div>
+            <div class="lp-showcase__copy">
+                <span class="lp-showcase__num">03</span>
+                <h3>@I18n.T("landing_game_ngola_title")</h3>
+                <p>@I18n.T("landing_game_ngola_desc")</p>
+                <button type="button" class="lp-link" @onclick="GoToStart">
+                    @I18n.T("landing_cta_play")
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 5l7 7-7 7" /></svg>
+                </button>
             </div>
         </article>
     </div>

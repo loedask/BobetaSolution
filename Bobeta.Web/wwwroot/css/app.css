@@ -332,6 +332,29 @@ button.playing-card.playing-card--btn:active:not(:disabled) {
   box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.35);
 }
 
+.game-preview--ngola {
+  background: linear-gradient(160deg, #92400e, #451a03);
+  border: 1px solid hsl(32 80% 40% / 0.45);
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.4);
+}
+
+.game-preview__ngola {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 3px;
+  width: 88%;
+  padding: 0.45rem;
+  border-radius: 0.55rem;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.game-preview__ngola-pit {
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: linear-gradient(160deg, #fde68a, #fbbf24);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
 .game-preview__fan {
   position: relative;
   width: 5.75rem;
@@ -407,7 +430,8 @@ button.playing-card.playing-card--btn:active:not(:disabled) {
 }
 
 .choice-selected .game-preview--makopa,
-.choice-selected .game-preview--kopo {
+.choice-selected .game-preview--kopo,
+.choice-selected .game-preview--ngola {
   border-color: hsl(45 90% 55% / 0.45);
   box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.45), 0 0 14px hsl(45 90% 55% / 0.12);
 }
@@ -447,6 +471,28 @@ button.playing-card.playing-card--btn:active:not(:disabled) {
 .game-filter-icon--kopo {
   background: linear-gradient(160deg, hsl(220 25% 14%), hsl(220 30% 8%));
   border: 1px solid hsl(220 20% 22%);
+}
+
+.game-filter-icon--ngola {
+  background: linear-gradient(160deg, #92400e, #451a03);
+  border: 1px solid hsl(32 80% 40% / 0.45);
+}
+
+.game-filter-icon__ngola {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  width: 1.35rem;
+  padding: 2px;
+  border-radius: 0.2rem;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.game-filter-icon__ngola span {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: linear-gradient(160deg, #fde68a, #fbbf24);
 }
 
 .game-filter-icon__fan {
@@ -516,6 +562,7 @@ button.playing-card.playing-card--btn:active:not(:disabled) {
 
 button:has(.game-filter-icon).filter-selected .game-filter-icon--makopa,
 button:has(.game-filter-icon).filter-selected .game-filter-icon--kopo,
+button:has(.game-filter-icon).filter-selected .game-filter-icon--ngola,
 button:has(.game-filter-icon).filter-selected .game-filter-icon--all {
   border-color: hsl(45 90% 55% / 0.45);
 }

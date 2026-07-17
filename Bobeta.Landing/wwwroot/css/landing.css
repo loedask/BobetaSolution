@@ -669,6 +669,10 @@
   .lp-showcase--kopo {
     grid-template-columns: 0.95fr 1.05fr;
   }
+
+  .lp-showcase--ngola {
+    grid-template-columns: 1.05fr 0.95fr;
+  }
 }
 
 .lp-showcase__stage {
@@ -812,6 +816,34 @@
 }
 
 .lp-board-wrap .lp-felt__label {
+  left: 0;
+  bottom: -1.4rem;
+}
+
+.lp-ngola-wrap {
+  position: relative;
+  width: min(88%, 20rem);
+}
+
+.lp-ngola {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.35rem;
+  padding: 0.9rem;
+  border-radius: 1.1rem;
+  background: linear-gradient(160deg, #92400e, #451a03);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.35), 0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+.lp-ngola__pit {
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: linear-gradient(160deg, #fde68a, #fbbf24);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4), 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.lp-ngola-wrap .lp-felt__label {
   left: 0;
   bottom: -1.4rem;
 }
