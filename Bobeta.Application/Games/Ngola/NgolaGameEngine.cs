@@ -104,7 +104,8 @@ public sealed class NgolaGameEngine(
                 session.Id, Array.Empty<string>(), null, null,
                 session.Status == GameStatus.Finished, session.GameResult?.WinnerPlayerId,
                 session.Status == GameStatus.Waiting, pot, opponentName,
-                null, 0, 0, false, GameVariant.Ngola);
+                null, 0, 0, false, GameVariant.Ngola,
+                IsDraw: session.Status == GameStatus.Finished && session.GameResult?.WinnerPlayerId == null);
         }
 
         var state = JsonSerializer.Deserialize<NgolaGameState>(session.GameStateJson, JsonOptions)!;
@@ -119,7 +120,8 @@ public sealed class NgolaGameEngine(
             session.Id, Array.Empty<string>(), null, state.CurrentTurnPlayerId,
             session.Status == GameStatus.Finished, session.GameResult?.WinnerPlayerId,
             false, pot, opponentName, null, 0, 0, false,
-            GameVariant.Ngola, null, ngola);
+            GameVariant.Ngola, null, ngola,
+            IsDraw: session.Status == GameStatus.Finished && session.GameResult?.WinnerPlayerId == null);
     }
 
     private async Task<string?> ResolveOpponentDisplayNameAsync(

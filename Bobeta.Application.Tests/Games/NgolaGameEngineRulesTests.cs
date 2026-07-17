@@ -36,6 +36,7 @@ public class NgolaGameEngineRulesTests
 
         Assert.True(move.IsSuccess);
         Assert.True(move.State!.GameOver);
+        Assert.False(move.State.IsDraw);
         Assert.Equal(_creator, move.State.WinnerPlayerId);
         Assert.Single(wallet.Settlements);
         Assert.Empty(wallet.Releases);
@@ -70,6 +71,7 @@ public class NgolaGameEngineRulesTests
 
         Assert.True(move.IsSuccess);
         Assert.True(move.State!.GameOver);
+        Assert.True(move.State.IsDraw);
         Assert.Null(move.State.WinnerPlayerId);
         Assert.Equal(2, wallet.Releases.Count);
         Assert.Contains((_creator, 200m), wallet.Releases);

@@ -26,4 +26,5 @@ public record GameStateDto(
     bool MustFollowLedSuit = false,
     GameVariant Variant = GameVariant.Makopa,
     KopoStateDto? Kopo = null,
-    NgolaStateDto? Ngola = null);
+    NgolaStateDto? Ngola = null,
+    bool IsDraw = false);

@@ -123,6 +123,9 @@ public sealed class GameStateDto
 
     [JsonPropertyName("ngola")]
     public NgolaStateDto? Ngola { get; set; }
+
+    [JsonPropertyName("isDraw")]
+    public bool IsDraw { get; set; }
 }
 
 public sealed class KopoSquareDto

@@ -32,4 +32,7 @@ public class GameStateViewModel
 
     public KopoStateDto? Kopo { get; set; }
     public NgolaStateDto? Ngola { get; set; }
+
+    /// <summary>True when the game finished with no winner (bets returned), as opposed to a cancellation/inactivity end.</summary>
+    public bool IsDraw { get; set; }
 }

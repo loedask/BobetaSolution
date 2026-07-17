@@ -126,6 +126,9 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
             NgolaBoard.OpponentScore = _vm.Ngola.OpponentScore;
             NgolaBoard.CanInteract = _vm.IsPlayerTurn && !_vm.ShowGameResult
                 && !_vm.ShowInactivityOverlay && !_vm.IsSendingMove;
+            RulesLink.IsVisible = true;
+            RulesLink.Text = i18n.T("ngola_rules_link");
+            RoundScoreLabel.IsVisible = false;
         }
         else if (_vm.WaitingForOpponent)
         {
@@ -170,6 +173,9 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
             PotOpponentNameLabel.Text = opp.Trim();
             PotOpponentInitialsLabel.Text = InitialsFromName(opp);
         }
+
+        if (_vm.ShowGameResult)
+            ResultTitle.Text = _vm.IsDraw ? "It's a draw" : "Game over";
 
         InactivityOverlay.IsVisible = _vm.ShowInactivityOverlay;
         if (_vm.ShowInactivityOverlay)

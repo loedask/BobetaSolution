@@ -23,5 +23,6 @@ public sealed class GamePlayTableState
     public int OpponentRoundWins { get; set; }
     public string? MatchRoundScoreText { get; set; }
     public bool ShowGameResult { get; set; }
+    public bool IsDraw { get; set; }
     public string? WinnerPlayerName { get; set; }
 }

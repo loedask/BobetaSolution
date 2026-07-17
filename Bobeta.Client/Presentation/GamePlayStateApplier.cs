@@ -7,7 +7,7 @@ namespace Bobeta.Client.Presentation;
 public static class GamePlayStateApplier
 {
     public static bool IsSessionEndedWithoutWinner(GameStateViewModel state) =>
-        state.GameOver && !state.WinnerPlayerId.HasValue && !state.WaitingForGameStart;
+        state.GameOver && !state.WinnerPlayerId.HasValue && !state.WaitingForGameStart && !state.IsDraw;
 
     public static ApplyResult ApplyAuthoritativeState(
         GamePlayTableState table,
@@ -46,10 +46,16 @@ public static class GamePlayStateApplier
         if (state.GameOver)
         {
             table.ShowGameResult = true;
-            table.WinnerPlayerName = state.WinnerPlayerId == myPlayerId ? "You" : "Opponent";
+            table.IsDraw = state.IsDraw;
+            table.WinnerPlayerName = state.IsDraw
+                ? "Draw"
+                : state.WinnerPlayerId == myPlayerId ? "You" : "Opponent";
         }
         else
+        {
             table.ShowGameResult = false;
+            table.IsDraw = false;
+        }
 
         table.TrickOutcomeMessage = FormatTrickOutcome(
             state.LastTrickWinnerPlayerId, myPlayerId, trickOutcomeYou, trickOutcomeOpponent);

@@ -56,6 +56,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public CardViewModel? LastPlayedCard => _table.LastPlayedCard;
     public string? WinnerPlayerName => _table.WinnerPlayerName;
     public bool ShowGameResult => _table.ShowGameResult;
+    public bool IsDraw => _table.IsDraw;
     public Guid? CurrentPlayerId => _table.CurrentPlayerId;
     public string? TrickOutcomeMessage => _table.TrickOutcomeMessage;
     public bool CanTakeCard => _table.CanTakeCard;

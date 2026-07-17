@@ -154,8 +154,11 @@
 
 @if (ViewModel.ShowGameResult)
 {
-    <WinCelebration Show="true" />
-    <GameResultModal WinnerPlayerName="@ViewModel.WinnerPlayerName" />
+    @if (!ViewModel.IsDraw)
+    {
+        <WinCelebration Show="true" />
+    }
+    <GameResultModal WinnerPlayerName="@ViewModel.WinnerPlayerName" IsDraw="@ViewModel.IsDraw" />
 }
 
 @code {
