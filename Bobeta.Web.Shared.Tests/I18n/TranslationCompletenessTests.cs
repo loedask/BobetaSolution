@@ -13,6 +13,7 @@ public sealed class TranslationCompletenessTests
         "phone_placeholder",
         "landing_game_makopa_title",
         "landing_game_kopo_title",
+        "landing_game_ngola_title",
         "live",
         "min_withdrawal",
         "max_withdrawal",
