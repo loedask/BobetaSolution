@@ -6,6 +6,27 @@ using Bobeta.API.App.Json;
 using Bobeta.API.Hubs;
 using Microsoft.AspNetCore.ResponseCompression;
 
+static void WriteStartupDiagnostics(string stage, Exception? ex = null)
+{
+    try
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "startup-crash.log");
+        var text =
+            $"{DateTimeOffset.Now:O} stage={stage}{Environment.NewLine}" +
+            $"ASPNETCORE_ENVIRONMENT={Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}{Environment.NewLine}" +
+            $"ASPNETCORE_URLS={Environment.GetEnvironmentVariable("ASPNETCORE_URLS")}{Environment.NewLine}" +
+            $"DOTNET_STARTUP_HOOKS={Environment.GetEnvironmentVariable("DOTNET_STARTUP_HOOKS")}{Environment.NewLine}" +
+            (ex is null ? string.Empty : ex.ToString());
+        File.WriteAllText(path, text);
+    }
+    catch
+    {
+        // Diagnostics must never block startup.
+    }
+}
+
+WriteStartupDiagnostics("enter-main");
+
 try
 {
     // Build the web application and configure services.
@@ -61,6 +82,7 @@ try
     });
 
     var app = builder.Build();
+    WriteStartupDiagnostics($"built env={app.Environment.EnvironmentName}");
 
     // Must run early so OPTIONS preflight gets Access-Control-* headers before auth/endpoints (see browser CORS errors).
     app.UseCors();
@@ -77,12 +99,12 @@ try
     app.MapHub<NotificationHub>("/hubs/notifications");
     app.MapGet("/health", () => Results.Ok(new { status = "healthy" })).AllowAnonymous();
 
+    WriteStartupDiagnostics("before-run");
     app.Run();
 }
 catch (Exception ex)
 {
-    var crashPath = Path.Combine(AppContext.BaseDirectory, "startup-crash.log");
-    File.WriteAllText(crashPath, $"{DateTimeOffset.Now:O}{Environment.NewLine}{ex}");
+    WriteStartupDiagnostics("exception", ex);
     Console.Error.WriteLine(ex);
     throw;
 }

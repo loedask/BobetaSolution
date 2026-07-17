@@ -8,7 +8,9 @@
       "hotReloadEnabled": false,
       "applicationUrl": "http://localhost:5163",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5163",
+        "DOTNET_STARTUP_HOOKS": ""
       }
     },
     "https": {
@@ -18,7 +20,9 @@
       "hotReloadEnabled": false,
       "applicationUrl": "https://localhost:7029;http://localhost:5163",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "https://localhost:7029;http://localhost:5163",
+        "DOTNET_STARTUP_HOOKS": ""
       }
     },
     "http-lan": {
@@ -28,7 +32,9 @@
       "hotReloadEnabled": false,
       "applicationUrl": "http://0.0.0.0:5163",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://0.0.0.0:5163",
+        "DOTNET_STARTUP_HOOKS": ""
       }
     }
   }

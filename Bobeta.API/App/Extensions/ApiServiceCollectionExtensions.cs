@@ -30,7 +30,9 @@ public static class ApiServiceCollectionExtensions
             ?? configuration.GetConnectionString("DefaultConnection")
             ?? "Host=localhost;Database=Bobeta;Username=postgres;Password=postgres";
 
-        if (environment.IsProduction())
+        // Skip when a debugger is attached: VS sometimes launches without the Development launch profile,
+        // which defaults the environment to Production and would reject the local Postgres connection string.
+        if (environment.IsProduction() && !System.Diagnostics.Debugger.IsAttached)
         {
             var usesLocalhost = connectionString.Contains("localhost", StringComparison.OrdinalIgnoreCase)
                 || connectionString.Contains("127.0.0.1", StringComparison.OrdinalIgnoreCase);
