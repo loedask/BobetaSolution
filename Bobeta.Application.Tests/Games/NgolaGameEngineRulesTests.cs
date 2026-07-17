@@ -46,6 +46,7 @@ public class NgolaGameEngineRulesTests
         Assert.Equal(300m, session.GameResult.WinnerAmount);
         Assert.Contains(notifications.GameResults, r => r.PlayerId == _creator && r.Won && r.Amount == 300m);
         Assert.Contains(notifications.GameResults, r => r.PlayerId == _opponent && !r.Won && r.Amount == 200m);
+        Assert.Null(session.GameStateJson);
     }
 
     [Fact]
@@ -78,6 +79,32 @@ public class NgolaGameEngineRulesTests
         Assert.Contains((_opponent, 200m), wallet.Releases);
         Assert.Empty(wallet.Settlements);
         Assert.Null(session.GameResult);
+        Assert.Null(session.GameStateJson);
+    }
+
+    [Fact]
+    public async Task GetGameStateAsync_WhenCancelledWithClearedState_ReportsGameOver()
+    {
+        var session = new GameSession
+        {
+            Id = Guid.NewGuid(),
+            CreatorPlayerId = _creator,
+            OpponentPlayerId = _opponent,
+            BetAmount = 200m,
+            Variant = GameVariant.Ngola,
+            Status = GameStatus.Cancelled,
+            CreatedAt = DateTime.UtcNow,
+            GameStateJson = null
+        };
+        var sut = CreateEngine(session, new RecordingWalletService());
+
+        var dto = await sut.GetGameStateAsync(session, _creator);
+
+        Assert.NotNull(dto);
+        Assert.True(dto!.GameOver);
+        Assert.False(dto.IsDraw);
+        Assert.Null(dto.WinnerPlayerId);
+        Assert.False(dto.WaitingForGameStart);
     }
 
     [Fact]

@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Bobeta.Client.Models.Api;
 
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<GameVariant>))]
 public enum GameVariant
 {
     Makopa = 0,

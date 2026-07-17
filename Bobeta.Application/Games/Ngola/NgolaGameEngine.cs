@@ -71,16 +71,21 @@ public sealed class NgolaGameEngine(
             logger.LogWarning("Ngola draw session={SessionId} — releasing bets.", sessionId);
             await ReleaseBetsAsync(session, cancellationToken);
             session.Status = GameStatus.Finished;
+            session.GameStateJson = null;
             session.FinishedAt = DateTime.UtcNow;
         }
         else if (winnerId.HasValue && loserId.HasValue)
         {
             await FinalizeGameAsync(session, winnerId.Value, loserId.Value, cancellationToken);
+            session.GameStateJson = null;
             session.Status = GameStatus.Finished;
             session.FinishedAt = DateTime.UtcNow;
         }
+        else
+        {
+            session.GameStateJson = JsonSerializer.Serialize(state, JsonOptions);
+        }
 
-        session.GameStateJson = JsonSerializer.Serialize(state, JsonOptions);
         await sessionRepository.UpdateAsync(session, cancellationToken);
         var dto = await GetGameStateAsync(session, playerId, cancellationToken);
         return dto == null ? GameMoveResult.Fail(GameMoveErrorCodes.InvalidState) : GameMoveResult.Ok(dto);
@@ -100,12 +105,16 @@ public sealed class NgolaGameEngine(
         var opponentName = await ResolveOpponentDisplayNameAsync(playerId, session, cancellationToken);
         if (string.IsNullOrEmpty(session.GameStateJson))
         {
-            return new GameStateDto(
-                session.Id, Array.Empty<string>(), null, null,
-                session.Status == GameStatus.Finished, session.GameResult?.WinnerPlayerId,
-                session.Status == GameStatus.Waiting, pot, opponentName,
-                null, 0, 0, false, GameVariant.Ngola,
-                IsDraw: session.Status == GameStatus.Finished && session.GameResult?.WinnerPlayerId == null);
+            if (session.Status == GameStatus.Waiting)
+                return LobbyState(session.Id, pot, opponentName, waiting: true);
+            if (session.Status == GameStatus.Finished)
+                return LobbyState(
+                    session.Id, pot, opponentName, waiting: false, gameOver: true,
+                    winner: session.GameResult?.WinnerPlayerId,
+                    isDraw: session.GameResult?.WinnerPlayerId == null);
+            if (session.Status == GameStatus.Cancelled)
+                return LobbyState(session.Id, pot, opponentName, waiting: false, gameOver: true);
+            return null;
         }
 
         var state = JsonSerializer.Deserialize<NgolaGameState>(session.GameStateJson, JsonOptions)!;
@@ -123,6 +132,17 @@ public sealed class NgolaGameEngine(
             GameVariant.Ngola, null, ngola,
             IsDraw: session.Status == GameStatus.Finished && session.GameResult?.WinnerPlayerId == null);
     }
+
+    private static GameStateDto LobbyState(
+        Guid sessionId,
+        decimal lobbyPot,
+        string? opponentName,
+        bool waiting,
+        bool gameOver = false,
+        Guid? winner = null,
+        bool isDraw = false) =>
+        new(sessionId, Array.Empty<string>(), null, null, gameOver, winner, waiting, lobbyPot, opponentName,
+            null, 0, 0, false, GameVariant.Ngola, null, null, isDraw);
 
     private async Task<string?> ResolveOpponentDisplayNameAsync(
         Guid viewerPlayerId,
