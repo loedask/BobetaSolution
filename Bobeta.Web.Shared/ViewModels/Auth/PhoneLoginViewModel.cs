@@ -45,7 +45,7 @@ public class PhoneLoginViewModel(AuthService authService, AppStateService appSta
             else
                 SetError(res.ErrorMessage ?? "Failed to send code.");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             SetError("Something went wrong. Please try again.");
         }

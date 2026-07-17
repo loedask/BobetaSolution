@@ -226,9 +226,9 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
     {
         var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
         if (_vm?.IsKopo == true)
-            await DisplayAlert(i18n.T("kopo_how_to_play_title"), i18n.T("kopo_rules_body"), i18n.T("done_short"));
+            await DisplayAlertAsync(i18n.T("kopo_how_to_play_title"), i18n.T("kopo_rules_body"), i18n.T("done_short"));
         else
-            await DisplayAlert(i18n.T("makopa_how_to_play_title"), i18n.T("makopa_rules_body"), i18n.T("done_short"));
+            await DisplayAlertAsync(i18n.T("makopa_how_to_play_title"), i18n.T("makopa_rules_body"), i18n.T("done_short"));
     }
 
     private async void OnKopoCellTapped(object? sender, (int Row, int Col) e)

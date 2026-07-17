@@ -92,16 +92,17 @@
         </Border>
 
         <VerticalStackLayout x:Name="MakopaPanel" Grid.Row="1" Spacing="8" IsVisible="True">
-            <HorizontalStackLayout Spacing="12" HorizontalOptions="Fill">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                 <Label
                     x:Name="RoundScoreLabel"
                     FontSize="12"
                     FontAttributes="Bold"
                     TextColor="{StaticResource AccentGreen}"
-                    HorizontalOptions="FillAndExpand"
+                    HorizontalOptions="Fill"
                     LineBreakMode="WordWrap" />
                 <Label
                     x:Name="RulesLink"
+                    Grid.Column="1"
                     FontSize="12"
                     TextDecorations="Underline"
                     TextColor="{StaticResource PrimaryGold}"
@@ -110,7 +111,7 @@
                         <TapGestureRecognizer Tapped="OnRulesTapped" />
                     </Label.GestureRecognizers>
                 </Label>
-            </HorizontalStackLayout>
+            </Grid>
             <Label x:Name="LastPlayTitle" FontSize="12" TextColor="{StaticResource MutedForeground}" />
             <Label
                 x:Name="TrickOutcomeLabel"
