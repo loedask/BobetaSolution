@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <!-- VS 18 + .NET 10: DotNetDeltaApplier can kill the debug process (exit 0xffffffff) before Kestrel binds. -->
+    <HotReloadEnabled>false</HotReloadEnabled>
   </PropertyGroup>
 
   <ItemGroup>
