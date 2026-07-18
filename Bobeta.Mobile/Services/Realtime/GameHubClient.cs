@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -66,12 +67,15 @@ public class GameHubClient
             _connection = null;
         }
 
-        var token = await _tokenProvider.GetAccessTokenAsync(cancellationToken);
-        var url = $"{_hubBaseUrl}/hubs/game?access_token={Uri.EscapeDataString(token ?? "")}";
+        await _tokenProvider.GetAccessTokenAsync(cancellationToken);
+        var url = $"{_hubBaseUrl}/hubs/game";
 
         _connection = new HubConnectionBuilder()
             .WithUrl(url, options =>
             {
+                options.Transports = HttpTransportType.WebSockets | HttpTransportType.LongPolling;
+                options.AccessTokenProvider = async () =>
+                    await _tokenProvider.GetAccessTokenAsync(CancellationToken.None) ?? "";
 #if ANDROID
                 options.HttpMessageHandlerFactory = _ => new AndroidMessageHandler();
 #endif

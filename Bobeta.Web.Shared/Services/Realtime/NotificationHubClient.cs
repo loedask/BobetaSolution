@@ -2,6 +2,7 @@ using System.Text.Json;
 using Bobeta.Client.Contracts;
 using Bobeta.Client.Models.Notifications;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ public sealed class NotificationHubClient : IAsyncDisposable
     private readonly IAccessTokenProvider _tokenProvider;
     private readonly string _hubBaseUrl;
     private readonly ILogger<NotificationHubClient> _logger;
+    private readonly SemaphoreSlim _connectLock = new(1, 1);
     private HubConnection? _connection;
     private CancellationTokenSource? _heartbeatCts;
     private bool _disposed;
@@ -41,67 +43,113 @@ public sealed class NotificationHubClient : IAsyncDisposable
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
         if (_disposed) return;
-        if (_connection?.State == HubConnectionState.Connected) return;
 
-        StopHeartbeat();
-
-        if (_connection != null)
+        await _connectLock.WaitAsync(cancellationToken);
+        try
         {
-            await _connection.StopAsync(CancellationToken.None);
-            await _connection.DisposeAsync();
-            _connection = null;
-        }
+            if (_disposed) return;
+            if (_connection?.State == HubConnectionState.Connected) return;
 
-        var token = await _tokenProvider.GetAccessTokenAsync(cancellationToken);
-        if (string.IsNullOrWhiteSpace(token))
-            return;
+            StopHeartbeat();
 
-        var url = $"{_hubBaseUrl}/hubs/notifications?access_token={Uri.EscapeDataString(token)}";
-        _connection = new HubConnectionBuilder()
-            .WithUrl(url)
-            .WithAutomaticReconnect()
-            .Build();
-
-        _connection.On<JsonElement>("NotificationReceived", payload =>
-        {
-            try
+            if (_connection != null)
             {
-                var item = MapPayload(payload);
-                if (item != null)
-                    OnNotificationReceived?.Invoke(item);
+                await _connection.StopAsync(CancellationToken.None);
+                await _connection.DisposeAsync();
+                _connection = null;
             }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to deserialize NotificationReceived payload.");
-            }
-        });
 
-        _connection.Reconnected += async _ =>
-        {
-            var connection = _connection;
-            if (connection is null)
+            var token = await _tokenProvider.GetAccessTokenAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(token))
                 return;
-            try
-            {
-                await connection.InvokeAsync("Heartbeat", CancellationToken.None);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogDebug(ex, "Presence heartbeat after reconnect failed.");
-            }
-        };
 
-        await _connection.StartAsync(cancellationToken);
-        StartHeartbeat();
+            var url = $"{_hubBaseUrl}/hubs/notifications";
+            _connection = new HubConnectionBuilder()
+                .WithUrl(url, options =>
+                {
+                    // Browser WASM does not support SSE; skip it so failures surface sooner.
+                    options.Transports = HttpTransportType.WebSockets | HttpTransportType.LongPolling;
+                    options.AccessTokenProvider = async () =>
+                        await _tokenProvider.GetAccessTokenAsync(CancellationToken.None) ?? "";
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            _connection.On<JsonElement>("NotificationReceived", payload =>
+            {
+                try
+                {
+                    var item = MapPayload(payload);
+                    if (item != null)
+                        OnNotificationReceived?.Invoke(item);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to deserialize NotificationReceived payload.");
+                }
+            });
+
+            _connection.Reconnected += async _ =>
+            {
+                var connection = _connection;
+                if (connection is null)
+                    return;
+                try
+                {
+                    await connection.InvokeAsync("Heartbeat", CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Presence heartbeat after reconnect failed.");
+                }
+            };
+
+            await _connection.StartAsync(cancellationToken);
+            StartHeartbeat();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // Realtime is best-effort; REST inbox still works. Do not crash layout/ErrorBoundary.
+            _logger.LogWarning(ex, "Notification hub connect failed.");
+            if (_connection != null)
+            {
+                try
+                {
+                    await _connection.DisposeAsync();
+                }
+                catch
+                {
+                    // ignore dispose after failed start
+                }
+
+                _connection = null;
+            }
+        }
+        finally
+        {
+            _connectLock.Release();
+        }
     }
 
     public async Task DisconnectAsync()
     {
-        StopHeartbeat();
-        if (_connection == null) return;
-        await _connection.StopAsync(CancellationToken.None);
-        await _connection.DisposeAsync();
-        _connection = null;
+        await _connectLock.WaitAsync();
+        try
+        {
+            StopHeartbeat();
+            if (_connection == null) return;
+            await _connection.StopAsync(CancellationToken.None);
+            await _connection.DisposeAsync();
+            _connection = null;
+        }
+        finally
+        {
+            _connectLock.Release();
+        }
     }
 
     public async ValueTask DisposeAsync()
@@ -109,6 +157,7 @@ public sealed class NotificationHubClient : IAsyncDisposable
         if (_disposed) return;
         _disposed = true;
         await DisconnectAsync();
+        _connectLock.Dispose();
     }
 
     private void StartHeartbeat()
