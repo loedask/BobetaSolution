@@ -28,6 +28,7 @@ public sealed class CreateGameEndpointTests(BobetaApiFactory factory) : IClassFi
   [InlineData("Makopa", GameVariant.Makopa)]
   [InlineData("Kopo", GameVariant.Kopo)]
   [InlineData("Ngola", GameVariant.Ngola)]
+  [InlineData("Domino", GameVariant.Domino)]
   public async Task PostCreate_AcceptsClientJsonWithStringVariant(string variantName, GameVariant expectedVariant)
   {
     using var client = factory.CreateClient();

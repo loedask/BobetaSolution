@@ -34,10 +34,11 @@
                 </Grid>
             </VerticalStackLayout>
             <Label x:Name="GameTypeLabel" FontSize="12" TextColor="{StaticResource MutedForeground}" />
-            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
-                <Button x:Name="MakopaBtn" Clicked="OnMakopaVariant" CornerRadius="10" />
-                <Button x:Name="KopoBtn" Grid.Column="1" Clicked="OnKopoVariant" CornerRadius="10" />
-                <Button x:Name="NgolaBtn" Grid.Column="2" Clicked="OnNgolaVariant" CornerRadius="10" />
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6">
+                <Button x:Name="MakopaBtn" Clicked="OnMakopaVariant" CornerRadius="10" FontSize="12" />
+                <Button x:Name="KopoBtn" Grid.Column="1" Clicked="OnKopoVariant" CornerRadius="10" FontSize="12" />
+                <Button x:Name="NgolaBtn" Grid.Column="2" Clicked="OnNgolaVariant" CornerRadius="10" FontSize="12" />
+                <Button x:Name="DominoBtn" Grid.Column="3" Clicked="OnDominoVariant" CornerRadius="10" FontSize="12" />
             </Grid>
             <Label x:Name="BetLabel" FontSize="12" TextColor="{StaticResource MutedForeground}" />
             <Entry

@@ -24,6 +24,7 @@ public class JoinGameViewModel(
     private bool _joinBusy;
     private readonly object _loadSync = new();
     private Task? _loadInFlight;
+    private int _loadGeneration;
     private DateTimeOffset _lastSuccessfulLoadUtc = DateTimeOffset.MinValue;
     private static readonly TimeSpan DuplicateSuppressionWindow = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan LiveRefreshInterval = TimeSpan.FromSeconds(12);
@@ -125,7 +126,9 @@ public class JoinGameViewModel(
     {
         lock (_loadSync)
         {
-            if (_loadInFlight != null)
+            // Do not reuse an in-flight load when force-refreshing (e.g. filter change):
+            // the in-flight call may have captured a different VariantFilter.
+            if (_loadInFlight != null && !forceRefresh)
                 return _loadInFlight;
 
             if (!forceRefresh
@@ -142,6 +145,8 @@ public class JoinGameViewModel(
 
     private async Task LoadGamesCoreAsync(bool quiet)
     {
+        var generation = Interlocked.Increment(ref _loadGeneration);
+        var variantFilter = VariantFilter;
         if (!quiet)
         {
             SetLoading(true);
@@ -149,13 +154,15 @@ public class JoinGameViewModel(
         }
         try
         {
-            var res = await _gameService.GetOpenGamesAsync(VariantFilter);
+            var res = await _gameService.GetOpenGamesAsync(variantFilter);
+            if (generation != Volatile.Read(ref _loadGeneration))
+                return;
+
             if (res.IsSuccess && res.Data != null)
             {
                 OpenGames = res.Data.Where(x => x.OpponentPlayerId == null).ToList();
                 _lastSuccessfulLoadUtc = DateTimeOffset.UtcNow;
-                if (quiet)
-                    RaiseStateChanged();
+                RaiseStateChanged();
             }
             else if (!res.IsSuccess && !quiet)
             {
@@ -177,8 +184,14 @@ public class JoinGameViewModel(
         finally
         {
             lock (_loadSync)
-                _loadInFlight = null;
-            if (!quiet)
+            {
+                if (generation == _loadGeneration)
+                    _loadInFlight = null;
+            }
+
+            // Latest generation owns the spinner. Clear it even if a quiet refresh
+            // superseded a non-quiet load that had set IsLoading.
+            if (generation == Volatile.Read(ref _loadGeneration) && IsLoading)
                 SetLoading(false);
         }
     }

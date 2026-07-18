@@ -16,8 +16,8 @@
 
 		<ApplicationTitle>Bobeta</ApplicationTitle>
 		<ApplicationId>com.bobeta.mobile</ApplicationId>
-		<ApplicationDisplayVersion>2.1.0</ApplicationDisplayVersion>
-		<ApplicationVersion>4</ApplicationVersion>
+		<ApplicationDisplayVersion>2.2.0</ApplicationDisplayVersion>
+		<ApplicationVersion>5</ApplicationVersion>
 
 		<WindowsPackageType>None</WindowsPackageType>
 
@@ -86,6 +86,11 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<PackageReference Include="Xamarin.Firebase.Messaging" Version="124.0.3.1" />
+		<GoogleServicesJson Include="Platforms\Android\google-services.json" />
 	</ItemGroup>
 
 	<ItemGroup>

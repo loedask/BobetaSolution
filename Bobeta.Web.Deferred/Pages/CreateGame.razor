@@ -29,7 +29,7 @@
                     <h2 class="font-display text-sm font-semibold text-foreground">@I18n.T("select_game_type")</h2>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <button type="button" class="@VariantClass(GameVariant.Makopa)" @onclick="() => ViewModel.SetVariant(GameVariant.Makopa)">
                         <span class="game-preview game-preview--makopa" aria-hidden="true">
                             <span class="game-preview__fan">
@@ -78,6 +78,16 @@
                             </span>
                         </span>
                         <span class="text-center font-display text-sm font-semibold">Ngola</span>
+                    </button>
+                    <button type="button" class="@VariantClass(GameVariant.Domino)" @onclick="() => ViewModel.SetVariant(GameVariant.Domino)">
+                        <span class="game-preview game-preview--domino" aria-hidden="true">
+                            <span class="game-preview__domino">
+                                <span class="game-preview__domino-tile"><span>6</span><span>6</span></span>
+                                <span class="game-preview__domino-tile"><span>6</span><span>3</span></span>
+                                <span class="game-preview__domino-tile"><span>3</span><span>1</span></span>
+                            </span>
+                        </span>
+                        <span class="text-center font-display text-sm font-semibold">Domino</span>
                     </button>
                 </div>
             </section>

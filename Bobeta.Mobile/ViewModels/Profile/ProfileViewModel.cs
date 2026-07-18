@@ -1,6 +1,7 @@
 using Bobeta.Client.Models.Influencer;
 using Bobeta.Client.Services;
 using Bobeta.Mobile.Services;
+using Bobeta.Mobile.Services.Push;
 
 namespace Bobeta.Mobile.ViewModels.Profile;
 
@@ -8,12 +9,14 @@ public class ProfileViewModel(
     AppStateService appState,
     INavigationService nav,
     InfluencerService influencerService,
-    I18nService i18n) : ViewModelBase
+    I18nService i18n,
+    PushRegistrationService pushRegistration) : ViewModelBase
 {
     private readonly AppStateService _appState = appState;
     private readonly INavigationService _nav = nav;
     private readonly InfluencerService _influencerService = influencerService;
     private readonly I18nService _i18n = i18n;
+    private readonly PushRegistrationService _pushRegistration = pushRegistration;
 
     public string PlayerName => _appState.State.CurrentPlayerName ?? "Player";
     public string? PhoneNumber => _appState.State.PhoneNumber ?? "—";
@@ -81,6 +84,8 @@ public class ProfileViewModel(
 
     public async Task SignOutAsync()
     {
+        try { await _pushRegistration.UnregisterLocalTokenAsync(); }
+        catch { /* best effort */ }
         _appState.ClearSession();
         await _appState.PersistAsync();
         ShowSignOutModal = false;

@@ -11,6 +11,6 @@ internal static class LazyRouteHelper
             return false;
         var segment = path.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .FirstOrDefault()?.ToLowerInvariant();
-        return segment is "dashboard" or "history" or "join" or "create-game" or "deposit" or "withdraw" or "profile";
+        return segment is "dashboard" or "history" or "join" or "create-game" or "my-waiting" or "deposit" or "withdraw" or "profile";
     }
 }

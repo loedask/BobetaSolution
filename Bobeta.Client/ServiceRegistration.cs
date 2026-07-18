@@ -83,6 +83,12 @@ public static class ServiceRegistration
             return new NotificationApiService(http, TokenProvider(sp));
         });
 
+        services.AddScoped<DeviceApiService>(sp =>
+        {
+            var http = sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName);
+            return new DeviceApiService(http, TokenProvider(sp));
+        });
+
         return services;
     }
 }

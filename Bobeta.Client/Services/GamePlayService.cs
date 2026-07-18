@@ -69,6 +69,28 @@ public class GamePlayService(HttpClient httpClient, IAccessTokenProvider? access
         return Response<GameStateViewModel?>.Success(GameStateMapper.ToViewModel(res.Data));
     }
 
+    public async Task<Response<GameStateViewModel?>> ApplyDominoMoveAsync(
+        Guid sessionId,
+        string action,
+        int? high = null,
+        int? low = null,
+        string? end = null,
+        CancellationToken cancellationToken = default)
+    {
+        var body = new DominoMoveApiRequest
+        {
+            SessionId = sessionId,
+            Action = action,
+            High = high,
+            Low = low,
+            End = end
+        };
+        var res = await PostAsync<GameStateDto>("api/GamePlay/domino/move", body, cancellationToken).ConfigureAwait(false);
+        if (!res.IsSuccess || res.Data == null)
+            return Response<GameStateViewModel?>.Failure(res.ErrorMessage ?? "Failed to apply Domino move.", res.StatusCode);
+        return Response<GameStateViewModel?>.Success(GameStateMapper.ToViewModel(res.Data));
+    }
+
     public async Task<Response<GameStateViewModel?>> PlayCardAsync(Guid sessionId, GameMoveRequest request, CancellationToken cancellationToken = default)
     {
         try

@@ -95,9 +95,10 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto" RowSpacing="8">
                     <Button
                         x:Name="CreateTile"
+                        Grid.Row="0"
                         Grid.Column="0"
                         Clicked="OnGoCreate"
                         CornerRadius="12"
@@ -107,6 +108,7 @@
                         TextColor="{StaticResource PrimaryDarkText}" />
                     <Button
                         x:Name="JoinTile"
+                        Grid.Row="0"
                         Grid.Column="1"
                         Clicked="OnGoJoin"
                         CornerRadius="12"
@@ -115,8 +117,19 @@
                         BackgroundColor="{StaticResource AccentGreen}"
                         TextColor="{StaticResource PrimaryDarkText}" />
                     <Button
+                        x:Name="WaitingTile"
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Clicked="OnGoWaiting"
+                        CornerRadius="12"
+                        HeightRequest="72"
+                        FontSize="11"
+                        BackgroundColor="{StaticResource SecondaryCard}"
+                        TextColor="{StaticResource Foreground}" />
+                    <Button
                         x:Name="HistoryTile"
-                        Grid.Column="2"
+                        Grid.Row="1"
+                        Grid.Column="1"
                         Clicked="OnGoHistory"
                         CornerRadius="12"
                         HeightRequest="72"

@@ -12,7 +12,8 @@ public class GameMoveConfiguration : IEntityTypeConfiguration<GameMove>
     {
         builder.ToTable("GameMoves");
         builder.HasKey(m => m.Id);
-        builder.Property(m => m.CardSuitRank).HasMaxLength(20);
+        // Domino/Kopo notations exceed the original Makopa "Suit_Rank" budget (20).
+        builder.Property(m => m.CardSuitRank).HasMaxLength(64);
         builder.HasOne(m => m.GameSession).WithMany(s => s.GameMoves).HasForeignKey(m => m.GameSessionId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(m => m.Player).WithMany().HasForeignKey(m => m.PlayerId).OnDelete(DeleteBehavior.Restrict);
     }

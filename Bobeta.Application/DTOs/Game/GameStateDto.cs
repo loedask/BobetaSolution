@@ -27,4 +27,5 @@ public record GameStateDto(
     GameVariant Variant = GameVariant.Makopa,
     KopoStateDto? Kopo = null,
     NgolaStateDto? Ngola = null,
+    DominoStateDto? Domino = null,
     bool IsDraw = false);

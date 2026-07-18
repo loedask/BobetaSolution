@@ -3,6 +3,7 @@ using Bobeta.Application.Interfaces;
 using Bobeta.Infrastructure.External;
 using Bobeta.Infrastructure.MoMo;
 using Bobeta.Infrastructure.Payments;
+using Bobeta.Infrastructure.Push;
 using Bobeta.Infrastructure.Services;
 using Bobeta.Infrastructure.Sms;
 using Bobeta.Infrastructure.Sms.Providers;
@@ -37,11 +38,17 @@ public static class InfrastructureServiceCollectionExtensions
         services.Configure<SmsGatewaySettings>(configuration.GetSection(SmsGatewaySettings.SectionName));
         services.Configure<SmsPortalSettings>(configuration.GetSection(SmsPortalSettings.SectionName));
         services.Configure<TwilioSettings>(configuration.GetSection(TwilioSettings.SectionName));
+        services.Configure<FcmOptions>(configuration.GetSection(FcmOptions.SectionName));
 
         services.AddHttpClient(MoMoPaymentService.MoMoHttpClientName);
         services.AddHttpClient(SendSmsGateHttpClientName);
         services.AddHttpClient(SmsPortalHttpClientName);
         services.AddHttpClient(TwilioHttpClientName);
+        services.AddHttpClient(FcmPushNotificationSender.HttpClientName);
+
+        var fcm = configuration.GetSection(FcmOptions.SectionName).Get<FcmOptions>();
+        if (fcm is { Enabled: true } && !string.IsNullOrWhiteSpace(fcm.ProjectId))
+            services.AddSingleton<IPushNotificationSender, FcmPushNotificationSender>();
 
         services.AddMemoryCache();
         services.AddScoped<IOtpRateLimitService, OtpRateLimitService>();

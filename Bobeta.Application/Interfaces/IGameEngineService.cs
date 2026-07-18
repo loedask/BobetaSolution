@@ -21,6 +21,16 @@ public interface IGameEngineService
     /// <summary>Sows all seeds from one of the current player's Ngola pits.</summary>
     Task<GameMoveResult> ApplyNgolaMoveAsync(Guid playerId, Guid sessionId, int pitIndex, CancellationToken cancellationToken = default);
 
+    /// <summary>Applies a Domino play, draw, or pass action.</summary>
+    Task<GameMoveResult> ApplyDominoMoveAsync(
+        Guid playerId,
+        Guid sessionId,
+        string action,
+        int? high,
+        int? low,
+        string? end,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Returns the current game state for the requesting player (their hand, last card, whose turn, game over, winner).</summary>
     Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default);
 }

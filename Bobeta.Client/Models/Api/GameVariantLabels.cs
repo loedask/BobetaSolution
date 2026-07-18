@@ -6,6 +6,7 @@ public static class GameVariantLabels
     {
         GameVariant.Kopo => "Kopo",
         GameVariant.Ngola => "Ngola",
+        GameVariant.Domino => "Domino",
         _ => "Makopa"
     };
 }

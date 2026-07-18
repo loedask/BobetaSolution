@@ -124,6 +124,9 @@ public sealed class GameStateDto
     [JsonPropertyName("ngola")]
     public NgolaStateDto? Ngola { get; set; }
 
+    [JsonPropertyName("domino")]
+    public DominoStateDto? Domino { get; set; }
+
     [JsonPropertyName("isDraw")]
     public bool IsDraw { get; set; }
 }
@@ -204,6 +207,57 @@ public sealed class NgolaMoveApiRequest
 
     [JsonPropertyName("pitIndex")]
     public int PitIndex { get; set; }
+}
+
+public sealed class DominoStateDto
+{
+    [JsonPropertyName("myHand")]
+    public List<string> MyHand { get; set; } = new();
+
+    [JsonPropertyName("opponentHandCount")]
+    public int OpponentHandCount { get; set; }
+
+    [JsonPropertyName("boneyardCount")]
+    public int BoneyardCount { get; set; }
+
+    [JsonPropertyName("chain")]
+    public List<string> Chain { get; set; } = new();
+
+    [JsonPropertyName("leftEnd")]
+    public int? LeftEnd { get; set; }
+
+    [JsonPropertyName("rightEnd")]
+    public int? RightEnd { get; set; }
+
+    [JsonPropertyName("isOpening")]
+    public bool IsOpening { get; set; }
+
+    [JsonPropertyName("openingTile")]
+    public string? OpeningTile { get; set; }
+
+    [JsonPropertyName("mustDraw")]
+    public bool MustDraw { get; set; }
+
+    [JsonPropertyName("mustPass")]
+    public bool MustPass { get; set; }
+}
+
+public sealed class DominoMoveApiRequest
+{
+    [JsonPropertyName("sessionId")]
+    public Guid SessionId { get; set; }
+
+    [JsonPropertyName("action")]
+    public string Action { get; set; } = "play";
+
+    [JsonPropertyName("high")]
+    public int? High { get; set; }
+
+    [JsonPropertyName("low")]
+    public int? Low { get; set; }
+
+    [JsonPropertyName("end")]
+    public string? End { get; set; }
 }
 
 public sealed class GameHistoryItemDto

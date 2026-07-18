@@ -1,0 +1,173 @@
+<div class="mx-auto max-w-lg space-y-3 rounded-[1.5rem] border border-slate-600/40 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 p-4 shadow-xl">
+    <div class="flex items-center justify-between px-1 text-xs font-semibold text-slate-200">
+        <span>Opponent: @OpponentHandCount</span>
+        <span>Boneyard: @BoneyardCount</span>
+    </div>
+
+    <div class="overflow-x-auto rounded-xl bg-black/25 p-3">
+        <div class="flex min-h-[3.25rem] items-center gap-1.5">
+            @if (Chain.Count == 0)
+            {
+                <p class="w-full text-center text-xs text-slate-400">
+                    @(IsOpening && !string.IsNullOrEmpty(OpeningTile)
+                        ? $"Play opening tile {OpeningTile}"
+                        : "Waiting for the opening tile…")
+                </p>
+            }
+            else
+            {
+                @foreach (var tile in Chain)
+                {
+                    <div class="@TileClass(selected: false, playable: false)">@FormatTile(tile)</div>
+                }
+            }
+        </div>
+    </div>
+
+    @if (!IsOpening && Chain.Count > 0 && CanInteract && !MustDraw && !MustPass && !string.IsNullOrEmpty(_selectedTile))
+    {
+        <div class="flex gap-2">
+            <button type="button"
+                    class="flex-1 rounded-xl border border-primary/40 bg-primary/15 px-3 py-2 text-xs font-semibold text-primary"
+                    @onclick="() => PlaySelectedAsync(DominoEndLeft)">
+                Left (@LeftEnd)
+            </button>
+            <button type="button"
+                    class="flex-1 rounded-xl border border-primary/40 bg-primary/15 px-3 py-2 text-xs font-semibold text-primary"
+                    @onclick="() => PlaySelectedAsync(DominoEndRight)">
+                Right (@RightEnd)
+            </button>
+        </div>
+    }
+
+    <div class="flex flex-wrap justify-center gap-2">
+        @foreach (var tile in MyHand)
+        {
+            var t = tile;
+            var canSelect = CanInteract && !MustDraw && !MustPass && IsTilePlayable(t);
+            <button type="button"
+                    class="@TileClass(_selectedTile == t, canSelect)"
+                    disabled="@(!canSelect)"
+                    @onclick="() => SelectOrPlayAsync(t)">
+                @FormatTile(t)
+            </button>
+        }
+    </div>
+
+    <div class="flex gap-2">
+        <button type="button"
+                class="flex-1 rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-semibold text-foreground disabled:opacity-50"
+                disabled="@(!CanInteract || !MustDraw)"
+                @onclick="DrawAsync">
+            Draw
+        </button>
+        <button type="button"
+                class="flex-1 rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-semibold text-foreground disabled:opacity-50"
+                disabled="@(!CanInteract || !MustPass)"
+                @onclick="PassAsync">
+            Pass
+        </button>
+    </div>
+</div>
+
+@code {
+    private const string DominoEndLeft = "left";
+    private const string DominoEndRight = "right";
+    private string? _selectedTile;
+
+    [Parameter] public IReadOnlyList<string> MyHand { get; set; } = Array.Empty<string>();
+    [Parameter] public int OpponentHandCount { get; set; }
+    [Parameter] public int BoneyardCount { get; set; }
+    [Parameter] public IReadOnlyList<string> Chain { get; set; } = Array.Empty<string>();
+    [Parameter] public int? LeftEnd { get; set; }
+    [Parameter] public int? RightEnd { get; set; }
+    [Parameter] public bool IsOpening { get; set; }
+    [Parameter] public string? OpeningTile { get; set; }
+    [Parameter] public bool MustDraw { get; set; }
+    [Parameter] public bool MustPass { get; set; }
+    [Parameter] public bool CanInteract { get; set; }
+    [Parameter] public EventCallback<(string Action, int? High, int? Low, string? End)> OnAction { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (_selectedTile != null && !MyHand.Contains(_selectedTile))
+            _selectedTile = null;
+    }
+
+    private Task DrawAsync() => OnAction.InvokeAsync(("draw", null, null, null));
+    private Task PassAsync() => OnAction.InvokeAsync(("pass", null, null, null));
+
+    private bool IsTilePlayable(string tile)
+    {
+        if (IsOpening)
+            return tile == OpeningTile;
+        return MatchesEnd(tile, LeftEnd) || MatchesEnd(tile, RightEnd);
+    }
+
+    private async Task SelectOrPlayAsync(string tile)
+    {
+        if (IsOpening)
+        {
+            var (h, l) = Parse(tile);
+            await OnAction.InvokeAsync(("play", h, l, null));
+            return;
+        }
+
+        var leftOk = MatchesEnd(tile, LeftEnd);
+        var rightOk = MatchesEnd(tile, RightEnd);
+        if (leftOk && !rightOk)
+        {
+            var (h, l) = Parse(tile);
+            await OnAction.InvokeAsync(("play", h, l, DominoEndLeft));
+            return;
+        }
+
+        if (rightOk && !leftOk)
+        {
+            var (h, l) = Parse(tile);
+            await OnAction.InvokeAsync(("play", h, l, DominoEndRight));
+            return;
+        }
+
+        _selectedTile = _selectedTile == tile ? null : tile;
+    }
+
+    private async Task PlaySelectedAsync(string end)
+    {
+        if (string.IsNullOrEmpty(_selectedTile))
+            return;
+        var (h, l) = Parse(_selectedTile);
+        await OnAction.InvokeAsync(("play", h, l, end));
+        _selectedTile = null;
+    }
+
+    private static bool MatchesEnd(string tile, int? end)
+    {
+        if (end is null)
+            return false;
+        var (h, l) = Parse(tile);
+        return h == end || l == end;
+    }
+
+    private static (int High, int Low) Parse(string tile)
+    {
+        var parts = tile.Split('-');
+        var a = int.Parse(parts[0]);
+        var b = int.Parse(parts[1]);
+        return a >= b ? (a, b) : (b, a);
+    }
+
+    private static string FormatTile(string tile)
+    {
+        var (h, l) = Parse(tile);
+        return $"{h}|{l}";
+    }
+
+    private static string TileClass(bool selected, bool playable) =>
+        "inline-flex min-w-[2.75rem] items-center justify-center rounded-md border-2 px-2 py-2 text-sm font-bold tabular-nums "
+        + (selected
+            ? "border-primary bg-primary/20 text-primary"
+            : playable
+                ? "cursor-pointer border-slate-300 bg-slate-100 text-slate-900 ring-2 ring-primary/50"
+                : "border-slate-500/40 bg-slate-200/90 text-slate-800 opacity-80");
+}

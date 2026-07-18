@@ -34,6 +34,9 @@ internal sealed class FakeGameSessionService : IGameSessionService
   public Task<IReadOnlyList<GameSessionDto>> ListOpenJoinableGamesAsync(Guid playerId, int skip = 0, int take = 50, GameVariant? variant = null, CancellationToken cancellationToken = default) =>
     throw new NotSupportedException();
 
+  public Task<IReadOnlyList<GameSessionDto>> ListMyWaitingGamesAsync(Guid playerId, int skip = 0, int take = 50, GameVariant? variant = null, CancellationToken cancellationToken = default) =>
+    throw new NotSupportedException();
+
   public Task ProposeNewBetAsync(Guid playerId, Guid gameId, decimal amount, CancellationToken cancellationToken = default) =>
     throw new NotSupportedException();
 

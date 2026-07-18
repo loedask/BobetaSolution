@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bobeta — Play Smart. Win Real Money.</title>
+    <title>Bobeta. Play Smart. Win Real Money.</title>
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
     <base href="/" />
     <link rel="stylesheet" href="css/app.css" />
@@ -20,11 +20,27 @@
 
 <body>
     <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
+        <div class="boot" role="status" aria-live="polite" aria-label="Loading Bobeta">
+            <div class="boot__stage">
+                <div class="boot__felt" aria-hidden="true">
+                    <span class="boot__card boot__card--1">A♥</span>
+                    <span class="boot__card boot__card--2">K♠</span>
+                    <span class="boot__card boot__card--3">7♦</span>
+                    <span class="boot__card boot__card--4">Q♣</span>
+                    <span class="boot__chip"></span>
+                </div>
+                <svg class="boot__ring" viewBox="0 0 120 120" aria-hidden="true">
+                    <circle class="boot__ring-track" cx="60" cy="60" r="52" />
+                    <circle class="boot__ring-fill" cx="60" cy="60" r="52" />
+                </svg>
+            </div>
+            <p class="boot__brand">BOBETA</p>
+            <p class="boot__tag">Setting the table</p>
+            <div class="boot__rail" aria-hidden="true">
+                <div class="boot__rail-fill"></div>
+            </div>
+            <p class="boot__pct"></p>
+        </div>
     </div>
 
     <div id="blazor-error-ui">
