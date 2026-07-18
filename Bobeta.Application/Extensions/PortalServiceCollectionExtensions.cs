@@ -16,6 +16,9 @@ public static class PortalServiceCollectionExtensions
     services.AddScoped<IPortalAuthService, PortalAuthService>();
     services.AddScoped<IPortalUserService, PortalUserService>();
     services.AddScoped<IPlayerQueryService, PlayerQueryService>();
+    services.AddScoped<INotificationRealtimePublisher, NullNotificationRealtimePublisher>();
+    services.AddSingleton<IPushNotificationSender, NullPushNotificationSender>();
+    services.AddScoped<INotificationService, NotificationService>();
     services.AddScoped<IWalletService, WalletService>();
     services.AddScoped<IGameHistoryService, GameHistoryService>();
     services.AddScoped<ILicensePartnerService, LicensePartnerService>();
