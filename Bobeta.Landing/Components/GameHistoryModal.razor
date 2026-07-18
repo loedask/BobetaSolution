@@ -30,28 +30,6 @@
                 {
                     <p class="lp-modal__note">@Entry.Note</p>
                 }
-
-                @if (Entry.Sources.Count > 0)
-                {
-                    <div class="lp-modal__sources">
-                        <p class="lp-modal__sources-label">@I18n.T("landing_game_history_sources")</p>
-                        <ul>
-                            @foreach (var source in Entry.Sources)
-                            {
-                                <li>
-                                    @if (!string.IsNullOrWhiteSpace(source.Url))
-                                    {
-                                        <a href="@source.Url" target="_blank" rel="noopener noreferrer">@source.Label</a>
-                                    }
-                                    else
-                                    {
-                                        <span>@source.Label</span>
-                                    }
-                                </li>
-                            }
-                        </ul>
-                    </div>
-                }
             </div>
 
             <footer class="lp-modal__foot">
