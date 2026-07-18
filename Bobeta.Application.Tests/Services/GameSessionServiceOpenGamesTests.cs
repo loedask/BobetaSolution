@@ -141,7 +141,9 @@ public sealed class GameSessionServiceOpenGamesTests
             new NoOpGameEngineService(),
             new RecordingGameSessionNotifier(),
             NoOpInfluencerAttributionService.Instance,
-            NoOpNotificationService.Instance);
+            NoOpNotificationService.Instance,
+            new InMemoryGameResultRepository(_ => { }),
+            NoOpGameRevenueService.Instance);
 
         var created = await sut.CreateGameAsync(creatorId, 200m, GameVariant.Domino);
         var openForJoiner = await sut.ListOpenJoinableGamesAsync(joinerId, variant: GameVariant.Domino);
@@ -164,7 +166,9 @@ public sealed class GameSessionServiceOpenGamesTests
             new NoOpGameEngineService(),
             new RecordingGameSessionNotifier(),
             NoOpInfluencerAttributionService.Instance,
-            NoOpNotificationService.Instance);
+            NoOpNotificationService.Instance,
+            new InMemoryGameResultRepository(_ => { }),
+            NoOpGameRevenueService.Instance);
 
     private static GameSession NewWaiting(Guid creatorId, GameVariant variant, decimal bet) =>
         new()

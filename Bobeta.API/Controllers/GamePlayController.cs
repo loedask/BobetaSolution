@@ -23,6 +23,7 @@ public class GamePlayController(
     IGameSessionRepository sessionRepository,
     IGameSessionConnectionTracker sessionConnectionTracker,
     IGameInactivityCoordinator gameInactivityCoordinator,
+    IGameSessionService gameSessionService,
     ILogger<GamePlayController> logger) : ControllerBase
 {
     private readonly IGameEngineService _gameEngineService = gameEngineService;
@@ -30,6 +31,7 @@ public class GamePlayController(
     private readonly IGameSessionRepository _sessionRepository = sessionRepository;
     private readonly IGameSessionConnectionTracker _sessionConnectionTracker = sessionConnectionTracker;
     private readonly IGameInactivityCoordinator _gameInactivityCoordinator = gameInactivityCoordinator;
+    private readonly IGameSessionService _gameSessionService = gameSessionService;
 
     private Guid PlayerId => Guid.Parse(User.FindFirst("playerId")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
@@ -259,6 +261,25 @@ public class GamePlayController(
     {
         await _gameInactivityCoordinator.CancelByPlayerAsync(sessionId, PlayerId, cancellationToken);
         return Ok();
+    }
+
+    /// <summary>Player leaves and forfeits: opponent wins the pot (minus platform fee).</summary>
+    [HttpPost("forfeit")]
+    public async Task<IActionResult> Forfeit([FromQuery] Guid sessionId, CancellationToken cancellationToken)
+    {
+        var outcome = await _gameSessionService.ForfeitGameAsync(PlayerId, sessionId, cancellationToken);
+        if (outcome == null)
+            return BadRequest(new { code = "cannot_forfeit", message = "This game cannot be forfeited." });
+
+        _gameInactivityCoordinator.UnregisterSession(sessionId);
+        var groupName = GameHub.GroupPrefix + sessionId;
+        var payload = new { winnerPlayerId = outcome.WinnerPlayerId, loserPlayerId = outcome.LoserPlayerId, reason = "forfeit" };
+        await _hubContext.Clients.Group(groupName).SendAsync("GameEndedByForfeit", payload, cancellationToken);
+        await _hubContext.Clients.Group(groupName).SendAsync("GameResult", outcome.WinnerPlayerId, cancellationToken);
+        logger.LogInformation(
+            "Game forfeited session={SessionId} loser={LoserId} winner={WinnerId}",
+            sessionId, outcome.LoserPlayerId, outcome.WinnerPlayerId);
+        return Ok(outcome);
     }
 
     private static string DescribeMoveError(string? code) => code switch

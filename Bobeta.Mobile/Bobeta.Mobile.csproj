@@ -16,8 +16,8 @@
 
 		<ApplicationTitle>Bobeta</ApplicationTitle>
 		<ApplicationId>com.bobeta.mobile</ApplicationId>
-		<ApplicationDisplayVersion>2.4.2</ApplicationDisplayVersion>
-		<ApplicationVersion>10</ApplicationVersion>
+		<ApplicationDisplayVersion>2.4.3</ApplicationDisplayVersion>
+		<ApplicationVersion>11</ApplicationVersion>
 
 		<WindowsPackageType>None</WindowsPackageType>
 

@@ -45,6 +45,15 @@ public class GamePlayService(HttpClient httpClient, IAccessTokenProvider? access
             : Response<bool>.Failure(res.ErrorMessage ?? "Could not cancel game.", res.StatusCode);
     }
 
+    public async Task<Response<bool>> ForfeitAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        var uri = $"api/GamePlay/forfeit?sessionId={sessionId:D}";
+        var res = await PostAsync<object>(uri, null, cancellationToken).ConfigureAwait(false);
+        return res.IsSuccess
+            ? Response<bool>.Success(true)
+            : Response<bool>.Failure(res.ErrorMessage ?? "Could not forfeit game.", res.StatusCode);
+    }
+
     public async Task<Response<GameStateViewModel?>> ApplyKopoMoveAsync(
         Guid sessionId,
         IReadOnlyList<KopoSquareDto> path,

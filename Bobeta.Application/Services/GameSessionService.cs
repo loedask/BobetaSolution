@@ -14,10 +14,14 @@ public class GameSessionService(
     IGameEngineService gameEngine,
     IGameSessionNotifier sessionNotifier,
     IInfluencerAttributionService influencerAttribution,
-    INotificationService notificationService) : IGameSessionService
+    INotificationService notificationService,
+    IGameResultRepository resultRepository,
+    IGameRevenueService gameRevenueService) : IGameSessionService
 {
     /// <summary>Max live (InProgress) matches a player may hold at once when joining.</summary>
     public const int MaxConcurrentInProgressGames = 3;
+
+    private const decimal CommissionRate = 0.25m;
 
     private readonly IGameSessionRepository _sessionRepository = sessionRepository;
     private readonly IPlayerRepository _playerRepository = playerRepository;
@@ -26,6 +30,8 @@ public class GameSessionService(
     private readonly IGameSessionNotifier _sessionNotifier = sessionNotifier;
     private readonly IInfluencerAttributionService _influencerAttribution = influencerAttribution;
     private readonly INotificationService _notificationService = notificationService;
+    private readonly IGameResultRepository _resultRepository = resultRepository;
+    private readonly IGameRevenueService _gameRevenueService = gameRevenueService;
 
     public async Task<GameSessionDto> CreateGameAsync(Guid playerId, decimal betAmount, GameVariant variant = GameVariant.Makopa, CancellationToken cancellationToken = default)
     {
@@ -165,6 +171,60 @@ public class GameSessionService(
         session.FinishedAt = DateTime.UtcNow;
         await _sessionRepository.UpdateAsync(session, cancellationToken);
         return true;
+    }
+
+    /// <inheritdoc />
+    public async Task<ForfeitGameOutcome?> ForfeitGameAsync(
+        Guid loserPlayerId,
+        Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        if (session == null || session.Status != GameStatus.InProgress || session.OpponentPlayerId == null)
+            return null;
+
+        Guid winnerPlayerId;
+        if (loserPlayerId == session.CreatorPlayerId)
+            winnerPlayerId = session.OpponentPlayerId.Value;
+        else if (loserPlayerId == session.OpponentPlayerId.Value)
+            winnerPlayerId = session.CreatorPlayerId;
+        else
+            return null;
+
+        var totalPot = session.BetAmount * 2;
+        var commission = totalPot * CommissionRate;
+        var winnerAmount = totalPot - commission;
+        await _walletService.SettleGameAsync(
+            winnerPlayerId,
+            loserPlayerId,
+            session.BetAmount,
+            ChargedAmount(session, winnerPlayerId),
+            ChargedAmount(session, loserPlayerId),
+            cancellationToken);
+
+        var result = new GameResult
+        {
+            Id = Guid.NewGuid(),
+            GameSessionId = session.Id,
+            WinnerPlayerId = winnerPlayerId,
+            LoserPlayerId = loserPlayerId,
+            TotalPot = totalPot,
+            WinnerAmount = winnerAmount,
+            PlatformCommission = commission,
+            CreatedAt = DateTime.UtcNow
+        };
+        await _gameRevenueService.EnrichWithPartnerShareAsync(result, winnerPlayerId, cancellationToken);
+        await _resultRepository.AddAsync(result, cancellationToken);
+        session.GameResult = result;
+        session.Status = GameStatus.Finished;
+        session.GameStateJson = null;
+        session.FinishedAt = DateTime.UtcNow;
+        await _sessionRepository.UpdateAsync(session, cancellationToken);
+
+        await _notificationService.NotifyGameResultAsync(winnerPlayerId, session.Id, won: true, winnerAmount, cancellationToken);
+        await _notificationService.NotifyGameResultAsync(loserPlayerId, session.Id, won: false, session.BetAmount, cancellationToken);
+
+        return new ForfeitGameOutcome(session.Id, winnerPlayerId, loserPlayerId, winnerAmount, session.Variant);
     }
 
     /// <inheritdoc />

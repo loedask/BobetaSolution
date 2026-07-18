@@ -27,6 +27,12 @@ public interface IGameSessionService
     /// <summary>Cancels an in-progress match and releases both players&apos; locked stakes.</summary>
     Task<bool> CancelInProgressGameAsync(Guid sessionId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Forfeits an in-progress match for <paramref name="loserPlayerId"/>: opponent wins and receives the settled pot.
+    /// Returns null if the session is not forfeitable by that player.
+    /// </summary>
+    Task<ForfeitGameOutcome?> ForfeitGameAsync(Guid loserPlayerId, Guid sessionId, CancellationToken cancellationToken = default);
+
     /// <summary>Cancels a waiting game created by the player and releases their locked stake / invite code.</summary>
     Task<bool> CancelWaitingGameAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default);
 }

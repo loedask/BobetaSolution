@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Bobeta.API.App.Services;
 using Bobeta.API.Services;
+using Bobeta.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -10,10 +11,12 @@ namespace Bobeta.API.Hubs;
 [Authorize]
 public class GameHub(
     IGameSessionConnectionTracker sessionConnectionTracker,
-    IGameInactivityCoordinator gameInactivityCoordinator) : Hub
+    IGameInactivityCoordinator gameInactivityCoordinator,
+    IGameSessionService gameSessionService) : Hub
 {
     private readonly IGameSessionConnectionTracker _sessionConnectionTracker = sessionConnectionTracker;
     private readonly IGameInactivityCoordinator _gameInactivityCoordinator = gameInactivityCoordinator;
+    private readonly IGameSessionService _gameSessionService = gameSessionService;
     /// <summary>Prefix for group names; group id is GroupPrefix + sessionId.</summary>
     public const string GroupPrefix = "Game_";
 
@@ -66,6 +69,21 @@ public class GameHub(
 
     public Task InactivityCancelGame(Guid sessionId) =>
         _gameInactivityCoordinator.CancelByPlayerAsync(sessionId, GetPlayerId(Context), Context.ConnectionAborted);
+
+    /// <summary>Caller forfeits; opponent wins. Broadcasts forfeit + GameResult to the session group.</summary>
+    public async Task ForfeitGame(Guid sessionId)
+    {
+        var loserId = GetPlayerId(Context);
+        var outcome = await _gameSessionService.ForfeitGameAsync(loserId, sessionId, Context.ConnectionAborted);
+        if (outcome == null)
+            throw new HubException("This game cannot be forfeited.");
+
+        _gameInactivityCoordinator.UnregisterSession(sessionId);
+        var group = GroupPrefix + sessionId;
+        var payload = new { winnerPlayerId = outcome.WinnerPlayerId, loserPlayerId = outcome.LoserPlayerId, reason = "forfeit" };
+        await Clients.Group(group).SendAsync("GameEndedByForfeit", payload);
+        await Clients.Group(group).SendAsync("GameResult", outcome.WinnerPlayerId);
+    }
 
     private static Guid GetPlayerId(HubCallerContext context)
     {
