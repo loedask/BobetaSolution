@@ -167,6 +167,100 @@ public class MakopaGameEngineRulesTests
     }
 
     [Fact]
+    public async Task PlayCard_WhenResponderPlaysLastCardAndLosesTrick_EmptyHandPlayerWins()
+    {
+        // Partner bug: forced to dump last card as response, lose the trick, still should win (empty hand).
+        var sessionId = Guid.NewGuid();
+        var creatorId = Guid.NewGuid();
+        var opponentId = Guid.NewGuid();
+        var pendingState = new MakopaGameState
+        {
+            CreatorHand = new List<string> { "Heart_4", "Club_14" },
+            OpponentHand = new List<string> { "Spade_3" },
+            LeadPlayerId = creatorId,
+            CurrentTurnPlayerId = opponentId,
+            TrickSuit = "Spade",
+            TrickPlays = new List<PlayedInTrick>
+            {
+                new() { PlayerId = creatorId, Card = "Spade_12" }
+            },
+            CreatorRoundWins = 2,
+            OpponentRoundWins = 1
+        };
+
+        var session = CreateSession(sessionId, creatorId, opponentId, pendingState);
+        var sut = CreateEngine(session);
+
+        var move = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.Three));
+
+        Assert.True(move.IsSuccess);
+        Assert.True(move.State!.GameOver);
+        Assert.Equal(opponentId, move.State.WinnerPlayerId);
+        Assert.Equal(GameStatus.Finished, session.Status);
+        Assert.Null(session.GameStateJson);
+        Assert.NotNull(session.GameResult);
+        Assert.Equal(opponentId, session.GameResult!.WinnerPlayerId);
+        Assert.Equal(creatorId, session.GameResult.LoserPlayerId);
+    }
+
+    [Fact]
+    public async Task PlayCard_WhenResponderPlaysLastCardAndWinsTrick_EmptyHandPlayerWins()
+    {
+        var sessionId = Guid.NewGuid();
+        var creatorId = Guid.NewGuid();
+        var opponentId = Guid.NewGuid();
+        var pendingState = new MakopaGameState
+        {
+            CreatorHand = new List<string> { "Heart_4", "Club_14" },
+            OpponentHand = new List<string> { "Spade_13" },
+            LeadPlayerId = creatorId,
+            CurrentTurnPlayerId = opponentId,
+            TrickSuit = "Spade",
+            TrickPlays = new List<PlayedInTrick>
+            {
+                new() { PlayerId = creatorId, Card = "Spade_5" }
+            }
+        };
+
+        var session = CreateSession(sessionId, creatorId, opponentId, pendingState);
+        var sut = CreateEngine(session);
+
+        var move = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.King));
+
+        Assert.True(move.IsSuccess);
+        Assert.True(move.State!.GameOver);
+        Assert.Equal(opponentId, move.State.WinnerPlayerId);
+        Assert.Equal(GameStatus.Finished, session.Status);
+    }
+
+    [Fact]
+    public async Task PlayCard_WhenLeaderPlaysLastCard_EmptyHandWinsBeforeResponse()
+    {
+        var sessionId = Guid.NewGuid();
+        var creatorId = Guid.NewGuid();
+        var opponentId = Guid.NewGuid();
+        var pendingState = new MakopaGameState
+        {
+            CreatorHand = new List<string> { "Spade_5" },
+            OpponentHand = new List<string> { "Spade_12", "Heart_10" },
+            LeadPlayerId = creatorId,
+            CurrentTurnPlayerId = creatorId,
+            TrickSuit = null,
+            TrickPlays = new List<PlayedInTrick>()
+        };
+
+        var session = CreateSession(sessionId, creatorId, opponentId, pendingState);
+        var sut = CreateEngine(session);
+
+        var move = await sut.PlayCardAsync(creatorId, sessionId, new Card(CardSuit.Spade, CardRank.Five));
+
+        Assert.True(move.IsSuccess);
+        Assert.True(move.State!.GameOver);
+        Assert.Equal(creatorId, move.State.WinnerPlayerId);
+        Assert.Equal(GameStatus.Finished, session.Status);
+    }
+
+    [Fact]
     public async Task VoidFollow_AddsLeadCardToResponder_AndLeaderLeadsAgain()
     {
         var sessionId = Guid.NewGuid();
@@ -241,9 +335,10 @@ public class MakopaGameEngineRulesTests
         var creatorId = Guid.NewGuid();
         var opponentId = Guid.NewGuid();
         const decimal betAmount = 200m;
+        // Creator still holds a card so empty-hand does not fire; opponent wins with one card to lead.
         var pendingState = new MakopaGameState
         {
-            CreatorHand = new List<string>(),
+            CreatorHand = new List<string> { "Club_9" },
             OpponentHand = new List<string> { "Spade_12", "Heart_10" },
             LeadPlayerId = creatorId,
             CurrentTurnPlayerId = opponentId,
@@ -261,7 +356,41 @@ public class MakopaGameEngineRulesTests
         await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.Queen));
 
         Assert.NotNull(session.GameResult);
-        Assert.Equal(betAmount * 2, session.GameResult!.TotalPot);
+        Assert.Equal(opponentId, session.GameResult!.WinnerPlayerId);
+        Assert.Equal(betAmount * 2, session.GameResult.TotalPot);
+        Assert.Equal(betAmount * 2 * 0.25m, session.GameResult.PlatformCommission);
+        Assert.Equal(betAmount * 2 * 0.75m, session.GameResult.WinnerAmount);
+    }
+
+    [Fact]
+    public async Task EmptyHandWin_Applies25PercentPlatformCommission()
+    {
+        var sessionId = Guid.NewGuid();
+        var creatorId = Guid.NewGuid();
+        var opponentId = Guid.NewGuid();
+        const decimal betAmount = 200m;
+        var pendingState = new MakopaGameState
+        {
+            CreatorHand = new List<string> { "Heart_4", "Club_14" },
+            OpponentHand = new List<string> { "Spade_3" },
+            LeadPlayerId = creatorId,
+            CurrentTurnPlayerId = opponentId,
+            TrickSuit = "Spade",
+            TrickPlays = new List<PlayedInTrick>
+            {
+                new() { PlayerId = creatorId, Card = "Spade_12" }
+            }
+        };
+
+        var session = CreateSession(sessionId, creatorId, opponentId, pendingState, betAmount);
+        var resultRepo = new InMemoryGameResultRepository(result => session.GameResult = result);
+        var sut = CreateEngine(session, resultRepo);
+
+        await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.Three));
+
+        Assert.NotNull(session.GameResult);
+        Assert.Equal(opponentId, session.GameResult!.WinnerPlayerId);
+        Assert.Equal(betAmount * 2, session.GameResult.TotalPot);
         Assert.Equal(betAmount * 2 * 0.25m, session.GameResult.PlatformCommission);
         Assert.Equal(betAmount * 2 * 0.75m, session.GameResult.WinnerAmount);
     }

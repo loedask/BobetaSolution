@@ -45,6 +45,7 @@ Authoritative rule logic lives in `Bobeta.Application/Games/`. This document mir
 
 | Rule | Detail |
 |------|--------|
+| Empty-hand win | After a play (lead, response, or Take resolution), if either seat has **0 cards**, that player wins immediately. Takes priority over the one-card-to-lead win. |
 | Normal win | It is your turn to lead (no trick in progress, you are the designated leader) **and** you hold **exactly 1 card** |
 | Instant loss | Before trick resolution: exactly one player holds a singleton (1 card), that player is **not** the responder, and the responder plays a card whose **suit matches** the singleton holder's remaining card → singleton holder wins immediately |
 | Hand wins | Each completed trick increments the trick winner's hand-win tally (shown in UI as "Hands won") |
