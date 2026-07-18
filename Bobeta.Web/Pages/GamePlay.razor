@@ -195,24 +195,50 @@
     </div>
 }
 
+@if (ViewModel.ShowForfeitConfirm)
+{
+    <div class="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm px-6">
+        <div class="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
+            <h3 class="font-display text-xl font-bold text-foreground mb-2">@I18n.T("forfeit_confirm_title")</h3>
+            <p class="text-sm text-muted-foreground mb-6">@I18n.T("forfeit_confirm")</p>
+            <div class="flex flex-col gap-2">
+                <button type="button"
+                        class="gold-gradient inline-flex items-center justify-center w-full rounded-xl py-3 font-semibold text-primary-foreground disabled:opacity-50"
+                        disabled="@ViewModel.ForfeitActionBusy"
+                        @onclick="OnConfirmForfeit">
+                    @I18n.T("yes")
+                </button>
+                <button type="button"
+                        class="rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground disabled:opacity-50"
+                        disabled="@ViewModel.ForfeitActionBusy"
+                        @onclick="OnDismissForfeit">
+                    @I18n.T("no")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @if (ViewModel.ShowGameResult)
 {
     @if (!ViewModel.IsDraw)
     {
         <WinCelebration Show="true" />
     }
-    <GameResultModal WinnerPlayerName="@ViewModel.WinnerPlayerName" IsDraw="@ViewModel.IsDraw" />
+    <GameResultModal WinnerPlayerName="@ViewModel.WinnerPlayerName" IsDraw="@ViewModel.IsDraw" EndedByForfeit="@ViewModel.EndedByForfeit" />
 }
 
 @code {
     [Parameter] public string SessionId { get; set; } = "";
 
     private GamePlayViewModel ViewModel { get; set; } = null!;
+    private IDisposable? _locationChangingRegistration;
 
     protected override void OnInitialized()
     {
         ViewModel = new GamePlayViewModel(GamePlayService, GameService, AppState, Nav, GameHubClient, GamePlayTestService, I18n);
         ViewModel.StateChanged += OnStateChanged;
+        _locationChangingRegistration = Nav.RegisterLocationChangingHandler(OnLocationChanging);
     }
 
     protected override async Task OnInitializedAsync()
@@ -221,8 +247,25 @@
             await ViewModel.LoadGameAsync(SessionId);
     }
 
+    private ValueTask OnLocationChanging(LocationChangingContext context)
+    {
+        if (!ViewModel.ShouldConfirmLeave)
+            return ValueTask.CompletedTask;
+
+        var target = context.TargetLocation;
+        var current = Nav.ToBaseRelativePath(Nav.Uri);
+        var targetRel = Nav.ToBaseRelativePath(target);
+        if (string.Equals(current, targetRel, StringComparison.OrdinalIgnoreCase))
+            return ValueTask.CompletedTask;
+
+        context.PreventNavigation();
+        ViewModel.RequestForfeitConfirm();
+        return ValueTask.CompletedTask;
+    }
+
     public async ValueTask DisposeAsync()
     {
+        _locationChangingRegistration?.Dispose();
         ViewModel.StateChanged -= OnStateChanged;
         await ViewModel.DisposeAsync();
     }
@@ -250,6 +293,9 @@
     private async Task OnInactivityContinue() => await ViewModel.ContinueInactivityAsync();
 
     private async Task OnInactivityCancelGame() => await ViewModel.CancelGameFromInactivityAsync();
+
+    private async Task OnConfirmForfeit() => await ViewModel.ConfirmForfeitAndLeaveAsync();
+    private void OnDismissForfeit() => ViewModel.DismissForfeitConfirm();
 
     private async Task OnKopoCellClicked((int Row, int Col) cell) => await ViewModel.OnKopoSquareClickedAsync(cell.Row, cell.Col);
     private async Task OnNgolaPitClicked(int pitIndex) => await ViewModel.OnNgolaPitClickedAsync(pitIndex);

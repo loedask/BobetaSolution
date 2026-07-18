@@ -24,6 +24,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     private DateTime? _inactivityDeadlineUtc;
     private readonly SemaphoreSlim _moveGate = new(1, 1);
     private bool _leaveInProgress;
+    private bool _allowLeaveWithoutForfeit;
 
     public GamePlayViewModel(
         GamePlayService gamePlayService,
@@ -61,6 +62,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public string? WinnerPlayerName => _table.WinnerPlayerName;
     public bool ShowGameResult => _table.ShowGameResult;
     public bool IsDraw => _table.IsDraw;
+    public bool EndedByForfeit => _table.EndedByForfeit;
     public Guid? CurrentPlayerId => _table.CurrentPlayerId;
     public string? TrickOutcomeMessage => _table.TrickOutcomeMessage;
     public bool CanTakeCard => _table.CanTakeCard;
@@ -72,7 +74,16 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public bool InactivityShowButtons { get; private set; }
     public int InactivityCountdownSeconds { get; private set; }
     public bool InactivityActionBusy { get; private set; }
+    public bool ForfeitActionBusy { get; private set; }
     public bool IsSendingMove => IsLoading && (Variant != GameVariant.Makopa || PlayerCards.Count > 0);
+
+    public bool ShouldConfirmLeave =>
+        !_allowLeaveWithoutForfeit
+        && !_leaveInProgress
+        && !ShowGameResult
+        && !WaitingForOpponent
+        && !string.IsNullOrEmpty(SessionId)
+        && MyPlayerId.HasValue;
 
     public bool ShowLoadingShell => GamePlayUiHelper.ShowLoadingShell(
         IsLoading, Variant, Kopo != null || Ngola != null || Domino != null || Abbia != null, PlayerCards.Count, WaitingForOpponent);
@@ -125,7 +136,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
                 sessionGuid, _table, MyPlayerId, BlockInteraction, UiTrickYou, UiTrickOpponent, null);
             if (sync.Apply == GamePlayStateApplier.ApplyResult.SessionEnded || sync.StatusCode == 404)
             {
-                await LeaveEndedSessionAsync(likelyInactivity: true);
+                await LeaveEndedSessionAsync(LeaveReason.Inactivity);
                 return;
             }
 
@@ -170,7 +181,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         var result = GamePlayStateApplier.ApplyAuthoritativeState(
             _table, state, MyPlayerId, BlockInteraction, UiTrickYou, UiTrickOpponent, null);
         if (result == GamePlayStateApplier.ApplyResult.SessionEnded)
-            await LeaveEndedSessionAsync(likelyInactivity: true);
+            await LeaveEndedSessionAsync(LeaveReason.Inactivity);
         else
             RaiseStateChanged();
     }
@@ -182,7 +193,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         var sync = await _sessionSync.FetchAndApplyAsync(
             sessionGuid, _table, MyPlayerId, BlockInteraction, UiTrickYou, UiTrickOpponent, null);
         if (sync.Apply == GamePlayStateApplier.ApplyResult.SessionEnded || sync.StatusCode == 404)
-            await LeaveEndedSessionAsync(likelyInactivity: true);
+            await LeaveEndedSessionAsync(LeaveReason.Inactivity);
         else
             RaiseStateChanged();
     }
@@ -199,6 +210,8 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         _hubClient.OnInactivityWarningDismissed += OnInactivityDismissedFromHub;
         _hubClient.OnGameEndedByInactivity -= OnGameEndedByInactivityFromHub;
         _hubClient.OnGameEndedByInactivity += OnGameEndedByInactivityFromHub;
+        _hubClient.OnGameEndedByForfeit -= OnGameEndedByForfeitFromHub;
+        _hubClient.OnGameEndedByForfeit += OnGameEndedByForfeitFromHub;
     }
 
     private void OnInactivityWarningFromHub(InactivityWarningPayload payload)
@@ -222,7 +235,60 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         RaiseStateChanged();
     }
 
-    private void OnGameEndedByInactivityFromHub() => _ = LeaveEndedSessionAsync(likelyInactivity: true);
+    private void OnGameEndedByInactivityFromHub() => _ = LeaveEndedSessionAsync(LeaveReason.Inactivity);
+
+    private void OnGameEndedByForfeitFromHub(Guid winnerId, Guid loserId) =>
+        _ = HandleForfeitFromHubAsync(winnerId, loserId);
+
+    private async Task HandleForfeitFromHubAsync(Guid winnerId, Guid loserId)
+    {
+        if (MyPlayerId == loserId)
+        {
+            if (_leaveInProgress)
+                return;
+            await LeaveEndedSessionAsync(LeaveReason.ForfeitLoss);
+            return;
+        }
+
+        if (MyPlayerId == winnerId)
+        {
+            _table.EndedByForfeit = true;
+            _allowLeaveWithoutForfeit = true;
+            await SyncGameStateFromServerAsync();
+        }
+    }
+
+    public async Task<bool> ConfirmForfeitAndLeaveAsync()
+    {
+        if (ForfeitActionBusy || !Guid.TryParse(SessionId, out var sessionGuid))
+            return false;
+        ForfeitActionBusy = true;
+        RaiseStateChanged();
+        try
+        {
+            var res = await _gamePlayService.ForfeitAsync(sessionGuid);
+            if (!res.IsSuccess)
+            {
+                var sync = await _sessionSync.FetchAndApplyAsync(
+                    sessionGuid, _table, MyPlayerId, BlockInteraction, UiTrickYou, UiTrickOpponent, null);
+                if (sync.Apply != GamePlayStateApplier.ApplyResult.GameOver
+                    && sync.Apply != GamePlayStateApplier.ApplyResult.SessionEnded)
+                {
+                    SetError(res.ErrorMessage ?? "Could not forfeit.");
+                    return false;
+                }
+            }
+
+            _allowLeaveWithoutForfeit = true;
+            await LeaveEndedSessionAsync(LeaveReason.ForfeitLoss);
+            return true;
+        }
+        finally
+        {
+            ForfeitActionBusy = false;
+            RaiseStateChanged();
+        }
+    }
 
     private void StartInactivityCountdown()
     {
@@ -288,7 +354,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             if (_hubClient != null)
                 await _hubClient.InactivityCancelGameAsync(SessionId);
             await _gamePlayService.CancelInactivityAsync(sessionGuid);
-            await LeaveEndedSessionAsync(likelyInactivity: true);
+            await LeaveEndedSessionAsync(LeaveReason.Inactivity);
         }
         finally
         {
@@ -302,14 +368,15 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         await SyncGameStateFromServerAsync();
         if (!ShowInactivityOverlay)
             return;
-        await LeaveEndedSessionAsync(likelyInactivity: true);
+        await LeaveEndedSessionAsync(LeaveReason.Inactivity);
     }
 
-    private Task LeaveEndedSessionAsync(bool likelyInactivity)
+    private Task LeaveEndedSessionAsync(LeaveReason reason)
     {
         if (_leaveInProgress)
             return Task.CompletedTask;
         _leaveInProgress = true;
+        _allowLeaveWithoutForfeit = true;
 
         StopSessionLivenessPoll();
         StopInactivityCountdown();
@@ -318,12 +385,22 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         InactivityShowButtons = false;
         InactivityActionBusy = false;
         ClearError();
-        SessionLeaveMessage = likelyInactivity
-            ? _i18n.T("game_cancelled_inactivity")
-            : _i18n.T("game_session_ended");
+        SessionLeaveMessage = reason switch
+        {
+            LeaveReason.ForfeitLoss => _i18n.T("forfeit_loss"),
+            LeaveReason.Inactivity => _i18n.T("game_cancelled_inactivity"),
+            _ => _i18n.T("game_session_ended")
+        };
         RaiseStateChanged();
         NavigateHomeRequested?.Invoke();
         return Task.CompletedTask;
+    }
+
+    private enum LeaveReason
+    {
+        Inactivity,
+        Session,
+        ForfeitLoss
     }
 
     public Task PlayCardAsync(CardViewModel card) => SubmitCardAsync(card);
@@ -718,6 +795,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             _hubClient.OnInactivityWarning -= OnInactivityWarningFromHub;
             _hubClient.OnInactivityWarningDismissed -= OnInactivityDismissedFromHub;
             _hubClient.OnGameEndedByInactivity -= OnGameEndedByInactivityFromHub;
+            _hubClient.OnGameEndedByForfeit -= OnGameEndedByForfeitFromHub;
             await _hubClient.DisconnectAsync();
         }
     }

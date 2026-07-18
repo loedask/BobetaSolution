@@ -224,6 +224,9 @@ public class GameInactivityCoordinatorTests
             return Task.FromResult(true);
         }
 
+        public Task<ForfeitGameOutcome?> ForfeitGameAsync(Guid loserPlayerId, Guid sessionId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<ForfeitGameOutcome?>(null);
+
         public Task<bool> CancelWaitingGameAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
             Task.FromResult(false);
     }

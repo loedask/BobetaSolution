@@ -109,7 +109,9 @@ public sealed class GameSessionServiceConcurrencyTests
             new NoOpGameEngineService(),
             new RecordingGameSessionNotifier(),
             NoOpInfluencerAttributionService.Instance,
-            NoOpNotificationService.Instance);
+            NoOpNotificationService.Instance,
+            new InMemoryGameResultRepository(_ => { }),
+            NoOpGameRevenueService.Instance);
 
     private static GameSession NewInProgress(Guid playerId, GameVariant variant, decimal bet)
     {
