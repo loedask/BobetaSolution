@@ -54,6 +54,8 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
+        // SignalR browser clients require AllowCredentials with an explicit origin allow-list
+        // (AllowAnyOrigin cannot be combined with credentials).
         policy.SetIsOriginAllowed(origin =>
         {
             if (string.IsNullOrEmpty(origin)) return false;
@@ -66,13 +68,17 @@ builder.Services.AddCors(options =>
         });
         policy.AllowAnyHeader();
         policy.AllowAnyMethod();
+        policy.AllowCredentials();
     });
 });
 
 var app = builder.Build();
 
 app.UseCors();
-app.UseResponseCompression();
+// Compress REST JSON only. SignalR negotiate/long-polling under /hubs must stay uncompressed.
+app.UseWhen(
+    ctx => !ctx.Request.Path.StartsWithSegments("/hubs"),
+    branch => branch.UseResponseCompression());
 app.UseBobetaSwagger();
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();

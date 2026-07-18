@@ -43,6 +43,7 @@ public class NotificationInboxViewModel : ViewModelBase, IAsyncDisposable
             _hubSubscribed = true;
         }
 
+        // Hub connect is best-effort; unread count still loads over REST if realtime fails.
         await _hub.ConnectAsync();
         await RefreshAsync();
     }
