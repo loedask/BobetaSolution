@@ -10,11 +10,11 @@ internal sealed class FakeGameSessionService : IGameSessionService
   public static decimal? LastCreateBetAmount { get; private set; }
   public static GameVariant? LastCreateVariant { get; private set; }
 
-  public static Guid? LastForfeitLoserId { get; private set; }
-  public static Guid? LastForfeitSessionId { get; private set; }
-  public static ForfeitGameOutcome? NextForfeitOutcome { get; set; }
+  public Guid? LastForfeitLoserId { get; private set; }
+  public Guid? LastForfeitSessionId { get; private set; }
+  public ForfeitGameOutcome? NextForfeitOutcome { get; set; }
 
-  public static void ResetForfeitTracking()
+  public void ResetForfeitTracking()
   {
     LastForfeitLoserId = null;
     LastForfeitSessionId = null;

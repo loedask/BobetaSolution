@@ -84,12 +84,13 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
 
     /// <summary>True while an in-progress match still needs a forfeit confirm before leaving.</summary>
     public bool ShouldConfirmLeave =>
-        !_allowNavigationWithoutForfeit
-        && !_leaveInProgress
-        && !ShowGameResult
-        && !WaitingForOpponent
-        && !string.IsNullOrEmpty(SessionId)
-        && MyPlayerId.HasValue;
+        GamePlayLeavePolicy.ShouldConfirmLeave(
+            _allowNavigationWithoutForfeit,
+            _leaveInProgress,
+            ShowGameResult,
+            WaitingForOpponent,
+            SessionId,
+            MyPlayerId.HasValue);
 
     public bool ShowLoadingShell => GamePlayUiHelper.ShowLoadingShell(
         IsLoading, Variant, Kopo != null || Ngola != null || Domino != null || Abbia != null, PlayerCards.Count, WaitingForOpponent);

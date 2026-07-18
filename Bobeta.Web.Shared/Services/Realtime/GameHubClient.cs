@@ -68,6 +68,10 @@ public class GameHubClient
     /// <summary>Match ended because a player forfeited (winner id in payload handling on client).</summary>
     public event Action<Guid, Guid>? OnGameEndedByForfeit;
 
+    /// <summary>Test hook to simulate a server forfeit broadcast without a live hub connection.</summary>
+    internal void RaiseGameEndedByForfeitForTests(Guid winnerPlayerId, Guid loserPlayerId) =>
+        OnGameEndedByForfeit?.Invoke(winnerPlayerId, loserPlayerId);
+
     public bool IsConnected => _connection?.State == HubConnectionState.Connected;
 
     /// <summary>Connects to the hub (if needed), joins the session group, and subscribes to events. Automatic reconnect on disconnect.</summary>

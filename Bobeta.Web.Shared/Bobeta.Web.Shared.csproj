@@ -19,4 +19,8 @@
     <ProjectReference Include="..\Bobeta.Client\Bobeta.Client.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Bobeta.Web.Tests" />
+  </ItemGroup>
+
 </Project>

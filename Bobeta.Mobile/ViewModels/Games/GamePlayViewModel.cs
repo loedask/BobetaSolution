@@ -78,12 +78,13 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public bool IsSendingMove => IsLoading && (Variant != GameVariant.Makopa || PlayerCards.Count > 0);
 
     public bool ShouldConfirmLeave =>
-        !_allowLeaveWithoutForfeit
-        && !_leaveInProgress
-        && !ShowGameResult
-        && !WaitingForOpponent
-        && !string.IsNullOrEmpty(SessionId)
-        && MyPlayerId.HasValue;
+        GamePlayLeavePolicy.ShouldConfirmLeave(
+            _allowLeaveWithoutForfeit,
+            _leaveInProgress,
+            ShowGameResult,
+            WaitingForOpponent,
+            SessionId,
+            MyPlayerId.HasValue);
 
     public bool ShowLoadingShell => GamePlayUiHelper.ShowLoadingShell(
         IsLoading, Variant, Kopo != null || Ngola != null || Domino != null || Abbia != null, PlayerCards.Count, WaitingForOpponent);

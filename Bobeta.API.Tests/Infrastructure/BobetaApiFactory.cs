@@ -23,4 +23,8 @@ public sealed class BobetaApiFactory : WebApplicationFactory<Program>
   public FakeNotificationService Notifications =>
     Services.GetRequiredService<INotificationService>() as FakeNotificationService
     ?? throw new InvalidOperationException("FakeNotificationService is not registered.");
+
+  internal FakeGameSessionService GameSessions =>
+    Services.GetRequiredService<IGameSessionService>() as FakeGameSessionService
+    ?? throw new InvalidOperationException("FakeGameSessionService is not registered.");
 }
