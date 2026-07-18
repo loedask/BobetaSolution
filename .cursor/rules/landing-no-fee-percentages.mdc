@@ -1,0 +1,37 @@
+---
+description: Never put fee or payout percentages in landing or marketing copy
+alwaysApply: true
+---
+
+# No Fee Percentages on Landing
+
+Marketing and landing surfaces must not mention platform fee or winner payout percentages (for example `25%`, `75%`, `25 %`, `75 %`).
+
+## Surfaces this covers
+
+- `Bobeta.Landing/**` (pages, components, `HelpCopy`, FAQ, terms, rules, privacy, responsible play)
+- Landing i18n keys (`landing_*`) in `I18nService`
+- Hero, trust chips, feature cards, ticker, footer, FAQ answers, legal/help blurbs written for the public site
+
+## What to write instead
+
+- Say the idea without the number: platform fee, winners paid to wallet, instant payouts, cash out to MoMo.
+- Keep exact splits for in-app stake and wallet UI only (`potential_win`, `platform_fee`, create-game summaries, and similar).
+
+## Examples
+
+```text
+Bad: 75% winner payout
+Good: Winners paid instantly
+
+Bad: Bobeta takes a platform fee (25%). The rest goes to the winner.
+Good: Bobeta takes a platform fee. The rest goes to the winner.
+
+Bad: Winners receive 75% of the pot straight to their wallet.
+Good: Win, then get paid straight to your wallet.
+```
+
+## When editing
+
+- Do not reintroduce percentages while translating or expanding landing/help copy.
+- If a percent is required for honesty, put it only on authenticated stake or wallet screens, not on `/` or public help/legal pages.

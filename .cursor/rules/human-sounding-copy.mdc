@@ -1,0 +1,41 @@
+---
+description: Write product copy and chat replies that sound human, not AI-generated
+alwaysApply: true
+---
+
+# Human-Sounding Copy
+
+Applies to UI strings, i18n values, landing/marketing text, docs, commit messages, PR bodies, and replies to the user.
+
+## Do not sound like a model
+
+- Write like a clear teammate. Short sentences. Concrete words.
+- Prefer plain phrasing over polished brochure tone.
+- Do not stack synonyms, throat-clearing, or filler openers ("In today's world", "It's important to note", "Let's dive in").
+- Avoid hype adjectives and empty intensifiers ("seamless", "robust", "cutting-edge", "powerful", "unlock", "elevate", "leverage").
+- Avoid parallel marketing cadence ("Play local. Win real. Feel alive.") unless the existing brand voice already uses it.
+- Do not over-explain. Say the useful thing once.
+
+## Punctuation tells
+
+- Never use em dashes (`—`) or en dashes (`–`) in user-facing or conversational text. Use a comma, period, colon, parentheses, or a separate sentence instead.
+- Avoid emoji decoration in product copy unless the user or existing UI already uses it.
+- Avoid neat three-item rhetorical lists when two points are enough.
+
+## Examples
+
+```text
+Bad: Play smart — win real money with seamless MoMo payouts.
+Good: Play smart. Win real money with MoMo payouts.
+
+Bad: Unlock a powerful, seamless experience designed to elevate your game.
+Good: Create or join a match in a few taps.
+
+Bad: It's important to note that winners get paid right away.
+Good: Winners get paid right away.
+```
+
+## When editing existing copy
+
+- Match the voice already in nearby strings for that locale.
+- Do not "polish" copy into generic AI tone while translating or refactoring.

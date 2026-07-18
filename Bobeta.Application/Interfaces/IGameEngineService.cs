@@ -18,6 +18,9 @@ public interface IGameEngineService
     /// <summary>Applies a Kopo move path (start + landing squares).</summary>
     Task<GameMoveResult> ApplyKopoMoveAsync(Guid playerId, Guid sessionId, IReadOnlyList<(int Row, int Col)> path, CancellationToken cancellationToken = default);
 
+    /// <summary>Sows all seeds from one of the current player's Ngola pits.</summary>
+    Task<GameMoveResult> ApplyNgolaMoveAsync(Guid playerId, Guid sessionId, int pitIndex, CancellationToken cancellationToken = default);
+
     /// <summary>Returns the current game state for the requesting player (their hand, last card, whose turn, game over, winner).</summary>
     Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default);
 }

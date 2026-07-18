@@ -1,0 +1,21 @@
+<div class="lp-faq__item @(_open ? "is-open" : null)">
+    <button type="button" class="lp-faq__q" aria-expanded="@_open" @onclick="Toggle">
+        <span>@Question</span>
+        <span class="lp-faq__icon" aria-hidden="true"></span>
+    </button>
+    @if (_open)
+    {
+        <div class="lp-faq__a">
+            <p>@Answer</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Question { get; set; } = "";
+    [Parameter, EditorRequired] public string Answer { get; set; } = "";
+
+    private bool _open;
+
+    private void Toggle() => _open = !_open;
+}

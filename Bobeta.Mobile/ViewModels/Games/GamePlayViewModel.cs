@@ -45,6 +45,8 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public GameVariant Variant => _table.Variant;
     public KopoStateDto? Kopo => _table.Kopo;
     public bool IsKopo => Variant == GameVariant.Kopo;
+    public NgolaStateDto? Ngola => _table.Ngola;
+    public bool IsNgola => Variant == GameVariant.Ngola;
     public bool IsPlayerTurn => _table.IsPlayerTurn;
     public decimal PotAmount => _table.PotAmount;
     public string? OpponentDisplayName => _table.OpponentDisplayName;
@@ -54,6 +56,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public CardViewModel? LastPlayedCard => _table.LastPlayedCard;
     public string? WinnerPlayerName => _table.WinnerPlayerName;
     public bool ShowGameResult => _table.ShowGameResult;
+    public bool IsDraw => _table.IsDraw;
     public Guid? CurrentPlayerId => _table.CurrentPlayerId;
     public string? TrickOutcomeMessage => _table.TrickOutcomeMessage;
     public bool CanTakeCard => _table.CanTakeCard;
@@ -65,10 +68,10 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public bool InactivityShowButtons { get; private set; }
     public int InactivityCountdownSeconds { get; private set; }
     public bool InactivityActionBusy { get; private set; }
-    public bool IsSendingMove => IsLoading && (IsKopo || PlayerCards.Count > 0);
+    public bool IsSendingMove => IsLoading && (Variant != GameVariant.Makopa || PlayerCards.Count > 0);
 
     public bool ShowLoadingShell => GamePlayUiHelper.ShowLoadingShell(
-        IsLoading, Variant, Kopo != null, PlayerCards.Count, WaitingForOpponent);
+        IsLoading, Variant, Kopo != null || Ngola != null, PlayerCards.Count, WaitingForOpponent);
 
     private readonly List<KopoSquareDto> _kopoPath = new();
     public IReadOnlyList<KopoSquareDto> KopoSelectionPath => _kopoPath;
@@ -386,6 +389,41 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         }
     }
 
+    public async Task OnNgolaPitClickedAsync(int pitIndex)
+    {
+        if (!IsNgola || !IsPlayerTurn || BlockInteraction
+            || !Guid.TryParse(SessionId, out var sessionGuid) || Ngola == null
+            || pitIndex < 0 || pitIndex >= Ngola.MyPits.Count || Ngola.MyPits[pitIndex] < 2)
+            return;
+        if (!await _moveGate.WaitAsync(0))
+            return;
+
+        SetLoading(true);
+        ClearError();
+        try
+        {
+            var res = await _gamePlayService.ApplyNgolaMoveAsync(sessionGuid, pitIndex);
+            if (!res.IsSuccess)
+            {
+                await HandleMoveFailureAsync(res);
+                return;
+            }
+            if (res.Data != null)
+                await ApplyAuthoritativeStateAsync(res.Data);
+        }
+        catch (Exception)
+        {
+            SetError("Something went wrong. Please try again.");
+            await SyncGameStateFromServerAsync();
+        }
+        finally
+        {
+            SetLoading(false);
+            _moveGate.Release();
+            RaiseStateChanged();
+        }
+    }
+
     public async Task TakeCardAsync()
     {
         if (!CanTakeCard || !Guid.TryParse(SessionId, out var sessionGuid))
@@ -563,7 +601,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     {
         _aiTriggerCts?.Cancel();
         _aiTriggerCts = new CancellationTokenSource();
-        if (IsKopo || ShowGameResult || WaitingForOpponent || IsPlayerTurn || _testService == null)
+        if (Variant != GameVariant.Makopa || ShowGameResult || WaitingForOpponent || IsPlayerTurn || _testService == null)
             return;
         try
         {

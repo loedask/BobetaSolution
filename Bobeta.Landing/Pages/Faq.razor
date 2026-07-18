@@ -1,0 +1,22 @@
+@page "/faq"
+@layout LegalLayout
+@inject I18nService I18n
+
+<PageTitle>@I18n.T("landing_faq_title") - Bobeta</PageTitle>
+
+<article class="lp-doc">
+    <header class="lp-doc__head">
+        <p class="lp-script">@I18n.T("landing_nav_faq")</p>
+        <h1>@I18n.T("landing_faq_title")</h1>
+        <p>@I18n.T("landing_faq_sub")</p>
+    </header>
+    <div class="lp-faq lp-faq--solo">
+        @foreach (var item in HelpCopy.Faq(I18n.Locale))
+        {
+            <FaqItem Question="@item.Question" Answer="@item.Answer" />
+        }
+    </div>
+    <p class="lp-doc__more">
+        <a href="/#faq">@I18n.T("landing_faq_on_home")</a>
+    </p>
+</article>

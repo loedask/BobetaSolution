@@ -21,7 +21,9 @@ internal static class GameStateMapper
         MyRoundWins = dto.MyRoundWins,
         OpponentRoundWins = dto.OpponentRoundWins,
         MustFollowLedSuit = dto.MustFollowLedSuit,
-        Kopo = dto.Kopo
+        Kopo = dto.Kopo,
+        Ngola = dto.Ngola,
+        IsDraw = dto.IsDraw
     };
 
     public static GameSessionViewModel ToViewModel(GameSessionDto dto) => new()

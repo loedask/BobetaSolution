@@ -91,7 +91,7 @@
             </VerticalStackLayout>
         </Border>
 
-        <VerticalStackLayout x:Name="MakopaPanel" Grid.Row="1" Spacing="8" IsVisible="True">
+        <VerticalStackLayout Grid.Row="1" Spacing="8">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                 <Label
                     x:Name="RoundScoreLabel"
@@ -112,14 +112,16 @@
                     </Label.GestureRecognizers>
                 </Label>
             </Grid>
-            <Label x:Name="LastPlayTitle" FontSize="12" TextColor="{StaticResource MutedForeground}" />
-            <Label
-                x:Name="TrickOutcomeLabel"
-                FontSize="13"
-                FontAttributes="Bold"
-                TextColor="{StaticResource AccentGreen}"
-                IsVisible="False" />
-            <controls:PlayingCardView Card="{Binding LastPlayedCard}" HorizontalOptions="Start" />
+            <VerticalStackLayout x:Name="MakopaPanel" Spacing="8" IsVisible="True">
+                <Label x:Name="LastPlayTitle" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+                <Label
+                    x:Name="TrickOutcomeLabel"
+                    FontSize="13"
+                    FontAttributes="Bold"
+                    TextColor="{StaticResource AccentGreen}"
+                    IsVisible="False" />
+                <controls:PlayingCardView Card="{Binding LastPlayedCard}" HorizontalOptions="Start" />
+            </VerticalStackLayout>
         </VerticalStackLayout>
 
         <Label
@@ -135,6 +137,13 @@
             IsVisible="False"
             VerticalOptions="Center"
             HorizontalOptions="Center" />
+
+        <controls:NgolaBoardView
+            x:Name="NgolaBoard"
+            Grid.Row="3"
+            IsVisible="False"
+            VerticalOptions="Center"
+            HorizontalOptions="Fill" />
 
         <CollectionView
             x:Name="HandView"

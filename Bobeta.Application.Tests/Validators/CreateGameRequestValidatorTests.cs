@@ -38,6 +38,7 @@ public sealed class CreateGameRequestValidatorTests
   [Theory]
   [InlineData(GameVariant.Makopa)]
   [InlineData(GameVariant.Kopo)]
+  [InlineData(GameVariant.Ngola)]
   public void Validate_AcceptsAllVariants(GameVariant variant)
   {
     var request = new CreateGameRequest(200, variant);

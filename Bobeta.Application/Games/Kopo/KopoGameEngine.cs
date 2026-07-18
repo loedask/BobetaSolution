@@ -111,7 +111,7 @@ public class KopoGameEngine(
             if (session.Status == GameStatus.Waiting)
                 return LobbyState(sessionId, lobbyPot, opponentName, waiting: true);
             if (session.Status == GameStatus.Finished)
-                return LobbyState(sessionId, lobbyPot, opponentName, waiting: false, gameOver: true, winner: session.GameResult?.WinnerPlayerId);
+                return LobbyState(sessionId, lobbyPot, opponentName, waiting: false, gameOver: true, winner: session.GameResult?.WinnerPlayerId, isDraw: session.GameResult?.WinnerPlayerId == null);
             if (session.Status == GameStatus.Cancelled)
                 return LobbyState(sessionId, lobbyPot, opponentName, waiting: false, gameOver: true, winner: null);
             return null;
@@ -149,9 +149,10 @@ public class KopoGameEngine(
         string? opponentName,
         bool waiting,
         bool gameOver = false,
-        Guid? winner = null) =>
+        Guid? winner = null,
+        bool isDraw = false) =>
         new(sessionId, Array.Empty<string>(), null, null, gameOver, winner, waiting, lobbyPot, opponentName,
-            null, 0, 0, false, GameVariant.Kopo, null);
+            null, 0, 0, false, GameVariant.Kopo, null, null, isDraw);
 
     private async Task<string?> ResolveOpponentDisplayNameAsync(Guid viewerPlayerId, GameSession session, CancellationToken cancellationToken)
     {

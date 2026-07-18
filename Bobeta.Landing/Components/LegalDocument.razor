@@ -1,0 +1,22 @@
+<article class="lp-doc">
+    <header class="lp-doc__head">
+        <p class="lp-script">Bobeta</p>
+        <h1>@Title</h1>
+        <p>@Intro</p>
+    </header>
+    <div class="lp-doc__body">
+        @foreach (var section in Sections)
+        {
+            <section class="lp-doc__section">
+                <h2>@section.Title</h2>
+                <p>@section.Body</p>
+            </section>
+        }
+    </div>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter, EditorRequired] public string Intro { get; set; } = "";
+    [Parameter, EditorRequired] public IReadOnlyList<HelpCopy.LegalSection> Sections { get; set; } = [];
+}

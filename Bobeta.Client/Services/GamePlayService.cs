@@ -57,6 +57,18 @@ public class GamePlayService(HttpClient httpClient, IAccessTokenProvider? access
         return Response<GameStateViewModel?>.Success(GameStateMapper.ToViewModel(res.Data));
     }
 
+    public async Task<Response<GameStateViewModel?>> ApplyNgolaMoveAsync(
+        Guid sessionId,
+        int pitIndex,
+        CancellationToken cancellationToken = default)
+    {
+        var body = new NgolaMoveApiRequest { SessionId = sessionId, PitIndex = pitIndex };
+        var res = await PostAsync<GameStateDto>("api/GamePlay/ngola/move", body, cancellationToken).ConfigureAwait(false);
+        if (!res.IsSuccess || res.Data == null)
+            return Response<GameStateViewModel?>.Failure(res.ErrorMessage ?? "Failed to sow seeds.", res.StatusCode);
+        return Response<GameStateViewModel?>.Success(GameStateMapper.ToViewModel(res.Data));
+    }
+
     public async Task<Response<GameStateViewModel?>> PlayCardAsync(Guid sessionId, GameMoveRequest request, CancellationToken cancellationToken = default)
     {
         try
