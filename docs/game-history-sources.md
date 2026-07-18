@@ -5,6 +5,12 @@ These are **not** shown on the public site (outbound links pull people away from
 
 Update this file when history copy changes.
 
+## Research portals
+
+Use these when scouting or documenting other games (not shown on the landing page):
+
+- [Ludii Games Library](https://ludii.games/library.php) — searchable catalog of traditional and reconstructed games (rules, regions, related titles). Start here when looking for candidates or ethnographic notes.
+
 ## Makopa
 
 - [Wiktionary / Kaikki: Swahili makopa (hearts)](https://kaikki.org/dictionary/Swahili/meaning/m/ma/makopa.html)
