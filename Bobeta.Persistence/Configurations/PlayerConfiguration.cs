@@ -17,5 +17,6 @@ public class PlayerConfiguration : IEntityTypeConfiguration<Player>
         builder.Property(p => p.Language).HasMaxLength(10);
         builder.Property(p => p.CountryCode).HasMaxLength(2);
         builder.HasIndex(p => p.PhoneNumber).IsUnique();
+        builder.HasIndex(p => p.LastSeenOnlineUtc);
     }
 }

@@ -22,7 +22,10 @@
     </div>
 
     <div class="space-y-5 px-5">
-        <ErrorBanner Message="@ViewModel.ErrorMessage" />
+        <ErrorBanner
+            Message="@ViewModel.ErrorMessage"
+            ActionHref="@(ViewModel.ShowLiveGamesAction ? "/history" : null)"
+            ActionLabel="@(ViewModel.ShowLiveGamesAction ? I18n.T("join_view_live_games") : null)" />
 
         <InviteCodePanel
             HasPendingCode="@(ViewModel.InviteStatus?.HasPendingCode == true)"
@@ -130,6 +133,9 @@
                         <a href="/create-game" class="mt-1 inline-flex items-center gap-1.5 rounded-xl gold-gradient px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow transition-all active:scale-[0.98]">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                             @I18n.T("create_game")
+                        </a>
+                        <a href="/my-waiting" class="text-xs font-semibold text-muted-foreground transition-colors hover:text-primary">
+                            @I18n.T("view_my_waiting_tables")
                         </a>
                     </div>
                 }

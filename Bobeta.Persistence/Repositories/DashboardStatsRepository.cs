@@ -465,4 +465,33 @@ public sealed class DashboardStatsRepository(BobetaDbContext db) : IDashboardSta
     RevenueAllocationSourceType.MoMoWithdrawal => "MoMo withdrawal",
     _ => type.ToString()
   };
+
+  public async Task<PresenceStatsDto> GetPresenceStatsAsync(CancellationToken cancellationToken = default)
+  {
+    var asOf = DateTime.UtcNow;
+    var onlineSince = asOf - PlayerPresenceWindows.Online;
+
+    var onlineNow = await db.Players.AsNoTracking()
+      .CountAsync(p => p.LastSeenOnlineUtc != null && p.LastSeenOnlineUtc >= onlineSince, cancellationToken);
+
+    var inProgress = db.GameSessions.AsNoTracking()
+      .Where(s => s.Status == GameStatus.InProgress);
+
+    var creatorIds = inProgress.Select(s => s.CreatorPlayerId);
+    var opponentIds = inProgress
+      .Where(s => s.OpponentPlayerId != null)
+      .Select(s => s.OpponentPlayerId!.Value);
+
+    var inMatch = await creatorIds
+      .Union(opponentIds)
+      .Distinct()
+      .CountAsync(cancellationToken);
+
+    return new PresenceStatsDto
+    {
+      OnlineNow = onlineNow,
+      InMatch = inMatch,
+      AsOfUtc = asOf
+    };
+  }
 }

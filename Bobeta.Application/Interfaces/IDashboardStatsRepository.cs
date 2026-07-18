@@ -22,4 +22,5 @@ public interface IDashboardStatsRepository
   Task<IReadOnlyList<PartnerRevenueBreakdownDto>> GetRevenueBySourceAsync(DashboardStatsFilter filter, CancellationToken cancellationToken = default);
   Task<IReadOnlyList<PartnerRevenueBreakdownDto>> GetRevenueByInfluencerAsync(DashboardStatsFilter filter, CancellationToken cancellationToken = default);
   Task<IReadOnlyList<PartnerRevenueAllocationItemDto>> GetRevenueAllocationsAsync(DashboardStatsFilter filter, int take, CancellationToken cancellationToken = default);
+  Task<PresenceStatsDto> GetPresenceStatsAsync(CancellationToken cancellationToken = default);
 }

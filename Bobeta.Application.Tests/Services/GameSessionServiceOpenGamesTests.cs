@@ -242,8 +242,8 @@ public sealed class GameSessionServiceOpenGamesTests
                 && s.Status == GameStatus.Waiting
                 && s.OpponentPlayerId == null));
 
-        public Task<bool> HasInProgressGameAsync(Guid playerId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(_sessions.Any(s =>
+        public Task<int> CountInProgressGamesAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(_sessions.Count(s =>
                 s.Status == GameStatus.InProgress
                 && (s.CreatorPlayerId == playerId || s.OpponentPlayerId == playerId)));
 

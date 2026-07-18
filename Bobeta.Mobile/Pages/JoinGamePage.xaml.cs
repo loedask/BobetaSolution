@@ -27,6 +27,7 @@ public partial class JoinGamePage : ContentPage
         Subtitle.Text = i18n.T("open_game_sessions");
         RefreshBtn.Text = i18n.T("refresh");
         EmptyLabel.Text = i18n.T("no_open_games");
+        ViewWaitingLink.Text = i18n.T("view_my_waiting_tables");
         FilterAllBtn.Text = i18n.T("filter_all_games");
         FilterMakopaBtn.Text = "Makopa";
         FilterKopoBtn.Text = "Kopo";
@@ -58,8 +59,11 @@ public partial class JoinGamePage : ContentPage
     {
         if (_vm == null) return;
         var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
+        var hasError = !string.IsNullOrEmpty(_vm.ErrorMessage);
+        ErrorPanel.IsVisible = hasError;
         ErrorLabel.Text = _vm.ErrorMessage ?? "";
-        ErrorLabel.IsVisible = !string.IsNullOrEmpty(_vm.ErrorMessage);
+        LiveGamesActionBtn.Text = i18n.T("join_view_live_games");
+        LiveGamesActionBtn.IsVisible = _vm.ShowLiveGamesAction;
         Busy.IsRunning = _vm.IsLoading && _vm.OpenGames.Count == 0;
         StyleFilter(FilterAllBtn, _vm.VariantFilter == null);
         StyleFilter(FilterMakopaBtn, _vm.VariantFilter == GameVariant.Makopa);
@@ -109,5 +113,15 @@ public partial class JoinGamePage : ContentPage
     {
         if (_vm == null || sender is not Button { BindingContext: GameSessionViewModel g }) return;
         await _vm.JoinGameAsync(g.Id);
+    }
+
+    private async void OnViewWaitingTapped(object? sender, TappedEventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(MyWaitingTablesPage));
+    }
+
+    private async void OnLiveGamesAction(object? sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync("//MainTabs/History");
     }
 }

@@ -28,6 +28,14 @@ public sealed class PlayerDashboardStatsDto
   public int ActivePlayers { get; init; }
 }
 
+/// <summary>Realtime platform presence for platform owners (not period-scoped).</summary>
+public sealed class PresenceStatsDto
+{
+  public int OnlineNow { get; init; }
+  public int InMatch { get; init; }
+  public DateTime AsOfUtc { get; init; }
+}
+
 public sealed class PaymentDashboardStatsDto
 {
   public int SuccessfulDeposits { get; init; }

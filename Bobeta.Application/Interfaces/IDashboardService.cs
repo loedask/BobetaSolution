@@ -34,4 +34,7 @@ public interface IDashboardService
       PortalUserRole role,
       Guid portalUserId,
       CancellationToken cancellationToken = default);
+
+  /// <summary>Realtime online / in-match counts for platform owners.</summary>
+  Task<PresenceStatsDto> GetPresenceAsync(CancellationToken cancellationToken = default);
 }

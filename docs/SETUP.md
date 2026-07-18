@@ -45,6 +45,8 @@ The API listens on the URLs in **`Bobeta.API/Properties/launchSettings.json`**. 
 
 **Production (e.g. Azure App Service with multiple instances):** Create [Azure SignalR Service](https://learn.microsoft.com/azure/azure-signalr/signalr-resource-create) in **Default** mode for this ASP.NET Core app. In App Service **Configuration**, add **`Azure__SignalR__ConnectionString`** (application setting) with the resource’s connection string. That maps to configuration key **`Azure:SignalR:ConnectionString`**. Hub URLs for clients stay **`/hubs/game`** on your API base URL.
 
+Portal **Online now** uses `Players.LastSeenOnlineUtc` updated by the notifications hub (connect + heartbeat). That works across API instances because it is stored in PostgreSQL. A player drops out of the online count about 2 minutes after heartbeats stop.
+
 To exercise Azure SignalR on your machine only, from **`Bobeta.API`**: `dotnet user-secrets set "Azure:SignalR:ConnectionString" "<your-connection-string>"`.
 
 ### Phone push (FCM / APNs)
