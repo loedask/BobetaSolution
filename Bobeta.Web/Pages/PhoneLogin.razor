@@ -5,7 +5,13 @@
 @inject I18nService I18n
 
 <div class="relative flex min-h-screen flex-col">
-    <div class="relative z-10 flex flex-1 flex-col items-center justify-center px-6 w-full max-w-sm">
+    <div class="relative z-20 flex items-center px-5 pt-6 pb-2">
+        <a href="/" class="inline-flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground" aria-label="@I18n.T("return_home")">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            <span>@I18n.T("return_home")</span>
+        </a>
+    </div>
+    <div class="relative z-10 flex flex-1 flex-col items-center justify-center px-6 w-full max-w-sm self-center">
         @if (string.Equals(EndSessionReason, "session-expired", StringComparison.OrdinalIgnoreCase))
         {
             <div class="mb-4 w-full rounded-xl border border-primary/35 bg-gradient-to-br from-primary/12 via-primary/5 to-transparent px-4 py-3 text-sm text-foreground shadow-sm">

@@ -55,6 +55,44 @@
                     document.removeEventListener('visibilitychange', this._visibilityHandler);
                     this._visibilityHandler = null;
                 }
+            },
+            // Landing: keep the menu docked while scrolling, with a soft progress glow.
+            bindLandingHeader: function (headerId) {
+                this.clearLandingHeader();
+                var header = document.getElementById(headerId);
+                if (!header)
+                    return;
+
+                var ticking = false;
+                var update = function () {
+                    ticking = false;
+                    var y = window.scrollY || document.documentElement.scrollTop || 0;
+                    var max = Math.max(
+                        1,
+                        (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight
+                    );
+                    var progress = Math.min(1, Math.max(0, y / max));
+                    header.classList.toggle('lp-header--docked', y > 28);
+                    header.style.setProperty('--lp-scroll', progress.toFixed(4));
+                };
+
+                this._landingScrollHandler = function () {
+                    if (ticking)
+                        return;
+                    ticking = true;
+                    window.requestAnimationFrame(update);
+                };
+
+                window.addEventListener('scroll', this._landingScrollHandler, { passive: true });
+                window.addEventListener('resize', this._landingScrollHandler, { passive: true });
+                update();
+            },
+            clearLandingHeader: function () {
+                if (this._landingScrollHandler) {
+                    window.removeEventListener('scroll', this._landingScrollHandler);
+                    window.removeEventListener('resize', this._landingScrollHandler);
+                    this._landingScrollHandler = null;
+                }
             }
         };
         if (!location.hostname.includes('localhost') && !location.hostname.startsWith('127.'))

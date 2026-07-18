@@ -4,11 +4,13 @@
     "Projects": [
       {
         "Path": "Bobeta.API\\Bobeta.API.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": "https"
       },
       {
-        "Path": "Bobeta.Web\\Bobeta.Web.csproj",
-        "Action": "Start"
+        "Path": "Bobeta.Web.Host\\Bobeta.Web.Host.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
       }
     ]
   },
@@ -17,7 +19,8 @@
     "Projects": [
       {
         "Path": "Bobeta.API\\Bobeta.API.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": "https"
       },
       {
         "Path": "Bobeta.Mobile\\Bobeta.Mobile.csproj",

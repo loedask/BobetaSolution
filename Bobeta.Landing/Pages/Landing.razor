@@ -1,16 +1,21 @@
 @page "/"
 @layout LandingLayout
+@implements IAsyncDisposable
 @inject NavigationManager Nav
 @inject I18nService I18n
+@inject IJSRuntime JS
 
-<header class="lp-header">
+<header id="lp-header" class="lp-header" aria-label="Bobeta">
     <div class="lp-shell lp-header__row">
         <a href="/" class="lp-mark" aria-label="BOBETA">
             <span>BO</span><span class="lp-mark__be">BE</span><span>TA</span>
         </a>
         <nav class="lp-nav">
+            <a href="#features">@I18n.T("landing_nav_features")</a>
             <a href="#games">@I18n.T("landing_nav_games")</a>
             <a href="#how-it-works">@I18n.T("landing_nav_how")</a>
+            <a href="#faq">@I18n.T("landing_nav_faq")</a>
+            <a href="#get-started">@I18n.T("landing_nav_get_started")</a>
         </nav>
         <div class="lp-header__actions">
             <button type="button" class="lp-btn lp-btn--ghost lp-btn--sm lp-hide-sm" @onclick="GoToLogin">
@@ -20,6 +25,7 @@
                 @I18n.T("landing_cta_play")
             </button>
         </div>
+        <div class="lp-header__progress" aria-hidden="true"></div>
     </div>
 </header>
 
@@ -74,6 +80,8 @@
             <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item">Kopo</span>
             <span class="lp-ticker__sep"></span>
+            <span class="lp-ticker__item">Ngola</span>
+            <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item lp-ticker__item--accent">BOBETA</span>
             <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item">MoMo</span>
@@ -111,67 +119,125 @@
             <p>@I18n.T("landing_games_sub")</p>
         </header>
 
-        <article class="lp-showcase lp-showcase--makopa">
-            <div class="lp-showcase__stage" aria-hidden="true">
-                <div class="lp-felt">
-                    <div class="lp-fan">
-                        <div class="lp-card lp-card--red lp-fan__1">A♥</div>
-                        <div class="lp-card lp-card--ink lp-fan__2">K♠</div>
-                        <div class="lp-card lp-card--red lp-fan__3">7♦</div>
-                        <div class="lp-card lp-card--ink lp-fan__4">Q♣</div>
-                    </div>
-                    <p class="lp-felt__label">Makopa</p>
+        <div class="lp-reel"
+             role="region"
+             aria-roledescription="carousel"
+             aria-label="@I18n.T("landing_games_title")"
+             @onmouseenter="PauseReel"
+             @onmouseleave="ResumeReel">
+            <div class="lp-reel__chrome">
+                <p class="lp-reel__count" aria-live="polite">
+                    <span>@((_activeGame + 1).ToString("00"))</span>
+                    <span class="lp-reel__count-sep">/</span>
+                    <span>@_games.Length.ToString("00")</span>
+                </p>
+                <div class="lp-reel__arrows">
+                    <button type="button" class="lp-reel__arrow" @onclick="PrevGame" aria-label="Previous game">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <button type="button" class="lp-reel__arrow" @onclick="NextGame" aria-label="Next game">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </button>
                 </div>
             </div>
-            <div class="lp-showcase__copy">
-                <span class="lp-showcase__num">01</span>
-                <h3>@I18n.T("landing_game_makopa_title")</h3>
-                <p>@I18n.T("landing_game_makopa_desc")</p>
-                <button type="button" class="lp-link" @onclick="GoToStart">
-                    @I18n.T("landing_cta_play")
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 5l7 7-7 7" /></svg>
-                </button>
-            </div>
-        </article>
 
-        <article class="lp-showcase lp-showcase--kopo">
-            <div class="lp-showcase__copy">
-                <span class="lp-showcase__num">02</span>
-                <h3>@I18n.T("landing_game_kopo_title")</h3>
-                <p>@I18n.T("landing_game_kopo_desc")</p>
-                <button type="button" class="lp-link" @onclick="GoToStart">
-                    @I18n.T("landing_cta_play")
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 5l7 7-7 7" /></svg>
-                </button>
-            </div>
-            <div class="lp-showcase__stage" aria-hidden="true">
-                <div class="lp-board-wrap">
-                    <div class="lp-board">
-                        @for (var row = 0; row < 8; row++)
+            <div class="lp-reel__stage">
+                @{
+                    var game = _games[_activeGame];
+                }
+                <article @key="game.Id" class="lp-reel__slide is-active">
+                    <div class="lp-reel__visual lp-showcase__stage" aria-hidden="true">
+                        @if (game.Id == "makopa")
                         {
-                            @for (var col = 0; col < 8; col++)
-                            {
-                                var idx = row * 8 + col;
-                                var dark = (row + col) % 2 == 0;
-                                var hasOrange = idx is 9 or 17 or 25 or 33;
-                                var hasWhite = idx is 30 or 38 or 46 or 54;
-                                <div class="lp-board__cell @(dark ? "is-dark" : "is-light")">
-                                    @if (hasOrange)
+                            <div class="lp-felt">
+                                <div class="lp-fan">
+                                    <div class="lp-card lp-card--red lp-fan__1">A♥</div>
+                                    <div class="lp-card lp-card--ink lp-fan__2">K♠</div>
+                                    <div class="lp-card lp-card--red lp-fan__3">7♦</div>
+                                    <div class="lp-card lp-card--ink lp-fan__4">Q♣</div>
+                                </div>
+                                <p class="lp-felt__label">Makopa</p>
+                            </div>
+                        }
+                        else if (game.Id == "kopo")
+                        {
+                            <div class="lp-board-wrap">
+                                <div class="lp-board">
+                                    @for (var row = 0; row < 8; row++)
                                     {
-                                        <span class="lp-piece lp-piece--orange"></span>
-                                    }
-                                    else if (hasWhite)
-                                    {
-                                        <span class="lp-piece lp-piece--white"></span>
+                                        @for (var col = 0; col < 8; col++)
+                                        {
+                                            var idx = row * 8 + col;
+                                            var dark = (row + col) % 2 == 0;
+                                            var hasOrange = idx is 9 or 17 or 25 or 33;
+                                            var hasWhite = idx is 30 or 38 or 46 or 54;
+                                            <div class="lp-board__cell @(dark ? "is-dark" : "is-light")">
+                                                @if (hasOrange)
+                                                {
+                                                    <span class="lp-piece lp-piece--orange"></span>
+                                                }
+                                                else if (hasWhite)
+                                                {
+                                                    <span class="lp-piece lp-piece--white"></span>
+                                                }
+                                            </div>
+                                        }
                                     }
                                 </div>
-                            }
+                                <p class="lp-felt__label">Kopo</p>
+                            </div>
+                        }
+                        else if (game.Id == "ngola")
+                        {
+                            <div class="lp-ngola-wrap">
+                                <div class="lp-ngola">
+                                    @for (var pit = 0; pit < 16; pit++)
+                                    {
+                                        <span class="lp-ngola__pit"></span>
+                                    }
+                                </div>
+                                <p class="lp-felt__label">Ngola</p>
+                            </div>
                         }
                     </div>
-                    <p class="lp-felt__label">Kopo</p>
+                    <div class="lp-reel__copy lp-showcase__copy">
+                        <span class="lp-showcase__num">@((_activeGame + 1).ToString("00"))</span>
+                        <h3>@I18n.T(game.TitleKey)</h3>
+                        <p>@I18n.T(game.DescKey)</p>
+                        <button type="button" class="lp-link" @onclick="GoToStart">
+                            @I18n.T("landing_cta_play")
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 5l7 7-7 7" /></svg>
+                        </button>
+                    </div>
+                </article>
+
+                <div class="lp-reel__autoplay" aria-hidden="true">
+                    <span class="lp-reel__autoplay-bar @(_reelPaused ? "is-paused" : null)" @key="_autoplayEpoch"></span>
                 </div>
             </div>
-        </article>
+
+            <div class="lp-reel__thumbs" role="tablist" aria-label="@I18n.T("landing_nav_games")">
+                @for (var i = 0; i < _games.Length; i++)
+                {
+                    var index = i;
+                    var thumb = _games[index];
+                    var selected = index == _activeGame;
+                    <button type="button"
+                            class="lp-reel__thumb @(selected ? "is-active" : null)"
+                            role="tab"
+                            aria-selected="@selected"
+                            id="@($"game-tab-{thumb.Id}")"
+                            @onclick="() => SelectGame(index)">
+                        <span class="lp-reel__thumb-num">@((index + 1).ToString("00"))</span>
+                        <span class="lp-reel__thumb-name">@I18n.T(thumb.TitleKey)</span>
+                        @if (selected && !_reelPaused)
+                        {
+                            <span class="lp-reel__thumb-pulse" aria-hidden="true"></span>
+                        }
+                    </button>
+                }
+            </div>
+        </div>
     </div>
 </section>
 
@@ -191,7 +257,27 @@
     </div>
 </section>
 
-<section class="lp-finale">
+<section id="faq" class="lp-help">
+    <div class="lp-shell lp-help__grid">
+        <div class="lp-help__intro">
+            <p class="lp-script">@I18n.T("landing_nav_faq")</p>
+            <h2>@I18n.T("landing_faq_title")</h2>
+            <p>@I18n.T("landing_faq_sub")</p>
+            <a href="/faq" class="lp-link">
+                @I18n.T("landing_faq_all")
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 5l7 7-7 7" /></svg>
+            </a>
+        </div>
+        <div class="lp-faq">
+            @foreach (var item in HelpCopy.Faq(I18n.Locale).Take(4))
+            {
+                <FaqItem Question="@item.Question" Answer="@item.Answer" />
+            }
+        </div>
+    </div>
+</section>
+
+<section id="get-started" class="lp-finale">
     <div class="lp-finale__wash" aria-hidden="true"></div>
     <div class="lp-finale__type" aria-hidden="true">
         <span>BO</span><span class="lp-mark__be">BE</span><span>TA</span>
@@ -216,18 +302,156 @@
 </section>
 
 <footer class="lp-footer">
-    <div class="lp-shell lp-footer__row">
-        <div>
+    <div class="lp-shell lp-footer__grid">
+        <div class="lp-footer__brand">
             <p class="lp-mark lp-mark--sm">
                 <span>BO</span><span class="lp-mark__be">BE</span><span>TA</span>
             </p>
             <p class="lp-script lp-script--sm">@I18n.T("landing_hero_line1") @I18n.T("landing_hero_line2")</p>
+            <p class="lp-footer__copy">© @DateTime.UtcNow.Year Bobeta. @I18n.T("landing_footer_rights")</p>
         </div>
-        <p class="lp-footer__copy">© @DateTime.UtcNow.Year Bobeta. @I18n.T("landing_footer_rights")</p>
+        <div class="lp-footer__col">
+            <p class="lp-footer__label">@I18n.T("landing_footer_help")</p>
+            <a href="#faq">@I18n.T("landing_nav_faq")</a>
+            <a href="/faq">@I18n.T("landing_faq_all")</a>
+            <a href="/rules">@I18n.T("landing_nav_rules")</a>
+        </div>
+        <div class="lp-footer__col">
+            <p class="lp-footer__label">@I18n.T("landing_legal_title")</p>
+            <a href="/terms">@I18n.T("landing_nav_terms")</a>
+            <a href="/responsible-play">@I18n.T("landing_nav_responsible")</a>
+            <a href="/privacy">@I18n.T("landing_nav_privacy")</a>
+            <a href="/rules">@I18n.T("landing_nav_rules")</a>
+        </div>
     </div>
 </footer>
 
 @code {
+    private static readonly GameSlide[] _games =
+    [
+        new("makopa", "landing_game_makopa_title", "landing_game_makopa_desc"),
+        new("kopo", "landing_game_kopo_title", "landing_game_kopo_desc"),
+        new("ngola", "landing_game_ngola_title", "landing_game_ngola_desc"),
+    ];
+
+    private bool _headerBound;
+    private int _activeGame;
+    private int _autoplayEpoch;
+    private bool _reelPaused;
+    private CancellationTokenSource? _autoplayCts;
+
+    protected override void OnInitialized() => StartAutoplay();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _headerBound)
+            return;
+
+        _headerBound = true;
+        await JS.InvokeVoidAsync("bobeta.bindLandingHeader", "lp-header");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        StopAutoplay();
+
+        if (!_headerBound)
+            return;
+
+        try
+        {
+            await JS.InvokeVoidAsync("bobeta.clearLandingHeader");
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit/WASM tearing down — nothing to clear.
+        }
+    }
+
+    private void SelectGame(int index)
+    {
+        if (index < 0 || index >= _games.Length || index == _activeGame)
+            return;
+
+        _activeGame = index;
+        RestartAutoplay();
+    }
+
+    private void NextGame()
+    {
+        _activeGame = (_activeGame + 1) % _games.Length;
+        RestartAutoplay();
+    }
+
+    private void PrevGame()
+    {
+        _activeGame = (_activeGame - 1 + _games.Length) % _games.Length;
+        RestartAutoplay();
+    }
+
+    private void PauseReel()
+    {
+        _reelPaused = true;
+        StopAutoplay();
+    }
+
+    private void ResumeReel()
+    {
+        _reelPaused = false;
+        StartAutoplay();
+    }
+
+    private void RestartAutoplay()
+    {
+        _autoplayEpoch++;
+        if (!_reelPaused)
+            StartAutoplay();
+    }
+
+    private void StartAutoplay()
+    {
+        StopAutoplay();
+        if (_games.Length < 2)
+            return;
+
+        _autoplayCts = new CancellationTokenSource();
+        var token = _autoplayCts.Token;
+        _ = RunAutoplayAsync(token);
+    }
+
+    private void StopAutoplay()
+    {
+        if (_autoplayCts is null)
+            return;
+
+        _autoplayCts.Cancel();
+        _autoplayCts.Dispose();
+        _autoplayCts = null;
+    }
+
+    private async Task RunAutoplayAsync(CancellationToken token)
+    {
+        try
+        {
+            while (!token.IsCancellationRequested)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5.5), token);
+                await InvokeAsync(() =>
+                {
+                    _activeGame = (_activeGame + 1) % _games.Length;
+                    _autoplayEpoch++;
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when pausing, selecting, or disposing.
+        }
+    }
+
     private void GoToStart() => Nav.NavigateTo("/start");
     private void GoToLogin() => Nav.NavigateTo("/login");
+
+    private sealed record GameSlide(string Id, string TitleKey, string DescKey);
 }

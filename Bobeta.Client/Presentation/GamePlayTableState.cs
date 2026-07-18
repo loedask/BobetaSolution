@@ -8,6 +8,7 @@ public sealed class GamePlayTableState
 {
     public GameVariant Variant { get; set; } = GameVariant.Makopa;
     public KopoStateDto? Kopo { get; set; }
+    public NgolaStateDto? Ngola { get; set; }
     public bool IsPlayerTurn { get; set; }
     public decimal PotAmount { get; set; }
     public string? OpponentDisplayName { get; set; }
@@ -22,5 +23,6 @@ public sealed class GamePlayTableState
     public int OpponentRoundWins { get; set; }
     public string? MatchRoundScoreText { get; set; }
     public bool ShowGameResult { get; set; }
+    public bool IsDraw { get; set; }
     public string? WinnerPlayerName { get; set; }
 }

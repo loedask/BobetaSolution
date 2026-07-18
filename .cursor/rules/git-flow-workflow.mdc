@@ -1,0 +1,15 @@
+---
+description: Follow the repository's Git Flow branching workflow
+alwaysApply: true
+---
+
+# Git Flow
+
+- This repository uses Git Flow.
+- Create feature work from `develop` using `feature/*` branches.
+- Finish features into `develop` with `git flow feature finish`.
+- Create releases using `git flow release start <version>` and `git flow release finish <version>`.
+- Use `hotfix/*` branches from `master` for urgent production fixes.
+- Do not commit feature work directly to `master`.
+- Preserve the configured Git Flow branch names, prefixes, and `v` version-tag prefix.
+- Ask before deviating from Git Flow or rewriting shared branch history.

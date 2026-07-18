@@ -120,6 +120,12 @@ public sealed class GameStateDto
 
     [JsonPropertyName("kopo")]
     public KopoStateDto? Kopo { get; set; }
+
+    [JsonPropertyName("ngola")]
+    public NgolaStateDto? Ngola { get; set; }
+
+    [JsonPropertyName("isDraw")]
+    public bool IsDraw { get; set; }
 }
 
 public sealed class KopoSquareDto
@@ -171,6 +177,33 @@ public sealed class KopoMoveApiRequest
 
     [JsonPropertyName("path")]
     public List<KopoSquareDto> Path { get; set; } = new();
+}
+
+public sealed class NgolaStateDto
+{
+    [JsonPropertyName("pitsPerPlayer")]
+    public int PitsPerPlayer { get; set; }
+
+    [JsonPropertyName("myPits")]
+    public List<int> MyPits { get; set; } = new();
+
+    [JsonPropertyName("opponentPits")]
+    public List<int> OpponentPits { get; set; } = new();
+
+    [JsonPropertyName("myScore")]
+    public int MyScore { get; set; }
+
+    [JsonPropertyName("opponentScore")]
+    public int OpponentScore { get; set; }
+}
+
+public sealed class NgolaMoveApiRequest
+{
+    [JsonPropertyName("sessionId")]
+    public Guid SessionId { get; set; }
+
+    [JsonPropertyName("pitIndex")]
+    public int PitIndex { get; set; }
 }
 
 public sealed class GameHistoryItemDto

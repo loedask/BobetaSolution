@@ -1,0 +1,14 @@
+---
+description: Keep the entire .NET solution free of build and analyzer warnings
+alwaysApply: true
+---
+
+# Warning-Free Solution
+
+- Do not finish a code or project-configuration change while the solution produces warnings.
+- Before completion, run `dotnet build BobetaSolution.slnx --warnaserror`.
+- Fix every warning reported by the build, including warnings outside the files directly changed when they prevent a warning-free solution build.
+- Address the underlying cause. Do not suppress warnings, lower analyzer severity, disable analyzers, or add `NoWarn`, pragmas, or warning exclusions unless the user explicitly approves that specific suppression.
+- Do not edit generated files under `bin/` or `obj/`; fix their source or project configuration instead.
+- Re-run the warning-as-error build after fixes and report the verification result.
+- If an external dependency, environment issue, or required user decision prevents a clean build, state the exact warning and blocker instead of claiming completion.

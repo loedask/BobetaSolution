@@ -1,0 +1,53 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject AppStateService AppState
+@inject I18nService I18n
+@inject NavigationManager Nav
+
+<div class="landing-page lp-legal-page">
+    <header class="lp-legal-top">
+        <div class="lp-shell lp-legal-top__row">
+            <a href="/" class="lp-mark" aria-label="BOBETA">
+                <span>BO</span><span class="lp-mark__be">BE</span><span>TA</span>
+            </a>
+            <a href="/" class="lp-legal-back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                @I18n.T("return_home")
+            </a>
+        </div>
+    </header>
+
+    <div class="lp-shell lp-legal-grid">
+        <aside class="lp-legal-side" aria-label="@I18n.T("landing_legal_title")">
+            <p class="lp-script lp-script--sm">@I18n.T("landing_legal_title")</p>
+            <nav class="lp-legal-side__nav">
+                <a href="/faq" class="@LinkClass("/faq")">@I18n.T("landing_nav_faq")</a>
+                <a href="/terms" class="@LinkClass("/terms")">@I18n.T("landing_nav_terms")</a>
+                <a href="/responsible-play" class="@LinkClass("/responsible-play")">@I18n.T("landing_nav_responsible")</a>
+                <a href="/privacy" class="@LinkClass("/privacy")">@I18n.T("landing_nav_privacy")</a>
+                <a href="/rules" class="@LinkClass("/rules")">@I18n.T("landing_nav_rules")</a>
+            </nav>
+            <button type="button" class="lp-btn lp-btn--solid lp-btn--sm lp-legal-side__cta" @onclick="GoToStart">
+                @I18n.T("landing_cta_play")
+            </button>
+        </aside>
+        <main class="lp-legal-main">
+            @Body
+        </main>
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized() => AppState.StateChanged += OnStateChanged;
+
+    private void OnStateChanged() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => AppState.StateChanged -= OnStateChanged;
+
+    private string LinkClass(string path) =>
+        Nav.ToBaseRelativePath(Nav.Uri).TrimEnd('/').Equals(path.TrimStart('/'), StringComparison.OrdinalIgnoreCase)
+            ? "is-active"
+            : string.Empty;
+
+    private void GoToStart() => Nav.NavigateTo("/start");
+}
