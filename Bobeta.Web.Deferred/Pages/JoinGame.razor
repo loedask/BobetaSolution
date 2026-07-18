@@ -22,7 +22,10 @@
     </div>
 
     <div class="space-y-5 px-5">
-        <ErrorBanner Message="@ViewModel.ErrorMessage" />
+        <ErrorBanner
+            Message="@ViewModel.ErrorMessage"
+            ActionHref="@(ViewModel.ShowLiveGamesAction ? "/history" : null)"
+            ActionLabel="@(ViewModel.ShowLiveGamesAction ? I18n.T("join_view_live_games") : null)" />
 
         <InviteCodePanel
             HasPendingCode="@(ViewModel.InviteStatus?.HasPendingCode == true)"

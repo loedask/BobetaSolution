@@ -91,7 +91,24 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-        <Label x:Name="ErrorLabel" Grid.Row="4" IsVisible="False" TextColor="{StaticResource Destructive}" VerticalOptions="Start" />
+        <VerticalStackLayout
+            x:Name="ErrorPanel"
+            Grid.Row="4"
+            IsVisible="False"
+            Spacing="8"
+            VerticalOptions="Start">
+            <Label x:Name="ErrorLabel" TextColor="{StaticResource Destructive}" />
+            <Button
+                x:Name="LiveGamesActionBtn"
+                IsVisible="False"
+                Clicked="OnLiveGamesAction"
+                HorizontalOptions="Start"
+                FontSize="13"
+                Padding="12,8"
+                CornerRadius="10"
+                BackgroundColor="{StaticResource Card}"
+                TextColor="{StaticResource Destructive}" />
+        </VerticalStackLayout>
         <ActivityIndicator x:Name="Busy" Grid.Row="4" IsRunning="False" Color="{StaticResource PrimaryGold}" VerticalOptions="Center" HorizontalOptions="Center" />
     </Grid>
 </ContentPage>

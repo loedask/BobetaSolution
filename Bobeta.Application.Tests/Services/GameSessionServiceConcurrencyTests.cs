@@ -1,3 +1,4 @@
+using Bobeta.Application.Common;
 using Bobeta.Application.Interfaces;
 using Bobeta.Application.Services;
 using Bobeta.Application.Tests.Games;
@@ -71,10 +72,11 @@ public sealed class GameSessionServiceConcurrencyTests
         var repo = new ListableGameSessionRepository(liveGames.Append(open).ToArray());
         var sut = CreateSut(repo);
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<TooManyLiveGamesException>(() =>
             sut.JoinGameAsync(playerId, open.Id));
 
-        Assert.Contains("5 matches", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("3 matches", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(GameSessionService.MaxConcurrentInProgressGames, ex.MaxGames);
     }
 
     [Fact]

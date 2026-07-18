@@ -1,3 +1,4 @@
+using Bobeta.Application.Common;
 using Bobeta.Application.DTOs.Game;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
@@ -16,7 +17,7 @@ public class GameSessionService(
     INotificationService notificationService) : IGameSessionService
 {
     /// <summary>Max live (InProgress) matches a player may hold at once when joining.</summary>
-    public const int MaxConcurrentInProgressGames = 5;
+    public const int MaxConcurrentInProgressGames = 3;
 
     private readonly IGameSessionRepository _sessionRepository = sessionRepository;
     private readonly IPlayerRepository _playerRepository = playerRepository;
@@ -70,8 +71,7 @@ public class GameSessionService(
 
         var liveCount = await _sessionRepository.CountInProgressGamesAsync(playerId, cancellationToken);
         if (liveCount >= MaxConcurrentInProgressGames)
-            throw new InvalidOperationException(
-                $"You can play up to {MaxConcurrentInProgressGames} matches at once. Finish one before joining another.");
+            throw new TooManyLiveGamesException(MaxConcurrentInProgressGames);
 
         var chargeAmount = await _influencerAttribution.GetChargeAmountAsync(playerId, session.BetAmount, cancellationToken);
         await _walletService.LockBetAsync(playerId, chargeAmount, cancellationToken);

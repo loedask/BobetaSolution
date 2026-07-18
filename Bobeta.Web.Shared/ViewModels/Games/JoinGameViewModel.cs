@@ -3,6 +3,7 @@ using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
 using Bobeta.Client.Models.Influencer;
 using Bobeta.Client.Contracts.Interfaces;
+using Bobeta.Client.Presentation;
 using Bobeta.Client.Services;
 using Bobeta.Web.Shared.Services;
 
@@ -37,6 +38,7 @@ public class JoinGameViewModel(
     public InfluencerCodeStatusViewModel? InviteStatus { get; private set; }
     public string InviteCodeInput { get; set; } = "";
     public string? InviteSuccessMessage { get; private set; }
+    public bool ShowLiveGamesAction { get; private set; }
 
     public void SetVariantFilter(GameVariant? variant)
     {
@@ -64,6 +66,7 @@ public class JoinGameViewModel(
         if (string.IsNullOrWhiteSpace(InviteCodeInput) || IsLoading) return;
         SetLoading(true);
         ClearError();
+        ShowLiveGamesAction = false;
         InviteSuccessMessage = null;
         try
         {
@@ -151,6 +154,7 @@ public class JoinGameViewModel(
         {
             SetLoading(true);
             ClearError();
+            ShowLiveGamesAction = false;
         }
         try
         {
@@ -200,6 +204,7 @@ public class JoinGameViewModel(
     {
         if (_joinBusy) return;
         _joinBusy = true;
+        ShowLiveGamesAction = false;
         SetLoading(true);
         try
         {
@@ -214,7 +219,17 @@ public class JoinGameViewModel(
             {
                 if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
                     return;
-                SetError(res.ErrorMessage ?? "Failed to join game.");
+                if (res.ErrorCode == GameSessionClientCodes.TooManyLiveGames)
+                {
+                    ShowLiveGamesAction = true;
+                    SetError(string.Format(
+                        _i18n.T("join_too_many_live_games"),
+                        GameSessionClientCodes.MaxConcurrentInProgressGames));
+                }
+                else
+                {
+                    SetError(res.ErrorMessage ?? "Failed to join game.");
+                }
             }
         }
         catch (Exception)
