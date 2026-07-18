@@ -1,3 +1,4 @@
+using Bobeta.Application.Common;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
 using Bobeta.Persistence.Context;
@@ -9,13 +10,11 @@ namespace Bobeta.Persistence.Seeding;
 /// <summary>Inserts two demo players (and wallets) for local multiplayer testing. Names use <see cref="Faker"/> with a fixed seed (Laravel-style reproducible fake data).</summary>
 public static class DemoAccountsSeeder
 {
-    /// <summary>Demo phone 1 — use Web country Congo (Brazzaville) +242; national digits 700000001.</summary>
-    public const string DemoPhone1 = "+242700000001";
+    /// <summary>Demo phone 1. Prefer <see cref="DemoAccountConstants.DemoPhone1"/>.</summary>
+    public const string DemoPhone1 = DemoAccountConstants.DemoPhone1;
 
-    /// <summary>Demo phone 2 — +242; national digits 700000002.</summary>
-    public const string DemoPhone2 = "+242700000002";
-
-    private const decimal DemoWalletBalance = 100_000m;
+    /// <summary>Demo phone 2. Prefer <see cref="DemoAccountConstants.DemoPhone2"/>.</summary>
+    public const string DemoPhone2 = DemoAccountConstants.DemoPhone2;
 
     /// <summary>Creates demo players if they do not already exist (idempotent).</summary>
     public static async Task SeedAsync(BobetaDbContext db, CancellationToken cancellationToken = default)
@@ -24,8 +23,8 @@ public static class DemoAccountsSeeder
 
         var seeds = new (string Phone, string Name)[]
         {
-            (DemoPhone1, TruncatePlayerName($"{faker.Name.FirstName()} Demo")),
-            (DemoPhone2, TruncatePlayerName($"{faker.Name.FirstName()} Test")),
+            (DemoAccountConstants.DemoPhone1, TruncatePlayerName($"{faker.Name.FirstName()} Demo")),
+            (DemoAccountConstants.DemoPhone2, TruncatePlayerName($"{faker.Name.FirstName()} Test")),
         };
 
         foreach (var (phone, name) in seeds)
@@ -51,7 +50,7 @@ public static class DemoAccountsSeeder
             {
                 Id = Guid.NewGuid(),
                 PlayerId = playerId,
-                Balance = DemoWalletBalance,
+                Balance = DemoAccountConstants.DemoWalletBalance,
                 LockedBalance = 0,
                 UpdatedAt = now
             });

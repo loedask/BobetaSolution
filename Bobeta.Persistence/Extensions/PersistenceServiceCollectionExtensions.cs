@@ -47,6 +47,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IDashboardStatsRepository, DashboardStatsRepository>();
         services.AddScoped<IPlayerNotificationRepository, PlayerNotificationRepository>();
         services.AddScoped<IPlayerDeviceTokenRepository, PlayerDeviceTokenRepository>();
+        services.AddScoped<IDemoAccountGamesResetRepository, DemoAccountGamesResetRepository>();
         return services;
     }
 

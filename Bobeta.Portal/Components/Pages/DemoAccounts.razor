@@ -1,0 +1,153 @@
+@page "/demo-accounts"
+@attribute [Authorize(Roles = "PlatformOwner")]
+@inject IDemoAccountGamesResetService ResetService
+@rendermode InteractiveServer
+
+<PageTitle>Demo accounts - Bobeta Portal</PageTitle>
+
+<div class="portal-page-header">
+    <div>
+        <h1>Demo accounts</h1>
+        <p class="portal-muted">Clear game data for the seeded demo players only. Accounts stay; wallets reset to the seed balance.</p>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <p class="portal-muted">Loading demo accounts...</p>
+}
+else
+{
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <div class="portal-alert portal-alert-error">@_error</div>
+    }
+    @if (!string.IsNullOrEmpty(_success))
+    {
+        <div class="portal-alert portal-alert-success">@_success</div>
+    }
+
+    @if (_preview.Accounts.Count == 0)
+    {
+        <p class="portal-muted">No demo accounts found. They are seeded in Development and Staging only.</p>
+    }
+    else
+    {
+        <section class="portal-card portal-section">
+            <h2>Demo players</h2>
+            <div class="portal-table-wrap">
+                <table class="portal-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Balance</th>
+                            <th>Locked</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var account in _preview.Accounts)
+                        {
+                            <tr>
+                                <td>@account.PlayerName</td>
+                                <td class="portal-mono">@account.PhoneNumber</td>
+                                <td class="portal-amount">@account.Balance.ToString("N0")</td>
+                                <td class="portal-amount">@account.LockedBalance.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="portal-card portal-section">
+            <h2>Game data to clear</h2>
+            <dl class="portal-dl">
+                <div><dt>Demo-only game sessions</dt><dd>@_preview.GameSessionCount</dd></div>
+                <div><dt>Game wallet transactions</dt><dd>@_preview.GameWalletTransactionCount</dd></div>
+                <div><dt>Game notifications</dt><dd>@_preview.GameNotificationCount</dd></div>
+            </dl>
+            <p class="portal-muted">
+                Deletes games between demo players (and waiting demo games). Keeps finished games against non-demo players.
+                Deposit and withdrawal history stays. Other players are not modified.
+            </p>
+
+            @if (!_confirm)
+            {
+                <button class="portal-button portal-button-danger" type="button" disabled="@_busy" @onclick="() => _confirm = true">
+                    Clear demo game data
+                </button>
+            }
+            else
+            {
+                <div class="portal-alert portal-alert-error">
+                    This cannot be undone. Clear game data for the demo accounts listed above?
+                </div>
+                <div class="portal-actions">
+                    <button class="portal-button portal-button-danger" type="button" disabled="@_busy" @onclick="HandleClearAsync">
+                        @(_busy ? "Clearing..." : "Yes, clear now")
+                    </button>
+                    <button class="portal-button" type="button" disabled="@_busy" @onclick="() => _confirm = false">
+                        Cancel
+                    </button>
+                </div>
+            }
+        </section>
+    }
+}
+
+@code {
+    private DemoAccountGamesResetPreviewDto _preview = new();
+    private bool _loading = true;
+    private bool _busy;
+    private bool _confirm;
+    private string? _error;
+    private string? _success;
+
+    protected override async Task OnInitializedAsync() => await LoadPreviewAsync();
+
+    private async Task LoadPreviewAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            _preview = await ResetService.GetPreviewAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            _preview = new DemoAccountGamesResetPreviewDto();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task HandleClearAsync()
+    {
+        _busy = true;
+        _error = null;
+        _success = null;
+        try
+        {
+            var result = await ResetService.ClearGamesDataAsync();
+            _confirm = false;
+            _success =
+                $"Cleared demo game data: {result.GameSessionsDeleted} sessions, " +
+                $"{result.GameWalletTransactionsDeleted} wallet transactions, " +
+                $"{result.GameNotificationsDeleted} notifications. " +
+                $"Reset {result.WalletsReset} wallet(s).";
+            _preview = await ResetService.GetPreviewAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}
