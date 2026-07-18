@@ -122,6 +122,24 @@ public static class DominoRules
     public static string NormalizeTile(int a, int b) =>
         a >= b ? $"{a}-{b}" : $"{b}-{a}";
 
+    /// <summary>
+    /// Compact history marker that fits GameMoves.CardSuitRank (originally varchar(20)).
+    /// Full "Domino:play:6-3:right" is 21 chars and caused production insert failures.
+    /// </summary>
+    public static string FormatMoveMarker(string action, int? high, int? low, string? end)
+    {
+        var normalized = action.Trim().ToLowerInvariant();
+        if (normalized == ActionPlay)
+        {
+            var endKey = string.IsNullOrWhiteSpace(end)
+                ? "-"
+                : char.ToUpperInvariant(end.Trim()[0]).ToString();
+            return $"D:p:{high}-{low}:{endKey}";
+        }
+
+        return normalized == ActionDraw ? "D:draw" : "D:pass";
+    }
+
     public static (int High, int Low) Parse(string tile)
     {
         var parts = tile.Split('-');

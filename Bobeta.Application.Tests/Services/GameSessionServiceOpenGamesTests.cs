@@ -49,6 +49,47 @@ public sealed class GameSessionServiceOpenGamesTests
     }
 
     [Fact]
+    public async Task ListMyWaitingGamesAsync_ShowsOnlyCreatorsWaitingTables()
+    {
+        var creatorId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var otherId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+        var mineId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var theirsId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+
+        var mine = new GameSession
+        {
+            Id = mineId,
+            CreatorPlayerId = creatorId,
+            BetAmount = 300m,
+            CreatorChargedAmount = 300m,
+            Variant = GameVariant.Makopa,
+            Status = GameStatus.Waiting,
+            OpponentPlayerId = null,
+            CreatedAt = DateTime.UtcNow
+        };
+        var theirs = new GameSession
+        {
+            Id = theirsId,
+            CreatorPlayerId = otherId,
+            BetAmount = 200m,
+            CreatorChargedAmount = 200m,
+            Variant = GameVariant.Makopa,
+            Status = GameStatus.Waiting,
+            OpponentPlayerId = null,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var sut = CreateSut(new ListableGameSessionRepository(mine, theirs));
+        var mineList = await sut.ListMyWaitingGamesAsync(creatorId);
+        var otherList = await sut.ListMyWaitingGamesAsync(otherId);
+
+        Assert.Single(mineList);
+        Assert.Equal(mineId, mineList[0].Id);
+        Assert.Single(otherList);
+        Assert.Equal(theirsId, otherList[0].Id);
+    }
+
+    [Fact]
     public async Task ListOpenJoinableGamesAsync_VariantFilter_HidesOtherVariants()
     {
         var creatorId = Guid.NewGuid();
@@ -165,6 +206,21 @@ public sealed class GameSessionServiceOpenGamesTests
         {
             IEnumerable<GameSession> q = _sessions
                 .Where(s => s.Status == GameStatus.Waiting && s.OpponentPlayerId == null && s.CreatorPlayerId != forPlayerId);
+            if (variant.HasValue)
+                q = q.Where(s => s.Variant == variant.Value);
+            return Task.FromResult<IReadOnlyList<GameSession>>(
+                q.OrderByDescending(s => s.CreatedAt).Skip(skip).Take(take).ToList());
+        }
+
+        public Task<IReadOnlyList<GameSession>> GetMyWaitingSessionsAsync(
+            Guid playerId,
+            int skip,
+            int take,
+            GameVariant? variant = null,
+            CancellationToken cancellationToken = default)
+        {
+            IEnumerable<GameSession> q = _sessions
+                .Where(s => s.Status == GameStatus.Waiting && s.OpponentPlayerId == null && s.CreatorPlayerId == playerId);
             if (variant.HasValue)
                 q = q.Where(s => s.Variant == variant.Value);
             return Task.FromResult<IReadOnlyList<GameSession>>(

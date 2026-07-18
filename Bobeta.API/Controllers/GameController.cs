@@ -56,6 +56,15 @@ public class GameController(IGameSessionService gameSessionService) : Controller
         return Ok(list);
     }
 
+    /// <summary>Lists waiting tables you created that still need an opponent.</summary>
+    [HttpGet("my-waiting")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<ActionResult<IReadOnlyList<GameSessionDto>>> GetMyWaitingGames([FromQuery] int skip = 0, [FromQuery] int take = 50, [FromQuery] GameVariant? variant = null, CancellationToken cancellationToken = default)
+    {
+        var list = await _gameSessionService.ListMyWaitingGamesAsync(PlayerId, skip, take, variant, cancellationToken);
+        return Ok(list);
+    }
+
     /// <summary>Proposes a new bet amount for the game (opponent must accept).</summary>
     [HttpPost("propose-bet")]
     public async Task<IActionResult> ProposeBet([FromBody] ProposeBetRequest request, CancellationToken cancellationToken)

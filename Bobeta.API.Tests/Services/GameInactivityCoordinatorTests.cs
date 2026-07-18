@@ -171,6 +171,9 @@ public class GameInactivityCoordinatorTests
         public Task<IReadOnlyList<GameSession>> GetJoinableWaitingSessionsAsync(Guid forPlayerId, int skip, int take, GameVariant? variant = null, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
 
+        public Task<IReadOnlyList<GameSession>> GetMyWaitingSessionsAsync(Guid playerId, int skip, int take, GameVariant? variant = null, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
+
         public Task<IReadOnlyList<GameSession>> GetByPlayerIdAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
 
@@ -202,6 +205,9 @@ public class GameInactivityCoordinatorTests
             => throw new NotSupportedException();
 
         public Task<IReadOnlyList<GameSessionDto>> ListOpenJoinableGamesAsync(Guid playerId, int skip = 0, int take = 50, GameVariant? variant = null, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+
+        public Task<IReadOnlyList<GameSessionDto>> ListMyWaitingGamesAsync(Guid playerId, int skip = 0, int take = 50, GameVariant? variant = null, CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
 
         public Task ProposeNewBetAsync(Guid playerId, Guid gameId, decimal amount, CancellationToken cancellationToken = default)

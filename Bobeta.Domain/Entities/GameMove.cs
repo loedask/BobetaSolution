@@ -20,7 +20,7 @@ public class GameMove
     /// <summary>When the move was recorded.</summary>
     public DateTime CreatedAt { get; set; }
 
-    /// <summary>Card played, stored as "Suit_Rank" (e.g. "Heart_14" for Ace of Hearts) for EF persistence.</summary>
+    /// <summary>Card played or move notation for history (Makopa Suit_Rank, Domino/Kopo compact markers).</summary>
     public string CardSuitRank { get; set; } = string.Empty;
 
     /// <summary>Navigation to the game session.</summary>

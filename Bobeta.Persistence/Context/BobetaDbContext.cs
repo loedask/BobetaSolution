@@ -64,6 +64,9 @@ public class BobetaDbContext(DbContextOptions<BobetaDbContext> options) : DbCont
     /// <summary>In-app player notification inbox.</summary>
     public DbSet<PlayerNotification> PlayerNotifications => Set<PlayerNotification>();
 
+    /// <summary>FCM device tokens for phone push.</summary>
+    public DbSet<PlayerDeviceToken> PlayerDeviceTokens => Set<PlayerDeviceToken>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

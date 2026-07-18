@@ -56,6 +56,21 @@ public class DominoGameEngineRulesTests
         Assert.Null(session.GameStateJson);
     }
 
+    [Theory]
+    [InlineData("play", 6, 3, "right", "D:p:6-3:R")]
+    [InlineData("play", 6, 6, "left", "D:p:6-6:L")]
+    [InlineData("play", 5, 1, null, "D:p:5-1:-")]
+    [InlineData("draw", null, null, null, "D:draw")]
+    [InlineData("pass", null, null, null, "D:pass")]
+    public void FormatMoveMarker_FitsOriginalVarchar20Budget(
+        string action, int? high, int? low, string? end, string expected)
+    {
+        var marker = DominoRules.FormatMoveMarker(action, high, low, end);
+
+        Assert.Equal(expected, marker);
+        Assert.True(marker.Length <= 20, $"Marker '{marker}' length {marker.Length} exceeds varchar(20).");
+    }
+
     [Fact]
     public async Task ApplyMoveAsync_WhenBlockedPipTie_ReleasesBothBets()
     {

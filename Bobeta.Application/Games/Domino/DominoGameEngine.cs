@@ -65,7 +65,7 @@ public sealed class DominoGameEngine(
             Id = Guid.NewGuid(),
             GameSessionId = sessionId,
             PlayerId = playerId,
-            CardSuitRank = $"Domino:{action}:{high}-{low}:{end}",
+            CardSuitRank = DominoRules.FormatMoveMarker(action, high, low, end),
             MoveOrder = moveOrder,
             CreatedAt = DateTime.UtcNow
         }, cancellationToken);

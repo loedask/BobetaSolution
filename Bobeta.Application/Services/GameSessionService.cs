@@ -123,6 +123,14 @@ public class GameSessionService(
         return sessions.Select(Map).ToList();
     }
 
+    public async Task<IReadOnlyList<GameSessionDto>> ListMyWaitingGamesAsync(Guid playerId, int skip = 0, int take = 50, GameVariant? variant = null, CancellationToken cancellationToken = default)
+    {
+        take = Math.Clamp(take, 1, 100);
+        skip = Math.Max(0, skip);
+        var sessions = await _sessionRepository.GetMyWaitingSessionsAsync(playerId, skip, take, variant, cancellationToken);
+        return sessions.Select(Map).ToList();
+    }
+
     public Task ProposeNewBetAsync(Guid playerId, Guid gameId, decimal amount, CancellationToken cancellationToken = default)
     {
         // Bet change proposal is communicated via SignalR/notification; persistence of proposed amount can be added here if needed.

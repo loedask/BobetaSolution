@@ -63,6 +63,25 @@ public class GameService(HttpClient httpClient, IAccessTokenProvider? accessToke
         return Response<IReadOnlyList<GameSessionViewModel>>.Success(res.Data.Select(GameStateMapper.ToViewModel).ToList());
     }
 
+    public async Task<Response<IReadOnlyList<GameSessionViewModel>>> GetMyWaitingGamesAsync(GameVariant? variant = null, CancellationToken cancellationToken = default)
+    {
+        var url = $"api/Game/my-waiting?skip=0&take=50&_={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+        if (variant.HasValue)
+            url += $"&variant={variant.Value}";
+        var res = await GetAsync<List<GameSessionDto>>(url, cancellationToken).ConfigureAwait(false);
+        if (!res.IsSuccess || res.Data == null)
+            return Response<IReadOnlyList<GameSessionViewModel>>.Failure(res.ErrorMessage ?? "Failed to load waiting tables.", res.StatusCode);
+        return Response<IReadOnlyList<GameSessionViewModel>>.Success(res.Data.Select(GameStateMapper.ToViewModel).ToList());
+    }
+
+    public async Task<Response<bool>> CancelWaitingGameAsync(Guid gameId, CancellationToken cancellationToken = default)
+    {
+        var res = await PostAsync<object>($"api/Game/cancel-waiting?gameId={gameId:D}", null, cancellationToken).ConfigureAwait(false);
+        return res.IsSuccess
+            ? Response<bool>.Success(true)
+            : Response<bool>.Failure(res.ErrorMessage ?? "Failed to cancel waiting table.", res.StatusCode);
+    }
+
     public async Task<Response<GameStateViewModel?>> GetGameStateAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
         var res = await GetAsync<GameStateDto>(

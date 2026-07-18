@@ -19,6 +19,9 @@ internal sealed class InMemoryGameSessionRepository(GameSession session) : IGame
     public Task<IReadOnlyList<GameSession>> GetJoinableWaitingSessionsAsync(Guid forPlayerId, int skip, int take, Domain.Enums.GameVariant? variant = null, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
 
+    public Task<IReadOnlyList<GameSession>> GetMyWaitingSessionsAsync(Guid playerId, int skip, int take, Domain.Enums.GameVariant? variant = null, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
+
     public Task<IReadOnlyList<GameSession>> GetByPlayerIdAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
 
@@ -211,6 +214,37 @@ internal sealed class ThrowingPlayerNotificationRepository : IPlayerNotification
 
     public Task MarkAllReadAsync(Guid playerId, CancellationToken cancellationToken = default) =>
         throw new InvalidOperationException("repository failed");
+}
+
+internal sealed class InMemoryPlayerDeviceTokenRepository : IPlayerDeviceTokenRepository
+{
+    public List<PlayerDeviceToken> Items { get; } = new();
+
+    public Task<IReadOnlyList<PlayerDeviceToken>> GetByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<PlayerDeviceToken>>(Items.Where(t => t.PlayerId == playerId).ToList());
+
+    public Task<PlayerDeviceToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Items.FirstOrDefault(t => t.Token == token));
+
+    public Task<PlayerDeviceToken> AddAsync(PlayerDeviceToken token, CancellationToken cancellationToken = default)
+    {
+        Items.Add(token);
+        return Task.FromResult(token);
+    }
+
+    public Task UpdateAsync(PlayerDeviceToken token, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+    public Task DeleteByTokenAsync(string token, CancellationToken cancellationToken = default)
+    {
+        Items.RemoveAll(t => t.Token == token);
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteByTokensAsync(IReadOnlyList<string> tokens, CancellationToken cancellationToken = default)
+    {
+        Items.RemoveAll(t => tokens.Contains(t.Token));
+        return Task.CompletedTask;
+    }
 }
 
 internal sealed class InMemoryWalletRepository : IWalletRepository

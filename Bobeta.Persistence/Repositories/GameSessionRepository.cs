@@ -33,6 +33,15 @@ public class GameSessionRepository : IGameSessionRepository
         return await q.OrderByDescending(s => s.CreatedAt).Skip(skip).Take(take).ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<GameSession>> GetMyWaitingSessionsAsync(Guid playerId, int skip, int take, GameVariant? variant = null, CancellationToken cancellationToken = default)
+    {
+        var q = _db.GameSessions
+            .Where(s => s.Status == GameStatus.Waiting && s.OpponentPlayerId == null && s.CreatorPlayerId == playerId);
+        if (variant.HasValue)
+            q = q.Where(s => s.Variant == variant.Value);
+        return await q.OrderByDescending(s => s.CreatedAt).Skip(skip).Take(take).ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<GameSession>> GetByPlayerIdAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default) =>
         await _db.GameSessions
             .Include(s => s.GameResult)

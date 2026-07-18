@@ -130,6 +130,16 @@ public sealed class GameSessionServiceConcurrencyTests
             return Task.FromResult<IReadOnlyList<GameSession>>(q.Skip(skip).Take(take).ToList());
         }
 
+        public Task<IReadOnlyList<GameSession>> GetMyWaitingSessionsAsync(
+            Guid playerId, int skip, int take, GameVariant? variant = null, CancellationToken cancellationToken = default)
+        {
+            IEnumerable<GameSession> q = _sessions
+                .Where(s => s.Status == GameStatus.Waiting && s.OpponentPlayerId == null && s.CreatorPlayerId == playerId);
+            if (variant.HasValue)
+                q = q.Where(s => s.Variant == variant.Value);
+            return Task.FromResult<IReadOnlyList<GameSession>>(q.Skip(skip).Take(take).ToList());
+        }
+
         public Task<IReadOnlyList<GameSession>> GetByPlayerIdAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<GameSession>>(
                 _sessions

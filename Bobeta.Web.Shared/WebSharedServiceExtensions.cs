@@ -28,6 +28,7 @@ public static class WebSharedServiceExtensions
         services.AddScoped<DepositViewModel>();
         services.AddScoped<WithdrawViewModel>();
         services.AddScoped<JoinGameViewModel>();
+        services.AddScoped<MyWaitingTablesViewModel>();
         services.AddScoped<CreateGameViewModel>();
         services.AddScoped<GameHistoryViewModel>();
         services.AddScoped<ProfileViewModel>();

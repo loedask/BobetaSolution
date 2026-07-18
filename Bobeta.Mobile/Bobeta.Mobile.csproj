@@ -88,6 +88,11 @@
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
 	</ItemGroup>
 
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<PackageReference Include="Xamarin.Firebase.Messaging" Version="124.0.3.1" />
+		<GoogleServicesJson Include="Platforms\Android\google-services.json" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\Bobeta.Client\Bobeta.Client.csproj" />
 	</ItemGroup>
