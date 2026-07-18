@@ -3,6 +3,7 @@ using Bobeta.Client.Models.Api;
 using Bobeta.Client.Models.Games;
 using Bobeta.Client.Models.Influencer;
 using Bobeta.Client.Contracts.Interfaces;
+using Bobeta.Client.Presentation;
 using Bobeta.Client.Services;
 using Bobeta.Web.Shared.Services;
 
@@ -27,8 +28,8 @@ public class JoinGameViewModel(
     private int _loadGeneration;
     private DateTimeOffset _lastSuccessfulLoadUtc = DateTimeOffset.MinValue;
     private static readonly TimeSpan DuplicateSuppressionWindow = TimeSpan.FromSeconds(2);
-    private static readonly TimeSpan LiveRefreshInterval = TimeSpan.FromSeconds(12);
-    private CancellationTokenSource? _liveRefreshCts;
+    private static readonly TimeSpan LobbyRefreshInterval = TimeSpan.FromSeconds(12);
+    private CancellationTokenSource? _lobbyRefreshCts;
 
     /// <summary>null = show all game types.</summary>
     public GameVariant? VariantFilter { get; private set; }
@@ -37,6 +38,7 @@ public class JoinGameViewModel(
     public InfluencerCodeStatusViewModel? InviteStatus { get; private set; }
     public string InviteCodeInput { get; set; } = "";
     public string? InviteSuccessMessage { get; private set; }
+    public bool ShowLiveGamesAction { get; private set; }
 
     public void SetVariantFilter(GameVariant? variant)
     {
@@ -64,6 +66,7 @@ public class JoinGameViewModel(
         if (string.IsNullOrWhiteSpace(InviteCodeInput) || IsLoading) return;
         SetLoading(true);
         ClearError();
+        ShowLiveGamesAction = false;
         InviteSuccessMessage = null;
         try
         {
@@ -94,25 +97,25 @@ public class JoinGameViewModel(
         }
     }
 
-    public void StartLiveRefresh()
+    public void StartLobbyRefresh()
     {
-        StopLiveRefresh();
-        _liveRefreshCts = new CancellationTokenSource();
-        _ = RunLiveRefreshAsync(_liveRefreshCts.Token);
+        StopLobbyRefresh();
+        _lobbyRefreshCts = new CancellationTokenSource();
+        _ = RunLobbyRefreshAsync(_lobbyRefreshCts.Token);
     }
 
-    public void StopLiveRefresh()
+    public void StopLobbyRefresh()
     {
-        _liveRefreshCts?.Cancel();
-        _liveRefreshCts?.Dispose();
-        _liveRefreshCts = null;
+        _lobbyRefreshCts?.Cancel();
+        _lobbyRefreshCts?.Dispose();
+        _lobbyRefreshCts = null;
     }
 
-    private async Task RunLiveRefreshAsync(CancellationToken token)
+    private async Task RunLobbyRefreshAsync(CancellationToken token)
     {
         try
         {
-            using var timer = new PeriodicTimer(LiveRefreshInterval);
+            using var timer = new PeriodicTimer(LobbyRefreshInterval);
             while (await timer.WaitForNextTickAsync(token))
                 await LoadGamesAsync(forceRefresh: true, quiet: true);
         }
@@ -151,6 +154,7 @@ public class JoinGameViewModel(
         {
             SetLoading(true);
             ClearError();
+            ShowLiveGamesAction = false;
         }
         try
         {
@@ -200,6 +204,7 @@ public class JoinGameViewModel(
     {
         if (_joinBusy) return;
         _joinBusy = true;
+        ShowLiveGamesAction = false;
         SetLoading(true);
         try
         {
@@ -214,7 +219,17 @@ public class JoinGameViewModel(
             {
                 if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
                     return;
-                SetError(res.ErrorMessage ?? "Failed to join game.");
+                if (res.ErrorCode == GameSessionClientCodes.TooManyLiveGames)
+                {
+                    ShowLiveGamesAction = true;
+                    SetError(string.Format(
+                        _i18n.T("join_too_many_live_games"),
+                        GameSessionClientCodes.MaxConcurrentInProgressGames));
+                }
+                else
+                {
+                    SetError(res.ErrorMessage ?? "Failed to join game.");
+                }
             }
         }
         catch (Exception)

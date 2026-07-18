@@ -1,3 +1,4 @@
+using Bobeta.Application.Common;
 using Bobeta.Application.DTOs.Game;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Enums;
@@ -40,6 +41,10 @@ public class GameController(IGameSessionService gameSessionService) : Controller
             var session = await _gameSessionService.JoinGameAsync(PlayerId, request.GameId, cancellationToken);
             if (session == null) return BadRequest("Game not available to join.");
             return Ok(session);
+        }
+        catch (TooManyLiveGamesException ex)
+        {
+            return BadRequest(new { code = GameSessionErrorCodes.TooManyLiveGames, message = ex.Message });
         }
         catch (InvalidOperationException ex)
         {

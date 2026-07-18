@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Bobeta.API.Services;
 
-/// <summary>Server-side AFK tracking for live games: idle thresholds, synchronized warning deadlines, cancel/suspend.</summary>
+/// <summary>Server-side AFK tracking for in-progress games: idle thresholds, synchronized warning deadlines, cancel/suspend.</summary>
 public interface IGameInactivityCoordinator
 {
     Task NotifyGameReadyAsync(Guid sessionId, Guid playerId, CancellationToken cancellationToken = default);

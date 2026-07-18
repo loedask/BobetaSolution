@@ -36,6 +36,7 @@
             <Button x:Name="FilterKopoBtn" Clicked="OnFilterKopo" CornerRadius="8" FontSize="12" Padding="12,6" />
             <Button x:Name="FilterNgolaBtn" Clicked="OnFilterNgola" CornerRadius="8" FontSize="12" Padding="12,6" />
             <Button x:Name="FilterDominoBtn" Clicked="OnFilterDomino" CornerRadius="8" FontSize="12" Padding="12,6" />
+            <Button x:Name="FilterAbbiaBtn" Clicked="OnFilterAbbia" CornerRadius="8" FontSize="12" Padding="12,6" />
         </HorizontalStackLayout>
         <Grid Grid.Row="3" ColumnDefinitions="*,Auto">
             <Label x:Name="Subtitle" FontSize="14" TextColor="{StaticResource MutedForeground}" VerticalOptions="Center" />
@@ -49,7 +50,22 @@
         </Grid>
         <CollectionView x:Name="GamesList" Grid.Row="4" ItemsSource="{Binding OpenGames}">
             <CollectionView.EmptyView>
-                <Label x:Name="EmptyLabel" TextColor="{StaticResource MutedForeground}" />
+                <VerticalStackLayout Padding="24" Spacing="12" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Label
+                        x:Name="EmptyLabel"
+                        HorizontalTextAlignment="Center"
+                        TextColor="{StaticResource MutedForeground}" />
+                    <Label
+                        x:Name="ViewWaitingLink"
+                        HorizontalTextAlignment="Center"
+                        FontSize="13"
+                        FontAttributes="Bold"
+                        TextColor="{StaticResource PrimaryGold}">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnViewWaitingTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </VerticalStackLayout>
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
@@ -76,7 +92,24 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-        <Label x:Name="ErrorLabel" Grid.Row="4" IsVisible="False" TextColor="{StaticResource Destructive}" VerticalOptions="Start" />
+        <VerticalStackLayout
+            x:Name="ErrorPanel"
+            Grid.Row="4"
+            IsVisible="False"
+            Spacing="8"
+            VerticalOptions="Start">
+            <Label x:Name="ErrorLabel" TextColor="{StaticResource Destructive}" />
+            <Button
+                x:Name="LiveGamesActionBtn"
+                IsVisible="False"
+                Clicked="OnLiveGamesAction"
+                HorizontalOptions="Start"
+                FontSize="13"
+                Padding="12,8"
+                CornerRadius="10"
+                BackgroundColor="{StaticResource Card}"
+                TextColor="{StaticResource Destructive}" />
+        </VerticalStackLayout>
         <ActivityIndicator x:Name="Busy" Grid.Row="4" IsRunning="False" Color="{StaticResource PrimaryGold}" VerticalOptions="Center" HorizontalOptions="Center" />
     </Grid>
 </ContentPage>

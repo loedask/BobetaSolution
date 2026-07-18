@@ -31,4 +31,7 @@ public class Player
 
     /// <summary>Current account status (e.g. Active, Suspended).</summary>
     public PlayerStatus Status { get; set; }
+
+    /// <summary>UTC time of the last authenticated realtime presence ping (notification hub).</summary>
+    public DateTime? LastSeenOnlineUtc { get; set; }
 }

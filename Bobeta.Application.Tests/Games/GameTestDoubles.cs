@@ -31,10 +31,12 @@ internal sealed class InMemoryGameSessionRepository(GameSession session) : IGame
             && session.Status == GameStatus.Waiting
             && session.OpponentPlayerId == null);
 
-    public Task<bool> HasInProgressGameAsync(Guid playerId, CancellationToken cancellationToken = default)
+    public Task<int> CountInProgressGamesAsync(Guid playerId, CancellationToken cancellationToken = default)
         => Task.FromResult(
             session.Status == GameStatus.InProgress
-            && (session.CreatorPlayerId == playerId || session.OpponentPlayerId == playerId));
+            && (session.CreatorPlayerId == playerId || session.OpponentPlayerId == playerId)
+                ? 1
+                : 0);
 
     public Task<GameSession> AddAsync(GameSession session, CancellationToken cancellationToken = default)
         => Task.FromResult(session);
@@ -364,6 +366,13 @@ internal sealed class InMemoryPlayerRepository(params Player[] players) : IPlaye
         return Task.CompletedTask;
     }
 
+    public Task TouchLastSeenOnlineAsync(Guid playerId, DateTime utcNow, CancellationToken cancellationToken = default)
+    {
+        if (_players.TryGetValue(playerId, out var player))
+            player.LastSeenOnlineUtc = utcNow;
+        return Task.CompletedTask;
+    }
+
     public Task<(IReadOnlyList<Player> Items, int TotalCount)> GetPagedAsync(
         int skip,
         int take,
@@ -404,6 +413,8 @@ internal sealed class NoOpGameEngineService : IGameEngineService
         throw new NotSupportedException();
     public Task<GameMoveResult> ApplyDominoMoveAsync(
         Guid playerId, Guid sessionId, string action, int? high, int? low, string? end, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+    public Task<GameMoveResult> ApplyAbbiaThrowAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
     public Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();

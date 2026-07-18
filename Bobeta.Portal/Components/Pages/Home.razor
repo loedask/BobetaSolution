@@ -1,5 +1,6 @@
 @page "/"
 @attribute [Authorize]
+@implements IAsyncDisposable
 @inject IDashboardService Dashboard
 @inject PortalUserContext PortalUser
 @rendermode InteractiveServer
@@ -37,11 +38,27 @@
 
 @if (_stats is not null)
 {
+    @if (PortalUser.IsPlatformOwner)
+    {
+        <div class="portal-detail-grid portal-section">
+            <section class="portal-card portal-stat-card">
+                <h2>Online now</h2>
+                <p class="portal-stat">@(_presence?.OnlineNow ?? 0)</p>
+                <p class="portal-muted">Authenticated apps connected in the last 2 minutes</p>
+            </section>
+            <section class="portal-card portal-stat-card">
+                <h2>In match</h2>
+                <p class="portal-stat">@(_presence?.InMatch ?? 0)</p>
+                <p class="portal-muted">Players in an in-progress game</p>
+            </section>
+        </div>
+    }
+
     <div class="portal-detail-grid portal-section">
         <section class="portal-card portal-stat-card">
             <h2>@_playersHeading</h2>
             <p class="portal-stat">@_stats.Players.TotalPlayers</p>
-            <p class="portal-muted">@_stats.Players.NewPlayers new in period · @_stats.Players.ActivePlayers active</p>
+            <p class="portal-muted">@_stats.Players.NewPlayers new in period · @_stats.Players.ActivePlayers active accounts</p>
         </section>
         @if (_stats.ShowFinancials)
         {
@@ -277,11 +294,15 @@
 }
 
 @code {
+    private static readonly TimeSpan PresencePollInterval = TimeSpan.FromSeconds(10);
+
     private DashboardStatsDto? _stats;
+    private PresenceStatsDto? _presence;
     private DateTime? _fromDate = DateTime.UtcNow.Date.AddDays(-30);
     private DateTime? _toDate = DateTime.UtcNow.Date;
     private bool _loading = true;
     private string? _error;
+    private CancellationTokenSource? _presenceCts;
 
     private string _subtitle => _stats switch
     {
@@ -311,7 +332,12 @@
         _ => "Revenue by source"
     };
 
-    protected override async Task OnInitializedAsync() => await LoadAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        if (PortalUser.IsPlatformOwner)
+            StartPresencePolling();
+    }
 
     private async Task LoadAsync()
     {
@@ -333,6 +359,8 @@
             };
 
             _stats = await Dashboard.GetDashboardAsync(query, role, userId);
+            if (PortalUser.IsPlatformOwner)
+                await RefreshPresenceAsync();
         }
         catch (Exception ex)
         {
@@ -344,6 +372,43 @@
         }
     }
 
+    private void StartPresencePolling()
+    {
+        _presenceCts?.Cancel();
+        _presenceCts?.Dispose();
+        _presenceCts = new CancellationTokenSource();
+        _ = RunPresencePollingAsync(_presenceCts.Token);
+    }
+
+    private async Task RunPresencePollingAsync(CancellationToken token)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(PresencePollInterval);
+            while (await timer.WaitForNextTickAsync(token))
+            {
+                await RefreshPresenceAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Page disposed.
+        }
+    }
+
+    private async Task RefreshPresenceAsync()
+    {
+        try
+        {
+            _presence = await Dashboard.GetPresenceAsync();
+        }
+        catch
+        {
+            // Keep last successful snapshot; period stats remain usable.
+        }
+    }
+
     private string ReportUrl(string fileName)
     {
         var from = _fromDate?.ToString("yyyy-MM-dd") ?? string.Empty;
@@ -352,4 +417,13 @@
     }
 
     private static string FormatAmount(decimal amount) => amount.ToString("N0");
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_presenceCts is null)
+            return;
+        await _presenceCts.CancelAsync();
+        _presenceCts.Dispose();
+        _presenceCts = null;
+    }
 }

@@ -28,7 +28,10 @@ public class GameService(HttpClient httpClient, IAccessTokenProvider? accessToke
             new JoinGameApiRequest { GameId = request.GameId },
             cancellationToken).ConfigureAwait(false);
         if (!postRes.IsSuccess || postRes.Data == null)
-            return Response<GameSessionViewModel?>.Failure(postRes.ErrorMessage ?? "Failed to join game.", postRes.StatusCode);
+            return Response<GameSessionViewModel?>.Failure(
+                postRes.ErrorMessage ?? "Failed to join game.",
+                postRes.StatusCode,
+                postRes.ErrorCode);
         return Response<GameSessionViewModel?>.Success(GameStateMapper.ToViewModel(postRes.Data));
     }
 

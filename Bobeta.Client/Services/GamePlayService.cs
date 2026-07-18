@@ -91,6 +91,17 @@ public class GamePlayService(HttpClient httpClient, IAccessTokenProvider? access
         return Response<GameStateViewModel?>.Success(GameStateMapper.ToViewModel(res.Data));
     }
 
+    public async Task<Response<GameStateViewModel?>> ApplyAbbiaThrowAsync(
+        Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        var body = new AbbiaMoveApiRequest { SessionId = sessionId };
+        var res = await PostAsync<GameStateDto>("api/GamePlay/abbia/throw", body, cancellationToken).ConfigureAwait(false);
+        if (!res.IsSuccess || res.Data == null)
+            return Response<GameStateViewModel?>.Failure(res.ErrorMessage ?? "Failed to throw Abbia tokens.", res.StatusCode);
+        return Response<GameStateViewModel?>.Success(GameStateMapper.ToViewModel(res.Data));
+    }
+
     public async Task<Response<GameStateViewModel?>> PlayCardAsync(Guid sessionId, GameMoveRequest request, CancellationToken cancellationToken = default)
     {
         try

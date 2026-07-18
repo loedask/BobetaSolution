@@ -48,7 +48,9 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public NgolaStateDto? Ngola => _table.Ngola;
     public bool IsNgola => Variant == GameVariant.Ngola;
     public DominoStateDto? Domino => _table.Domino;
+    public AbbiaStateDto? Abbia => _table.Abbia;
     public bool IsDomino => Variant == GameVariant.Domino;
+    public bool IsAbbia => Variant == GameVariant.Abbia;
     public bool IsPlayerTurn => _table.IsPlayerTurn;
     public decimal PotAmount => _table.PotAmount;
     public string? OpponentDisplayName => _table.OpponentDisplayName;
@@ -73,7 +75,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public bool IsSendingMove => IsLoading && (Variant != GameVariant.Makopa || PlayerCards.Count > 0);
 
     public bool ShowLoadingShell => GamePlayUiHelper.ShowLoadingShell(
-        IsLoading, Variant, Kopo != null || Ngola != null || Domino != null, PlayerCards.Count, WaitingForOpponent);
+        IsLoading, Variant, Kopo != null || Ngola != null || Domino != null || Abbia != null, PlayerCards.Count, WaitingForOpponent);
 
     private readonly List<KopoSquareDto> _kopoPath = new();
     public IReadOnlyList<KopoSquareDto> KopoSelectionPath => _kopoPath;
@@ -440,6 +442,40 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         try
         {
             var res = await _gamePlayService.ApplyDominoMoveAsync(sessionGuid, action, high, low, end);
+            if (!res.IsSuccess)
+            {
+                await HandleMoveFailureAsync(res);
+                return;
+            }
+            if (res.Data != null)
+                await ApplyAuthoritativeStateAsync(res.Data);
+        }
+        catch (Exception)
+        {
+            SetError("Something went wrong. Please try again.");
+            await SyncGameStateFromServerAsync();
+        }
+        finally
+        {
+            SetLoading(false);
+            _moveGate.Release();
+            RaiseStateChanged();
+        }
+    }
+
+    public async Task OnAbbiaThrowAsync()
+    {
+        if (!IsAbbia || !IsPlayerTurn || BlockInteraction
+            || !Guid.TryParse(SessionId, out var sessionGuid) || Abbia?.CanThrow != true)
+            return;
+        if (!await _moveGate.WaitAsync(0))
+            return;
+
+        SetLoading(true);
+        ClearError();
+        try
+        {
+            var res = await _gamePlayService.ApplyAbbiaThrowAsync(sessionGuid);
             if (!res.IsSuccess)
             {
                 await HandleMoveFailureAsync(res);

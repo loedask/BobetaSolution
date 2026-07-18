@@ -183,10 +183,12 @@ public class GameInactivityCoordinatorTests
                 && session.Status == GameStatus.Waiting
                 && session.OpponentPlayerId == null);
 
-        public Task<bool> HasInProgressGameAsync(Guid playerId, CancellationToken cancellationToken = default)
+        public Task<int> CountInProgressGamesAsync(Guid playerId, CancellationToken cancellationToken = default)
             => Task.FromResult(
                 session.Status == GameStatus.InProgress
-                && (session.CreatorPlayerId == playerId || session.OpponentPlayerId == playerId));
+                && (session.CreatorPlayerId == playerId || session.OpponentPlayerId == playerId)
+                    ? 1
+                    : 0);
 
         public Task<GameSession> AddAsync(GameSession session, CancellationToken cancellationToken = default)
             => Task.FromResult(session);

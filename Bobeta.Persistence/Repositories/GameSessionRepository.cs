@@ -57,8 +57,8 @@ public class GameSessionRepository : IGameSessionRepository
                  && s.OpponentPlayerId == null,
             cancellationToken);
 
-    public Task<bool> HasInProgressGameAsync(Guid playerId, CancellationToken cancellationToken = default) =>
-        _db.GameSessions.AnyAsync(
+    public Task<int> CountInProgressGamesAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+        _db.GameSessions.CountAsync(
             s => s.Status == GameStatus.InProgress
                  && (s.CreatorPlayerId == playerId || s.OpponentPlayerId == playerId),
             cancellationToken);

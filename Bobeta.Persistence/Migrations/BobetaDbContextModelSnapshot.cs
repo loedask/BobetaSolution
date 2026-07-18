@@ -524,6 +524,9 @@ namespace Bobeta.Persistence.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
+                    b.Property<DateTime?>("LastSeenOnlineUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -538,6 +541,8 @@ namespace Bobeta.Persistence.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LastSeenOnlineUtc");
 
                     b.HasIndex("PhoneNumber")
                         .IsUnique();

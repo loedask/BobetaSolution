@@ -46,6 +46,7 @@ public static class ApiServiceCollectionExtensions
         services.AddScoped<IGameSessionNotifier, GameSessionSignalRNotifier>();
         services.AddScoped<INotificationRealtimePublisher, SignalRNotificationRealtimePublisher>();
         services.AddSingleton<IGameSessionConnectionTracker, GameSessionConnectionTracker>();
+        services.AddSingleton<IPlayerOnlinePresenceTracker, PlayerOnlinePresenceTracker>();
         services.AddSingleton<IGameInactivityCoordinator, GameInactivityCoordinator>();
         services.AddHostedService<GameInactivityHostedService>();
         services.AddSingleton<IUserIdProvider, PlayerIdSignalRUserIdProvider>();
