@@ -722,34 +722,204 @@
   line-height: 1.65;
 }
 
-.lp-showcase {
-  display: grid;
-  gap: 0;
-  margin-bottom: 1.5rem;
-  border: 1px solid var(--lp-line);
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01));
-  overflow: hidden;
-  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+/* —— Game reel (single-stage carousel; scales to N games) —— */
+.lp-reel {
+  position: relative;
 }
 
-.lp-showcase:hover {
-  border-color: rgba(242, 140, 40, 0.4);
-  transform: translateY(-3px);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35), 0 0 40px rgba(242, 140, 40, 0.08);
+.lp-reel__chrome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.lp-reel__count {
+  margin: 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 0.92rem;
+  letter-spacing: 0.12em;
+  color: var(--lp-orange);
+}
+
+.lp-reel__count-sep {
+  margin: 0 0.35rem;
+  color: rgba(247, 244, 239, 0.28);
+}
+
+.lp-reel__arrows {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.lp-reel__arrow {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(247, 244, 239, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--lp-paper);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.lp-reel__arrow svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.lp-reel__arrow:hover {
+  border-color: rgba(242, 140, 40, 0.55);
+  color: var(--lp-orange);
+  background: rgba(242, 140, 40, 0.08);
+}
+
+.lp-reel__arrow:active {
+  transform: scale(0.96);
+}
+
+.lp-reel__stage {
+  position: relative;
+  border: 1px solid var(--lp-line);
+  border-radius: 1.35rem;
+  overflow: hidden;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+}
+
+.lp-reel__slide {
+  display: grid;
+  gap: 0;
+  animation: lp-reel-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (min-width: 860px) {
-  .lp-showcase {
+  .lp-reel__slide {
     grid-template-columns: 1.05fr 0.95fr;
     min-height: 22rem;
   }
+}
 
-  .lp-showcase--kopo {
-    grid-template-columns: 0.95fr 1.05fr;
+@keyframes lp-reel-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.65rem) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.lp-reel__autoplay {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 0.65rem;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(247, 244, 239, 0.08);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lp-reel__autoplay-bar {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--lp-orange-deep), var(--lp-orange-hot));
+  transform-origin: left center;
+  animation: lp-reel-progress 5.5s linear both;
+  box-shadow: 0 0 10px rgba(242, 140, 40, 0.45);
+}
+
+.lp-reel__autoplay-bar.is-paused {
+  animation-play-state: paused;
+}
+
+@keyframes lp-reel-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.lp-reel__thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.lp-reel__thumb {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.85rem 0.95rem 0.95rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(247, 244, 239, 0.1);
+  background: rgba(255, 255, 255, 0.025);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lp-reel__thumb:hover {
+  border-color: rgba(242, 140, 40, 0.35);
+  background: rgba(242, 140, 40, 0.05);
+}
+
+.lp-reel__thumb.is-active {
+  border-color: rgba(242, 140, 40, 0.55);
+  background:
+    linear-gradient(135deg, rgba(242, 140, 40, 0.14), transparent 55%),
+    rgba(255, 255, 255, 0.03);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25), 0 0 24px rgba(242, 140, 40, 0.08);
+  transform: translateY(-2px);
+}
+
+.lp-reel__thumb-num {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--lp-orange);
+}
+
+.lp-reel__thumb-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--lp-paper);
+}
+
+.lp-reel__thumb-pulse {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--lp-orange-hot), transparent);
+  animation: lp-thumb-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes lp-thumb-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-reel__slide,
+  .lp-reel__autoplay-bar,
+  .lp-reel__thumb-pulse {
+    animation: none !important;
   }
 
-  .lp-showcase--ngola {
-    grid-template-columns: 1.05fr 0.95fr;
+  .lp-reel__autoplay-bar {
+    transform: scaleX(0.35);
   }
 }
 
@@ -765,7 +935,7 @@
 }
 
 .lp-showcase__copy {
-  padding: 2rem 1.75rem 2.15rem;
+  padding: 2rem 1.75rem 2.35rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -848,10 +1018,10 @@
 .lp-fan__3 { transform: translate(0.85rem, -0.2rem) rotate(7deg); }
 .lp-fan__4 { transform: translate(2.6rem, 0.35rem) rotate(20deg); }
 
-.lp-showcase:hover .lp-fan__1 { transform: translate(-3.2rem, 0.1rem) rotate(-28deg); }
-.lp-showcase:hover .lp-fan__2 { transform: translate(-1.05rem, -0.45rem) rotate(-10deg); }
-.lp-showcase:hover .lp-fan__3 { transform: translate(1.05rem, -0.45rem) rotate(10deg); }
-.lp-showcase:hover .lp-fan__4 { transform: translate(3.2rem, 0.1rem) rotate(28deg); }
+.lp-reel__stage:hover .lp-fan__1 { transform: translate(-3.2rem, 0.1rem) rotate(-28deg); }
+.lp-reel__stage:hover .lp-fan__2 { transform: translate(-1.05rem, -0.45rem) rotate(-10deg); }
+.lp-reel__stage:hover .lp-fan__3 { transform: translate(1.05rem, -0.45rem) rotate(10deg); }
+.lp-reel__stage:hover .lp-fan__4 { transform: translate(3.2rem, 0.1rem) rotate(28deg); }
 
 .lp-board-wrap {
   position: relative;
