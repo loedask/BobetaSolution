@@ -212,7 +212,18 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         }
 
         if (_vm.ShowGameResult)
-            ResultTitle.Text = _vm.IsDraw ? "It's a draw" : "Game over";
+        {
+            if (_vm.IsDraw)
+                ResultTitle.Text = "It's a draw";
+            else if (_vm.EndedByForfeit && _vm.WinnerPlayerName == "You")
+                ResultTitle.Text = i18n.T("forfeit_win");
+            else if (_vm.EndedByForfeit)
+                ResultTitle.Text = i18n.T("forfeit_loss");
+            else if (_vm.WinnerPlayerName == "You")
+                ResultTitle.Text = i18n.T("result_you_won");
+            else
+                ResultTitle.Text = i18n.T("result_game_over");
+        }
 
         InactivityOverlay.IsVisible = _vm.ShowInactivityOverlay;
         if (_vm.ShowInactivityOverlay)
@@ -270,7 +281,39 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
     }
 
     private async void OnDone(object? sender, EventArgs e) =>
-        await Shell.Current.GoToAsync("//MainTabs/Dashboard");
+        await TryLeaveWithForfeitConfirmAsync();
+
+    protected override bool OnBackButtonPressed()
+    {
+        _ = TryLeaveWithForfeitConfirmAsync();
+        return true;
+    }
+
+    private async Task TryLeaveWithForfeitConfirmAsync()
+    {
+        if (_vm == null)
+        {
+            await Shell.Current.GoToAsync("//MainTabs/Dashboard");
+            return;
+        }
+
+        if (!_vm.ShouldConfirmLeave)
+        {
+            await Shell.Current.GoToAsync("//MainTabs/Dashboard");
+            return;
+        }
+
+        var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
+        var leave = await DisplayAlertAsync(
+            i18n.T("forfeit_confirm_title"),
+            i18n.T("forfeit_confirm"),
+            i18n.T("yes"),
+            i18n.T("no"));
+        if (!leave)
+            return;
+
+        await _vm.ConfirmForfeitAndLeaveAsync();
+    }
 
     private async void OnTakeCardTapped(object? sender, EventArgs e)
     {

@@ -48,6 +48,7 @@ public class GameHubClient
     public event Action<InactivityWarningPayload>? OnInactivityWarning;
     public event Action? OnInactivityWarningDismissed;
     public event Action? OnGameEndedByInactivity;
+    public event Action<Guid, Guid>? OnGameEndedByForfeit;
 
     public bool IsConnected => _connection?.State == HubConnectionState.Connected;
 
@@ -157,6 +158,21 @@ public class GameHubClient
         _connection.On("InactivityWarningDismissed", () => OnInactivityWarningDismissed?.Invoke());
         _connection.On<JsonElement>("GameEndedByInactivity", _ => OnGameEndedByInactivity?.Invoke());
 
+        _connection.On<JsonElement>("GameEndedByForfeit", payload =>
+        {
+            try
+            {
+                if (!payload.TryGetProperty("winnerPlayerId", out var winnerEl)
+                    || !payload.TryGetProperty("loserPlayerId", out var loserEl))
+                    return;
+                OnGameEndedByForfeit?.Invoke(winnerEl.GetGuid(), loserEl.GetGuid());
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "GameEndedByForfeit deserialize failed.");
+            }
+        });
+
         await StartAndJoinAsync(sessionGuid, cancellationToken);
     }
 
@@ -262,6 +278,15 @@ public class GameHubClient
         if (!await TryEnsureConnectedAsync(sessionId, cancellationToken))
             return;
         await _connection!.InvokeAsync("InactivityCancelGame", sessionGuid, cancellationToken);
+    }
+
+    public async Task ForfeitGameAsync(string sessionId, CancellationToken cancellationToken = default)
+    {
+        if (!Guid.TryParse(sessionId, out var sessionGuid))
+            return;
+        if (!await TryEnsureConnectedAsync(sessionId, cancellationToken))
+            return;
+        await _connection!.InvokeAsync("ForfeitGame", sessionGuid, cancellationToken);
     }
 
     public async Task PlayCardAsync(string sessionId, string suit, int rank, CancellationToken cancellationToken = default)

@@ -65,6 +65,9 @@ public class GameHubClient
     /// <summary>Match ended by inactivity / cancel — navigate both players home.</summary>
     public event Action? OnGameEndedByInactivity;
 
+    /// <summary>Match ended because a player forfeited (winner id in payload handling on client).</summary>
+    public event Action<Guid, Guid>? OnGameEndedByForfeit;
+
     public bool IsConnected => _connection?.State == HubConnectionState.Connected;
 
     /// <summary>Connects to the hub (if needed), joins the session group, and subscribes to events. Automatic reconnect on disconnect.</summary>
@@ -172,6 +175,23 @@ public class GameHubClient
         // Server sends a payload; parameterless handlers are not invoked reliably.
         _connection.On<JsonElement>("GameEndedByInactivity", _ => OnGameEndedByInactivity?.Invoke());
 
+        _connection.On<JsonElement>("GameEndedByForfeit", payload =>
+        {
+            try
+            {
+                if (!payload.TryGetProperty("winnerPlayerId", out var winnerEl)
+                    || !payload.TryGetProperty("loserPlayerId", out var loserEl))
+                    return;
+                var winnerId = winnerEl.GetGuid();
+                var loserId = loserEl.GetGuid();
+                OnGameEndedByForfeit?.Invoke(winnerId, loserId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "GameEndedByForfeit deserialize failed.");
+            }
+        });
+
         await StartAndJoinAsync(sessionGuid, cancellationToken);
     }
 
@@ -277,6 +297,15 @@ public class GameHubClient
         if (!await TryEnsureConnectedAsync(sessionId, cancellationToken))
             return;
         await _connection!.InvokeAsync("InactivityCancelGame", sessionGuid, cancellationToken);
+    }
+
+    public async Task ForfeitGameAsync(string sessionId, CancellationToken cancellationToken = default)
+    {
+        if (!Guid.TryParse(sessionId, out var sessionGuid))
+            return;
+        if (!await TryEnsureConnectedAsync(sessionId, cancellationToken))
+            return;
+        await _connection!.InvokeAsync("ForfeitGame", sessionGuid, cancellationToken);
     }
 
     /// <summary>Sends a card play to the hub (broadcasts to others). Card format e.g. "Heart_2".</summary>

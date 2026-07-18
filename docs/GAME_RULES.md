@@ -49,6 +49,7 @@ Authoritative rule logic lives in `Bobeta.Application/Games/`. This document mir
 | Normal win | It is your turn to lead (no trick in progress, you are the designated leader) **and** you hold **exactly 1 card** |
 | Instant loss | Before trick resolution: exactly one player holds a singleton (1 card), that player is **not** the responder, and the responder plays a card whose **suit matches** the singleton holder's remaining card → singleton holder wins immediately |
 | Hand wins | Each completed trick increments the trick winner's hand-win tally (shown in UI as "Hands won") |
+| Forfeit (leave) | Leaving an in-progress match after confirm settles the pot to the opponent (25% platform fee). Inactivity cancel still refunds both and uses the inactivity message. |
 
 ### Economy
 
@@ -99,6 +100,7 @@ Authoritative rule logic lives in `Bobeta.Application/Games/`. This document mir
 | Loss | You have 0 pieces |
 | Draw (stalemate) | Neither player has any legal move → bets are **released** (no winner settlement) |
 | Blocked player | If only one side has legal moves, the other side loses |
+| Forfeit (leave) | Leaving an in-progress match after confirm settles the pot to the opponent (same 25% fee as a normal win). Distinct from inactivity cancel, which refunds both. |
 
 ### Economy
 

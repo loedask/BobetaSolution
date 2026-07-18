@@ -40,7 +40,9 @@ public sealed class GameSessionServiceNotificationTests
             new NoOpGameEngineService(),
             notifier,
             NoOpInfluencerAttributionService.Instance,
-            notifications);
+            notifications,
+            new InMemoryGameResultRepository(_ => { }),
+            NoOpGameRevenueService.Instance);
 
         var result = await sut.JoinGameAsync(joinerId, sessionId);
 
@@ -79,7 +81,9 @@ public sealed class GameSessionServiceNotificationTests
             new NoOpGameEngineService(),
             new RecordingGameSessionNotifier(),
             NoOpInfluencerAttributionService.Instance,
-            notifications);
+            notifications,
+            new InMemoryGameResultRepository(_ => { }),
+            NoOpGameRevenueService.Instance);
 
         await sut.JoinGameAsync(joinerId, session.Id);
 
@@ -109,7 +113,9 @@ public sealed class GameSessionServiceNotificationTests
             new NoOpGameEngineService(),
             new RecordingGameSessionNotifier(),
             NoOpInfluencerAttributionService.Instance,
-            notifications);
+            notifications,
+            new InMemoryGameResultRepository(_ => { }),
+            NoOpGameRevenueService.Instance);
 
         await sut.JoinGameAsync(creatorId, session.Id);
 
@@ -136,7 +142,9 @@ public sealed class GameSessionServiceNotificationTests
             new NoOpGameEngineService(),
             new RecordingGameSessionNotifier(),
             NoOpInfluencerAttributionService.Instance,
-            notifications);
+            notifications,
+            new InMemoryGameResultRepository(_ => { }),
+            NoOpGameRevenueService.Instance);
 
         var result = await sut.JoinGameAsync(Guid.NewGuid(), session.Id);
 

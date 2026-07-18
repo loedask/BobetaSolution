@@ -10,6 +10,17 @@ internal sealed class FakeGameSessionService : IGameSessionService
   public static decimal? LastCreateBetAmount { get; private set; }
   public static GameVariant? LastCreateVariant { get; private set; }
 
+  public static Guid? LastForfeitLoserId { get; private set; }
+  public static Guid? LastForfeitSessionId { get; private set; }
+  public static ForfeitGameOutcome? NextForfeitOutcome { get; set; }
+
+  public static void ResetForfeitTracking()
+  {
+    LastForfeitLoserId = null;
+    LastForfeitSessionId = null;
+    NextForfeitOutcome = null;
+  }
+
   public Task<GameSessionDto> CreateGameAsync(Guid playerId, decimal betAmount, GameVariant variant = GameVariant.Makopa, CancellationToken cancellationToken = default)
   {
     LastCreatePlayerId = playerId;
@@ -45,6 +56,13 @@ internal sealed class FakeGameSessionService : IGameSessionService
 
   public Task<bool> CancelInProgressGameAsync(Guid sessionId, CancellationToken cancellationToken = default) =>
     throw new NotSupportedException();
+
+  public Task<ForfeitGameOutcome?> ForfeitGameAsync(Guid loserPlayerId, Guid sessionId, CancellationToken cancellationToken = default)
+  {
+    LastForfeitLoserId = loserPlayerId;
+    LastForfeitSessionId = sessionId;
+    return Task.FromResult(NextForfeitOutcome);
+  }
 
   public Task<bool> CancelWaitingGameAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
     throw new NotSupportedException();
