@@ -1,0 +1,10 @@
+@page "/what-is-bobeta"
+@layout LegalLayout
+@inject I18nService I18n
+
+<PageTitle>@Doc.Title - Bobeta</PageTitle>
+<LegalDocument Title="@Doc.Title" Intro="@Doc.Intro" Sections="@Doc.Sections" />
+
+@code {
+    private HelpCopy.LegalDoc Doc => HelpCopy.WhatIs(I18n.Locale);
+}
