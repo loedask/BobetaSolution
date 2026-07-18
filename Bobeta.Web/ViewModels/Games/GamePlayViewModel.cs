@@ -51,6 +51,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public GameVariant Variant => _table.Variant;
     public KopoStateDto? Kopo => _table.Kopo;
     public NgolaStateDto? Ngola => _table.Ngola;
+    public DominoStateDto? Domino => _table.Domino;
     public bool IsPlayerTurn => _table.IsPlayerTurn;
     public decimal PotAmount => _table.PotAmount;
     public string? OpponentDisplayName => _table.OpponentDisplayName;
@@ -77,7 +78,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public bool IsSendingMove => IsLoading && (Variant != GameVariant.Makopa || PlayerCards.Count > 0);
 
     public bool ShowLoadingShell => GamePlayUiHelper.ShowLoadingShell(
-        IsLoading, Variant, Kopo != null || Ngola != null, PlayerCards.Count, WaitingForOpponent);
+        IsLoading, Variant, Kopo != null || Ngola != null || Domino != null, PlayerCards.Count, WaitingForOpponent);
 
     private readonly List<KopoSquareDto> _kopoPath = new();
     public IReadOnlyList<KopoSquareDto> KopoSelectionPath => _kopoPath;
@@ -413,6 +414,43 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         try
         {
             var res = await _gamePlayService.ApplyNgolaMoveAsync(sessionGuid, pitIndex);
+            if (!res.IsSuccess)
+            {
+                if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))
+                    return;
+                await HandleMoveFailureAsync(res);
+                return;
+            }
+            if (res.Data != null)
+                await ApplyAuthoritativeStateAsync(res.Data);
+        }
+        catch (Exception)
+        {
+            SetError("Something went wrong. Please try again.");
+            await SyncGameStateFromServerAsync();
+        }
+        finally
+        {
+            SetLoading(false);
+            _moveGate.Release();
+            RaiseStateChanged();
+        }
+    }
+
+    public async Task OnDominoActionAsync(string action, int? high, int? low, string? end)
+    {
+        if (Variant != GameVariant.Domino || !IsPlayerTurn || BlockInteraction
+            || !Guid.TryParse(SessionId, out var sessionGuid) || Domino == null
+            || string.IsNullOrWhiteSpace(action))
+            return;
+        if (!await _moveGate.WaitAsync(0))
+            return;
+
+        SetLoading(true);
+        ClearError();
+        try
+        {
+            var res = await _gamePlayService.ApplyDominoMoveAsync(sessionGuid, action, high, low, end);
             if (!res.IsSuccess)
             {
                 if (await _appState.HandleUnauthorizedAsync(res.StatusCode, _nav))

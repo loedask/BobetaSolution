@@ -23,6 +23,7 @@ internal static class GameStateMapper
         MustFollowLedSuit = dto.MustFollowLedSuit,
         Kopo = dto.Kopo,
         Ngola = dto.Ngola,
+        Domino = dto.Domino,
         IsDraw = dto.IsDraw
     };
 

@@ -47,6 +47,10 @@ The API listens on the URLs in **`Bobeta.API/Properties/launchSettings.json`**. 
 
 To exercise Azure SignalR on your machine only, from **`Bobeta.API`**: `dotnet user-secrets set "Azure:SignalR:ConnectionString" "<your-connection-string>"`.
 
+### Phone push (FCM / APNs)
+
+Closed-app notifications use Firebase. See **[PUSH.md](./PUSH.md)** for `Fcm` settings, `google-services.json`, and device token registration.
+
 ## 4. Run the Web app
 
 1. Open **`Bobeta.Web/wwwroot/appsettings.json`** (or **`wwwroot/appsettings.Development.json`**) and set **`ApiBaseUrl`** to the API base URL (defaults to **`https://localhost:7029`** to match the API’s HTTPS profile).

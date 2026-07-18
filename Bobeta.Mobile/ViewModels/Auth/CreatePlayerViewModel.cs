@@ -1,6 +1,7 @@
 using Bobeta.Client.Models.Players;
 using Bobeta.Client.Services;
 using Bobeta.Mobile.Services;
+using Bobeta.Mobile.Services.Push;
 
 namespace Bobeta.Mobile.ViewModels.Auth;
 
@@ -8,12 +9,14 @@ public class CreatePlayerViewModel(
     AuthService authService,
     AppStateService appState,
     INavigationService nav,
-    InfluencerService influencerService) : ViewModelBase
+    InfluencerService influencerService,
+    PushRegistrationService pushRegistration) : ViewModelBase
 {
     private readonly AuthService _authService = authService;
     private readonly AppStateService _appState = appState;
     private readonly INavigationService _nav = nav;
     private readonly InfluencerService _influencerService = influencerService;
+    private readonly PushRegistrationService _pushRegistration = pushRegistration;
 
     private string _playerName = "";
 
@@ -52,6 +55,8 @@ public class CreatePlayerViewModel(
                     _appState.State.PendingInviteCode,
                     () => _appState.SetPendingInviteCode(null),
                     () => _appState.PersistAsync());
+                try { await _pushRegistration.RegisterIfPossibleAsync(); }
+                catch { /* optional until FCM is configured */ }
                 await _nav.ToMainTabsAsync("Dashboard");
             }
             else

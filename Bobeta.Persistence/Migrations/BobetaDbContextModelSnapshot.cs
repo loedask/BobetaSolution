@@ -30,8 +30,8 @@ namespace Bobeta.Persistence.Migrations
 
                     b.Property<string>("CardSuitRank")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -543,6 +543,39 @@ namespace Bobeta.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Players", (string)null);
+                });
+
+            modelBuilder.Entity("Bobeta.Domain.Entities.PlayerDeviceToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Platform")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("PlayerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("PlayerId", "UpdatedAt");
+
+                    b.ToTable("PlayerDeviceTokens", (string)null);
                 });
 
             modelBuilder.Entity("Bobeta.Domain.Entities.PlayerNotification", b =>

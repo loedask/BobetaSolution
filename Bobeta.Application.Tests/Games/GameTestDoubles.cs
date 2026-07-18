@@ -1,8 +1,10 @@
+using Bobeta.Application.DTOs.Game;
 using Bobeta.Application.DTOs.Notifications;
 using Bobeta.Application.DTOs.Wallet;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
+using Bobeta.Domain.ValueObjects;
 
 namespace Bobeta.Application.Tests.Games;
 
@@ -17,8 +19,22 @@ internal sealed class InMemoryGameSessionRepository(GameSession session) : IGame
     public Task<IReadOnlyList<GameSession>> GetJoinableWaitingSessionsAsync(Guid forPlayerId, int skip, int take, Domain.Enums.GameVariant? variant = null, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
 
+    public Task<IReadOnlyList<GameSession>> GetMyWaitingSessionsAsync(Guid playerId, int skip, int take, Domain.Enums.GameVariant? variant = null, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
+
     public Task<IReadOnlyList<GameSession>> GetByPlayerIdAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
+
+    public Task<bool> HasOpenWaitingSeatAsync(Guid playerId, CancellationToken cancellationToken = default)
+        => Task.FromResult(
+            session.CreatorPlayerId == playerId
+            && session.Status == GameStatus.Waiting
+            && session.OpponentPlayerId == null);
+
+    public Task<bool> HasInProgressGameAsync(Guid playerId, CancellationToken cancellationToken = default)
+        => Task.FromResult(
+            session.Status == GameStatus.InProgress
+            && (session.CreatorPlayerId == playerId || session.OpponentPlayerId == playerId));
 
     public Task<GameSession> AddAsync(GameSession session, CancellationToken cancellationToken = default)
         => Task.FromResult(session);
@@ -200,6 +216,37 @@ internal sealed class ThrowingPlayerNotificationRepository : IPlayerNotification
         throw new InvalidOperationException("repository failed");
 }
 
+internal sealed class InMemoryPlayerDeviceTokenRepository : IPlayerDeviceTokenRepository
+{
+    public List<PlayerDeviceToken> Items { get; } = new();
+
+    public Task<IReadOnlyList<PlayerDeviceToken>> GetByPlayerIdAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<PlayerDeviceToken>>(Items.Where(t => t.PlayerId == playerId).ToList());
+
+    public Task<PlayerDeviceToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Items.FirstOrDefault(t => t.Token == token));
+
+    public Task<PlayerDeviceToken> AddAsync(PlayerDeviceToken token, CancellationToken cancellationToken = default)
+    {
+        Items.Add(token);
+        return Task.FromResult(token);
+    }
+
+    public Task UpdateAsync(PlayerDeviceToken token, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+    public Task DeleteByTokenAsync(string token, CancellationToken cancellationToken = default)
+    {
+        Items.RemoveAll(t => t.Token == token);
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteByTokensAsync(IReadOnlyList<string> tokens, CancellationToken cancellationToken = default)
+    {
+        Items.RemoveAll(t => tokens.Contains(t.Token));
+        return Task.CompletedTask;
+    }
+}
+
 internal sealed class InMemoryWalletRepository : IWalletRepository
 {
     private readonly Dictionary<Guid, Wallet> _wallets = new();
@@ -331,4 +378,33 @@ internal sealed class InMemoryPlayerRepository(params Player[] players) : IPlaye
             .ToList();
         return Task.FromResult<(IReadOnlyList<Player>, int)>((items, _players.Count));
     }
+}
+
+internal sealed class RecordingGameSessionNotifier : IGameSessionNotifier
+{
+    public List<Guid> Sessions { get; } = new();
+
+    public Task NotifySessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        Sessions.Add(sessionId);
+        return Task.CompletedTask;
+    }
+}
+
+internal sealed class NoOpGameEngineService : IGameEngineService
+{
+    public Task StartGameAsync(Guid sessionId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task<GameMoveResult> PlayCardAsync(Guid playerId, Guid sessionId, Card card, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+    public Task<GameMoveResult> VoidFollowDrawAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+    public Task<GameMoveResult> ApplyKopoMoveAsync(Guid playerId, Guid sessionId, IReadOnlyList<(int Row, int Col)> path, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+    public Task<GameMoveResult> ApplyNgolaMoveAsync(Guid playerId, Guid sessionId, int pitIndex, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+    public Task<GameMoveResult> ApplyDominoMoveAsync(
+        Guid playerId, Guid sessionId, string action, int? high, int? low, string? end, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+    public Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
 }

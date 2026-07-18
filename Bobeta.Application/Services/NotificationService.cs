@@ -6,10 +6,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Bobeta.Application.Services;
 
-/// <summary>Persists inbox notifications and publishes them to connected clients.</summary>
+/// <summary>Persists inbox notifications, publishes over SignalR, and sends phone push when tokens exist.</summary>
 public class NotificationService(
     IPlayerNotificationRepository repository,
     INotificationRealtimePublisher realtimePublisher,
+    IPushNotificationSender pushSender,
+    IPlayerDeviceTokenRepository deviceTokens,
     ILogger<NotificationService> logger) : INotificationService
 {
     public Task NotifyOpponentJoinedAsync(
@@ -149,11 +151,72 @@ public class NotificationService(
             await repository.AddAsync(entity, cancellationToken);
             var dto = Map(entity);
             await realtimePublisher.PublishAsync(playerId, dto, cancellationToken);
+            await TrySendPushAsync(playerId, type, actorName, amount, relatedEntityId, deepLink, cancellationToken);
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Failed to create/publish notification type={Type} player={PlayerId}", type, playerId);
         }
+    }
+
+    private async Task TrySendPushAsync(
+        Guid playerId,
+        NotificationType type,
+        string? actorName,
+        decimal? amount,
+        Guid? relatedEntityId,
+        string? deepLink,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var tokens = await deviceTokens.GetByPlayerIdAsync(playerId, cancellationToken);
+            if (tokens.Count == 0)
+                return;
+
+            var (title, body) = FormatPush(type, actorName, amount);
+            var data = new Dictionary<string, string>
+            {
+                ["type"] = type.ToString(),
+                ["deepLink"] = deepLink ?? ""
+            };
+            if (relatedEntityId is { } id)
+                data["relatedEntityId"] = id.ToString("D");
+
+            var invalid = await pushSender.SendAsync(
+                tokens.Select(t => t.Token).ToList(),
+                title,
+                body,
+                data,
+                cancellationToken);
+
+            if (invalid.Count > 0)
+                await deviceTokens.DeleteByTokensAsync(invalid, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to send push notification type={Type} player={PlayerId}", type, playerId);
+        }
+    }
+
+    /// <summary>Push copy is French-first (default market); inbox i18n still localizes in-app.</summary>
+    private static (string Title, string Body) FormatPush(NotificationType type, string? actorName, decimal? amount)
+    {
+        var actor = string.IsNullOrWhiteSpace(actorName) ? "Adversaire" : actorName.Trim();
+        var amountText = amount is { } a ? a.ToString("N0") : "";
+        return type switch
+        {
+            NotificationType.OpponentJoined => ("Adversaire a rejoint", $"{actor} a rejoint votre partie de {amountText} FCFA."),
+            NotificationType.GameWon => ("Victoire", $"Vous avez gagne {amountText} FCFA."),
+            NotificationType.GameLost => ("Partie terminee", "Vous avez perdu cette partie."),
+            NotificationType.DepositSuccess => ("Depot reussi", $"{amountText} FCFA ajoutes a votre portefeuille."),
+            NotificationType.DepositFailed => ("Depot echoue", "Le depot n'a pas abouti."),
+            NotificationType.WithdrawSuccess => ("Retrait reussi", $"{amountText} FCFA envoyes."),
+            NotificationType.WithdrawFailed => ("Retrait echoue", "Le retrait n'a pas abouti."),
+            NotificationType.GameInvite => ("Invitation", $"{actor} vous invite a une partie de {amountText} FCFA."),
+            NotificationType.BetProposal => ("Nouvelle mise", $"Proposition de mise: {amountText} FCFA."),
+            _ => ("Bobeta", "Vous avez une nouvelle notification.")
+        };
     }
 
     private static NotificationDto Map(PlayerNotification n) =>

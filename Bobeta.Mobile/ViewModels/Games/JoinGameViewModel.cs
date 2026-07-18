@@ -120,12 +120,12 @@ public class JoinGameViewModel(
         }
         try
         {
-            var res = await _gameService.GetOpenGamesAsync(VariantFilter);
+            var variantFilter = VariantFilter;
+            var res = await _gameService.GetOpenGamesAsync(variantFilter);
             if (res.IsSuccess && res.Data != null)
             {
                 OpenGames = res.Data.Where(x => x.OpponentPlayerId == null).ToList();
-                if (quiet)
-                    RaiseStateChanged();
+                RaiseStateChanged();
             }
             else if (!res.IsSuccess && !quiet)
                 SetError(res.ErrorMessage ?? "Failed to load games.");

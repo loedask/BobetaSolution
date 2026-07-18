@@ -238,6 +238,8 @@ public sealed class NotificationServiceTests
         var sut = new NotificationService(
             new ThrowingPlayerNotificationRepository(),
             new RecordingNotificationRealtimePublisher(),
+            NullPushNotificationSender.Instance,
+            new InMemoryPlayerDeviceTokenRepository(),
             NullLogger<NotificationService>.Instance);
 
         var ex = await Record.ExceptionAsync(() =>
@@ -249,5 +251,5 @@ public sealed class NotificationServiceTests
     private static NotificationService CreateSut(
         InMemoryPlayerNotificationRepository repo,
         RecordingNotificationRealtimePublisher publisher) =>
-        new(repo, publisher, NullLogger<NotificationService>.Instance);
+        new(repo, publisher, NullPushNotificationSender.Instance, new InMemoryPlayerDeviceTokenRepository(), NullLogger<NotificationService>.Instance);
 }

@@ -12,5 +12,7 @@ public interface IGameService
     Task<Response<bool>> ProposeBetAsync(Guid gameId, double amount, CancellationToken cancellationToken = default);
     Task<Response<bool>> AcceptBetChangeAsync(Guid gameId, CancellationToken cancellationToken = default);
     Task<Response<IReadOnlyList<GameSessionViewModel>>> GetOpenGamesAsync(GameVariant? variant = null, CancellationToken cancellationToken = default);
+    Task<Response<IReadOnlyList<GameSessionViewModel>>> GetMyWaitingGamesAsync(GameVariant? variant = null, CancellationToken cancellationToken = default);
+    Task<Response<bool>> CancelWaitingGameAsync(Guid gameId, CancellationToken cancellationToken = default);
     Task<Response<GameStateViewModel?>> GetGameStateAsync(Guid sessionId, CancellationToken cancellationToken = default);
 }

@@ -145,6 +145,13 @@
             VerticalOptions="Center"
             HorizontalOptions="Fill" />
 
+        <controls:DominoBoardView
+            x:Name="DominoBoard"
+            Grid.Row="3"
+            IsVisible="False"
+            VerticalOptions="Center"
+            HorizontalOptions="Fill" />
+
         <CollectionView
             x:Name="HandView"
             Grid.Row="3"

@@ -15,6 +15,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(CreatePlayerPage), typeof(CreatePlayerPage));
         Routing.RegisterRoute(nameof(DepositPage), typeof(DepositPage));
         Routing.RegisterRoute(nameof(WithdrawPage), typeof(WithdrawPage));
+        Routing.RegisterRoute(nameof(MyWaitingTablesPage), typeof(MyWaitingTablesPage));
         Routing.RegisterRoute("GamePlay", typeof(GamePlayPage));
 
         Loaded += async (_, _) =>
@@ -23,6 +24,16 @@ public partial class AppShell : Shell
             if (appState.State.IsAuthenticated)
             {
                 await inbox.InitializeAsync();
+                try
+                {
+                    var push = MauiProgram.Services.GetService<Bobeta.Mobile.Services.Push.PushRegistrationService>();
+                    if (push is not null)
+                        await push.RegisterIfPossibleAsync();
+                }
+                catch
+                {
+                    // Push is optional until Firebase is configured.
+                }
                 await GoToAsync("//MainTabs/Dashboard");
             }
         };

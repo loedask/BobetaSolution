@@ -25,6 +25,10 @@ public class GameSessionService(
 
     public async Task<GameSessionDto> CreateGameAsync(Guid playerId, decimal betAmount, GameVariant variant = GameVariant.Makopa, CancellationToken cancellationToken = default)
     {
+        if (await _sessionRepository.HasOpenWaitingSeatAsync(playerId, cancellationToken))
+            throw new InvalidOperationException(
+                "You already have an open table waiting for an opponent. Cancel it or wait for a join before creating another.");
+
         var chargeAmount = await _influencerAttribution.GetChargeAmountAsync(playerId, betAmount, cancellationToken);
         await _walletService.LockBetAsync(playerId, chargeAmount, cancellationToken);
 
@@ -60,6 +64,10 @@ public class GameSessionService(
             return null;
         if (session.CreatorPlayerId == playerId)
             return Map(session);
+
+        if (await _sessionRepository.HasInProgressGameAsync(playerId, cancellationToken))
+            throw new InvalidOperationException(
+                "Finish your current match before joining another game.");
 
         var chargeAmount = await _influencerAttribution.GetChargeAmountAsync(playerId, session.BetAmount, cancellationToken);
         await _walletService.LockBetAsync(playerId, chargeAmount, cancellationToken);
@@ -112,6 +120,14 @@ public class GameSessionService(
         take = Math.Clamp(take, 1, 100);
         skip = Math.Max(0, skip);
         var sessions = await _sessionRepository.GetJoinableWaitingSessionsAsync(playerId, skip, take, variant, cancellationToken);
+        return sessions.Select(Map).ToList();
+    }
+
+    public async Task<IReadOnlyList<GameSessionDto>> ListMyWaitingGamesAsync(Guid playerId, int skip = 0, int take = 50, GameVariant? variant = null, CancellationToken cancellationToken = default)
+    {
+        take = Math.Clamp(take, 1, 100);
+        skip = Math.Max(0, skip);
+        var sessions = await _sessionRepository.GetMyWaitingSessionsAsync(playerId, skip, take, variant, cancellationToken);
         return sessions.Select(Map).ToList();
     }
 

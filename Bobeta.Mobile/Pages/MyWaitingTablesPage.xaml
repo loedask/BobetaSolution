@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Bobeta.Mobile.Pages.MyWaitingTablesPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="{StaticResource PageBackground}"
+    Title="My waiting tables">
+
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
+        <VerticalStackLayout Spacing="6">
+            <Label x:Name="TitleLabel" FontSize="22" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
+            <Label x:Name="HintLabel" FontSize="13" TextColor="{StaticResource MutedForeground}" LineBreakMode="WordWrap" />
+            <Label x:Name="ErrorLabel" IsVisible="False" TextColor="{StaticResource Destructive}" FontSize="13" />
+        </VerticalStackLayout>
+
+        <RefreshView Grid.Row="1" x:Name="Refresh" Refreshing="OnRefresh">
+            <CollectionView x:Name="TablesList">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="24" Spacing="10" VerticalOptions="Center">
+                        <Label x:Name="EmptyTitle" FontAttributes="Bold" FontSize="16" HorizontalTextAlignment="Center" TextColor="{StaticResource Foreground}" />
+                        <Label x:Name="EmptyBody" FontSize="13" HorizontalTextAlignment="Center" TextColor="{StaticResource MutedForeground}" />
+                        <Button
+                            x:Name="CreateBtn"
+                            Clicked="OnCreate"
+                            Margin="40,8,40,0"
+                            CornerRadius="12"
+                            BackgroundColor="{StaticResource PrimaryGold}"
+                            TextColor="{StaticResource PrimaryDarkText}" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,0,10" Padding="14" BackgroundColor="{StaticResource Card}" StrokeShape="RoundRectangle 14">
+                            <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="10">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding VariantName}" FontAttributes="Bold" FontSize="14" TextColor="{StaticResource PrimaryGold}" />
+                                    <Label x:Name="WaitingHint" Text="{Binding Status}" FontSize="12" TextColor="{StaticResource MutedForeground}" />
+                                    <Label Text="{Binding BetAmount, StringFormat='{0:N0} FCFA'}" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource Foreground}" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="8">
+                                    <Button
+                                        Text="Open"
+                                        Clicked="OnOpen"
+                                        CommandParameter="{Binding Id}"
+                                        CornerRadius="10"
+                                        FontSize="12"
+                                        BackgroundColor="{StaticResource PrimaryGold}"
+                                        TextColor="{StaticResource PrimaryDarkText}" />
+                                    <Button
+                                        Text="Cancel"
+                                        Clicked="OnCancel"
+                                        CommandParameter="{Binding Id}"
+                                        CornerRadius="10"
+                                        FontSize="12"
+                                        BackgroundColor="{StaticResource SecondaryCard}"
+                                        TextColor="{StaticResource Foreground}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

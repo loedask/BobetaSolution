@@ -9,6 +9,10 @@ using Bobeta.Client.Contracts;
 using Bobeta.Mobile.Pages;
 using Bobeta.Mobile.Services;
 using Bobeta.Mobile.Services.Realtime;
+using Bobeta.Mobile.Services.Push;
+#if ANDROID
+using Bobeta.Mobile.Platforms.Android;
+#endif
 using Bobeta.Mobile.ViewModels.Auth;
 using Bobeta.Mobile.ViewModels.Dashboard;
 using Bobeta.Mobile.ViewModels.Games;
@@ -92,11 +96,18 @@ public static class MauiProgram
         builder.Services.AddTransient<DepositViewModel>();
         builder.Services.AddTransient<WithdrawViewModel>();
         builder.Services.AddTransient<JoinGameViewModel>();
+        builder.Services.AddTransient<MyWaitingTablesViewModel>();
         builder.Services.AddTransient<CreateGameViewModel>();
         builder.Services.AddTransient<GameHistoryViewModel>();
         builder.Services.AddTransient<ProfileViewModel>();
         builder.Services.AddTransient<GamePlayViewModel>();
         builder.Services.AddSingleton<Bobeta.Mobile.ViewModels.Notifications.NotificationInboxViewModel>();
+#if ANDROID
+        builder.Services.AddSingleton<IPushTokenProvider, AndroidFirebasePushTokenProvider>();
+#else
+        builder.Services.AddSingleton<IPushTokenProvider, NullPushTokenProvider>();
+#endif
+        builder.Services.AddSingleton<PushRegistrationService>();
 
         builder.Services.AddSingleton<AppShell>();
 

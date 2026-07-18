@@ -32,6 +32,7 @@ public partial class DashboardPage : ContentPage
         WithdrawBtn.Text = i18n.T("withdraw");
         CreateTile.Text = i18n.T("create_game");
         JoinTile.Text = i18n.T("join_game");
+        WaitingTile.Text = i18n.T("my_waiting_tables");
         HistoryTile.Text = i18n.T("history");
         RecentTitle.Text = i18n.T("recent_activity");
         SeeAllBtn.Text = i18n.T("see_all");
@@ -160,6 +161,9 @@ public partial class DashboardPage : ContentPage
 
     private async void OnGoJoin(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync("//MainTabs/JoinGame");
+
+    private async void OnGoWaiting(object? sender, EventArgs e) =>
+        await Shell.Current.GoToAsync(nameof(MyWaitingTablesPage));
 
     private async void OnGoHistory(object? sender, EventArgs e) =>
         await Shell.Current.GoToAsync("//MainTabs/History");

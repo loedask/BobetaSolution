@@ -143,30 +143,4 @@ public sealed class GameSessionServiceNotificationTests
         Assert.Null(result);
         Assert.Empty(notifications.OpponentJoined);
     }
-
-    private sealed class RecordingGameSessionNotifier : IGameSessionNotifier
-    {
-        public List<Guid> Sessions { get; } = new();
-
-        public Task NotifySessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
-        {
-            Sessions.Add(sessionId);
-            return Task.CompletedTask;
-        }
-    }
-
-    private sealed class NoOpGameEngineService : IGameEngineService
-    {
-        public Task StartGameAsync(Guid sessionId, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task<GameMoveResult> PlayCardAsync(Guid playerId, Guid sessionId, Card card, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
-        public Task<GameMoveResult> VoidFollowDrawAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
-        public Task<GameMoveResult> ApplyKopoMoveAsync(Guid playerId, Guid sessionId, IReadOnlyList<(int Row, int Col)> path, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
-        public Task<GameMoveResult> ApplyNgolaMoveAsync(Guid playerId, Guid sessionId, int pitIndex, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
-        public Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
-    }
 }

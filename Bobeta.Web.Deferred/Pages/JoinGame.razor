@@ -35,7 +35,7 @@
             SuccessMessage="@ViewModel.InviteSuccessMessage" />
 
         <div class="card-surface rounded-2xl border border-border/50 p-1.5">
-            <div class="grid grid-cols-4 gap-1">
+            <div class="grid grid-cols-3 gap-1 sm:grid-cols-5">
                 <button type="button" class="@FilterClass(null)" @onclick="() => SetFilter(null)">
                     <span class="game-filter-icon game-filter-icon--all" aria-hidden="true">
                         <span></span><span></span><span></span><span></span>
@@ -80,6 +80,14 @@
                         </span>
                     </span>
                     <span>Ngola</span>
+                </button>
+                <button type="button" class="@FilterClass(GameVariant.Domino)" @onclick="() => SetFilter(GameVariant.Domino)">
+                    <span class="game-filter-icon game-filter-icon--domino" aria-hidden="true">
+                        <span class="game-filter-icon__domino">
+                            <span></span><span></span>
+                        </span>
+                    </span>
+                    <span>Domino</span>
                 </button>
             </div>
         </div>
