@@ -184,7 +184,7 @@
 
 .lp-nav {
   display: none;
-  gap: 2rem;
+  gap: 1.35rem;
   font-size: 0.88rem;
   font-weight: 500;
   color: var(--lp-mute);
@@ -221,6 +221,15 @@
 
 @media (min-width: 768px) {
   .lp-nav { display: flex; }
+}
+
+@media (min-width: 960px) {
+  .lp-nav { gap: 1.75rem; }
+}
+
+/* Keep sticky-header anchors from landing under the floating dock */
+.landing-page section[id] {
+  scroll-margin-top: 5.5rem;
 }
 
 .lp-hide-sm { display: none; }
