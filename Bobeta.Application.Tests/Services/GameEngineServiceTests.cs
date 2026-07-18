@@ -23,9 +23,10 @@ public class GameEngineServiceTests
         var sessionId = Guid.NewGuid();
         var creatorId = Guid.NewGuid();
         var opponentId = Guid.NewGuid();
+        // Creator still holds a card so empty-hand does not fire; opponent wins with one card to lead.
         var pendingState = new MakopaGameState
         {
-            CreatorHand = new List<string>(),
+            CreatorHand = new List<string> { "Club_9" },
             OpponentHand = new List<string> { "Spade_12", "Heart_10" },
             LeadPlayerId = creatorId,
             CurrentTurnPlayerId = opponentId,
@@ -59,6 +60,42 @@ public class GameEngineServiceTests
     }
 
     [Fact]
+    public async Task PlayCardAsync_WhenResponderEmptiesHand_EndsGameAndNotifies()
+    {
+        var sessionId = Guid.NewGuid();
+        var creatorId = Guid.NewGuid();
+        var opponentId = Guid.NewGuid();
+        var pendingState = new MakopaGameState
+        {
+            CreatorHand = new List<string> { "Heart_4", "Club_14" },
+            OpponentHand = new List<string> { "Spade_3" },
+            LeadPlayerId = creatorId,
+            CurrentTurnPlayerId = opponentId,
+            TrickSuit = "Spade",
+            TrickPlays = new List<PlayedInTrick>
+            {
+                new() { PlayerId = creatorId, Card = "Spade_12" }
+            }
+        };
+
+        var session = CreateSession(sessionId, creatorId, opponentId, pendingState);
+        var wallet = new RecordingWalletService();
+        var notifications = new RecordingNotificationService();
+        var sut = CreateEngine(session, wallet, notifications);
+
+        var move = await sut.PlayCardAsync(opponentId, sessionId, new Card(CardSuit.Spade, CardRank.Three));
+
+        Assert.True(move.IsSuccess);
+        Assert.True(move.State!.GameOver);
+        Assert.Equal(opponentId, move.State.WinnerPlayerId);
+        Assert.Equal(GameStatus.Finished, session.Status);
+        Assert.Single(wallet.Settlements);
+        Assert.Equal(2, notifications.GameResults.Count);
+        Assert.Contains(notifications.GameResults, r => r.PlayerId == opponentId && r.Won && r.Amount == 150m);
+        Assert.Contains(notifications.GameResults, r => r.PlayerId == creatorId && !r.Won && r.Amount == 100m);
+    }
+
+    [Fact]
     public async Task PlayCardAsync_WhenGameEnds_NotifiesWinnerAndLoser()
     {
         var sessionId = Guid.NewGuid();
@@ -66,7 +103,7 @@ public class GameEngineServiceTests
         var opponentId = Guid.NewGuid();
         var pendingState = new MakopaGameState
         {
-            CreatorHand = new List<string>(),
+            CreatorHand = new List<string> { "Club_9" },
             OpponentHand = new List<string> { "Spade_12", "Heart_10" },
             LeadPlayerId = creatorId,
             CurrentTurnPlayerId = opponentId,

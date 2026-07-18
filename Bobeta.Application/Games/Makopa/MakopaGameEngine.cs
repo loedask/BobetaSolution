@@ -15,7 +15,8 @@ namespace Bobeta.Application.Games.Makopa;
 /// Makopa (authoritative rules): 2 players, 4 cards each from a shuffled 52-card deck; remaining cards are unused (no drawing ever).
 /// Trick = lead + response. Follow suit when possible; void → Take only (lead card to responder's hand; leader leads again; Take is not a card play).
 /// Completed trick: compare led suit only; higher rank wins; ties → leader wins; both cards leave play; winner leads next.
-/// Win: after turn/leader assignment, if it is your turn to lead and you hold exactly one card, you win immediately.
+/// Win: a player with an empty hand wins immediately (e.g. after playing their last card as lead or response).
+/// Also: after turn/leader assignment, if it is your turn to lead and you hold exactly one card, you win immediately.
 /// Instant loss (before trick resolution): responder plays a suit matching the other player's only card while that player holds exactly one card.
 /// </summary>
 public class MakopaGameEngine(
@@ -119,7 +120,7 @@ public class MakopaGameEngine(
             CreatedAt = DateTime.UtcNow
         }, cancellationToken);
 
-        await TryEndGameIfCurrentPlayerHasNoCardsAsync(
+        await TryEndGameIfWinConditionMetAsync(
             session, state, creatorId, opponentId, sessionId, cancellationToken);
 
         session.GameStateJson = session.Status == GameStatus.Finished
@@ -238,7 +239,7 @@ public class MakopaGameEngine(
             state.CurrentTurnPlayerId = playerId == creatorId ? opponentId : creatorId;
         }
 
-        await TryEndGameIfCurrentPlayerHasNoCardsAsync(
+        await TryEndGameIfWinConditionMetAsync(
             session, state, creatorId, opponentId, sessionId, cancellationToken);
 
         if (session.Status == GameStatus.Finished)
@@ -405,9 +406,10 @@ public class MakopaGameEngine(
         && state.CurrentTurnPlayerId == state.LeadPlayerId;
 
     /// <summary>
-    /// Win when it is a player&apos;s turn to lead and they hold exactly one card (e.g. after winning a trick or regaining lead after Take).
+    /// Ends the game when a seat has an empty hand, or when it is a player&apos;s turn to lead with exactly one card
+    /// (e.g. after winning a trick or regaining lead after Take). Empty hand takes priority.
     /// </summary>
-    private async Task TryEndGameIfCurrentPlayerHasNoCardsAsync(
+    private async Task TryEndGameIfWinConditionMetAsync(
         GameSession session,
         MakopaGameState state,
         Guid creatorId,
@@ -417,6 +419,28 @@ public class MakopaGameEngine(
     {
         if (session.Status == GameStatus.Finished)
             return;
+
+        var creatorHandCount = state.CreatorHand.Count;
+        var opponentHandCount = state.OpponentHand.Count;
+        Guid? emptyHandWinnerId = creatorHandCount == 0
+            ? creatorId
+            : opponentHandCount == 0
+                ? opponentId
+                : null;
+
+        if (emptyHandWinnerId.HasValue)
+        {
+            var winnerId = emptyHandWinnerId.Value;
+            var loserId = winnerId == creatorId ? opponentId : creatorId;
+            _logger.LogInformation(
+                "Makopa win check | session={SessionId} emptyHandWinner={WinnerId} creatorHand={CreatorHand} opponentHand={OpponentHand} endGameTriggered=True",
+                sessionId, winnerId, creatorHandCount, opponentHandCount);
+            await FinalizeGameAsync(session, winnerId, loserId, cancellationToken);
+            session.GameStateJson = null;
+            session.Status = GameStatus.Finished;
+            session.FinishedAt = DateTime.UtcNow;
+            return;
+        }
 
         if (!state.CurrentTurnPlayerId.HasValue)
         {
@@ -437,8 +461,8 @@ public class MakopaGameEngine(
         if (!endGameTriggered)
             return;
 
-        var loserId = currentPlayerId == creatorId ? opponentId : creatorId;
-        await FinalizeGameAsync(session, currentPlayerId, loserId, cancellationToken);
+        var oneCardLoserId = currentPlayerId == creatorId ? opponentId : creatorId;
+        await FinalizeGameAsync(session, currentPlayerId, oneCardLoserId, cancellationToken);
         session.GameStateJson = null;
         session.Status = GameStatus.Finished;
         session.FinishedAt = DateTime.UtcNow;

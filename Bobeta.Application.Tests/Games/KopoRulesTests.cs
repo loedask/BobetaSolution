@@ -236,6 +236,21 @@ public class KopoRulesTests
     }
 
     [Fact]
+    public void CheckOutcome_OpponentWinsWhenCreatorHasNoPieces()
+    {
+        var state = new KopoGameState
+        {
+            Pieces = [new KopoPiece { Id = 1, OwnerId = _opponent, Row = 4, Col = 3 }]
+        };
+
+        var (winner, loser, isDraw) = KopoRules.CheckOutcome(state, _creator, _opponent);
+
+        Assert.Equal(_opponent, winner);
+        Assert.Equal(_creator, loser);
+        Assert.False(isDraw);
+    }
+
+    [Fact]
     public void CheckOutcome_DrawWhenNeitherPlayerCanMove()
     {
         var state = new KopoGameState
@@ -273,6 +288,47 @@ public class KopoRulesTests
 
         Assert.Equal(_opponent, winner);
         Assert.Equal(_creator, loser);
+        Assert.False(isDraw);
+    }
+
+    [Fact]
+    public void CheckOutcome_CreatorWinsWhenOpponentHasNoLegalMove()
+    {
+        var state = new KopoGameState
+        {
+            Pieces =
+            [
+                new KopoPiece { Id = 1, OwnerId = _opponent, Row = 9, Col = 0 },
+                new KopoPiece { Id = 2, OwnerId = _creator, Row = 7, Col = 2 }
+            ]
+        };
+
+        Assert.False(KopoRules.HasAnyLegalMove(state, _creator, _opponent));
+        Assert.True(KopoRules.HasAnyLegalMove(state, _creator, _creator));
+
+        var (winner, loser, isDraw) = KopoRules.CheckOutcome(state, _creator, _opponent);
+
+        Assert.Equal(_creator, winner);
+        Assert.Equal(_opponent, loser);
+        Assert.False(isDraw);
+    }
+
+    [Fact]
+    public void CheckOutcome_ContinuesWhenBothSidesCanMove()
+    {
+        var state = new KopoGameState
+        {
+            Pieces =
+            [
+                new KopoPiece { Id = 1, OwnerId = _creator, Row = 6, Col = 1 },
+                new KopoPiece { Id = 2, OwnerId = _opponent, Row = 3, Col = 2 }
+            ]
+        };
+
+        var (winner, loser, isDraw) = KopoRules.CheckOutcome(state, _creator, _opponent);
+
+        Assert.Null(winner);
+        Assert.Null(loser);
         Assert.False(isDraw);
     }
 }
