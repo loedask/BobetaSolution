@@ -41,21 +41,40 @@ public sealed class GameSessionServiceConcurrencyTests
     }
 
     [Fact]
-    public async Task JoinGameAsync_WhenPlayerAlreadyHasInProgress_Throws()
+    public async Task JoinGameAsync_WhenPlayerHasOneInProgress_AllowsJoin()
     {
         var playerId = Guid.NewGuid();
         var creatorId = Guid.NewGuid();
-        var live = NewWaiting(playerId, GameVariant.Kopo, 200m);
-        live.OpponentPlayerId = Guid.NewGuid();
-        live.Status = GameStatus.InProgress;
+        var live = NewInProgress(playerId, GameVariant.Kopo, 200m);
         var open = NewWaiting(creatorId, GameVariant.Domino, 200m);
         var repo = new ListableGameSessionRepository(live, open);
+        var wallet = new RecordingWalletService();
+        var sut = CreateSut(repo, wallet);
+
+        var joined = await sut.JoinGameAsync(playerId, open.Id);
+
+        Assert.NotNull(joined);
+        Assert.Equal(playerId, joined!.OpponentPlayerId);
+        Assert.Contains(wallet.Locks, l => l.PlayerId == playerId && l.Amount == 200m);
+    }
+
+    [Fact]
+    public async Task JoinGameAsync_WhenPlayerAlreadyAtMaxInProgress_Throws()
+    {
+        var playerId = Guid.NewGuid();
+        var creatorId = Guid.NewGuid();
+        var liveGames = Enumerable.Range(0, GameSessionService.MaxConcurrentInProgressGames)
+            .Select(_ => NewInProgress(playerId, GameVariant.Kopo, 200m))
+            .Cast<GameSession>()
+            .ToArray();
+        var open = NewWaiting(creatorId, GameVariant.Domino, 200m);
+        var repo = new ListableGameSessionRepository(liveGames.Append(open).ToArray());
         var sut = CreateSut(repo);
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             sut.JoinGameAsync(playerId, open.Id));
 
-        Assert.Contains("current match", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("5 matches", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -89,6 +108,14 @@ public sealed class GameSessionServiceConcurrencyTests
             new RecordingGameSessionNotifier(),
             NoOpInfluencerAttributionService.Instance,
             NoOpNotificationService.Instance);
+
+    private static GameSession NewInProgress(Guid playerId, GameVariant variant, decimal bet)
+    {
+        var session = NewWaiting(playerId, variant, bet);
+        session.OpponentPlayerId = Guid.NewGuid();
+        session.Status = GameStatus.InProgress;
+        return session;
+    }
 
     private static GameSession NewWaiting(Guid creatorId, GameVariant variant, decimal bet) =>
         new()
@@ -152,8 +179,8 @@ public sealed class GameSessionServiceConcurrencyTests
                 && s.Status == GameStatus.Waiting
                 && s.OpponentPlayerId == null));
 
-        public Task<bool> HasInProgressGameAsync(Guid playerId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(_sessions.Any(s =>
+        public Task<int> CountInProgressGamesAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(_sessions.Count(s =>
                 s.Status == GameStatus.InProgress
                 && (s.CreatorPlayerId == playerId || s.OpponentPlayerId == playerId)));
 

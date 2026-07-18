@@ -15,6 +15,9 @@ public class GameSessionService(
     IInfluencerAttributionService influencerAttribution,
     INotificationService notificationService) : IGameSessionService
 {
+    /// <summary>Max live (InProgress) matches a player may hold at once when joining.</summary>
+    public const int MaxConcurrentInProgressGames = 5;
+
     private readonly IGameSessionRepository _sessionRepository = sessionRepository;
     private readonly IPlayerRepository _playerRepository = playerRepository;
     private readonly IWalletService _walletService = walletService;
@@ -65,9 +68,10 @@ public class GameSessionService(
         if (session.CreatorPlayerId == playerId)
             return Map(session);
 
-        if (await _sessionRepository.HasInProgressGameAsync(playerId, cancellationToken))
+        var liveCount = await _sessionRepository.CountInProgressGamesAsync(playerId, cancellationToken);
+        if (liveCount >= MaxConcurrentInProgressGames)
             throw new InvalidOperationException(
-                "Finish your current match before joining another game.");
+                $"You can play up to {MaxConcurrentInProgressGames} matches at once. Finish one before joining another.");
 
         var chargeAmount = await _influencerAttribution.GetChargeAmountAsync(playerId, session.BetAmount, cancellationToken);
         await _walletService.LockBetAsync(playerId, chargeAmount, cancellationToken);
