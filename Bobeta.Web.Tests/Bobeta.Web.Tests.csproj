@@ -8,9 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.8" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.8" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -19,8 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Bobeta.API\Bobeta.API.csproj" />
-    <ProjectReference Include="..\Bobeta.Application\Bobeta.Application.csproj" />
+    <ProjectReference Include="..\Bobeta.Web\Bobeta.Web.csproj" />
+    <ProjectReference Include="..\Bobeta.Web.Shared\Bobeta.Web.Shared.csproj" />
     <ProjectReference Include="..\Bobeta.Client\Bobeta.Client.csproj" />
   </ItemGroup>
 

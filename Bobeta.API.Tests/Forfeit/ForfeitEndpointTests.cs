@@ -27,9 +27,10 @@ public sealed class ForfeitEndpointTests(BobetaApiFactory factory) : IClassFixtu
     [Fact]
     public async Task PostForfeit_WhenOutcomeAvailable_ReturnsOkAndRecordsCaller()
     {
-        FakeGameSessionService.ResetForfeitTracking();
+        var games = factory.GameSessions;
+        games.ResetForfeitTracking();
         var sessionId = Guid.NewGuid();
-        FakeGameSessionService.NextForfeitOutcome = new ForfeitGameOutcome(
+        games.NextForfeitOutcome = new ForfeitGameOutcome(
             sessionId, WinnerId, TestPlayerId, 150m, GameVariant.Makopa);
 
         using var client = factory.CreateClient();
@@ -39,8 +40,8 @@ public sealed class ForfeitEndpointTests(BobetaApiFactory factory) : IClassFixtu
         using var response = await client.PostAsync($"/api/GamePlay/forfeit?sessionId={sessionId:D}", null);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(TestPlayerId, FakeGameSessionService.LastForfeitLoserId);
-        Assert.Equal(sessionId, FakeGameSessionService.LastForfeitSessionId);
+        Assert.Equal(TestPlayerId, games.LastForfeitLoserId);
+        Assert.Equal(sessionId, games.LastForfeitSessionId);
 
         var body = await response.Content.ReadFromJsonAsync<ForfeitGameOutcome>(ApiJson);
         Assert.NotNull(body);
@@ -50,12 +51,12 @@ public sealed class ForfeitEndpointTests(BobetaApiFactory factory) : IClassFixtu
         Assert.Equal(GameVariant.Makopa, body.Variant);
     }
 
-
     [Fact]
     public async Task PostForfeit_WhenCannotForfeit_ReturnsBadRequest()
     {
-        FakeGameSessionService.ResetForfeitTracking();
-        FakeGameSessionService.NextForfeitOutcome = null;
+        var games = factory.GameSessions;
+        games.ResetForfeitTracking();
+        games.NextForfeitOutcome = null;
         var sessionId = Guid.NewGuid();
 
         using var client = factory.CreateClient();
@@ -65,19 +66,20 @@ public sealed class ForfeitEndpointTests(BobetaApiFactory factory) : IClassFixtu
         using var response = await client.PostAsync($"/api/GamePlay/forfeit?sessionId={sessionId:D}", null);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(TestPlayerId, FakeGameSessionService.LastForfeitLoserId);
-        Assert.Equal(sessionId, FakeGameSessionService.LastForfeitSessionId);
+        Assert.Equal(TestPlayerId, games.LastForfeitLoserId);
+        Assert.Equal(sessionId, games.LastForfeitSessionId);
     }
 
     [Fact]
     public async Task PostForfeit_WithoutAuth_ReturnsUnauthorized()
     {
-        FakeGameSessionService.ResetForfeitTracking();
+        var games = factory.GameSessions;
+        games.ResetForfeitTracking();
         using var client = factory.CreateClient();
 
         using var response = await client.PostAsync($"/api/GamePlay/forfeit?sessionId={Guid.NewGuid():D}", null);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        Assert.Null(FakeGameSessionService.LastForfeitLoserId);
+        Assert.Null(games.LastForfeitLoserId);
     }
 }

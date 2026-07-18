@@ -17,6 +17,7 @@
     <Project Path="Bobeta.Application.Tests/Bobeta.Application.Tests.csproj" />
     <Project Path="Bobeta.Client.Tests/Bobeta.Client.Tests.csproj" />
     <Project Path="Bobeta.Web.Shared.Tests/Bobeta.Web.Shared.Tests.csproj" />
+    <Project Path="Bobeta.Web.Tests/Bobeta.Web.Tests.csproj" />
   </Folder>
   <Folder Name="/UI/" />
   <Folder Name="/UI/Core/">
