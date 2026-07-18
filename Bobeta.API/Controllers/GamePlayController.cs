@@ -214,6 +214,28 @@ public class GamePlayController(
         return Ok(state);
     }
 
+    /// <summary>Throws Abbia tokens for the current player.</summary>
+    [HttpPost("abbia/throw")]
+    public async Task<ActionResult<GameStateDto>> AbbiaThrow([FromBody] AbbiaMoveRequest request, CancellationToken cancellationToken)
+    {
+        var move = await _gameEngineService.ApplyAbbiaThrowAsync(PlayerId, request.SessionId, cancellationToken);
+        if (!move.IsSuccess)
+            return BadRequest(new { code = move.ErrorCode, message = DescribeAbbiaMoveError(move.ErrorCode) });
+
+        var state = move.State!;
+        await _gameInactivityCoordinator.RecordGameplayActivityAsync(request.SessionId, cancellationToken);
+        if (state.GameOver)
+        {
+            _gameInactivityCoordinator.UnregisterSession(request.SessionId);
+            await _hubContext.Clients.Group(GameHub.GroupPrefix + request.SessionId)
+                .SendAsync("GameResult", state.WinnerPlayerId);
+        }
+
+        var sessionRow = await _sessionRepository.GetByIdAsync(request.SessionId, cancellationToken);
+        await PushGameStateToParticipantsAsync(sessionRow, request.SessionId, state, cancellationToken);
+        return Ok(state);
+    }
+
     /// <summary>Gets the current game state for the authenticated player (hand, last card, whose turn, game over, winner).</summary>
     [HttpGet("state")]
     public async Task<ActionResult<GameStateDto>> GetGameState([FromQuery] Guid sessionId, CancellationToken cancellationToken)
@@ -270,6 +292,13 @@ public class GamePlayController(
     {
         GameMoveErrorCodes.NotYourTurn => "It is not your turn.",
         GameMoveErrorCodes.InvalidMove => "That Domino action is not legal.",
+        _ => "Invalid move or game state."
+    };
+
+    private static string DescribeAbbiaMoveError(string? code) => code switch
+    {
+        GameMoveErrorCodes.NotYourTurn => "It is not your turn.",
+        GameMoveErrorCodes.InvalidMove => "You already threw your tokens.",
         _ => "Invalid move or game state."
     };
 }

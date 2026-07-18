@@ -18,6 +18,8 @@ namespace Bobeta.Client.Serialization;
 [JsonSerializable(typeof(List<KopoPieceDto>))]
 [JsonSerializable(typeof(NgolaStateDto))]
 [JsonSerializable(typeof(DominoStateDto))]
+[JsonSerializable(typeof(AbbiaStateDto))]
 [JsonSerializable(typeof(List<int>))]
+[JsonSerializable(typeof(List<bool>))]
 [JsonSerializable(typeof(GameVariant))]
 public partial class GameStateSignalRJsonContext : JsonSerializerContext;

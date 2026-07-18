@@ -7,9 +7,9 @@ using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
-namespace Bobeta.Application.Games.Ngola;
+namespace Bobeta.Application.Games.Abbia;
 
-public sealed class NgolaGameEngine(
+public sealed class AbbiaGameEngine(
     IGameSessionRepository sessionRepository,
     IGameMoveRepository moveRepository,
     IGameResultRepository resultRepository,
@@ -18,57 +18,61 @@ public sealed class NgolaGameEngine(
     IGameRevenueService gameRevenueService,
     IInfluencerAttributionService influencerAttribution,
     INotificationService notificationService,
-    ILogger<NgolaGameEngine> logger) : IGameEngine
+    ILogger<AbbiaGameEngine> logger) : IGameEngine
 {
     private const decimal CommissionRate = 0.25m;
     private static JsonSerializerOptions JsonOptions => GameJson.Options;
 
-    public GameVariant Variant => GameVariant.Ngola;
+    public GameVariant Variant => GameVariant.Abbia;
 
     public async Task StartGameAsync(GameSession session, CancellationToken cancellationToken = default)
     {
         if (session.Status != GameStatus.Waiting || session.OpponentPlayerId == null)
             throw new InvalidOperationException("Game is not ready to start.");
 
-        var first = PickFirstTurn(session.Id, session.CreatorPlayerId, session.OpponentPlayerId.Value);
-        session.GameStateJson = JsonSerializer.Serialize(NgolaRules.CreateInitial(first), JsonOptions);
+        var state = AbbiaRules.CreateInitial(
+            session.Id, session.CreatorPlayerId, session.OpponentPlayerId.Value);
+        session.GameStateJson = JsonSerializer.Serialize(state, JsonOptions);
         session.Status = GameStatus.InProgress;
         session.StartedAt = DateTime.UtcNow;
         await sessionRepository.UpdateAsync(session, cancellationToken);
     }
 
-    public async Task<GameMoveResult> ApplyMoveAsync(
+    public async Task<GameMoveResult> ApplyThrowAsync(
         Guid playerId,
         Guid sessionId,
-        int pitIndex,
         CancellationToken cancellationToken = default)
     {
         var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken);
         if (session?.GameStateJson == null || session.Status != GameStatus.InProgress
-            || session.Variant != GameVariant.Ngola || session.OpponentPlayerId == null)
+            || session.Variant != GameVariant.Abbia || session.OpponentPlayerId == null)
             return GameMoveResult.Fail(GameMoveErrorCodes.InvalidState);
 
-        var state = JsonSerializer.Deserialize<NgolaGameState>(session.GameStateJson, JsonOptions)!;
+        var state = JsonSerializer.Deserialize<AbbiaGameState>(session.GameStateJson, JsonOptions)!;
         var creatorId = session.CreatorPlayerId;
         var opponentId = session.OpponentPlayerId.Value;
-        if (!NgolaRules.TryApplyMove(state, creatorId, opponentId, playerId, pitIndex, out var errorCode))
+        var moveOrder = await moveRepository.GetCountByGameSessionIdAsync(sessionId, cancellationToken);
+        if (!AbbiaRules.TryApplyThrow(
+                state, creatorId, opponentId, playerId, sessionId, moveOrder, out var errorCode))
             return GameMoveResult.Fail(errorCode ?? GameMoveErrorCodes.InvalidMove);
 
-        var moveOrder = await moveRepository.GetCountByGameSessionIdAsync(sessionId, cancellationToken);
+        var carvedUp = playerId == creatorId
+            ? AbbiaRules.CarvedUpCount(state.CreatorTokens)
+            : AbbiaRules.CarvedUpCount(state.OpponentTokens);
         await moveRepository.AddAsync(new GameMove
         {
             Id = Guid.NewGuid(),
             GameSessionId = sessionId,
             PlayerId = playerId,
-            CardSuitRank = $"Ngola:{pitIndex}",
+            CardSuitRank = AbbiaRules.FormatMoveMarker(carvedUp),
             MoveOrder = moveOrder,
             CreatedAt = DateTime.UtcNow
         }, cancellationToken);
 
-        var (winnerId, loserId, isDraw) = NgolaRules.CompleteIfBlocked(state, creatorId, opponentId);
+        var (winnerId, loserId, isDraw) = AbbiaRules.Evaluate(state, creatorId, opponentId);
         if (isDraw)
         {
-            logger.LogWarning("Ngola draw session={SessionId} — releasing bets.", sessionId);
+            logger.LogWarning("Abbia draw session={SessionId} — releasing bets.", sessionId);
             await ReleaseBetsAsync(session, cancellationToken);
             session.Status = GameStatus.Finished;
             session.GameStateJson = null;
@@ -117,19 +121,30 @@ public sealed class NgolaGameEngine(
             return null;
         }
 
-        var state = JsonSerializer.Deserialize<NgolaGameState>(session.GameStateJson, JsonOptions)!;
+        var state = JsonSerializer.Deserialize<AbbiaGameState>(session.GameStateJson, JsonOptions)!;
         var viewerIsCreator = playerId == session.CreatorPlayerId;
-        var ngola = new NgolaStateDto(
-            NgolaRules.PitsPerPlayer,
-            NgolaRules.PitsForViewer(state, playerId, session.CreatorPlayerId, ownRow: true),
-            NgolaRules.PitsForViewer(state, playerId, session.CreatorPlayerId, ownRow: false),
-            viewerIsCreator ? state.CreatorScore : state.OpponentScore,
-            viewerIsCreator ? state.OpponentScore : state.CreatorScore);
+        var iHaveThrown = viewerIsCreator ? state.CreatorThrown : state.OpponentThrown;
+        var opponentHasThrown = viewerIsCreator ? state.OpponentThrown : state.CreatorThrown;
+        var myTokens = iHaveThrown
+            ? (IReadOnlyList<bool>)(viewerIsCreator ? state.CreatorTokens : state.OpponentTokens)
+            : null;
+        var opponentTokens = opponentHasThrown
+            ? (IReadOnlyList<bool>)(viewerIsCreator ? state.OpponentTokens : state.CreatorTokens)
+            : null;
+        var abbia = new AbbiaStateDto(
+            AbbiaRules.TokenCount,
+            myTokens,
+            opponentTokens,
+            myTokens == null ? null : AbbiaRules.CarvedUpCount(myTokens),
+            opponentTokens == null ? null : AbbiaRules.CarvedUpCount(opponentTokens),
+            iHaveThrown,
+            opponentHasThrown,
+            state.CurrentTurnPlayerId == playerId && !iHaveThrown);
         return new GameStateDto(
             session.Id, Array.Empty<string>(), null, state.CurrentTurnPlayerId,
             session.Status == GameStatus.Finished, session.GameResult?.WinnerPlayerId,
             false, pot, opponentName, null, 0, 0, false,
-            GameVariant.Ngola, null, ngola, null,
+            GameVariant.Abbia, null, null, null, abbia,
             IsDraw: session.Status == GameStatus.Finished && session.GameResult?.WinnerPlayerId == null);
     }
 
@@ -142,7 +157,7 @@ public sealed class NgolaGameEngine(
         Guid? winner = null,
         bool isDraw = false) =>
         new(sessionId, Array.Empty<string>(), null, null, gameOver, winner, waiting, lobbyPot, opponentName,
-            null, 0, 0, false, GameVariant.Ngola, null, null, null, null, isDraw);
+            null, 0, 0, false, GameVariant.Abbia, null, null, null, null, isDraw);
 
     private async Task<string?> ResolveOpponentDisplayNameAsync(
         Guid viewerPlayerId,
@@ -203,11 +218,5 @@ public sealed class NgolaGameEngine(
             GameSessionService.ChargedAmount(session, opponentId),
             cancellationToken);
         await influencerAttribution.DetachGameRedemptionsAsync(session.Id, cancellationToken);
-    }
-
-    private static Guid PickFirstTurn(Guid sessionId, Guid creatorId, Guid opponentId)
-    {
-        var seed = sessionId.GetHashCode() ^ 0x4E_47_4F_4C;
-        return new Random(seed).Next(2) == 0 ? creatorId : opponentId;
     }
 }

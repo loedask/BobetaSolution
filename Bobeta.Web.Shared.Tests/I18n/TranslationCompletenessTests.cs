@@ -15,6 +15,7 @@ public sealed class TranslationCompletenessTests
         "landing_game_kopo_title",
         "landing_game_ngola_title",
         "landing_game_domino_title",
+        "landing_game_abbia_title",
         "landing_nav_faq",
         "live",
         "min_withdrawal",

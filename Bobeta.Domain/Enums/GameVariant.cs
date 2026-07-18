@@ -13,5 +13,8 @@ public enum GameVariant
     Ngola = 2,
 
     /// <summary>Double-six Domino draw game (1v1).</summary>
-    Domino = 3
+    Domino = 3,
+
+    /// <summary>1v1 Abbia token-flip chance game.</summary>
+    Abbia = 4
 }

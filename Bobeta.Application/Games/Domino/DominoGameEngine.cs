@@ -143,7 +143,7 @@ public sealed class DominoGameEngine(
             session.Id, Array.Empty<string>(), null, state.CurrentTurnPlayerId,
             session.Status == GameStatus.Finished, session.GameResult?.WinnerPlayerId,
             false, pot, opponentName, null, 0, 0, false,
-            GameVariant.Domino, null, null, domino,
+            GameVariant.Domino, null, null, domino, null,
             IsDraw: session.Status == GameStatus.Finished && session.GameResult?.WinnerPlayerId == null);
     }
 
@@ -156,7 +156,7 @@ public sealed class DominoGameEngine(
         Guid? winner = null,
         bool isDraw = false) =>
         new(sessionId, Array.Empty<string>(), null, null, gameOver, winner, waiting, lobbyPot, opponentName,
-            null, 0, 0, false, GameVariant.Domino, null, null, null, isDraw);
+            null, 0, 0, false, GameVariant.Domino, null, null, null, null, isDraw);
 
     private async Task<string?> ResolveOpponentDisplayNameAsync(
         Guid viewerPlayerId,

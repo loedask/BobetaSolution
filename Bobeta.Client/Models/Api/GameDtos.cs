@@ -127,6 +127,9 @@ public sealed class GameStateDto
     [JsonPropertyName("domino")]
     public DominoStateDto? Domino { get; set; }
 
+    [JsonPropertyName("abbia")]
+    public AbbiaStateDto? Abbia { get; set; }
+
     [JsonPropertyName("isDraw")]
     public bool IsDraw { get; set; }
 }
@@ -258,6 +261,39 @@ public sealed class DominoMoveApiRequest
 
     [JsonPropertyName("end")]
     public string? End { get; set; }
+}
+
+public sealed class AbbiaStateDto
+{
+    [JsonPropertyName("tokenCount")]
+    public int TokenCount { get; set; }
+
+    [JsonPropertyName("myTokens")]
+    public List<bool>? MyTokens { get; set; }
+
+    [JsonPropertyName("opponentTokens")]
+    public List<bool>? OpponentTokens { get; set; }
+
+    [JsonPropertyName("myCarvedUp")]
+    public int? MyCarvedUp { get; set; }
+
+    [JsonPropertyName("opponentCarvedUp")]
+    public int? OpponentCarvedUp { get; set; }
+
+    [JsonPropertyName("iHaveThrown")]
+    public bool IHaveThrown { get; set; }
+
+    [JsonPropertyName("opponentHasThrown")]
+    public bool OpponentHasThrown { get; set; }
+
+    [JsonPropertyName("canThrow")]
+    public bool CanThrow { get; set; }
+}
+
+public sealed class AbbiaMoveApiRequest
+{
+    [JsonPropertyName("sessionId")]
+    public Guid SessionId { get; set; }
 }
 
 public sealed class GameHistoryItemDto

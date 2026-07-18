@@ -198,6 +198,39 @@ Bobeta Ngola is a custom **two-row, eight-pit** ruleset (not the 4×8 Ludii vari
 
 ---
 
+## Abbia (1v1 token-flip chance game)
+
+**Source:** `Bobeta.Application/Games/Abbia/AbbiaRules.cs`, `AbbiaGameEngine.cs`  
+**Tests:** `Bobeta.Application.Tests/Games/AbbiaRulesTests.cs`
+
+Simplified 1v1 Abbia: each seat throws five two-faced tokens. Carved side up scores. Higher count wins.
+
+### Setup
+
+| Rule | Detail |
+|------|--------|
+| Players | Exactly 2 |
+| Tokens | 5 per seat |
+| First throw | Random seat (session-seeded) |
+
+### Play
+
+| Rule | Detail |
+|------|--------|
+| Throw | On your turn, throw once; server flips your five tokens |
+| Reveal | Your tokens stay visible after you throw; opponent tokens stay hidden until they throw |
+| Win | After both throws, higher carved-up count wins |
+| Draw | Equal carved-up counts release both bets |
+
+### Economy
+
+| Rule | Detail |
+|------|--------|
+| Win | Same 25% platform commission on the pot as other games |
+| Draw | Both players' locked bets are released |
+
+---
+
 ## Platform / session rules (all games)
 
 **Source:** `CreateGameRequestValidator.cs`, `GameSessionService.cs`, `GameInactivityCoordinator.cs`  
@@ -211,7 +244,7 @@ Bobeta Ngola is a custom **two-row, eight-pit** ruleset (not the 4×8 Ludii vari
 | Join game | Locks opponent's bet; game auto-starts |
 | Inactivity | 60 s idle → first warning (10 s to Continue or Cancel); after Continue, 40 s idle → second warning; deadline expires → game cancelled, bets released |
 | Real moves | Reset idle timer and dismiss warnings |
-| API routing | `play-card` / `void-follow` → Makopa only; `kopo/move` → Kopo only; `ngola/move` → Ngola only; `domino/move` → Domino only |
+| API routing | `play-card` / `void-follow` → Makopa only; `kopo/move` → Kopo only; `ngola/move` → Ngola only; `domino/move` → Domino only; `abbia/throw` → Abbia only |
 
 ---
 

@@ -10,6 +10,7 @@ public sealed class GamePlayTableState
     public KopoStateDto? Kopo { get; set; }
     public NgolaStateDto? Ngola { get; set; }
     public DominoStateDto? Domino { get; set; }
+    public AbbiaStateDto? Abbia { get; set; }
     public bool IsPlayerTurn { get; set; }
     public decimal PotAmount { get; set; }
     public string? OpponentDisplayName { get; set; }
