@@ -30,6 +30,8 @@ public partial class JoinGamePage : ContentPage
         FilterAllBtn.Text = i18n.T("filter_all_games");
         FilterMakopaBtn.Text = "Makopa";
         FilterKopoBtn.Text = "Kopo";
+        FilterNgolaBtn.Text = "Ngola";
+        FilterDominoBtn.Text = "Domino";
         InviteHaveCodeLabel.Text = i18n.T("invite_have_code");
         InviteHintLabel.Text = i18n.T("invite_enter_hint");
         InviteApplyBtn.Text = i18n.T("invite_apply");
@@ -63,6 +65,7 @@ public partial class JoinGamePage : ContentPage
         StyleFilter(FilterMakopaBtn, _vm.VariantFilter == GameVariant.Makopa);
         StyleFilter(FilterKopoBtn, _vm.VariantFilter == GameVariant.Kopo);
         StyleFilter(FilterNgolaBtn, _vm.VariantFilter == GameVariant.Ngola);
+        StyleFilter(FilterDominoBtn, _vm.VariantFilter == GameVariant.Domino);
 
         var hasInvite = _vm.InviteStatus?.HasPendingCode == true;
         InviteBanner.IsVisible = hasInvite;
@@ -88,6 +91,7 @@ public partial class JoinGamePage : ContentPage
     private void OnFilterMakopa(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Makopa);
     private void OnFilterKopo(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Kopo);
     private void OnFilterNgola(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Ngola);
+    private void OnFilterDomino(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Domino);
 
     private async void OnApplyInvite(object? sender, EventArgs e)
     {

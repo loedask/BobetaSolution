@@ -47,6 +47,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         KopoBoard.CellTapped += OnKopoCellTapped;
         NgolaBoard.PitTapped -= OnNgolaPitTapped;
         NgolaBoard.PitTapped += OnNgolaPitTapped;
+        DominoBoard.ActionRequested -= OnDominoActionRequested;
+        DominoBoard.ActionRequested += OnDominoActionRequested;
 
         if (!string.IsNullOrEmpty(_sessionId))
             await _vm.LoadGameAsync(_sessionId);
@@ -65,6 +67,7 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
 
         KopoBoard.CellTapped -= OnKopoCellTapped;
         NgolaBoard.PitTapped -= OnNgolaPitTapped;
+        DominoBoard.ActionRequested -= OnDominoActionRequested;
 
         base.OnDisappearing();
     }
@@ -80,13 +83,15 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
 
         var isKopo = _vm.IsKopo;
         var isNgola = _vm.IsNgola;
-        var isMakopa = !isKopo && !isNgola;
+        var isDomino = _vm.IsDomino;
+        var isMakopa = !isKopo && !isNgola && !isDomino;
         MakopaPanel.IsVisible = isMakopa;
         HandView.IsVisible = isMakopa;
         TakeCardButton.IsVisible = isMakopa;
         TakeCardHintLabel.IsVisible = isMakopa;
         KopoBoard.IsVisible = isKopo && _vm.Kopo != null;
         NgolaBoard.IsVisible = isNgola && _vm.Ngola != null;
+        DominoBoard.IsVisible = isDomino && _vm.Domino != null;
         KopoChainHint.IsVisible = isKopo && (_vm.Kopo?.MustContinueChain ?? false);
 
         var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
@@ -128,6 +133,24 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
                 && !_vm.ShowInactivityOverlay && !_vm.IsSendingMove;
             RulesLink.IsVisible = true;
             RulesLink.Text = i18n.T("ngola_rules_link");
+            RoundScoreLabel.IsVisible = false;
+        }
+        else if (isDomino && _vm.Domino != null)
+        {
+            DominoBoard.MyHand = _vm.Domino.MyHand;
+            DominoBoard.OpponentHandCount = _vm.Domino.OpponentHandCount;
+            DominoBoard.BoneyardCount = _vm.Domino.BoneyardCount;
+            DominoBoard.Chain = _vm.Domino.Chain;
+            DominoBoard.LeftEnd = _vm.Domino.LeftEnd;
+            DominoBoard.RightEnd = _vm.Domino.RightEnd;
+            DominoBoard.IsOpening = _vm.Domino.IsOpening;
+            DominoBoard.OpeningTile = _vm.Domino.OpeningTile;
+            DominoBoard.MustDraw = _vm.Domino.MustDraw;
+            DominoBoard.MustPass = _vm.Domino.MustPass;
+            DominoBoard.CanInteract = _vm.IsPlayerTurn && !_vm.ShowGameResult
+                && !_vm.ShowInactivityOverlay && !_vm.IsSendingMove;
+            RulesLink.IsVisible = true;
+            RulesLink.Text = i18n.T("domino_rules_link");
             RoundScoreLabel.IsVisible = false;
         }
         else if (_vm.WaitingForOpponent)
@@ -250,6 +273,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
             await DisplayAlertAsync(i18n.T("kopo_how_to_play_title"), i18n.T("kopo_rules_body"), i18n.T("done_short"));
         else if (_vm?.IsNgola == true)
             await DisplayAlertAsync(i18n.T("ngola_how_to_play_title"), i18n.T("ngola_rules_body"), i18n.T("done_short"));
+        else if (_vm?.IsDomino == true)
+            await DisplayAlertAsync(i18n.T("domino_how_to_play_title"), i18n.T("domino_rules_body"), i18n.T("done_short"));
         else
             await DisplayAlertAsync(i18n.T("makopa_how_to_play_title"), i18n.T("makopa_rules_body"), i18n.T("done_short"));
     }
@@ -264,5 +289,11 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
     {
         if (_vm == null) return;
         await _vm.OnNgolaPitClickedAsync(pitIndex);
+    }
+
+    private async void OnDominoActionRequested(object? sender, (string Action, int? High, int? Low, string? End) e)
+    {
+        if (_vm == null) return;
+        await _vm.OnDominoActionAsync(e.Action, e.High, e.Low, e.End);
     }
 }

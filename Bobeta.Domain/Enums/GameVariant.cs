@@ -10,5 +10,8 @@ public enum GameVariant
     Kopo = 1,
 
     /// <summary>Two-row, eight-pit Mancala game.</summary>
-    Ngola = 2
+    Ngola = 2,
+
+    /// <summary>Double-six Domino draw game (1v1).</summary>
+    Domino = 3
 }

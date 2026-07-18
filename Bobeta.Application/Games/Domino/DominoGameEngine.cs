@@ -7,9 +7,9 @@ using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
-namespace Bobeta.Application.Games.Ngola;
+namespace Bobeta.Application.Games.Domino;
 
-public sealed class NgolaGameEngine(
+public sealed class DominoGameEngine(
     IGameSessionRepository sessionRepository,
     IGameMoveRepository moveRepository,
     IGameResultRepository resultRepository,
@@ -18,20 +18,21 @@ public sealed class NgolaGameEngine(
     IGameRevenueService gameRevenueService,
     IInfluencerAttributionService influencerAttribution,
     INotificationService notificationService,
-    ILogger<NgolaGameEngine> logger) : IGameEngine
+    ILogger<DominoGameEngine> logger) : IGameEngine
 {
     private const decimal CommissionRate = 0.25m;
     private static JsonSerializerOptions JsonOptions => GameJson.Options;
 
-    public GameVariant Variant => GameVariant.Ngola;
+    public GameVariant Variant => GameVariant.Domino;
 
     public async Task StartGameAsync(GameSession session, CancellationToken cancellationToken = default)
     {
         if (session.Status != GameStatus.Waiting || session.OpponentPlayerId == null)
             throw new InvalidOperationException("Game is not ready to start.");
 
-        var first = PickFirstTurn(session.Id, session.CreatorPlayerId, session.OpponentPlayerId.Value);
-        session.GameStateJson = JsonSerializer.Serialize(NgolaRules.CreateInitial(first), JsonOptions);
+        var state = DominoRules.CreateInitial(
+            session.Id, session.CreatorPlayerId, session.OpponentPlayerId.Value);
+        session.GameStateJson = JsonSerializer.Serialize(state, JsonOptions);
         session.Status = GameStatus.InProgress;
         session.StartedAt = DateTime.UtcNow;
         await sessionRepository.UpdateAsync(session, cancellationToken);
@@ -40,18 +41,22 @@ public sealed class NgolaGameEngine(
     public async Task<GameMoveResult> ApplyMoveAsync(
         Guid playerId,
         Guid sessionId,
-        int pitIndex,
+        string action,
+        int? high,
+        int? low,
+        string? end,
         CancellationToken cancellationToken = default)
     {
         var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken);
         if (session?.GameStateJson == null || session.Status != GameStatus.InProgress
-            || session.Variant != GameVariant.Ngola || session.OpponentPlayerId == null)
+            || session.Variant != GameVariant.Domino || session.OpponentPlayerId == null)
             return GameMoveResult.Fail(GameMoveErrorCodes.InvalidState);
 
-        var state = JsonSerializer.Deserialize<NgolaGameState>(session.GameStateJson, JsonOptions)!;
+        var state = JsonSerializer.Deserialize<DominoGameState>(session.GameStateJson, JsonOptions)!;
         var creatorId = session.CreatorPlayerId;
         var opponentId = session.OpponentPlayerId.Value;
-        if (!NgolaRules.TryApplyMove(state, creatorId, opponentId, playerId, pitIndex, out var errorCode))
+        if (!DominoRules.TryApplyAction(
+                state, creatorId, opponentId, playerId, action, high, low, end, out var errorCode))
             return GameMoveResult.Fail(errorCode ?? GameMoveErrorCodes.InvalidMove);
 
         var moveOrder = await moveRepository.GetCountByGameSessionIdAsync(sessionId, cancellationToken);
@@ -60,15 +65,16 @@ public sealed class NgolaGameEngine(
             Id = Guid.NewGuid(),
             GameSessionId = sessionId,
             PlayerId = playerId,
-            CardSuitRank = $"Ngola:{pitIndex}",
+            CardSuitRank = $"Domino:{action}:{high}-{low}:{end}",
             MoveOrder = moveOrder,
             CreatedAt = DateTime.UtcNow
         }, cancellationToken);
 
-        var (winnerId, loserId, isDraw) = NgolaRules.CompleteIfBlocked(state, creatorId, opponentId);
+        var (winnerId, loserId, isDraw) = DominoRules.EvaluateAfterAction(
+            state, creatorId, opponentId, playerId, action);
         if (isDraw)
         {
-            logger.LogWarning("Ngola draw session={SessionId} — releasing bets.", sessionId);
+            logger.LogWarning("Domino draw session={SessionId} — releasing bets.", sessionId);
             await ReleaseBetsAsync(session, cancellationToken);
             session.Status = GameStatus.Finished;
             session.GameStateJson = null;
@@ -117,19 +123,27 @@ public sealed class NgolaGameEngine(
             return null;
         }
 
-        var state = JsonSerializer.Deserialize<NgolaGameState>(session.GameStateJson, JsonOptions)!;
+        var state = JsonSerializer.Deserialize<DominoGameState>(session.GameStateJson, JsonOptions)!;
         var viewerIsCreator = playerId == session.CreatorPlayerId;
-        var ngola = new NgolaStateDto(
-            NgolaRules.PitsPerPlayer,
-            NgolaRules.PitsForViewer(state, playerId, session.CreatorPlayerId, ownRow: true),
-            NgolaRules.PitsForViewer(state, playerId, session.CreatorPlayerId, ownRow: false),
-            viewerIsCreator ? state.CreatorScore : state.OpponentScore,
-            viewerIsCreator ? state.OpponentScore : state.CreatorScore);
+        var myHand = viewerIsCreator ? state.CreatorHand : state.OpponentHand;
+        var opponentHand = viewerIsCreator ? state.OpponentHand : state.CreatorHand;
+        var isMyTurn = state.CurrentTurnPlayerId == playerId;
+        var domino = new DominoStateDto(
+            myHand.ToList(),
+            opponentHand.Count,
+            state.Boneyard.Count,
+            state.Chain.ToList(),
+            state.LeftEnd,
+            state.RightEnd,
+            state.IsOpening,
+            isMyTurn && state.IsOpening ? state.OpeningTile : null,
+            isMyTurn && DominoRules.MustDraw(state, playerId, session.CreatorPlayerId),
+            isMyTurn && DominoRules.MustPass(state, playerId, session.CreatorPlayerId));
         return new GameStateDto(
             session.Id, Array.Empty<string>(), null, state.CurrentTurnPlayerId,
             session.Status == GameStatus.Finished, session.GameResult?.WinnerPlayerId,
             false, pot, opponentName, null, 0, 0, false,
-            GameVariant.Ngola, null, ngola, null,
+            GameVariant.Domino, null, null, domino,
             IsDraw: session.Status == GameStatus.Finished && session.GameResult?.WinnerPlayerId == null);
     }
 
@@ -142,7 +156,7 @@ public sealed class NgolaGameEngine(
         Guid? winner = null,
         bool isDraw = false) =>
         new(sessionId, Array.Empty<string>(), null, null, gameOver, winner, waiting, lobbyPot, opponentName,
-            null, 0, 0, false, GameVariant.Ngola, null, null, null, isDraw);
+            null, 0, 0, false, GameVariant.Domino, null, null, null, isDraw);
 
     private async Task<string?> ResolveOpponentDisplayNameAsync(
         Guid viewerPlayerId,
@@ -203,11 +217,5 @@ public sealed class NgolaGameEngine(
             GameSessionService.ChargedAmount(session, opponentId),
             cancellationToken);
         await influencerAttribution.DetachGameRedemptionsAsync(session.Id, cancellationToken);
-    }
-
-    private static Guid PickFirstTurn(Guid sessionId, Guid creatorId, Guid opponentId)
-    {
-        var seed = sessionId.GetHashCode() ^ 0x4E_47_4F_4C;
-        return new Random(seed).Next(2) == 0 ? creatorId : opponentId;
     }
 }

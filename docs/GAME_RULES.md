@@ -2,7 +2,7 @@
 
 Authoritative rule logic lives in `Bobeta.Application/Games/`. This document mirrors that implementation so rules stay stable when code changes. Each section lists the source files and regression tests that lock the behavior in place.
 
-**When you change game rules:** update the code, this document, the i18n strings (`makopa_rules_body`, `kopo_rules_body`, `ngola_rules_body`), and the tests listed below.
+**When you change game rules:** update the code, this document, the i18n strings (`makopa_rules_body`, `kopo_rules_body`, `ngola_rules_body`, `domino_rules_body`), and the tests listed below.
 
 ---
 
@@ -163,6 +163,41 @@ Bobeta Ngola is a custom **two-row, eight-pit** ruleset (not the 4×8 Ludii vari
 
 ---
 
+## Domino (double-six draw game)
+
+**Source:** `Bobeta.Application/Games/Domino/DominoRules.cs`, `DominoGameEngine.cs`  
+**Tests:** `Bobeta.Application.Tests/Games/DominoRulesTests.cs`, `DominoGameEngineRulesTests.cs`
+
+1v1 Domino with a double-six set (28 tiles), draw from the boneyard when stuck (*avec pioche*).
+
+### Setup
+
+| Rule | Detail |
+|------|--------|
+| Players | Exactly 2 |
+| Set | Double-six (tiles `0-0` … `6-6`) |
+| Deal | 7 tiles each; remaining 14 form the boneyard |
+| Opening | Highest double in either hand (else highest tile); that seat must open with that tile |
+
+### Play
+
+| Rule | Detail |
+|------|--------|
+| Attach | Match either open end (`left` / `right`) |
+| Draw | If no legal play and the boneyard still has tiles, draw one and keep the turn |
+| Pass | If no legal play and the boneyard is empty, pass |
+| Win | Empty your hand |
+| Blocked | Both seats blocked with empty boneyard: lowest remaining pip count wins; equal pips → draw |
+
+### Economy
+
+| Rule | Detail |
+|------|--------|
+| Win | Same 25% platform commission on the pot as other games |
+| Draw | Both players' locked bets are released |
+
+---
+
 ## Platform / session rules (all games)
 
 **Source:** `CreateGameRequestValidator.cs`, `GameSessionService.cs`, `GameInactivityCoordinator.cs`  
@@ -175,7 +210,7 @@ Bobeta Ngola is a custom **two-row, eight-pit** ruleset (not the 4×8 Ludii vari
 | Join game | Locks opponent's bet; game auto-starts |
 | Inactivity | 60 s idle → first warning (10 s to Continue or Cancel); after Continue, 40 s idle → second warning; deadline expires → game cancelled, bets released |
 | Real moves | Reset idle timer and dismiss warnings |
-| API routing | `play-card` / `void-follow` → Makopa only; `kopo/move` → Kopo only; `ngola/move` → Ngola only |
+| API routing | `play-card` / `void-follow` → Makopa only; `kopo/move` → Kopo only; `ngola/move` → Ngola only; `domino/move` → Domino only |
 
 ---
 
@@ -183,7 +218,7 @@ Bobeta Ngola is a custom **two-row, eight-pit** ruleset (not the 4×8 Ludii vari
 
 Player-facing rule text is in:
 
-- `Bobeta.Web.Shared/Services/I18nService.cs` — keys `makopa_rules_body`, `kopo_rules_body`, `ngola_rules_body`
+- `Bobeta.Web.Shared/Services/I18nService.cs` — keys `makopa_rules_body`, `kopo_rules_body`, `ngola_rules_body`, `domino_rules_body`
 - `Bobeta.Mobile/Services/I18nService.cs` — same keys
 
 Displayed in `Bobeta.Web/Pages/GamePlay.razor` and `Bobeta.Mobile/Pages/GamePlayPage.xaml.cs`.

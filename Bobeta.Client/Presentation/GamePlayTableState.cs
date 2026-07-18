@@ -9,6 +9,7 @@ public sealed class GamePlayTableState
     public GameVariant Variant { get; set; } = GameVariant.Makopa;
     public KopoStateDto? Kopo { get; set; }
     public NgolaStateDto? Ngola { get; set; }
+    public DominoStateDto? Domino { get; set; }
     public bool IsPlayerTurn { get; set; }
     public decimal PotAmount { get; set; }
     public string? OpponentDisplayName { get; set; }

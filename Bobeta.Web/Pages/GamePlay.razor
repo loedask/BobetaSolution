@@ -77,6 +77,32 @@
                     <p class="text-center text-sm text-muted-foreground">@I18n.T("sending_move")</p>
                 }
             }
+            else if (ViewModel.Variant == GameVariant.Domino)
+            {
+                <details class="rounded-xl border border-border bg-card/60 px-4 py-3 text-sm text-foreground">
+                    <summary class="cursor-pointer select-none font-semibold">@I18n.T("domino_how_to_play_title")</summary>
+                    <div class="mt-2 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">@I18n.T("domino_rules_body")</div>
+                </details>
+                @if (ViewModel.Domino != null)
+                {
+                    <DominoBoard MyHand="@ViewModel.Domino.MyHand"
+                                 OpponentHandCount="@ViewModel.Domino.OpponentHandCount"
+                                 BoneyardCount="@ViewModel.Domino.BoneyardCount"
+                                 Chain="@ViewModel.Domino.Chain"
+                                 LeftEnd="@ViewModel.Domino.LeftEnd"
+                                 RightEnd="@ViewModel.Domino.RightEnd"
+                                 IsOpening="@ViewModel.Domino.IsOpening"
+                                 OpeningTile="@ViewModel.Domino.OpeningTile"
+                                 MustDraw="@ViewModel.Domino.MustDraw"
+                                 MustPass="@ViewModel.Domino.MustPass"
+                                 CanInteract="@(ViewModel.IsPlayerTurn && !ViewModel.IsSendingMove && !ViewModel.ShowInactivityOverlay)"
+                                 OnAction="OnDominoAction" />
+                }
+                @if (ViewModel.IsSendingMove)
+                {
+                    <p class="text-center text-sm text-muted-foreground">@I18n.T("sending_move")</p>
+                }
+            }
             else
             {
                 <details class="rounded-xl border border-border bg-card/60 px-4 py-3 text-sm text-foreground">
@@ -210,4 +236,6 @@
 
     private async Task OnKopoCellClicked((int Row, int Col) cell) => await ViewModel.OnKopoSquareClickedAsync(cell.Row, cell.Col);
     private async Task OnNgolaPitClicked(int pitIndex) => await ViewModel.OnNgolaPitClickedAsync(pitIndex);
+    private async Task OnDominoAction((string Action, int? High, int? Low, string? End) move) =>
+        await ViewModel.OnDominoActionAsync(move.Action, move.High, move.Low, move.End);
 }

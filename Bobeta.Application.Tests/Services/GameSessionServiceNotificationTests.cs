@@ -166,6 +166,9 @@ public sealed class GameSessionServiceNotificationTests
             throw new NotSupportedException();
         public Task<GameMoveResult> ApplyNgolaMoveAsync(Guid playerId, Guid sessionId, int pitIndex, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
+        public Task<GameMoveResult> ApplyDominoMoveAsync(
+            Guid playerId, Guid sessionId, string action, int? high, int? low, string? end, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
         public Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
     }

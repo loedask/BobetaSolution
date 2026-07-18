@@ -82,6 +82,8 @@
             <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item">Ngola</span>
             <span class="lp-ticker__sep"></span>
+            <span class="lp-ticker__item">Domino</span>
+            <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item lp-ticker__item--accent">BOBETA</span>
             <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item">MoMo</span>
@@ -197,6 +199,17 @@
                                     }
                                 </div>
                                 <p class="lp-felt__label">Ngola</p>
+                            </div>
+                        }
+                        else if (game.Id == "domino")
+                        {
+                            <div class="lp-domino-wrap">
+                                <div class="lp-domino">
+                                    <span class="lp-domino__tile"><span>6</span><span>6</span></span>
+                                    <span class="lp-domino__tile"><span>6</span><span>3</span></span>
+                                    <span class="lp-domino__tile"><span>3</span><span>1</span></span>
+                                </div>
+                                <p class="lp-felt__label">Domino</p>
                             </div>
                         }
                     </div>
@@ -332,6 +345,7 @@
         new("makopa", "landing_game_makopa_title", "landing_game_makopa_desc"),
         new("kopo", "landing_game_kopo_title", "landing_game_kopo_desc"),
         new("ngola", "landing_game_ngola_title", "landing_game_ngola_desc"),
+        new("domino", "landing_game_domino_title", "landing_game_domino_desc"),
     ];
 
     private bool _headerBound;

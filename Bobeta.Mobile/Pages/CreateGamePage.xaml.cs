@@ -27,6 +27,7 @@ public partial class CreateGamePage : ContentPage
         MakopaBtn.Text = "Makopa";
         KopoBtn.Text = "Kopo";
         NgolaBtn.Text = "Ngola";
+        DominoBtn.Text = "Domino";
         DescLabel.Text = i18n.T("choose_bet_desc");
         BetLabel.Text = i18n.T("your_bet");
         CreateBtn.Text = i18n.T("create_game");
@@ -58,6 +59,7 @@ public partial class CreateGamePage : ContentPage
         StyleVariant(MakopaBtn, _vm.SelectedVariant == GameVariant.Makopa);
         StyleVariant(KopoBtn, _vm.SelectedVariant == GameVariant.Kopo);
         StyleVariant(NgolaBtn, _vm.SelectedVariant == GameVariant.Ngola);
+        StyleVariant(DominoBtn, _vm.SelectedVariant == GameVariant.Domino);
 
         var hasInvite = _vm.InviteStatus?.HasPendingCode == true;
         InviteBanner.IsVisible = hasInvite;
@@ -82,6 +84,7 @@ public partial class CreateGamePage : ContentPage
     private void OnMakopaVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Makopa);
     private void OnKopoVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Kopo);
     private void OnNgolaVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Ngola);
+    private void OnDominoVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Domino);
 
     private static void StyleVariant(Button button, bool selected)
     {
