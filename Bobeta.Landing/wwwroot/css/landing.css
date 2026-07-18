@@ -31,7 +31,8 @@
   color: var(--lp-paper);
   background: var(--lp-ink);
   font-family: 'Outfit', system-ui, sans-serif;
-  overflow-x: hidden;
+  /* clip keeps horizontal bleed contained without breaking position:sticky */
+  overflow-x: clip;
   min-height: 100vh;
 }
 
@@ -85,23 +86,100 @@
 .lp-script--dark { color: var(--lp-orange-deep); }
 .lp-script--sm { font-size: 1.15rem; margin-top: 0.35rem; }
 
-/* —— Header —— */
+/* —— Header (floating dock — stays visible while scrolling) —— */
 .lp-header {
+  --lp-scroll: 0;
   position: sticky;
   top: 0;
   z-index: 40;
-  backdrop-filter: blur(18px) saturate(1.15);
-  -webkit-backdrop-filter: blur(18px) saturate(1.15);
-  background: linear-gradient(180deg, rgba(6, 6, 6, 0.92), rgba(6, 6, 6, 0.72));
-  border-bottom: 1px solid var(--lp-line);
+  padding: 0.7rem 0.85rem 0;
+  pointer-events: none;
 }
 
 .lp-header__row {
+  pointer-events: auto;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 4rem;
+  min-height: 3.65rem;
+  padding-inline: 1rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(247, 244, 239, 0.1);
+  background:
+    linear-gradient(135deg, rgba(242, 140, 40, 0.08), transparent 42%),
+    rgba(6, 6, 6, 0.72);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow:
+    0 10px 32px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    min-height 0.35s ease,
+    padding 0.35s ease;
+}
+
+.lp-header__progress {
+  position: absolute;
+  left: 1.15rem;
+  right: 1.15rem;
+  bottom: 0.35rem;
+  height: 2px;
+  border-radius: 999px;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.lp-header__progress::after {
+  content: "";
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--lp-orange-deep), var(--lp-orange-hot));
+  transform: scaleX(var(--lp-scroll));
+  transform-origin: left center;
+  box-shadow: 0 0 12px rgba(242, 140, 40, 0.55);
+}
+
+/* After leaving the hero: tighter dock + orange rim + scroll progress */
+.lp-header--docked {
+  top: 0.65rem;
+}
+
+.lp-header--docked .lp-header__row {
+  min-height: 3.25rem;
+  padding-inline: 0.95rem 0.7rem;
+  border-color: rgba(242, 140, 40, 0.28);
+  background:
+    linear-gradient(135deg, rgba(242, 140, 40, 0.16), transparent 48%),
+    rgba(6, 6, 6, 0.86);
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(242, 140, 40, 0.08),
+    0 0 28px rgba(242, 140, 40, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(0) scale(0.985);
+}
+
+.lp-header--docked .lp-header__progress {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-header__row,
+  .lp-header__progress {
+    transition: none;
+  }
 }
 
 .lp-nav {

@@ -1,9 +1,11 @@
 @page "/"
 @layout LandingLayout
+@implements IAsyncDisposable
 @inject NavigationManager Nav
 @inject I18nService I18n
+@inject IJSRuntime JS
 
-<header class="lp-header">
+<header id="lp-header" class="lp-header" aria-label="Bobeta">
     <div class="lp-shell lp-header__row">
         <a href="/" class="lp-mark" aria-label="BOBETA">
             <span>BO</span><span class="lp-mark__be">BE</span><span>TA</span>
@@ -20,6 +22,7 @@
                 @I18n.T("landing_cta_play")
             </button>
         </div>
+        <div class="lp-header__progress" aria-hidden="true"></div>
     </div>
 </header>
 
@@ -253,6 +256,32 @@
 </footer>
 
 @code {
+    private bool _headerBound;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _headerBound)
+            return;
+
+        _headerBound = true;
+        await JS.InvokeVoidAsync("bobeta.bindLandingHeader", "lp-header");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (!_headerBound)
+            return;
+
+        try
+        {
+            await JS.InvokeVoidAsync("bobeta.clearLandingHeader");
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit/WASM tearing down — nothing to clear.
+        }
+    }
+
     private void GoToStart() => Nav.NavigateTo("/start");
     private void GoToLogin() => Nav.NavigateTo("/login");
 }
