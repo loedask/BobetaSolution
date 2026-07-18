@@ -116,7 +116,7 @@ else
         }
         catch (Exception ex)
         {
-            _error = ex.Message;
+            _error = FormatError(ex);
             _preview = new DemoAccountGamesResetPreviewDto();
         }
         finally
@@ -143,11 +143,17 @@ else
         }
         catch (Exception ex)
         {
-            _error = ex.Message;
+            _error = FormatError(ex);
         }
         finally
         {
             _busy = false;
         }
+    }
+
+    private static string FormatError(Exception ex)
+    {
+        var inner = ex.InnerException?.Message;
+        return string.IsNullOrWhiteSpace(inner) ? ex.Message : $"{ex.Message} ({inner})";
     }
 }

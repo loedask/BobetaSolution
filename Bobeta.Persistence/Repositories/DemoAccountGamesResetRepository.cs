@@ -13,23 +13,6 @@ namespace Bobeta.Persistence.Repositories;
 /// </summary>
 public sealed class DemoAccountGamesResetRepository(BobetaDbContext db) : IDemoAccountGamesResetRepository
 {
-  private static readonly TransactionType[] GameTransactionTypes =
-  [
-    TransactionType.BetLock,
-    TransactionType.BetRelease,
-    TransactionType.Win,
-    TransactionType.Commission
-  ];
-
-  private static readonly NotificationType[] GameNotificationTypes =
-  [
-    NotificationType.OpponentJoined,
-    NotificationType.GameWon,
-    NotificationType.GameLost,
-    NotificationType.GameInvite,
-    NotificationType.BetProposal
-  ];
-
   public async Task<DemoAccountGamesResetPreviewDto> GetPreviewAsync(
       IReadOnlyList<string> demoPhoneNumbers,
       CancellationToken cancellationToken = default)
@@ -123,12 +106,23 @@ public sealed class DemoAccountGamesResetRepository(BobetaDbContext db) : IDemoA
           .Where(r => demoIds.Contains(r.PlayerId))
           .ExecuteDeleteAsync(cancellationToken);
 
+      // Equality ORs instead of array.Contains: on net10, array.Contains binds to
+      // MemoryExtensions and EF fails evaluating the query parameter expression.
       var walletTxDeleted = await db.WalletTransactions
-          .Where(t => demoIds.Contains(t.PlayerId) && GameTransactionTypes.Contains(t.Type))
+          .Where(t => demoIds.Contains(t.PlayerId)
+                      && (t.Type == TransactionType.BetLock
+                          || t.Type == TransactionType.BetRelease
+                          || t.Type == TransactionType.Win
+                          || t.Type == TransactionType.Commission))
           .ExecuteDeleteAsync(cancellationToken);
 
       var notificationsDeleted = await db.PlayerNotifications
-          .Where(n => demoIds.Contains(n.PlayerId) && GameNotificationTypes.Contains(n.Type))
+          .Where(n => demoIds.Contains(n.PlayerId)
+                      && (n.Type == NotificationType.OpponentJoined
+                          || n.Type == NotificationType.GameWon
+                          || n.Type == NotificationType.GameLost
+                          || n.Type == NotificationType.GameInvite
+                          || n.Type == NotificationType.BetProposal))
           .ExecuteDeleteAsync(cancellationToken);
 
       var now = DateTime.UtcNow;
@@ -170,40 +164,63 @@ public sealed class DemoAccountGamesResetRepository(BobetaDbContext db) : IDemoA
     if (phones.Count == 0)
       return [];
 
-    return await db.Players
+    var players = await db.Players
         .AsNoTracking()
         .Where(p => phones.Contains(p.PhoneNumber))
-        .Select(p => new DemoAccountSummaryDto
-        {
-          PlayerId = p.Id,
-          PhoneNumber = p.PhoneNumber,
-          PlayerName = p.PlayerName,
-          Balance = db.Wallets
-              .Where(w => w.PlayerId == p.Id)
-              .Select(w => w.Balance)
-              .FirstOrDefault(),
-          LockedBalance = db.Wallets
-              .Where(w => w.PlayerId == p.Id)
-              .Select(w => w.LockedBalance)
-              .FirstOrDefault()
-        })
         .OrderBy(p => p.PhoneNumber)
+        .Select(p => new { p.Id, p.PhoneNumber, p.PlayerName })
         .ToListAsync(cancellationToken);
+
+    if (players.Count == 0)
+      return [];
+
+    var playerIds = players.Select(p => p.Id).ToList();
+    var wallets = await db.Wallets
+        .AsNoTracking()
+        .Where(w => playerIds.Contains(w.PlayerId))
+        .Select(w => new { w.PlayerId, w.Balance, w.LockedBalance })
+        .ToListAsync(cancellationToken);
+
+    var walletByPlayerId = wallets.ToDictionary(w => w.PlayerId);
+
+    return players
+        .Select(p =>
+        {
+          walletByPlayerId.TryGetValue(p.Id, out var wallet);
+          return new DemoAccountSummaryDto
+          {
+            PlayerId = p.Id,
+            PhoneNumber = p.PhoneNumber,
+            PlayerName = p.PlayerName,
+            Balance = wallet?.Balance ?? 0m,
+            LockedBalance = wallet?.LockedBalance ?? 0m
+          };
+        })
+        .ToList();
   }
 
-  private Task<int> CountDemoOnlySessionsAsync(IReadOnlyList<Guid> demoIds, CancellationToken cancellationToken) =>
+  private Task<int> CountDemoOnlySessionsAsync(List<Guid> demoIds, CancellationToken cancellationToken) =>
       db.GameSessions.CountAsync(
           s => demoIds.Contains(s.CreatorPlayerId)
                && (s.OpponentPlayerId == null || demoIds.Contains(s.OpponentPlayerId.Value)),
           cancellationToken);
 
-  private Task<int> CountGameWalletTransactionsAsync(IReadOnlyList<Guid> demoIds, CancellationToken cancellationToken) =>
+  private Task<int> CountGameWalletTransactionsAsync(List<Guid> demoIds, CancellationToken cancellationToken) =>
       db.WalletTransactions.CountAsync(
-          t => demoIds.Contains(t.PlayerId) && GameTransactionTypes.Contains(t.Type),
+          t => demoIds.Contains(t.PlayerId)
+               && (t.Type == TransactionType.BetLock
+                   || t.Type == TransactionType.BetRelease
+                   || t.Type == TransactionType.Win
+                   || t.Type == TransactionType.Commission),
           cancellationToken);
 
-  private Task<int> CountGameNotificationsAsync(IReadOnlyList<Guid> demoIds, CancellationToken cancellationToken) =>
+  private Task<int> CountGameNotificationsAsync(List<Guid> demoIds, CancellationToken cancellationToken) =>
       db.PlayerNotifications.CountAsync(
-          n => demoIds.Contains(n.PlayerId) && GameNotificationTypes.Contains(n.Type),
+          n => demoIds.Contains(n.PlayerId)
+               && (n.Type == NotificationType.OpponentJoined
+                   || n.Type == NotificationType.GameWon
+                   || n.Type == NotificationType.GameLost
+                   || n.Type == NotificationType.GameInvite
+                   || n.Type == NotificationType.BetProposal),
           cancellationToken);
 }
