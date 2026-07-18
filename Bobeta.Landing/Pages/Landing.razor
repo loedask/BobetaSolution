@@ -1,6 +1,8 @@
 @page "/"
 @layout LandingLayout
 @implements IAsyncDisposable
+@using Bobeta.Landing.Components
+@using Bobeta.Landing.Content
 @inject NavigationManager Nav
 @inject I18nService I18n
 @inject IJSRuntime JS
@@ -83,6 +85,8 @@
             <span class="lp-ticker__item">Ngola</span>
             <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item">Domino</span>
+            <span class="lp-ticker__sep"></span>
+            <span class="lp-ticker__item">Abbia</span>
             <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item lp-ticker__item--accent">BOBETA</span>
             <span class="lp-ticker__sep"></span>
@@ -212,15 +216,33 @@
                                 <p class="lp-felt__label">Domino</p>
                             </div>
                         }
+                        else if (game.Id == "abbia")
+                        {
+                            <div class="lp-abbia-wrap">
+                                <div class="lp-abbia">
+                                    <span class="lp-abbia__token lp-abbia__token--carved"></span>
+                                    <span class="lp-abbia__token"></span>
+                                    <span class="lp-abbia__token lp-abbia__token--carved"></span>
+                                    <span class="lp-abbia__token"></span>
+                                    <span class="lp-abbia__token lp-abbia__token--carved"></span>
+                                </div>
+                                <p class="lp-felt__label">Abbia</p>
+                            </div>
+                        }
                     </div>
                     <div class="lp-reel__copy lp-showcase__copy">
                         <span class="lp-showcase__num">@((_activeGame + 1).ToString("00"))</span>
                         <h3>@I18n.T(game.TitleKey)</h3>
                         <p>@I18n.T(game.DescKey)</p>
-                        <button type="button" class="lp-link" @onclick="GoToStart">
-                            @I18n.T("landing_cta_play")
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 5l7 7-7 7" /></svg>
-                        </button>
+                        <div class="lp-reel__actions">
+                            <button type="button" class="lp-link" @onclick="GoToStart">
+                                @I18n.T("landing_cta_play")
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 5l7 7-7 7" /></svg>
+                            </button>
+                            <button type="button" class="lp-link lp-link--quiet" @onclick="() => OpenHistory(game.Id)">
+                                @I18n.T("landing_game_history")
+                            </button>
+                        </div>
                     </div>
                 </article>
 
@@ -340,6 +362,11 @@
     </div>
 </footer>
 
+@if (_historyEntry is not null)
+{
+    <GameHistoryModal Entry="_historyEntry" OnClose="CloseHistory" />
+}
+
 @code {
     private static readonly GameSlide[] _games =
     [
@@ -347,6 +374,7 @@
         new("kopo", "landing_game_kopo_title", "landing_game_kopo_desc"),
         new("ngola", "landing_game_ngola_title", "landing_game_ngola_desc"),
         new("domino", "landing_game_domino_title", "landing_game_domino_desc"),
+        new("abbia", "landing_game_abbia_title", "landing_game_abbia_desc"),
     ];
 
     private bool _headerBound;
@@ -354,6 +382,7 @@
     private int _autoplayEpoch;
     private bool _reelPaused;
     private CancellationTokenSource? _autoplayCts;
+    private GameHistoryCopy.Entry? _historyEntry;
 
     protected override void OnInitialized() => StartAutoplay();
 
@@ -467,6 +496,20 @@
 
     private void GoToStart() => Nav.NavigateTo("/start");
     private void GoToLogin() => Nav.NavigateTo("/login");
+
+    private void OpenHistory(string gameId)
+    {
+        _historyEntry = GameHistoryCopy.For(gameId, I18n.Locale);
+        if (_historyEntry is null)
+            return;
+        PauseReel();
+    }
+
+    private void CloseHistory()
+    {
+        _historyEntry = null;
+        ResumeReel();
+    }
 
     private sealed record GameSlide(string Id, string TitleKey, string DescKey);
 }

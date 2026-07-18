@@ -414,6 +414,8 @@ internal sealed class NoOpGameEngineService : IGameEngineService
     public Task<GameMoveResult> ApplyDominoMoveAsync(
         Guid playerId, Guid sessionId, string action, int? high, int? low, string? end, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
+    public Task<GameMoveResult> ApplyAbbiaThrowAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
     public Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
 }

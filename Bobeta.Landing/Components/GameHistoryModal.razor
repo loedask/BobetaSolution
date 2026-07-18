@@ -1,0 +1,72 @@
+@namespace Bobeta.Landing.Components
+@using Bobeta.Landing.Content
+@inject I18nService I18n
+
+@if (Entry is not null)
+{
+    <div class="lp-modal" role="presentation" @onclick="OnBackdrop">
+        <div class="lp-modal__panel"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="lp-history-title"
+             @onclick:stopPropagation="true">
+            <header class="lp-modal__head">
+                <div>
+                    <p class="lp-script lp-script--sm">@I18n.T("landing_game_history")</p>
+                    <h2 id="lp-history-title">@Entry.Title</h2>
+                </div>
+                <button type="button" class="lp-modal__close" @onclick="Close" aria-label="@I18n.T("landing_game_history_close")">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </header>
+
+            <div class="lp-modal__body">
+                <p class="lp-modal__lead">@Entry.Lead</p>
+                @foreach (var paragraph in Entry.Paragraphs)
+                {
+                    <p>@paragraph</p>
+                }
+                @if (!string.IsNullOrWhiteSpace(Entry.Note))
+                {
+                    <p class="lp-modal__note">@Entry.Note</p>
+                }
+
+                @if (Entry.Sources.Count > 0)
+                {
+                    <div class="lp-modal__sources">
+                        <p class="lp-modal__sources-label">@I18n.T("landing_game_history_sources")</p>
+                        <ul>
+                            @foreach (var source in Entry.Sources)
+                            {
+                                <li>
+                                    @if (!string.IsNullOrWhiteSpace(source.Url))
+                                    {
+                                        <a href="@source.Url" target="_blank" rel="noopener noreferrer">@source.Label</a>
+                                    }
+                                    else
+                                    {
+                                        <span>@source.Label</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+
+            <footer class="lp-modal__foot">
+                <a href="/rules" class="lp-link">@I18n.T("landing_nav_rules")</a>
+                <button type="button" class="lp-btn lp-btn--solid lp-btn--sm" @onclick="Close">@I18n.T("landing_game_history_close")</button>
+            </footer>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public GameHistoryCopy.Entry? Entry { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private Task Close() => OnClose.InvokeAsync();
+
+    private async Task OnBackdrop() => await Close();
+}

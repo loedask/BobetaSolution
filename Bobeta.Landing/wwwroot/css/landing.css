@@ -320,6 +320,27 @@
 
 .lp-link:hover svg { transform: translateX(4px); }
 
+.lp-link--quiet {
+  color: rgba(245, 240, 232, 0.72);
+  font-weight: 600;
+}
+
+.lp-link--quiet:hover {
+  color: var(--lp-orange);
+}
+
+.lp-reel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem 1.35rem;
+  margin-top: 0.35rem;
+}
+
+.lp-reel__actions .lp-link {
+  margin-top: 0.9rem;
+}
+
 /* —— Hero —— */
 .lp-hero {
   position: relative;
@@ -1145,6 +1166,171 @@
 .lp-domino-wrap .lp-felt__label {
   left: 0;
   bottom: -1.4rem;
+}
+
+.lp-abbia-wrap {
+  position: relative;
+  width: min(88%, 18rem);
+}
+
+.lp-abbia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.2rem 1rem;
+  border-radius: 1.1rem;
+  background: linear-gradient(160deg, #292524, #1c1917);
+  border: 1px solid rgba(168, 162, 158, 0.35);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45), 0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+.lp-abbia__token {
+  width: 1.15rem;
+  height: 1.55rem;
+  border-radius: 0.35rem;
+  background: linear-gradient(165deg, #78716c, #44403c);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.lp-abbia__token--carved {
+  background: linear-gradient(165deg, #facc15, #a16207);
+}
+
+.lp-abbia-wrap .lp-felt__label {
+  left: 0;
+  bottom: -1.4rem;
+}
+
+/* —— Game history modal —— */
+.lp-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(8, 6, 4, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.lp-modal__panel {
+  width: min(100%, 36rem);
+  max-height: min(88vh, 40rem);
+  overflow: auto;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(242, 140, 40, 0.28);
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(242, 140, 40, 0.12), transparent 55%),
+    linear-gradient(165deg, #1a1612, #0d0b09);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.55);
+  color: var(--lp-paper);
+}
+
+.lp-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.35rem 1.35rem 0.75rem;
+}
+
+.lp-modal__head h2 {
+  margin: 0.15rem 0 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: clamp(1.7rem, 4vw, 2.2rem);
+  line-height: 1.1;
+}
+
+.lp-modal__close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 240, 232, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--lp-paper);
+  cursor: pointer;
+}
+
+.lp-modal__close svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.lp-modal__body {
+  padding: 0.35rem 1.35rem 1rem;
+  display: grid;
+  gap: 0.85rem;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: rgba(245, 240, 232, 0.88);
+}
+
+.lp-modal__lead {
+  margin: 0;
+  color: var(--lp-paper);
+  font-weight: 600;
+}
+
+.lp-modal__body p {
+  margin: 0;
+}
+
+.lp-modal__note {
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(242, 140, 40, 0.22);
+  background: rgba(242, 140, 40, 0.08);
+  color: rgba(245, 240, 232, 0.92);
+  font-size: 0.92rem;
+}
+
+.lp-modal__sources {
+  margin-top: 0.35rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(245, 240, 232, 0.12);
+}
+
+.lp-modal__sources-label {
+  margin: 0 0 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-orange);
+}
+
+.lp-modal__sources ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.lp-modal__sources a {
+  color: rgba(245, 240, 232, 0.9);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.lp-modal__sources a:hover {
+  color: var(--lp-orange);
+}
+
+.lp-modal__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.85rem 1.35rem 1.35rem;
+}
+
+.lp-modal__foot .lp-link {
+  margin-top: 0;
 }
 
 /* —— Path / steps —— */

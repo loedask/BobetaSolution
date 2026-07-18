@@ -96,7 +96,7 @@ public class GameHistoryViewModel : ViewModelBase
                 return new GameHistoryRow
                 {
                     SessionId = sid,
-                    Title = $"{_i18n.T("history_waiting")} — {item.BetAmount:N0} FCFA",
+                    Title = $"{_i18n.T("history_waiting")}: {item.BetAmount:N0} FCFA",
                     Subtitle = meta,
                     Time = item.CreatedAt.ToString("g"),
                     AmountText = "—",
@@ -106,8 +106,8 @@ public class GameHistoryViewModel : ViewModelBase
                 return new GameHistoryRow
                 {
                     SessionId = sid,
-                    Title = $"{_i18n.T("history_live_game")} — {item.BetAmount:N0} FCFA",
-                    Subtitle = $"{role}. {_i18n.T("history_live_hint")}",
+                    Title = $"{_i18n.T("history_in_progress")}: {item.BetAmount:N0} FCFA",
+                    Subtitle = $"{role}. {_i18n.T("history_continue_hint")}",
                     Time = item.CreatedAt.ToString("g"),
                     AmountText = "—",
                     AmountColor = muted,
@@ -117,7 +117,7 @@ public class GameHistoryViewModel : ViewModelBase
                 return new GameHistoryRow
                 {
                     SessionId = sid,
-                    Title = $"{_i18n.T("history_cancelled")} — {item.BetAmount:N0} FCFA",
+                    Title = $"{_i18n.T("history_cancelled")}: {item.BetAmount:N0} FCFA",
                     Subtitle = meta,
                     Time = item.CreatedAt.ToString("g"),
                     AmountText = "—",

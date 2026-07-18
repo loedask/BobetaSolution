@@ -31,6 +31,12 @@ public interface IGameEngineService
         string? end,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Throws Abbia tokens for the current player.</summary>
+    Task<GameMoveResult> ApplyAbbiaThrowAsync(
+        Guid playerId,
+        Guid sessionId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Returns the current game state for the requesting player (their hand, last card, whose turn, game over, winner).</summary>
     Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default);
 }

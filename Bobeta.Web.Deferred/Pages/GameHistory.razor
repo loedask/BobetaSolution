@@ -137,7 +137,7 @@
     {
         GameStatus.Finished => RowIsWin(item) ? I18n.T("won") : I18n.T("lost"),
         GameStatus.Waiting => I18n.T("history_waiting"),
-        GameStatus.InProgress => I18n.T("history_live_game"),
+        GameStatus.InProgress => I18n.T("history_in_progress"),
         GameStatus.Cancelled => I18n.T("history_cancelled"),
         _ => item.Status.ToString()
     };
@@ -147,7 +147,7 @@
         var role = item.IsCreator ? I18n.T("history_you_hosted") : I18n.T("history_you_joined");
         return item.Status switch
         {
-            GameStatus.InProgress => $"{role}. {I18n.T("history_live_hint")}",
+            GameStatus.InProgress => $"{role}. {I18n.T("history_continue_hint")}",
             GameStatus.Waiting or GameStatus.Cancelled => role,
             _ => ""
         };

@@ -152,6 +152,13 @@
             VerticalOptions="Center"
             HorizontalOptions="Fill" />
 
+        <controls:AbbiaBoardView
+            x:Name="AbbiaBoard"
+            Grid.Row="3"
+            IsVisible="False"
+            VerticalOptions="Center"
+            HorizontalOptions="Fill" />
+
         <CollectionView
             x:Name="HandView"
             Grid.Row="3"

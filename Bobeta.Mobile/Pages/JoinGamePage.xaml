@@ -36,6 +36,7 @@
             <Button x:Name="FilterKopoBtn" Clicked="OnFilterKopo" CornerRadius="8" FontSize="12" Padding="12,6" />
             <Button x:Name="FilterNgolaBtn" Clicked="OnFilterNgola" CornerRadius="8" FontSize="12" Padding="12,6" />
             <Button x:Name="FilterDominoBtn" Clicked="OnFilterDomino" CornerRadius="8" FontSize="12" Padding="12,6" />
+            <Button x:Name="FilterAbbiaBtn" Clicked="OnFilterAbbia" CornerRadius="8" FontSize="12" Padding="12,6" />
         </HorizontalStackLayout>
         <Grid Grid.Row="3" ColumnDefinitions="*,Auto">
             <Label x:Name="Subtitle" FontSize="14" TextColor="{StaticResource MutedForeground}" VerticalOptions="Center" />

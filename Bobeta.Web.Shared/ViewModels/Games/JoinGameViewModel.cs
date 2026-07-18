@@ -28,8 +28,8 @@ public class JoinGameViewModel(
     private int _loadGeneration;
     private DateTimeOffset _lastSuccessfulLoadUtc = DateTimeOffset.MinValue;
     private static readonly TimeSpan DuplicateSuppressionWindow = TimeSpan.FromSeconds(2);
-    private static readonly TimeSpan LiveRefreshInterval = TimeSpan.FromSeconds(12);
-    private CancellationTokenSource? _liveRefreshCts;
+    private static readonly TimeSpan LobbyRefreshInterval = TimeSpan.FromSeconds(12);
+    private CancellationTokenSource? _lobbyRefreshCts;
 
     /// <summary>null = show all game types.</summary>
     public GameVariant? VariantFilter { get; private set; }
@@ -97,25 +97,25 @@ public class JoinGameViewModel(
         }
     }
 
-    public void StartLiveRefresh()
+    public void StartLobbyRefresh()
     {
-        StopLiveRefresh();
-        _liveRefreshCts = new CancellationTokenSource();
-        _ = RunLiveRefreshAsync(_liveRefreshCts.Token);
+        StopLobbyRefresh();
+        _lobbyRefreshCts = new CancellationTokenSource();
+        _ = RunLobbyRefreshAsync(_lobbyRefreshCts.Token);
     }
 
-    public void StopLiveRefresh()
+    public void StopLobbyRefresh()
     {
-        _liveRefreshCts?.Cancel();
-        _liveRefreshCts?.Dispose();
-        _liveRefreshCts = null;
+        _lobbyRefreshCts?.Cancel();
+        _lobbyRefreshCts?.Dispose();
+        _lobbyRefreshCts = null;
     }
 
-    private async Task RunLiveRefreshAsync(CancellationToken token)
+    private async Task RunLobbyRefreshAsync(CancellationToken token)
     {
         try
         {
-            using var timer = new PeriodicTimer(LiveRefreshInterval);
+            using var timer = new PeriodicTimer(LobbyRefreshInterval);
             while (await timer.WaitForNextTickAsync(token))
                 await LoadGamesAsync(forceRefresh: true, quiet: true);
         }

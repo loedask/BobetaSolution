@@ -1,0 +1,68 @@
+@namespace Bobeta.Web.Components.Game
+@using Bobeta.Client.Models.Api
+
+<div class="abbia-board space-y-4">
+    <div class="rounded-2xl border border-border bg-card/70 p-4">
+        <p class="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Opponent</p>
+        <div class="flex flex-wrap justify-center gap-2">
+            @if (Abbia?.OpponentHasThrown == true && Abbia.OpponentTokens != null)
+            {
+                @foreach (var carved in Abbia.OpponentTokens)
+                {
+                    <span class="@TokenClass(carved)">@(carved ? "◆" : "○")</span>
+                }
+                <p class="w-full text-center text-sm text-foreground">@Abbia.OpponentCarvedUp carved up</p>
+            }
+            else
+            {
+                @for (var i = 0; i < (Abbia?.TokenCount ?? 5); i++)
+                {
+                    <span class="abbia-token abbia-token--hidden">?</span>
+                }
+                <p class="w-full text-center text-xs text-muted-foreground">Waiting for throw</p>
+            }
+        </div>
+    </div>
+
+    <div class="rounded-2xl border border-border bg-card/70 p-4">
+        <p class="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">You</p>
+        <div class="flex flex-wrap justify-center gap-2">
+            @if (Abbia?.IHaveThrown == true && Abbia.MyTokens != null)
+            {
+                @foreach (var carved in Abbia.MyTokens)
+                {
+                    <span class="@TokenClass(carved)">@(carved ? "◆" : "○")</span>
+                }
+                <p class="w-full text-center text-sm text-foreground">@Abbia.MyCarvedUp carved up</p>
+            }
+            else
+            {
+                @for (var i = 0; i < (Abbia?.TokenCount ?? 5); i++)
+                {
+                    <span class="abbia-token abbia-token--ready">◆</span>
+                }
+                <p class="w-full text-center text-xs text-muted-foreground">Ready to throw</p>
+            }
+        </div>
+    </div>
+
+    @if (CanInteract && Abbia?.CanThrow == true)
+    {
+        <button type="button"
+                class="w-full rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground"
+                @onclick="OnThrowClicked">
+            Throw tokens
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public AbbiaStateDto? Abbia { get; set; }
+    [Parameter] public bool CanInteract { get; set; }
+    [Parameter] public EventCallback OnThrow { get; set; }
+
+    private static string TokenClass(bool carved) =>
+        carved ? "abbia-token abbia-token--carved" : "abbia-token abbia-token--blank";
+
+    private Task OnThrowClicked() => OnThrow.InvokeAsync();
+}
