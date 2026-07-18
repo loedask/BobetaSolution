@@ -14,6 +14,7 @@
             <a href="#features">@I18n.T("landing_nav_features")</a>
             <a href="#games">@I18n.T("landing_nav_games")</a>
             <a href="#how-it-works">@I18n.T("landing_nav_how")</a>
+            <a href="#faq">@I18n.T("landing_nav_faq")</a>
             <a href="#get-started">@I18n.T("landing_nav_get_started")</a>
         </nav>
         <div class="lp-header__actions">
@@ -256,6 +257,26 @@
     </div>
 </section>
 
+<section id="faq" class="lp-help">
+    <div class="lp-shell lp-help__grid">
+        <div class="lp-help__intro">
+            <p class="lp-script">@I18n.T("landing_nav_faq")</p>
+            <h2>@I18n.T("landing_faq_title")</h2>
+            <p>@I18n.T("landing_faq_sub")</p>
+            <a href="/faq" class="lp-link">
+                @I18n.T("landing_faq_all")
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 5l7 7-7 7" /></svg>
+            </a>
+        </div>
+        <div class="lp-faq">
+            @foreach (var item in HelpCopy.Faq(I18n.Locale).Take(4))
+            {
+                <FaqItem Question="@item.Question" Answer="@item.Answer" />
+            }
+        </div>
+    </div>
+</section>
+
 <section id="get-started" class="lp-finale">
     <div class="lp-finale__wash" aria-hidden="true"></div>
     <div class="lp-finale__type" aria-hidden="true">
@@ -281,14 +302,27 @@
 </section>
 
 <footer class="lp-footer">
-    <div class="lp-shell lp-footer__row">
-        <div>
+    <div class="lp-shell lp-footer__grid">
+        <div class="lp-footer__brand">
             <p class="lp-mark lp-mark--sm">
                 <span>BO</span><span class="lp-mark__be">BE</span><span>TA</span>
             </p>
             <p class="lp-script lp-script--sm">@I18n.T("landing_hero_line1") @I18n.T("landing_hero_line2")</p>
+            <p class="lp-footer__copy">© @DateTime.UtcNow.Year Bobeta. @I18n.T("landing_footer_rights")</p>
         </div>
-        <p class="lp-footer__copy">© @DateTime.UtcNow.Year Bobeta. @I18n.T("landing_footer_rights")</p>
+        <div class="lp-footer__col">
+            <p class="lp-footer__label">@I18n.T("landing_footer_help")</p>
+            <a href="#faq">@I18n.T("landing_nav_faq")</a>
+            <a href="/faq">@I18n.T("landing_faq_all")</a>
+            <a href="/rules">@I18n.T("landing_nav_rules")</a>
+        </div>
+        <div class="lp-footer__col">
+            <p class="lp-footer__label">@I18n.T("landing_legal_title")</p>
+            <a href="/terms">@I18n.T("landing_nav_terms")</a>
+            <a href="/responsible-play">@I18n.T("landing_nav_responsible")</a>
+            <a href="/privacy">@I18n.T("landing_nav_privacy")</a>
+            <a href="/rules">@I18n.T("landing_nav_rules")</a>
+        </div>
     </div>
 </footer>
 

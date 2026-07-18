@@ -1286,28 +1286,313 @@
   margin-bottom: 1.5rem;
 }
 
-/* —— Footer —— */
-.lp-footer {
+/* —— FAQ / help band —— */
+.lp-help {
+  padding: 5rem 0 4.5rem;
+  background:
+    radial-gradient(ellipse 45% 50% at 10% 20%, rgba(242, 140, 40, 0.08), transparent 55%),
+    var(--lp-ink);
   border-top: 1px solid var(--lp-line);
-  padding: 2.25rem 0 2.5rem;
-  background: rgba(0, 0, 0, 0.35);
 }
 
-.lp-footer__row {
+.lp-help__grid {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 860px) {
+  .lp-help__grid {
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .lp-help__intro {
+    position: sticky;
+    top: 5.5rem;
+  }
+}
+
+.lp-help__intro h2 {
+  margin: 0.35rem 0 0.75rem;
+  font-size: clamp(1.85rem, 3.5vw, 2.5rem);
+}
+
+.lp-help__intro > p {
+  margin: 0 0 1.25rem;
+  color: var(--lp-mute);
+  line-height: 1.65;
+  max-width: 26rem;
+}
+
+.lp-faq {
   display: flex;
   flex-direction: column;
+  gap: 0.65rem;
+}
+
+.lp-faq__item {
+  border: 1px solid rgba(247, 244, 239, 0.1);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.025);
+  overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.lp-faq__item.is-open {
+  border-color: rgba(242, 140, 40, 0.4);
+  background:
+    linear-gradient(135deg, rgba(242, 140, 40, 0.1), transparent 50%),
+    rgba(255, 255, 255, 0.03);
+}
+
+.lp-faq__q {
+  width: 100%;
+  display: flex;
   align-items: center;
-  gap: 1.25rem;
-  text-align: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border: 0;
+  background: none;
+  color: var(--lp-paper);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lp-faq__icon {
+  flex-shrink: 0;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-right: 2px solid var(--lp-orange);
+  border-bottom: 2px solid var(--lp-orange);
+  transform: rotate(45deg) translate(-1px, -1px);
+  transition: transform 0.25s ease;
+}
+
+.lp-faq__item.is-open .lp-faq__icon {
+  transform: rotate(225deg) translate(-1px, -1px);
+}
+
+.lp-faq__a {
+  padding: 0 1.1rem 1.1rem;
+}
+
+.lp-faq__a p {
+  margin: 0;
+  color: var(--lp-mute);
+  line-height: 1.65;
+  font-size: 0.95rem;
+}
+
+.lp-faq--solo {
+  margin-top: 0.5rem;
+}
+
+/* —— Legal pages —— */
+.lp-legal-top {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 0.85rem 0;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(6, 6, 6, 0.82);
+  border-bottom: 1px solid var(--lp-line);
+}
+
+.lp-legal-top__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.lp-legal-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--lp-mute);
+  text-decoration: none;
+  font-size: 0.88rem;
+  transition: color 0.2s ease;
+}
+
+.lp-legal-back svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.lp-legal-back:hover { color: var(--lp-paper); }
+
+.lp-legal-grid {
+  display: grid;
+  gap: 2rem;
+  padding: 2rem 0 4rem;
+}
+
+@media (min-width: 860px) {
+  .lp-legal-grid {
+    grid-template-columns: 15rem 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+}
+
+.lp-legal-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+@media (min-width: 860px) {
+  .lp-legal-side {
+    position: sticky;
+    top: 5rem;
+  }
+}
+
+.lp-legal-side__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.lp-legal-side__nav a {
+  color: var(--lp-mute);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.lp-legal-side__nav a:hover {
+  color: var(--lp-paper);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.lp-legal-side__nav a.is-active {
+  color: var(--lp-paper);
+  border-color: rgba(242, 140, 40, 0.35);
+  background: rgba(242, 140, 40, 0.08);
+}
+
+.lp-legal-side__cta {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+}
+
+.lp-legal-main {
+  min-width: 0;
+}
+
+.lp-doc {
+  border: 1px solid rgba(247, 244, 239, 0.1);
+  border-radius: 1.35rem;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+  padding: 1.75rem 1.4rem 2rem;
 }
 
 @media (min-width: 640px) {
-  .lp-footer__row {
-    flex-direction: row;
-    justify-content: space-between;
-    text-align: left;
+  .lp-doc { padding: 2.25rem 2rem 2.5rem; }
+}
+
+.lp-doc__head h1 {
+  margin: 0.35rem 0 0.75rem;
+  font-size: clamp(1.85rem, 3.5vw, 2.6rem);
+}
+
+.lp-doc__head > p:last-child {
+  margin: 0;
+  color: var(--lp-mute);
+  line-height: 1.65;
+  max-width: 40rem;
+}
+
+.lp-doc__body {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.lp-doc__section h2 {
+  margin: 0 0 0.45rem;
+  font-size: 1.15rem;
+  color: var(--lp-orange);
+}
+
+.lp-doc__section p {
+  margin: 0;
+  color: rgba(247, 244, 239, 0.72);
+  line-height: 1.7;
+  font-size: 0.96rem;
+}
+
+.lp-doc__more {
+  margin: 1.5rem 0 0;
+}
+
+.lp-doc__more a {
+  color: var(--lp-orange);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.lp-doc__more a:hover { text-decoration: underline; }
+
+/* —— Footer —— */
+.lp-footer {
+  border-top: 1px solid var(--lp-line);
+  padding: 2.75rem 0 2.5rem;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.lp-footer__grid {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 760px) {
+  .lp-footer__grid {
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 2.5rem;
+    align-items: start;
   }
 }
+
+.lp-footer__brand .lp-footer__copy {
+  margin-top: 1rem;
+}
+
+.lp-footer__label {
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lp-orange);
+  font-weight: 700;
+}
+
+.lp-footer__col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.lp-footer__col a {
+  color: var(--lp-mute);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.lp-footer__col a:hover { color: var(--lp-paper); }
 
 .lp-footer__copy {
   margin: 0;
