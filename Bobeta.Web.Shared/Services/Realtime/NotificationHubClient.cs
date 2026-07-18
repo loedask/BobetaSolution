@@ -8,13 +8,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Bobeta.Web.Shared.Services.Realtime;
 
-/// <summary>SignalR client for the player notification inbox hub.</summary>
+/// <summary>SignalR client for the player notification inbox hub and presence heartbeats.</summary>
 public sealed class NotificationHubClient : IAsyncDisposable
 {
+    private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromSeconds(45);
+
     private readonly IAccessTokenProvider _tokenProvider;
     private readonly string _hubBaseUrl;
     private readonly ILogger<NotificationHubClient> _logger;
     private HubConnection? _connection;
+    private CancellationTokenSource? _heartbeatCts;
     private bool _disposed;
 
     public NotificationHubClient(
@@ -39,6 +42,8 @@ public sealed class NotificationHubClient : IAsyncDisposable
     {
         if (_disposed) return;
         if (_connection?.State == HubConnectionState.Connected) return;
+
+        StopHeartbeat();
 
         if (_connection != null)
         {
@@ -71,11 +76,28 @@ public sealed class NotificationHubClient : IAsyncDisposable
             }
         });
 
+        _connection.Reconnected += async _ =>
+        {
+            var connection = _connection;
+            if (connection is null)
+                return;
+            try
+            {
+                await connection.InvokeAsync("Heartbeat", CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Presence heartbeat after reconnect failed.");
+            }
+        };
+
         await _connection.StartAsync(cancellationToken);
+        StartHeartbeat();
     }
 
     public async Task DisconnectAsync()
     {
+        StopHeartbeat();
         if (_connection == null) return;
         await _connection.StopAsync(CancellationToken.None);
         await _connection.DisposeAsync();
@@ -87,6 +109,51 @@ public sealed class NotificationHubClient : IAsyncDisposable
         if (_disposed) return;
         _disposed = true;
         await DisconnectAsync();
+    }
+
+    private void StartHeartbeat()
+    {
+        StopHeartbeat();
+        if (_connection == null) return;
+        _heartbeatCts = new CancellationTokenSource();
+        _ = RunHeartbeatAsync(_heartbeatCts.Token);
+    }
+
+    private void StopHeartbeat()
+    {
+        _heartbeatCts?.Cancel();
+        _heartbeatCts?.Dispose();
+        _heartbeatCts = null;
+    }
+
+    private async Task RunHeartbeatAsync(CancellationToken token)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(HeartbeatInterval);
+            while (await timer.WaitForNextTickAsync(token))
+            {
+                var connection = _connection;
+                if (connection?.State != HubConnectionState.Connected)
+                    continue;
+                try
+                {
+                    await connection.InvokeAsync("Heartbeat", token);
+                }
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Presence heartbeat failed.");
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Disconnect / dispose.
+        }
     }
 
     private static NotificationViewModel? MapPayload(JsonElement payload)

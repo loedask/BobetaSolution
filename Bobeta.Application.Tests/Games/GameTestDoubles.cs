@@ -364,6 +364,13 @@ internal sealed class InMemoryPlayerRepository(params Player[] players) : IPlaye
         return Task.CompletedTask;
     }
 
+    public Task TouchLastSeenOnlineAsync(Guid playerId, DateTime utcNow, CancellationToken cancellationToken = default)
+    {
+        if (_players.TryGetValue(playerId, out var player))
+            player.LastSeenOnlineUtc = utcNow;
+        return Task.CompletedTask;
+    }
+
     public Task<(IReadOnlyList<Player> Items, int TotalCount)> GetPagedAsync(
         int skip,
         int take,

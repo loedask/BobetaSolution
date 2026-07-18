@@ -178,6 +178,9 @@ public sealed class DashboardService(
       });
   }
 
+  public Task<PresenceStatsDto> GetPresenceAsync(CancellationToken cancellationToken = default) =>
+    stats.GetPresenceStatsAsync(cancellationToken);
+
   private static List<(string Category, string Metric, object? Value)> BuildSummaryMetrics(DashboardStatsDto dashboard)
   {
     var playerLabel = dashboard.IsInfluencerScoped
@@ -191,7 +194,7 @@ public sealed class DashboardService(
       (playerLabel, "Total players", dashboard.Players.TotalPlayers),
       (playerLabel, "New players in period", dashboard.Players.NewPlayers),
       (playerLabel, "Verified players", dashboard.Players.VerifiedPlayers),
-      (playerLabel, "Active players", dashboard.Players.ActivePlayers)
+      (playerLabel, "Active accounts", dashboard.Players.ActivePlayers)
     };
 
     if (!dashboard.ShowFinancials)

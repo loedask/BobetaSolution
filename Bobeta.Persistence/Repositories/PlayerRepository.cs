@@ -29,6 +29,11 @@ public class PlayerRepository(BobetaDbContext db) : IPlayerRepository
         await _db.SaveChangesAsync(cancellationToken);
     }
 
+    public Task TouchLastSeenOnlineAsync(Guid playerId, DateTime utcNow, CancellationToken cancellationToken = default) =>
+        _db.Players
+            .Where(p => p.Id == playerId)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.LastSeenOnlineUtc, utcNow), cancellationToken);
+
     public async Task<(IReadOnlyList<Player> Items, int TotalCount)> GetPagedAsync(
         int skip,
         int take,
