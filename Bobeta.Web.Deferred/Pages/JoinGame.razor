@@ -17,7 +17,7 @@
                 <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60"></span>
                 <span class="relative inline-flex h-2 w-2 rounded-full bg-accent"></span>
             </span>
-            @ViewModel.OpenGames.Count @I18n.T("live")
+            @ViewModel.OpenGames.Count @I18n.T("open")
         </div>
     </div>
 
@@ -108,7 +108,7 @@
                     </span>
                     <div>
                         <p class="font-display text-sm font-semibold text-foreground">@I18n.T("open_game_sessions")</p>
-                        <p class="text-[11px] text-muted-foreground">@ViewModel.OpenGames.Count @I18n.T("live")</p>
+                        <p class="text-[11px] text-muted-foreground">@ViewModel.OpenGames.Count @I18n.T("open")</p>
                     </div>
                 </div>
                 <button type="button"
@@ -163,7 +163,7 @@
     protected override async Task OnInitializedAsync()
     {
         await Task.WhenAll(ViewModel.LoadGamesAsync(), ViewModel.LoadInviteStatusAsync());
-        ViewModel.StartLiveRefresh();
+        ViewModel.StartLobbyRefresh();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -190,7 +190,7 @@
 
     public async ValueTask DisposeAsync()
     {
-        ViewModel.StopLiveRefresh();
+        ViewModel.StopLobbyRefresh();
         ViewModel.StateChanged -= OnStateChanged;
         try
         {

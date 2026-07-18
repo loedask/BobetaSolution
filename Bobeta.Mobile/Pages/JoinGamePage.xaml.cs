@@ -39,7 +39,7 @@ public partial class JoinGamePage : ContentPage
         InviteCodeEntry.Placeholder = i18n.T("invite_enter_code");
 
         await Task.WhenAll(_vm.LoadGamesAsync(), _vm.LoadInviteStatusAsync());
-        _vm.StartLiveRefresh();
+        _vm.StartLobbyRefresh();
         SyncUi();
     }
 
@@ -47,7 +47,7 @@ public partial class JoinGamePage : ContentPage
     {
         if (_vm != null)
         {
-            _vm.StopLiveRefresh();
+            _vm.StopLobbyRefresh();
             _vm.StateChanged -= OnVmChanged;
         }
         base.OnDisappearing();

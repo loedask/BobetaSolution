@@ -24,7 +24,7 @@ public interface IGameSessionRepository
     /// <summary>True when the player already created a waiting table with no opponent.</summary>
     Task<bool> HasOpenWaitingSeatAsync(Guid playerId, CancellationToken cancellationToken = default);
 
-    /// <summary>True when the player is in a live match (creator or opponent).</summary>
+    /// <summary>True when the player is in an in-progress match (creator or opponent).</summary>
     Task<bool> HasInProgressGameAsync(Guid playerId, CancellationToken cancellationToken = default);
 
     /// <summary>Creates a new game session and returns it.</summary>
