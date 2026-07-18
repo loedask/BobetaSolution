@@ -104,6 +104,90 @@ public class KopoGameEngineRulesTests
         Assert.Contains(notifications.GameResults, r => r.PlayerId == _opponent && !r.Won && r.Amount == 200m);
     }
 
+    [Fact]
+    public async Task ApplyMoveAsync_WhenCreatorEliminated_SettlesForOpponent()
+    {
+        var sessionId = Guid.NewGuid();
+        var session = new GameSession
+        {
+            Id = sessionId,
+            CreatorPlayerId = _creator,
+            OpponentPlayerId = _opponent,
+            BetAmount = 200m,
+            Variant = GameVariant.Kopo,
+            Status = GameStatus.InProgress,
+            CreatedAt = DateTime.UtcNow,
+            GameStateJson = JsonSerializer.Serialize(new KopoGameState
+            {
+                CurrentTurnPlayerId = _opponent,
+                NextPieceId = 4,
+                Pieces =
+                [
+                    new KopoPiece { Id = 1, OwnerId = _opponent, Row = 3, Col = 2 },
+                    new KopoPiece { Id = 2, OwnerId = _creator, Row = 4, Col = 3 }
+                ]
+            }, JsonOptions)
+        };
+
+        var wallet = new RecordingWalletService();
+        var notifications = new RecordingNotificationService();
+        var sut = CreateEngine(session, wallet, notifications);
+
+        var move = await sut.ApplyMoveAsync(_opponent, sessionId, new[] { (3, 2), (5, 4) });
+
+        Assert.True(move.IsSuccess);
+        Assert.True(move.State!.GameOver);
+        Assert.Equal(_opponent, move.State.WinnerPlayerId);
+        Assert.Single(wallet.Settlements);
+        Assert.Empty(wallet.Releases);
+        Assert.NotNull(session.GameResult);
+        Assert.Equal(_opponent, session.GameResult!.WinnerPlayerId);
+        Assert.Equal(_creator, session.GameResult.LoserPlayerId);
+        Assert.Contains(notifications.GameResults, r => r.PlayerId == _opponent && r.Won && r.Amount == 300m);
+        Assert.Contains(notifications.GameResults, r => r.PlayerId == _creator && !r.Won && r.Amount == 200m);
+    }
+
+    [Fact]
+    public async Task ApplyMoveAsync_WhenCaptureLeavesOpponentImmobilized_SettlesForCreator()
+    {
+        // Opponent keeps a man stuck on its back row; capturing the mobile piece ends the game.
+        var sessionId = Guid.NewGuid();
+        var session = new GameSession
+        {
+            Id = sessionId,
+            CreatorPlayerId = _creator,
+            OpponentPlayerId = _opponent,
+            BetAmount = 200m,
+            Variant = GameVariant.Kopo,
+            Status = GameStatus.InProgress,
+            CreatedAt = DateTime.UtcNow,
+            GameStateJson = JsonSerializer.Serialize(new KopoGameState
+            {
+                CurrentTurnPlayerId = _creator,
+                NextPieceId = 5,
+                Pieces =
+                [
+                    new KopoPiece { Id = 1, OwnerId = _creator, Row = 5, Col = 4 },
+                    new KopoPiece { Id = 2, OwnerId = _opponent, Row = 4, Col = 3 },
+                    new KopoPiece { Id = 3, OwnerId = _opponent, Row = 9, Col = 0 }
+                ]
+            }, JsonOptions)
+        };
+
+        var wallet = new RecordingWalletService();
+        var sut = CreateEngine(session, wallet);
+
+        var move = await sut.ApplyMoveAsync(_creator, sessionId, new[] { (5, 4), (3, 2) });
+
+        Assert.True(move.IsSuccess);
+        Assert.True(move.State!.GameOver);
+        Assert.False(move.State.IsDraw);
+        Assert.Equal(_creator, move.State.WinnerPlayerId);
+        Assert.Single(wallet.Settlements);
+        Assert.Empty(wallet.Releases);
+        Assert.Null(session.GameStateJson);
+    }
+
     private static async Task InvokeReleaseBetsAsync(KopoGameEngine engine, GameSession session)
     {
         var method = typeof(KopoGameEngine).GetMethod("ReleaseBetsAsync", BindingFlags.Instance | BindingFlags.NonPublic)

@@ -112,7 +112,7 @@ Authoritative rule logic lives in `Bobeta.Application/Games/`. This document mir
 ## Ngola (2×8 seed-sowing / Mancala)
 
 **Source:** `Bobeta.Application/Games/Ngola/NgolaRules.cs`, `NgolaGameEngine.cs`  
-**Tests:** `Bobeta.Application.Tests/Games/NgolaRulesTests.cs`
+**Tests:** `Bobeta.Application.Tests/Games/NgolaRulesTests.cs`, `NgolaGameEngineRulesTests.cs`
 
 Bobeta Ngola is a custom **two-row, eight-pit** ruleset (not the 4×8 Ludii variant).
 
@@ -202,7 +202,7 @@ Bobeta Ngola is a custom **two-row, eight-pit** ruleset (not the 4×8 Ludii vari
 ## Abbia (1v1 token-flip chance game)
 
 **Source:** `Bobeta.Application/Games/Abbia/AbbiaRules.cs`, `AbbiaGameEngine.cs`  
-**Tests:** `Bobeta.Application.Tests/Games/AbbiaRulesTests.cs`
+**Tests:** `Bobeta.Application.Tests/Games/AbbiaRulesTests.cs`, `AbbiaGameEngineRulesTests.cs`
 
 Simplified 1v1 Abbia: each seat throws five two-faced tokens. Carved side up scores. Higher count wins.
 

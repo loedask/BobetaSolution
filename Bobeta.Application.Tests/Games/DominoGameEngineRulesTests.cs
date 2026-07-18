@@ -56,6 +56,76 @@ public class DominoGameEngineRulesTests
         Assert.Null(session.GameStateJson);
     }
 
+    [Fact]
+    public async Task ApplyMoveAsync_WhenOpponentEmptiesHand_SettlesForOpponent()
+    {
+        var state = new DominoGameState
+        {
+            CreatorHand = ["5-1", "4-2"],
+            OpponentHand = ["6-3"],
+            Boneyard = [],
+            Chain = ["6-6"],
+            LeftEnd = 6,
+            RightEnd = 6,
+            CurrentTurnPlayerId = _opponent,
+            IsOpening = false
+        };
+
+        var wallet = new RecordingWalletService();
+        var notifications = new RecordingNotificationService();
+        var session = CreateSession(state);
+        var sut = CreateEngine(session, wallet, notifications);
+
+        var move = await sut.ApplyMoveAsync(
+            _opponent, session.Id, DominoRules.ActionPlay, 6, 3, DominoRules.EndLeft);
+
+        Assert.True(move.IsSuccess);
+        Assert.True(move.State!.GameOver);
+        Assert.Equal(_opponent, move.State.WinnerPlayerId);
+        Assert.Single(wallet.Settlements);
+        Assert.Empty(wallet.Releases);
+        Assert.Equal(_opponent, session.GameResult!.WinnerPlayerId);
+        Assert.Equal(_creator, session.GameResult.LoserPlayerId);
+        Assert.Contains(notifications.GameResults, r => r.PlayerId == _opponent && r.Won && r.Amount == 300m);
+        Assert.Null(session.GameStateJson);
+    }
+
+    [Fact]
+    public async Task ApplyMoveAsync_WhenBlockedLowerPipsWins_Settles()
+    {
+        var state = new DominoGameState
+        {
+            CreatorHand = ["1-0"],
+            OpponentHand = ["5-5"],
+            Boneyard = [],
+            Chain = ["6-6"],
+            LeftEnd = 6,
+            RightEnd = 6,
+            CurrentTurnPlayerId = _creator,
+            IsOpening = false
+        };
+
+        var wallet = new RecordingWalletService();
+        var notifications = new RecordingNotificationService();
+        var session = CreateSession(state);
+        var sut = CreateEngine(session, wallet, notifications);
+
+        var move = await sut.ApplyMoveAsync(
+            _creator, session.Id, DominoRules.ActionPass, null, null, null);
+
+        Assert.True(move.IsSuccess);
+        Assert.True(move.State!.GameOver);
+        Assert.False(move.State.IsDraw);
+        Assert.Equal(_creator, move.State.WinnerPlayerId);
+        Assert.Single(wallet.Settlements);
+        Assert.Empty(wallet.Releases);
+        Assert.Equal(_creator, session.GameResult!.WinnerPlayerId);
+        Assert.Equal(_opponent, session.GameResult.LoserPlayerId);
+        Assert.Equal(100m, session.GameResult.PlatformCommission);
+        Assert.Contains(notifications.GameResults, r => r.PlayerId == _creator && r.Won && r.Amount == 300m);
+        Assert.Null(session.GameStateJson);
+    }
+
     [Theory]
     [InlineData("play", 6, 3, "right", "D:p:6-3:R")]
     [InlineData("play", 6, 6, "left", "D:p:6-6:L")]

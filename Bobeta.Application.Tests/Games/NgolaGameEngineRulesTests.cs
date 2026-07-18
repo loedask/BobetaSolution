@@ -50,6 +50,63 @@ public class NgolaGameEngineRulesTests
     }
 
     [Fact]
+    public async Task ApplyMoveAsync_WhenCreatorBlockedWithLowerScore_SettlesForOpponent()
+    {
+        // Opponent sows local pit 7 (canonical 8); creator has no pit with >= 2 seeds and loses on score.
+        var pits = new int[NgolaRules.TotalPits];
+        pits[8] = 2;
+        var state = new NgolaGameState { CurrentTurnPlayerId = _opponent, Pits = pits };
+
+        var wallet = new RecordingWalletService();
+        var notifications = new RecordingNotificationService();
+        var session = CreateSession(state);
+        var sut = CreateEngine(session, wallet, notifications);
+
+        var move = await sut.ApplyMoveAsync(_opponent, session.Id, pitIndex: 7);
+
+        Assert.True(move.IsSuccess);
+        Assert.True(move.State!.GameOver);
+        Assert.False(move.State.IsDraw);
+        Assert.Equal(_opponent, move.State.WinnerPlayerId);
+        Assert.Single(wallet.Settlements);
+        Assert.Empty(wallet.Releases);
+        Assert.NotNull(session.GameResult);
+        Assert.Equal(_opponent, session.GameResult!.WinnerPlayerId);
+        Assert.Equal(_creator, session.GameResult.LoserPlayerId);
+        Assert.Contains(notifications.GameResults, r => r.PlayerId == _opponent && r.Won && r.Amount == 300m);
+        Assert.Contains(notifications.GameResults, r => r.PlayerId == _creator && !r.Won && r.Amount == 200m);
+        Assert.Null(session.GameStateJson);
+    }
+
+    [Fact]
+    public async Task ApplyMoveAsync_WhenCaptureThenBlocksOpponent_SettlesUsingCapturePlusSweep()
+    {
+        var pits = new int[NgolaRules.TotalPits];
+        pits[6] = 2;
+        pits[8] = 3; // capture landing
+        pits[0] = 1; // creator leftover after sow/capture
+        var state = new NgolaGameState
+        {
+            CurrentTurnPlayerId = _creator,
+            CreatorScore = 0,
+            OpponentScore = 0,
+            Pits = pits
+        };
+
+        var wallet = new RecordingWalletService();
+        var session = CreateSession(state);
+        var sut = CreateEngine(session, wallet);
+
+        var move = await sut.ApplyMoveAsync(_creator, session.Id, pitIndex: 6);
+
+        Assert.True(move.IsSuccess);
+        Assert.True(move.State!.GameOver);
+        Assert.Equal(_creator, move.State.WinnerPlayerId);
+        Assert.Single(wallet.Settlements);
+        Assert.Null(session.GameStateJson);
+    }
+
+    [Fact]
     public async Task ApplyMoveAsync_WhenFinalScoresTie_ReleasesBothBets()
     {
         // After the move both sides finish with 2 seeds each → draw → release bets, no settlement.

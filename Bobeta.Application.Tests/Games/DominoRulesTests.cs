@@ -125,6 +125,75 @@ public sealed class DominoRulesTests
     }
 
     [Fact]
+    public void EvaluateAfterAction_PassWhenOpponentCanStillPlay_Continues()
+    {
+        var state = new DominoGameState
+        {
+            CreatorHand = ["1-0"],
+            OpponentHand = ["6-5"],
+            Boneyard = [],
+            Chain = ["6-6"],
+            LeftEnd = 6,
+            RightEnd = 6,
+            CurrentTurnPlayerId = _opponent,
+            IsOpening = false
+        };
+
+        var (winner, loser, draw) = DominoRules.EvaluateAfterAction(
+            state, _creator, _opponent, _creator, DominoRules.ActionPass);
+
+        Assert.Null(winner);
+        Assert.Null(loser);
+        Assert.False(draw);
+    }
+
+    [Fact]
+    public void EvaluateAfterAction_PassWhenBoneyardRemains_Continues()
+    {
+        var state = new DominoGameState
+        {
+            CreatorHand = ["1-0"],
+            OpponentHand = ["5-5"],
+            Boneyard = ["3-2"],
+            Chain = ["6-6"],
+            LeftEnd = 6,
+            RightEnd = 6,
+            CurrentTurnPlayerId = _opponent,
+            IsOpening = false
+        };
+
+        var (winner, loser, draw) = DominoRules.EvaluateAfterAction(
+            state, _creator, _opponent, _creator, DominoRules.ActionPass);
+
+        Assert.Null(winner);
+        Assert.Null(loser);
+        Assert.False(draw);
+    }
+
+    [Fact]
+    public void EvaluateAfterAction_MutualBlockEqualPips_IsDraw()
+    {
+        var state = new DominoGameState
+        {
+            CreatorHand = ["2-0"],
+            OpponentHand = ["1-1"],
+            Boneyard = [],
+            Chain = ["6-6"],
+            LeftEnd = 6,
+            RightEnd = 6,
+            CurrentTurnPlayerId = _opponent,
+            IsOpening = false
+        };
+
+        var (winner, loser, draw) = DominoRules.EvaluateAfterAction(
+            state, _creator, _opponent, _creator, DominoRules.ActionPass);
+
+        Assert.Null(winner);
+        Assert.Null(loser);
+        Assert.True(draw);
+    }
+
+    [Fact]
     public void TryDraw_AddsTileAndKeepsTurn()
     {
         var state = new DominoGameState

@@ -87,4 +87,65 @@ public sealed class NgolaRulesTests
         Assert.Equal(11, state.OpponentScore);
         Assert.All(state.Pits, seeds => Assert.Equal(0, seeds));
     }
+
+    [Fact]
+    public void CompleteIfBlocked_WhenScoresEqual_IsDraw()
+    {
+        var state = new NgolaGameState
+        {
+            CurrentTurnPlayerId = _opponent,
+            CreatorScore = 10,
+            OpponentScore = 11,
+            Pits = new[] { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+        };
+
+        var outcome = NgolaRules.CompleteIfBlocked(state, _creator, _opponent);
+
+        Assert.Null(outcome.WinnerId);
+        Assert.Null(outcome.LoserId);
+        Assert.True(outcome.IsDraw);
+        Assert.Equal(11, state.CreatorScore);
+        Assert.Equal(11, state.OpponentScore);
+    }
+
+    [Fact]
+    public void CompleteIfBlocked_WhenNextPlayerStillHasMove_ReturnsContinue()
+    {
+        var state = new NgolaGameState
+        {
+            CurrentTurnPlayerId = _opponent,
+            CreatorScore = 5,
+            OpponentScore = 5,
+            Pits = new[] { 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0 }
+        };
+
+        var outcome = NgolaRules.CompleteIfBlocked(state, _creator, _opponent);
+
+        Assert.Null(outcome.WinnerId);
+        Assert.Null(outcome.LoserId);
+        Assert.False(outcome.IsDraw);
+        Assert.Equal(2, state.Pits[8]);
+        Assert.Equal(5, state.CreatorScore);
+        Assert.Equal(5, state.OpponentScore);
+    }
+
+    [Fact]
+    public void CompleteIfBlocked_WhenOpponentScoreHigher_OpponentWins()
+    {
+        var state = new NgolaGameState
+        {
+            CurrentTurnPlayerId = _creator,
+            CreatorScore = 5,
+            OpponentScore = 10,
+            Pits = new[] { 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0 }
+        };
+
+        var outcome = NgolaRules.CompleteIfBlocked(state, _creator, _opponent);
+
+        Assert.Equal(_opponent, outcome.WinnerId);
+        Assert.Equal(_creator, outcome.LoserId);
+        Assert.False(outcome.IsDraw);
+        Assert.Equal(6, state.CreatorScore);
+        Assert.Equal(12, state.OpponentScore);
+    }
 }
