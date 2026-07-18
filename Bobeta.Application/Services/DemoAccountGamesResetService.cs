@@ -9,11 +9,11 @@ public sealed class DemoAccountGamesResetService(
     IDemoAccountGamesResetRepository repository) : IDemoAccountGamesResetService
 {
   public Task<DemoAccountGamesResetPreviewDto> GetPreviewAsync(CancellationToken cancellationToken = default) =>
-      repository.GetPreviewAsync(DemoAccountConstants.PhoneNumbers, cancellationToken);
+      repository.GetPreviewAsync(DemoAccountConstants.PhoneNumbers.ToList(), cancellationToken);
 
   public Task<DemoAccountGamesResetResultDto> ClearGamesDataAsync(CancellationToken cancellationToken = default) =>
       repository.ClearGamesDataAsync(
-          DemoAccountConstants.PhoneNumbers,
+          DemoAccountConstants.PhoneNumbers.ToList(),
           DemoAccountConstants.DemoWalletBalance,
           cancellationToken);
 }
