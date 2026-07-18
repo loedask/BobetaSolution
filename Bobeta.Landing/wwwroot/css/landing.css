@@ -1288,38 +1288,6 @@
   font-size: 0.92rem;
 }
 
-.lp-modal__sources {
-  margin-top: 0.35rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid rgba(245, 240, 232, 0.12);
-}
-
-.lp-modal__sources-label {
-  margin: 0 0 0.45rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--lp-orange);
-}
-
-.lp-modal__sources ul {
-  margin: 0;
-  padding-left: 1.1rem;
-  display: grid;
-  gap: 0.35rem;
-}
-
-.lp-modal__sources a {
-  color: rgba(245, 240, 232, 0.9);
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-}
-
-.lp-modal__sources a:hover {
-  color: var(--lp-orange);
-}
-
 .lp-modal__foot {
   display: flex;
   flex-wrap: wrap;
