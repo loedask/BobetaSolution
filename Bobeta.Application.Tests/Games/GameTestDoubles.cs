@@ -1,8 +1,10 @@
+using Bobeta.Application.DTOs.Game;
 using Bobeta.Application.DTOs.Notifications;
 using Bobeta.Application.DTOs.Wallet;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
+using Bobeta.Domain.ValueObjects;
 
 namespace Bobeta.Application.Tests.Games;
 
@@ -331,4 +333,33 @@ internal sealed class InMemoryPlayerRepository(params Player[] players) : IPlaye
             .ToList();
         return Task.FromResult<(IReadOnlyList<Player>, int)>((items, _players.Count));
     }
+}
+
+internal sealed class RecordingGameSessionNotifier : IGameSessionNotifier
+{
+    public List<Guid> Sessions { get; } = new();
+
+    public Task NotifySessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        Sessions.Add(sessionId);
+        return Task.CompletedTask;
+    }
+}
+
+internal sealed class NoOpGameEngineService : IGameEngineService
+{
+    public Task StartGameAsync(Guid sessionId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task<GameMoveResult> PlayCardAsync(Guid playerId, Guid sessionId, Card card, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+    public Task<GameMoveResult> VoidFollowDrawAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+    public Task<GameMoveResult> ApplyKopoMoveAsync(Guid playerId, Guid sessionId, IReadOnlyList<(int Row, int Col)> path, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+    public Task<GameMoveResult> ApplyNgolaMoveAsync(Guid playerId, Guid sessionId, int pitIndex, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+    public Task<GameMoveResult> ApplyDominoMoveAsync(
+        Guid playerId, Guid sessionId, string action, int? high, int? low, string? end, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+    public Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
 }

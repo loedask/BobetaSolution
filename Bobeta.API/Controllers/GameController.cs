@@ -49,6 +49,7 @@ public class GameController(IGameSessionService gameSessionService) : Controller
 
     /// <summary>Lists waiting games you can join (excludes games you created).</summary>
     [HttpGet("open")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<ActionResult<IReadOnlyList<GameSessionDto>>> GetOpenGames([FromQuery] int skip = 0, [FromQuery] int take = 50, [FromQuery] GameVariant? variant = null, CancellationToken cancellationToken = default)
     {
         var list = await _gameSessionService.ListOpenJoinableGamesAsync(PlayerId, skip, take, variant, cancellationToken);

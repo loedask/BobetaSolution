@@ -53,9 +53,10 @@ public class GameService(HttpClient httpClient, IAccessTokenProvider? accessToke
 
     public async Task<Response<IReadOnlyList<GameSessionViewModel>>> GetOpenGamesAsync(GameVariant? variant = null, CancellationToken cancellationToken = default)
     {
-        var url = "api/Game/open?skip=0&take=100";
+        // Cache-bust so account switches never reuse another player's empty lobby response.
+        var url = $"api/Game/open?skip=0&take=100&_={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
         if (variant.HasValue)
-            url += $"&variant={(int)variant.Value}";
+            url += $"&variant={variant.Value}";
         var res = await GetAsync<List<GameSessionDto>>(url, cancellationToken).ConfigureAwait(false);
         if (!res.IsSuccess || res.Data == null)
             return Response<IReadOnlyList<GameSessionViewModel>>.Failure(res.ErrorMessage ?? "Failed to load open games.", res.StatusCode);
