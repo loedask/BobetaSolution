@@ -180,6 +180,17 @@ public sealed class GameSessionServiceOpenGamesTests
                     .Take(take)
                     .ToList());
 
+        public Task<bool> HasOpenWaitingSeatAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(_sessions.Any(s =>
+                s.CreatorPlayerId == playerId
+                && s.Status == GameStatus.Waiting
+                && s.OpponentPlayerId == null));
+
+        public Task<bool> HasInProgressGameAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(_sessions.Any(s =>
+                s.Status == GameStatus.InProgress
+                && (s.CreatorPlayerId == playerId || s.OpponentPlayerId == playerId)));
+
         public Task<GameSession> AddAsync(GameSession session, CancellationToken cancellationToken = default)
         {
             _sessions.Add(session);

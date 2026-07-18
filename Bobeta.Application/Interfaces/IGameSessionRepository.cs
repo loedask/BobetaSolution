@@ -18,6 +18,12 @@ public interface IGameSessionRepository
     /// <summary>Gets sessions where the player is creator or opponent, for history; includes result. Ordered by created descending, with paging.</summary>
     Task<IReadOnlyList<GameSession>> GetByPlayerIdAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default);
 
+    /// <summary>True when the player already created a waiting table with no opponent.</summary>
+    Task<bool> HasOpenWaitingSeatAsync(Guid playerId, CancellationToken cancellationToken = default);
+
+    /// <summary>True when the player is in a live match (creator or opponent).</summary>
+    Task<bool> HasInProgressGameAsync(Guid playerId, CancellationToken cancellationToken = default);
+
     /// <summary>Creates a new game session and returns it.</summary>
     Task<GameSession> AddAsync(GameSession session, CancellationToken cancellationToken = default);
 

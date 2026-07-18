@@ -206,6 +206,7 @@ Bobeta Ngola is a custom **two-row, eight-pit** ruleset (not the 4×8 Ludii vari
 | Rule | Detail |
 |------|--------|
 | Bet range | 200–500 FCFA per player |
+| Concurrent seats | At most one open Waiting table you created, and at most one live InProgress match |
 | Create game | Locks creator's bet; status = Waiting |
 | Join game | Locks opponent's bet; game auto-starts |
 | Inactivity | 60 s idle → first warning (10 s to Continue or Cancel); after Continue, 40 s idle → second warning; deadline expires → game cancelled, bets released |

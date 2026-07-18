@@ -22,6 +22,17 @@ internal sealed class InMemoryGameSessionRepository(GameSession session) : IGame
     public Task<IReadOnlyList<GameSession>> GetByPlayerIdAsync(Guid playerId, int skip, int take, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<GameSession>>(Array.Empty<GameSession>());
 
+    public Task<bool> HasOpenWaitingSeatAsync(Guid playerId, CancellationToken cancellationToken = default)
+        => Task.FromResult(
+            session.CreatorPlayerId == playerId
+            && session.Status == GameStatus.Waiting
+            && session.OpponentPlayerId == null);
+
+    public Task<bool> HasInProgressGameAsync(Guid playerId, CancellationToken cancellationToken = default)
+        => Task.FromResult(
+            session.Status == GameStatus.InProgress
+            && (session.CreatorPlayerId == playerId || session.OpponentPlayerId == playerId));
+
     public Task<GameSession> AddAsync(GameSession session, CancellationToken cancellationToken = default)
         => Task.FromResult(session);
 

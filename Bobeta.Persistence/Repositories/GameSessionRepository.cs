@@ -41,6 +41,19 @@ public class GameSessionRepository : IGameSessionRepository
             .Skip(skip).Take(take)
             .ToListAsync(cancellationToken);
 
+    public Task<bool> HasOpenWaitingSeatAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+        _db.GameSessions.AnyAsync(
+            s => s.CreatorPlayerId == playerId
+                 && s.Status == GameStatus.Waiting
+                 && s.OpponentPlayerId == null,
+            cancellationToken);
+
+    public Task<bool> HasInProgressGameAsync(Guid playerId, CancellationToken cancellationToken = default) =>
+        _db.GameSessions.AnyAsync(
+            s => s.Status == GameStatus.InProgress
+                 && (s.CreatorPlayerId == playerId || s.OpponentPlayerId == playerId),
+            cancellationToken);
+
     public async Task<GameSession> AddAsync(GameSession session, CancellationToken cancellationToken = default)
     {
         _db.GameSessions.Add(session);
