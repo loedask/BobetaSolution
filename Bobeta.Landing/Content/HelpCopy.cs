@@ -484,80 +484,80 @@ public static class HelpCopy
 
     private static readonly LegalDoc WhatIsEn = new(
         "What is Bobeta?",
-        "Bobeta is a skill-gaming platform for real stakes on mobile money. A short list of games you already know. Fast matches. Clear payouts.",
+        "Bobeta is a real-stakes platform on mobile money, built around Congolese and African table games. A short list you already know. Fast matches. Clear payouts.",
         [
             new("A short list, on purpose",
-                "Big platforms stack hundreds of titles and leave you scrolling. Bobeta does the opposite. You get a small set of classic skill games: Makopa, Kopo, Ngola, and Domino. Pick one, stake, and play. No endless catalog to dig through."),
+                "Big platforms stack hundreds of titles and leave you scrolling. Bobeta does the opposite. You get a small set of classic skill games such as Makopa, Kopo, Ngola, Domino, and Nzengué, plus Abbia when you want a chance throw. The lineup starts in Congo and reaches across African games people already know. Pick one, stake, and play. No endless catalog to dig through."),
             new("Built for quick wins",
                 "Every match is one-vs-one and paced for short sessions. You lock a stake, play a real opponent, and settle when the game ends. Win, then take the payout to your wallet. Ideal when you want a sharp match, not a long night of browsing lobbies."),
             new("Real stakes. Real cash-out.",
                 "Deposit and withdraw with MoMo. Both stakes form the pot. Bobeta takes a platform fee. The rest goes to the winner's wallet. What you see in the match is what you play for."),
             new("Skill play, not a slot wall",
-                "Outcomes come from how you play. Deals and first turns use fair randomization in the game engines. There is no hidden odds board behind a thousand lookalike games."),
+                "Most outcomes come from how you play. Deals, first turns, and Abbia throws use fair randomization in the game engines. There is no hidden odds board behind a thousand lookalike games."),
             new("How to start",
                 "Open Play now, confirm your MoMo number with an OTP, add funds, then create or join a match. The FAQ and Game rules pages cover the details if you need them."),
         ]);
 
     private static readonly LegalDoc WhatIsFr = new(
         "Qu'est-ce que Bobeta ?",
-        "Bobeta est une plateforme de jeux d'adresse à enjeux réels via mobile money. Une courte liste de jeux que vous connaissez déjà. Des parties rapides. Des paiements clairs.",
+        "Bobeta est une plateforme à enjeux réels via mobile money, bâtie autour de jeux de table congolais et africains. Une courte liste que vous connaissez déjà. Des parties rapides. Des paiements clairs.",
         [
             new("Une liste courte, volontairement",
-                "Les grandes plateformes empilent des centaines de titres et vous font défiler. Bobeta fait l'inverse. Vous avez un petit set de jeux classiques: Makopa, Kopo, Ngola et Domino. Choisissez, misez, jouez. Pas de catalogue infini."),
+                "Les grandes plateformes empilent des centaines de titres et vous font défiler. Bobeta fait l'inverse. Vous avez un petit set de jeux d'adresse classiques tels que Makopa, Kopo, Ngola, Domino et Nzengué, plus Abbia pour un lancer de hasard. La ligne commence au Congo et s'ouvre aux jeux africains que les gens connaissent déjà. Choisissez, misez, jouez. Pas de catalogue infini."),
             new("Pensé pour des parties rapides",
                 "Chaque partie est un duel, cadencé pour des sessions courtes. Vous bloquez une mise, affrontez un adversaire, et le règlement suit la fin de partie. Gagnez, puis encaissez sur votre portefeuille. Idéal pour un match net, pas pour une soirée à chercher un jeu."),
             new("Enjeux réels. Retrait réel.",
                 "Déposez et retirez avec MoMo. Les deux mises forment le pot. Bobeta prélève des frais de plateforme. Le reste va au gagnant. Ce que vous voyez dans la partie est ce que vous jouez."),
             new("De l'adresse, pas un mur de machines",
-                "Le résultat vient du jeu. Les distributions et le premier tour utilisent un tirage équitable dans les moteurs. Pas de cote cachée derrière mille jeux qui se ressemblent."),
+                "La plupart des résultats viennent du jeu. Les distributions, le premier tour et les lancers Abbia utilisent un tirage équitable dans les moteurs. Pas de cote cachée derrière mille jeux qui se ressemblent."),
             new("Comment commencer",
                 "Ouvrez Jouer maintenant, confirmez votre numéro MoMo avec un OTP, rechargez, puis créez ou rejoignez une partie. La FAQ et les Règles des jeux donnent le détail si besoin."),
         ]);
 
     private static readonly LegalDoc WhatIsKt = new(
         "Bobeta kele nini?",
-        "Bobeta kele plateforme ya ba jeux ya adresse ti ba enjeux ya kyeleka na mobile money. Liste ya kukusa ya ba jeux nge me zaba. Ba parties ya nswalu. Ba paiements ya polele.",
+        "Bobeta kele plateforme ya ba enjeux ya kyeleka na mobile money, salama na ba jeux ya table ya Congo mpi ya Afrique. Liste ya kukusa ya ba jeux nge me zaba. Ba parties ya nswalu. Ba paiements ya polele.",
         [
             new("Liste ya kukusa, na lukanu",
-                "Ba plateformes ya nene ke yika ba titres nkama mpi nge ke landa. Bobeta ke sala na nima. Nge ke zwaka set ya kukusa: Makopa, Kopo, Ngola mpi Domino. Sola, yika mise, sakana. Ve catalogue ya ndambu ve."),
+                "Ba plateformes ya nene ke yika ba titres nkama mpi nge ke landa. Bobeta ke sala na nima. Nge ke zwaka set ya kukusa ya ba jeux ya adresse ya classique mutindu Makopa, Kopo, Ngola, Domino mpi Nzengué, plus Abbia sambu na lancer ya hasard. Ligne ke bandaka na Congo mpi ke kanga ba jeux ya Afrique bantu me zaba. Sola, yika mise, sakana. Ve catalogue ya ndambu ve."),
             new("Sala sambu na ba parties ya nswalu",
                 "Konso partie kele duel ya kukusa. Yika mise, sakana ti mbeni, mpi règlement ke landa nsuka. Longa, baka mbongo na wallet. Yai kele sambu na match ya nswalu, ve sambu na kulanda ba jeux ntangu ya nene."),
             new("Ba enjeux ya kyeleka. Retrait ya kyeleka.",
                 "Yika mpi katula na MoMo. Ba mises zole ke sala pot. Bobeta ke baka frais ya plateforme. Ya ntama ke kwenda na nani me longa. Yo nge me mona na partie kele yo nge ke sakana."),
             new("Adresse, ve mur ya ba machines",
-                "Résultat kele ya kusakana. Ba cartes mpi nani ke bandisa ke solamaka na botondi. Ve cote ya kubumba nima ya ba jeux nkama."),
+                "Ba résultats mingi kele ya kusakana. Ba cartes, nani ke bandisa, mpi ba lancers Abbia ke solamaka na botondi. Ve cote ya kubumba nima ya ba jeux nkama."),
             new("Mutindu ya kubanda",
                 "Fina Jouer maintenant, confirma numéro MoMo na OTP, yika mbongo, sala to kota partie. FAQ mpi ba règles ke monisa ba détails."),
         ]);
 
     private static readonly LegalDoc WhatIsLn = new(
         "Bobeta ezali nini?",
-        "Bobeta ezali plateforme ya ba jeux ya adresse na ba enjeux ya solo na mobile money. Liste mokuse ya ba jeux oyebi. Ba parties ya mbangu. Ba paiements ya polele.",
+        "Bobeta ezali plateforme ya ba enjeux ya solo na mobile money, salemi na ba jeux ya table ya Congo mpe ya Afrique. Liste mokuse ya ba jeux oyebi. Ba parties ya mbangu. Ba paiements ya polele.",
         [
             new("Liste mokuse, na makanisi",
-                "Ba plateformes ya monene ezali na ba titres nkama mpe ozali kolanda. Bobeta ezali kosala na nsima. Ozwi set mokuse: Makopa, Kopo, Ngola mpe Domino. Pona, tya mise, sakana. Ezali te catalogue ya seko."),
+                "Ba plateformes ya monene ezali na ba titres nkama mpe ozali kolanda. Bobeta ezali kosala na nsima. Ozwi set mokuse ya ba jeux ya adresse ya classique lokola Makopa, Kopo, Ngola, Domino mpe Nzengué, plus Abbia soki olingi lancer ya hasard. Ligne ebandaka na Congo mpe ekangaka ba jeux ya Afrique bato bayebi. Pona, tya mise, sakana. Ezali te catalogue ya seko."),
             new("Salemi mpo na ba parties ya mbangu",
                 "Mokano mokomoko ezali duel mokuse. Tya mise, sakana na monguna, règlement elandi suka. Longa, zwá mbongo na wallet. Ezali mpo na match ya mbangu, ezali te mpo na koluka ba jeux na butu mobimba."),
             new("Ba enjeux ya solo. Retrait ya solo.",
                 "Tya mpe katola na MoMo. Ba mises mibale esali pot. Bobeta ezwi frais ya plateforme. Oyo etikalí ekendé na oyo alongi. Oyo omoni na partie ezali oyo osakanaka."),
             new("Adresse, ezali te mur ya ba machines",
-                "Résultat ezali ya kosakana. Ba cartes mpe nani abandi esalemaka na bolamu. Ezali te cote ya kobomba nsima ya ba jeux nkama."),
+                "Ba résultats ebele ezali ya kosakana. Ba cartes, nani abandi, mpe ba lancers Abbia esalemaka na bolamu. Ezali te cote ya kobomba nsima ya ba jeux nkama."),
             new("Ndenge ya kobanda",
                 "Fina Jouer maintenant, confirma numéro MoMo na OTP, tya mbongo, sala to kota partie. FAQ mpe ba règles emonisi ba détails."),
         ]);
 
     private static readonly LegalDoc WhatIsSw = new(
         "Bobeta ni nini?",
-        "Bobeta ni jukwaa la michezo ya ustadi yenye dau halisi kupitia mobile money. Orodha fupi ya michezo unayoijua. Mechi za haraka. Malipo wazi.",
+        "Bobeta ni jukwaa la dau halisi kupitia mobile money, lililojengwa kuzunguka michezo ya meza ya Kongo na Afrika. Orodha fupi unayoijua. Mechi za haraka. Malipo wazi.",
         [
             new("Orodha fupi, kwa makusudi",
-                "Majukwaa makubwa yanaweka mamia ya michezo na unakuwa unaskroli. Bobeta inafanya kinyume. Unapata seti ndogo: Makopa, Kopo, Ngola, na Domino. Chagua, weka dau, cheza. Hakuna katalogi isiyoisha."),
+                "Majukwaa makubwa yanaweka mamia ya michezo na unakuwa unaskroli. Bobeta inafanya kinyume. Unapata seti ndogo ya michezo ya ustadi kama Makopa, Kopo, Ngola, Domino, na Nzengué, pamoja na Abbia unapotaka tupa ya bahati. Orodha inaanza Kongo na inafikia michezo ya Afrika watu wanayoijua. Chagua, weka dau, cheza. Hakuna katalogi isiyoisha."),
             new("Imejengwa kwa ushindi wa haraka",
                 "Kila mechi ni mtu mmoja dhidi ya mwingine, kwa muda mfupi. Funga dau, cheza, maliza. Shinda, kisha chukua malipo kwenye pochi. Inafaa kwa mechi kali, si usiku mzima wa kutafuta mchezo."),
             new("Dau halisi. Utoaji halisi.",
                 "Weka na toa kupitia MoMo. Dau zote mbili zinaunda poti. Bobeta inachukua ada ya jukwaa. Salio huenda kwa mshindi. Unachokiona kwenye mechi ndicho unachochezea."),
             new("Ustadi, si ukuta wa slot",
-                "Matokeo yanatokana na uchezaji. Ugawaji na mwanzo hutumia bahati ya haki kwenye injini. Hakuna odds za siri nyuma ya michezo elfu zinazofanana."),
+                "Matokeo mengi yanatokana na uchezaji. Ugawaji, mwanzo, na tupa za Abbia hutumia bahati ya haki kwenye injini. Hakuna odds za siri nyuma ya michezo elfu zinazofanana."),
             new("Jinsi ya kuanza",
                 "Fungua Play now, thibitisha nambari yako ya MoMo kwa OTP, weka fedha, kisha unda au jiunge. FAQ na Sheria za michezo zina maelezo zaidi."),
         ]);
