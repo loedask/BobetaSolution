@@ -35,6 +35,7 @@ public partial class JoinGamePage : ContentPage
         FilterDominoBtn.Text = "Domino";
         FilterAbbiaBtn.Text = "Abbia";
         FilterNzengueBtn.Text = "Nzengué";
+        FilterYoteBtn.Text = "Yoté";
         InviteHaveCodeLabel.Text = i18n.T("invite_have_code");
         InviteHintLabel.Text = i18n.T("invite_enter_hint");
         InviteApplyBtn.Text = i18n.T("invite_apply");
@@ -74,6 +75,7 @@ public partial class JoinGamePage : ContentPage
         StyleFilter(FilterDominoBtn, _vm.VariantFilter == GameVariant.Domino);
         StyleFilter(FilterAbbiaBtn, _vm.VariantFilter == GameVariant.Abbia);
         StyleFilter(FilterNzengueBtn, _vm.VariantFilter == GameVariant.Nzengue);
+        StyleFilter(FilterYoteBtn, _vm.VariantFilter == GameVariant.Yote);
 
         var hasInvite = _vm.InviteStatus?.HasPendingCode == true;
         InviteBanner.IsVisible = hasInvite;
@@ -102,6 +104,7 @@ public partial class JoinGamePage : ContentPage
     private void OnFilterDomino(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Domino);
     private void OnFilterAbbia(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Abbia);
     private void OnFilterNzengue(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Nzengue);
+    private void OnFilterYote(object? sender, EventArgs e) => _vm?.SetVariantFilter(GameVariant.Yote);
 
     private async void OnApplyInvite(object? sender, EventArgs e)
     {

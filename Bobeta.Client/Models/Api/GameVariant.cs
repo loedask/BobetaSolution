@@ -10,5 +10,6 @@ public enum GameVariant
     Ngola = 2,
     Domino = 3,
     Abbia = 4,
-    Nzengue = 5
+    Nzengue = 5,
+    Yote = 6
 }

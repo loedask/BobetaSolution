@@ -113,6 +113,18 @@
                         </span>
                         <span class="text-center font-display text-sm font-semibold">Nzengué</span>
                     </button>
+                    <button type="button" class="@VariantClass(GameVariant.Yote)" @onclick="() => ViewModel.SetVariant(GameVariant.Yote)">
+                        <span class="game-preview game-preview--yote" aria-hidden="true">
+                            <span class="game-preview__yote">
+                                @for (var cell = 0; cell < 30; cell++)
+                                {
+                                    var occupied = cell is 7 or 14 or 22;
+                                    <span class="game-preview__yote-cell@(occupied ? " game-preview__yote-cell--mine" : "")"></span>
+                                }
+                            </span>
+                        </span>
+                        <span class="text-center font-display text-sm font-semibold">Yoté</span>
+                    </button>
                 </div>
             </section>
 

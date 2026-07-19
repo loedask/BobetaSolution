@@ -43,4 +43,9 @@ Use these when scouting or documenting other games (not shown on the landing pag
 
 - [Ludii Portal: Nzengué Small (Klepzig 1972)](https://ludii.games/details.php?keyword=Nzengue%20Small)
 - [Ludii Portal: Nzengué Large (Klepzig 1972)](https://ludii.games/details.php?keyword=Nzengue%20Large)
+
+## Yoté
+
+- [Wikipedia: Yoté](https://en.wikipedia.org/wiki/Yot%C3%A9)
+- [GamesCrafters: Yoté](https://www.gamescrafters.com/games/yote.html)
 - Klepzig, J. 1972. Traditional games in the Congo. In *Games of the World*.

@@ -4,6 +4,7 @@ using Bobeta.Application.Games.Kopo;
 using Bobeta.Application.Games.Makopa;
 using Bobeta.Application.Games.Ngola;
 using Bobeta.Application.Games.Nzengue;
+using Bobeta.Application.Games.Yote;
 using Bobeta.Application.Interfaces;
 using Bobeta.Application.Services;
 using Bobeta.Application.Validators;
@@ -26,6 +27,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<DominoGameEngine>();
         services.AddScoped<AbbiaGameEngine>();
         services.AddScoped<NzengueGameEngine>();
+        services.AddScoped<YoteGameEngine>();
         services.AddScoped<IGameEngineService, GameEngineService>();
         services.AddScoped<IGameHistoryService, GameHistoryService>();
         services.AddScoped<INotificationRealtimePublisher, NullNotificationRealtimePublisher>();

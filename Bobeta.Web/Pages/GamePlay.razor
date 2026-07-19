@@ -137,6 +137,23 @@
                     <p class="text-center text-sm text-muted-foreground">@I18n.T("sending_move")</p>
                 }
             }
+            else if (ViewModel.Variant == GameVariant.Yote)
+            {
+                <details class="rounded-xl border border-border bg-card/60 px-4 py-3 text-sm text-foreground">
+                    <summary class="cursor-pointer select-none font-semibold">@I18n.T("yote_how_to_play_title")</summary>
+                    <div class="mt-2 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">@I18n.T("yote_rules_body")</div>
+                </details>
+                @if (ViewModel.Yote != null)
+                {
+                    <YoteBoard Yote="@ViewModel.Yote"
+                               CanInteract="@(ViewModel.IsPlayerTurn && !ViewModel.IsSendingMove && !ViewModel.ShowInactivityOverlay)"
+                               OnPlay="OnYotePlay" />
+                }
+                @if (ViewModel.IsSendingMove)
+                {
+                    <p class="text-center text-sm text-muted-foreground">@I18n.T("sending_move")</p>
+                }
+            }
             else
             {
                 <details class="rounded-xl border border-border bg-card/60 px-4 py-3 text-sm text-foreground">
@@ -321,4 +338,7 @@
     private async Task OnAbbiaThrow() => await ViewModel.OnAbbiaThrowAsync();
     private async Task OnNzenguePlay((int? From, int To) move) =>
         await ViewModel.OnNzenguePlayAsync(move.From, move.To);
+
+    private async Task OnYotePlay((int? From, int To, int? ExtraRemove) move) =>
+        await ViewModel.OnYotePlayAsync(move.From, move.To, move.ExtraRemove);
 }

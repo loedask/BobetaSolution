@@ -30,4 +30,5 @@ public record GameStateDto(
     DominoStateDto? Domino = null,
     AbbiaStateDto? Abbia = null,
     NzengueStateDto? Nzengue = null,
+    YoteStateDto? Yote = null,
     bool IsDraw = false);

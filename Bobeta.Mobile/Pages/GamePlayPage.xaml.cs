@@ -53,6 +53,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         AbbiaBoard.ThrowRequested += OnAbbiaThrowRequested;
         NzengueBoard.MoveRequested -= OnNzengueMoveRequested;
         NzengueBoard.MoveRequested += OnNzengueMoveRequested;
+        YoteBoard.MoveRequested -= OnYoteMoveRequested;
+        YoteBoard.MoveRequested += OnYoteMoveRequested;
 
         if (!string.IsNullOrEmpty(_sessionId))
             await _vm.LoadGameAsync(_sessionId);
@@ -74,6 +76,7 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         DominoBoard.ActionRequested -= OnDominoActionRequested;
         AbbiaBoard.ThrowRequested -= OnAbbiaThrowRequested;
         NzengueBoard.MoveRequested -= OnNzengueMoveRequested;
+        YoteBoard.MoveRequested -= OnYoteMoveRequested;
 
         base.OnDisappearing();
     }
@@ -92,7 +95,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         var isDomino = _vm.IsDomino;
         var isAbbia = _vm.IsAbbia;
         var isNzengue = _vm.IsNzengue;
-        var isMakopa = !isKopo && !isNgola && !isDomino && !isAbbia && !isNzengue;
+        var isYote = _vm.IsYote;
+        var isMakopa = !isKopo && !isNgola && !isDomino && !isAbbia && !isNzengue && !isYote;
         MakopaPanel.IsVisible = isMakopa;
         HandView.IsVisible = isMakopa;
         TakeCardButton.IsVisible = isMakopa;
@@ -102,6 +106,7 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
         DominoBoard.IsVisible = isDomino && _vm.Domino != null;
         AbbiaBoard.IsVisible = isAbbia && _vm.Abbia != null;
         NzengueBoard.IsVisible = isNzengue && _vm.Nzengue != null;
+        YoteBoard.IsVisible = isYote && _vm.Yote != null;
         KopoChainHint.IsVisible = isKopo && (_vm.Kopo?.MustContinueChain ?? false);
 
         var i18n = MauiProgram.Services.GetRequiredService<I18nService>();
@@ -179,6 +184,15 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
                 && !_vm.ShowInactivityOverlay && !_vm.IsSendingMove;
             RulesLink.IsVisible = true;
             RulesLink.Text = i18n.T("nzengue_rules_link");
+            RoundScoreLabel.IsVisible = false;
+        }
+        else if (isYote && _vm.Yote != null)
+        {
+            YoteBoard.State = _vm.Yote;
+            YoteBoard.CanInteract = _vm.IsPlayerTurn && !_vm.ShowGameResult
+                && !_vm.ShowInactivityOverlay && !_vm.IsSendingMove;
+            RulesLink.IsVisible = true;
+            RulesLink.Text = i18n.T("yote_rules_link");
             RoundScoreLabel.IsVisible = false;
         }
         else if (_vm.WaitingForOpponent)
@@ -350,6 +364,8 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
             await DisplayAlertAsync(i18n.T("abbia_how_to_play_title"), i18n.T("abbia_rules_body"), i18n.T("done_short"));
         else if (_vm?.IsNzengue == true)
             await DisplayAlertAsync(i18n.T("nzengue_how_to_play_title"), i18n.T("nzengue_rules_body"), i18n.T("done_short"));
+        else if (_vm?.IsYote == true)
+            await DisplayAlertAsync(i18n.T("yote_how_to_play_title"), i18n.T("yote_rules_body"), i18n.T("done_short"));
         else
             await DisplayAlertAsync(i18n.T("makopa_how_to_play_title"), i18n.T("makopa_rules_body"), i18n.T("done_short"));
     }
@@ -382,5 +398,11 @@ public partial class GamePlayPage : ContentPage, IQueryAttributable
     {
         if (_vm == null) return;
         await _vm.OnNzengueMoveAsync(e.FromPoint, e.ToPoint);
+    }
+
+    private async void OnYoteMoveRequested(object? sender, (int? FromCell, int ToCell, int? ExtraRemoveCell) e)
+    {
+        if (_vm == null) return;
+        await _vm.OnYoteMoveAsync(e.FromCell, e.ToCell, e.ExtraRemoveCell);
     }
 }

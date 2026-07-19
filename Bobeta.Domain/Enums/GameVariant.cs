@@ -19,5 +19,8 @@ public enum GameVariant
     Abbia = 4,
 
     /// <summary>Congo alignment game: place then move stones on a 9-point board.</summary>
-    Nzengue = 5
+    Nzengue = 5,
+
+    /// <summary>West African 5×6 capture game (place, slide, jump + bonus remove).</summary>
+    Yote = 6
 }

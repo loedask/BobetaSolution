@@ -129,6 +129,26 @@ public class GamePlayService(HttpClient httpClient, IAccessTokenProvider? access
         return Response<GameStateViewModel?>.Success(GameStateMapper.ToViewModel(res.Data));
     }
 
+    public async Task<Response<GameStateViewModel?>> ApplyYoteMoveAsync(
+        Guid sessionId,
+        int? fromCell,
+        int toCell,
+        int? extraRemoveCell = null,
+        CancellationToken cancellationToken = default)
+    {
+        var body = new YoteMoveApiRequest
+        {
+            SessionId = sessionId,
+            FromCell = fromCell,
+            ToCell = toCell,
+            ExtraRemoveCell = extraRemoveCell
+        };
+        var res = await PostAsync<GameStateDto>("api/GamePlay/yote/move", body, cancellationToken).ConfigureAwait(false);
+        if (!res.IsSuccess || res.Data == null)
+            return Response<GameStateViewModel?>.Failure(res.ErrorMessage ?? "Failed to apply Yoté move.", res.StatusCode);
+        return Response<GameStateViewModel?>.Success(GameStateMapper.ToViewModel(res.Data));
+    }
+
     public async Task<Response<GameStateViewModel?>> PlayCardAsync(Guid sessionId, GameMoveRequest request, CancellationToken cancellationToken = default)
     {
         try

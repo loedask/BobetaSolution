@@ -86,6 +86,18 @@ public static class GameHistoryCopy
                 "First player to make three in a row wins. Lines follow the board edges, midlines, and diagonals through the center.",
                 "Bobeta's Nzengué is a simplified 1v1 version for MoMo stakes: the Small board topology with the Large move phase after placement.",
             ]),
+
+        ["yote"] = new(
+            "yote",
+            "Yoté",
+            "Yoté (also Yote) is a West African capture game played for stakes in Senegal, Mali, and Guinea. Sources include Wikipedia and GamesCrafters rule sets.",
+            [
+                "Each player starts with twelve pieces in hand on an empty 5×6 board. Turns alternate: place from hand, slide orthogonally, or jump-capture.",
+                "A jump removes the jumped piece. If any opponent pieces remain on the board, the capturer removes one more of their choice.",
+                "Captures are optional. No diagonal moves. One jump per turn.",
+                "Win by leaving the opponent with no pieces in hand or on the board. If both sides have three or fewer pieces total, the match is a draw.",
+                "Bobeta's Yoté follows these common house rules for 1v1 MoMo stakes.",
+            ]),
     };
 
     private static readonly Dictionary<string, Entry> Fr = new(StringComparer.OrdinalIgnoreCase)
@@ -150,6 +162,18 @@ public static class GameHistoryCopy
                 "Chaque joueur commence avec trois pierres. On place a tour de role sur des points vides, puis on fait glisser une pierre le long d'une ligne vers un point voisin libre.",
                 "Le premier a aligner trois pierres gagne. Les lignes suivent les cotes, les medianes et les diagonales passant par le centre.",
                 "Le Nzengué Bobeta est une version 1v1 simplifiee pour les enjeux MoMo: topologie Small avec phase de deplacement Large apres le placement.",
+            ]),
+
+        ["yote"] = new(
+            "yote",
+            "Yoté",
+            "Le Yoté (aussi Yote) est un jeu de capture d'Afrique de l'Ouest, joue pour des enjeux au Senegal, au Mali et en Guinee. Sources: Wikipedia et GamesCrafters.",
+            [
+                "Chaque joueur commence avec douze pieces en main sur un plateau 5×6 vide. A tour de role: placer, glisser orthogonalement, ou sauter pour capturer.",
+                "Un saut retire la piece sautee. S'il reste des pieces adverses sur le plateau, le capteur en retire une autre au choix.",
+                "Les captures ne sont pas obligatoires. Pas de diagonales. Un seul saut par tour.",
+                "Gagne celui qui laisse l'adversaire sans piece en main ni sur le plateau. Match nul si chaque camp a trois pieces ou moins au total.",
+                "Le Yoté Bobeta suit ces regles maison courantes pour des enjeux MoMo 1v1.",
             ]),
     };
 }

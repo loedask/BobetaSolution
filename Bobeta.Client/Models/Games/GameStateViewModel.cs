@@ -35,6 +35,7 @@ public class GameStateViewModel
     public DominoStateDto? Domino { get; set; }
     public AbbiaStateDto? Abbia { get; set; }
     public NzengueStateDto? Nzengue { get; set; }
+    public YoteStateDto? Yote { get; set; }
 
     /// <summary>True when the game finished with no winner (bets returned), as opposed to a cancellation/inactivity end.</summary>
     public bool IsDraw { get; set; }
