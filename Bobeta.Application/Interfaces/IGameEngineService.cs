@@ -37,6 +37,14 @@ public interface IGameEngineService
         Guid sessionId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Places or moves a stone in Nzengué.</summary>
+    Task<GameMoveResult> ApplyNzengueMoveAsync(
+        Guid playerId,
+        Guid sessionId,
+        int? fromPoint,
+        int toPoint,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Returns the current game state for the requesting player (their hand, last card, whose turn, game over, winner).</summary>
     Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default);
 }

@@ -1,0 +1,131 @@
+@namespace Bobeta.Web.Components.Game
+@using Bobeta.Client.Models.Api
+
+<div class="space-y-3">
+    <p class="text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        @(IsPlacePhase ? "Place a stone" : "Move a stone")
+        · You to place: @(Nzengue?.MyPiecesToPlace ?? 0)
+        · Opponent to place: @(Nzengue?.OpponentPiecesToPlace ?? 0)
+    </p>
+
+    <div class="nzengue-board" role="grid" aria-label="Nzengué board">
+        @for (var i = 0; i < PointCount; i++)
+        {
+            var point = i;
+            var occupancy = OccupancyAt(point);
+            var canClick = CanInteract && IsClickable(point);
+            <button type="button"
+                    class="@PointClass(point, occupancy, canClick)"
+                    disabled="@(!canClick)"
+                    aria-label="@PointLabel(point, occupancy)"
+                    @onclick="() => OnPointClicked(point)">
+            </button>
+        }
+    </div>
+
+    @if (!IsPlacePhase && _selectedFrom is int selected)
+    {
+        <p class="text-center text-xs text-muted-foreground">Selected stone at @(selected + 1). Tap an empty connected point.</p>
+    }
+</div>
+
+@code {
+    [Parameter] public NzengueStateDto? Nzengue { get; set; }
+    [Parameter] public bool CanInteract { get; set; }
+    [Parameter] public EventCallback<(int? From, int To)> OnPlay { get; set; }
+
+    private int? _selectedFrom;
+
+    private int PointCount => Nzengue?.PointCount > 0 ? Nzengue.PointCount : 9;
+
+    private bool IsPlacePhase =>
+        string.Equals(Nzengue?.Phase, "place", StringComparison.OrdinalIgnoreCase);
+
+    private int OccupancyAt(int point)
+    {
+        var occ = Nzengue?.Occupancy;
+        if (occ == null || point < 0 || point >= occ.Count)
+            return 0;
+        return occ[point];
+    }
+
+    private bool IsClickable(int point)
+    {
+        if (Nzengue?.CanAct != true)
+            return false;
+
+        if (IsPlacePhase)
+            return Nzengue.LegalPlacePoints?.Contains(point) == true;
+
+        if (_selectedFrom is int from)
+            return Nzengue.LegalMoves?.Any(m => m.From == from && m.To == point) == true
+                || point == from;
+
+        return Nzengue.LegalMoves?.Any(m => m.From == point) == true;
+    }
+
+    private async Task OnPointClicked(int point)
+    {
+        if (!CanInteract || Nzengue?.CanAct != true)
+            return;
+
+        if (IsPlacePhase)
+        {
+            _selectedFrom = null;
+            await OnPlay.InvokeAsync((null, point));
+            return;
+        }
+
+        if (_selectedFrom is int from)
+        {
+            if (point == from)
+            {
+                _selectedFrom = null;
+                return;
+            }
+
+            if (Nzengue.LegalMoves?.Any(m => m.From == from && m.To == point) == true)
+            {
+                _selectedFrom = null;
+                await OnPlay.InvokeAsync((from, point));
+            }
+
+            return;
+        }
+
+        if (OccupancyAt(point) == 1 && Nzengue.LegalMoves?.Any(m => m.From == point) == true)
+            _selectedFrom = point;
+    }
+
+    private string PointClass(int point, int occupancy, bool canClick)
+    {
+        var css = "nzengue-board__point";
+        css += occupancy switch
+        {
+            1 => " nzengue-board__point--mine",
+            2 => " nzengue-board__point--opponent",
+            _ => ""
+        };
+        if (_selectedFrom == point)
+            css += " nzengue-board__point--selected";
+        else if (!IsPlacePhase && _selectedFrom is int from
+                 && Nzengue?.LegalMoves?.Any(m => m.From == from && m.To == point) == true)
+            css += " nzengue-board__point--target";
+        if (canClick)
+            css += " nzengue-board__point--active";
+        return css;
+    }
+
+    private static string PointLabel(int point, int occupancy) => occupancy switch
+    {
+        1 => $"Point {point + 1}, your stone",
+        2 => $"Point {point + 1}, opponent stone",
+        _ => $"Point {point + 1}, empty"
+    };
+
+    protected override void OnParametersSet()
+    {
+        if (IsPlacePhase || Nzengue?.CanAct != true)
+            _selectedFrom = null;
+    }
+}

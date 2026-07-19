@@ -234,6 +234,39 @@ Simplified 1v1 Abbia: each seat throws five two-faced tokens. Carved side up sco
 
 ---
 
+## Nzengué (1v1 alignment game)
+
+**Source:** `Bobeta.Application/Games/Nzengue/NzengueRules.cs`, `NzengueGameEngine.cs`
+
+Simplified 1v1 Nzengué for MoMo stakes: nine-point board (square corners, edge midpoints, center, diagonals), three stones per seat, placement phase then slide phase.
+
+### Setup
+
+| Rule | Detail |
+|------|--------|
+| Players | Exactly 2 |
+| Board | 9 points connected by edges, midlines, and diagonals through the center |
+| Stones | 3 per seat |
+| First turn | Random seat (session-seeded) |
+
+### Play
+
+| Rule | Detail |
+|------|--------|
+| Place | Alternate placing one stone on an empty point until each seat has placed three |
+| Move | After placement, alternate sliding one of your stones along a line to an adjacent empty point |
+| Win | First player to get three stones in a row wins |
+| Draw | If the current player has no legal move in the move phase, the match is a draw |
+
+### Economy
+
+| Rule | Detail |
+|------|--------|
+| Win | Same 25% platform commission on the pot as other games |
+| Draw | Both players' locked bets are released |
+
+---
+
 ## Platform / session rules (all games)
 
 **Source:** `CreateGameRequestValidator.cs`, `GameSessionService.cs`, `GameInactivityCoordinator.cs`  
@@ -247,7 +280,7 @@ Simplified 1v1 Abbia: each seat throws five two-faced tokens. Carved side up sco
 | Join game | Locks opponent's bet; game auto-starts |
 | Inactivity | 60 s idle → first warning (10 s to Continue or Cancel); after Continue, 40 s idle → second warning; deadline expires → game cancelled, bets released |
 | Real moves | Reset idle timer and dismiss warnings |
-| API routing | `play-card` / `void-follow` → Makopa only; `kopo/move` → Kopo only; `ngola/move` → Ngola only; `domino/move` → Domino only; `abbia/throw` → Abbia only |
+| API routing | `play-card` / `void-follow` → Makopa only; `kopo/move` → Kopo only; `ngola/move` → Ngola only; `domino/move` → Domino only; `abbia/throw` → Abbia only; `nzengue/move` → Nzengue only |
 
 ---
 
@@ -255,7 +288,7 @@ Simplified 1v1 Abbia: each seat throws five two-faced tokens. Carved side up sco
 
 Player-facing rule text is in:
 
-- `Bobeta.Web.Shared/Services/I18nService.cs` — keys `makopa_rules_body`, `kopo_rules_body`, `ngola_rules_body`, `domino_rules_body`
+- `Bobeta.Web.Shared/Services/I18nService.cs` — keys `makopa_rules_body`, `kopo_rules_body`, `ngola_rules_body`, `domino_rules_body`, `abbia_rules_body`, `nzengue_rules_body`
 - `Bobeta.Mobile/Services/I18nService.cs` — same keys
 
 Displayed in `Bobeta.Web/Pages/GamePlay.razor` and `Bobeta.Mobile/Pages/GamePlayPage.xaml.cs`.

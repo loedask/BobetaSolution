@@ -101,6 +101,18 @@
                         </span>
                         <span class="text-center font-display text-sm font-semibold">Abbia</span>
                     </button>
+                    <button type="button" class="@VariantClass(GameVariant.Nzengue)" @onclick="() => ViewModel.SetVariant(GameVariant.Nzengue)">
+                        <span class="game-preview game-preview--nzengue" aria-hidden="true">
+                            <span class="game-preview__nzengue">
+                                @for (var point = 0; point < 9; point++)
+                                {
+                                    var occupied = point is 0 or 4 or 8;
+                                    <span class="game-preview__nzengue-point@(occupied ? " game-preview__nzengue-point--mine" : "")"></span>
+                                }
+                            </span>
+                        </span>
+                        <span class="text-center font-display text-sm font-semibold">Nzengué</span>
+                    </button>
                 </div>
             </section>
 

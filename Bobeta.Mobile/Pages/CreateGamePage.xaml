@@ -40,6 +40,7 @@
                 <Button x:Name="NgolaBtn" Grid.Column="2" Clicked="OnNgolaVariant" CornerRadius="10" FontSize="12" />
                 <Button x:Name="DominoBtn" Grid.Row="1" Clicked="OnDominoVariant" CornerRadius="10" FontSize="12" />
                 <Button x:Name="AbbiaBtn" Grid.Row="1" Grid.Column="1" Clicked="OnAbbiaVariant" CornerRadius="10" FontSize="12" />
+                <Button x:Name="NzengueBtn" Grid.Row="1" Grid.Column="2" Clicked="OnNzengueVariant" CornerRadius="10" FontSize="12" />
             </Grid>
             <Label x:Name="BetLabel" FontSize="12" TextColor="{StaticResource MutedForeground}" />
             <Entry

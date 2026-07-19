@@ -7,9 +7,9 @@ using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
-namespace Bobeta.Application.Games.Domino;
+namespace Bobeta.Application.Games.Nzengue;
 
-public sealed class DominoGameEngine(
+public sealed class NzengueGameEngine(
     IGameSessionRepository sessionRepository,
     IGameMoveRepository moveRepository,
     IGameResultRepository resultRepository,
@@ -18,21 +18,20 @@ public sealed class DominoGameEngine(
     IGameRevenueService gameRevenueService,
     IInfluencerAttributionService influencerAttribution,
     INotificationService notificationService,
-    ILogger<DominoGameEngine> logger) : IGameEngine
+    ILogger<NzengueGameEngine> logger) : IGameEngine
 {
     private const decimal CommissionRate = 0.25m;
     private static JsonSerializerOptions JsonOptions => GameJson.Options;
 
-    public GameVariant Variant => GameVariant.Domino;
+    public GameVariant Variant => GameVariant.Nzengue;
 
     public async Task StartGameAsync(GameSession session, CancellationToken cancellationToken = default)
     {
         if (session.Status != GameStatus.Waiting || session.OpponentPlayerId == null)
             throw new InvalidOperationException("Game is not ready to start.");
 
-        var state = DominoRules.CreateInitial(
-            session.Id, session.CreatorPlayerId, session.OpponentPlayerId.Value);
-        session.GameStateJson = JsonSerializer.Serialize(state, JsonOptions);
+        var first = PickFirstTurn(session.Id, session.CreatorPlayerId, session.OpponentPlayerId.Value);
+        session.GameStateJson = JsonSerializer.Serialize(NzengueRules.CreateInitial(first), JsonOptions);
         session.Status = GameStatus.InProgress;
         session.StartedAt = DateTime.UtcNow;
         await sessionRepository.UpdateAsync(session, cancellationToken);
@@ -41,23 +40,34 @@ public sealed class DominoGameEngine(
     public async Task<GameMoveResult> ApplyMoveAsync(
         Guid playerId,
         Guid sessionId,
-        string action,
-        int? high,
-        int? low,
-        string? end,
+        int? fromPoint,
+        int toPoint,
         CancellationToken cancellationToken = default)
     {
         var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken);
         if (session?.GameStateJson == null || session.Status != GameStatus.InProgress
-            || session.Variant != GameVariant.Domino || session.OpponentPlayerId == null)
+            || session.Variant != GameVariant.Nzengue || session.OpponentPlayerId == null)
             return GameMoveResult.Fail(GameMoveErrorCodes.InvalidState);
 
-        var state = JsonSerializer.Deserialize<DominoGameState>(session.GameStateJson, JsonOptions)!;
+        var state = JsonSerializer.Deserialize<NzengueGameState>(session.GameStateJson, JsonOptions)!;
         var creatorId = session.CreatorPlayerId;
         var opponentId = session.OpponentPlayerId.Value;
-        if (!DominoRules.TryApplyAction(
-                state, creatorId, opponentId, playerId, action, high, low, end, out var errorCode))
-            return GameMoveResult.Fail(errorCode ?? GameMoveErrorCodes.InvalidMove);
+
+        string? errorCode;
+        string marker;
+        if (fromPoint == null)
+        {
+            if (!NzengueRules.TryApplyPlace(state, creatorId, opponentId, playerId, toPoint, out errorCode))
+                return GameMoveResult.Fail(errorCode ?? GameMoveErrorCodes.InvalidMove);
+            marker = NzengueRules.FormatPlaceMarker(toPoint);
+        }
+        else
+        {
+            if (!NzengueRules.TryApplyMove(
+                    state, creatorId, opponentId, playerId, fromPoint.Value, toPoint, out errorCode))
+                return GameMoveResult.Fail(errorCode ?? GameMoveErrorCodes.InvalidMove);
+            marker = NzengueRules.FormatMoveMarker(fromPoint.Value, toPoint);
+        }
 
         var moveOrder = await moveRepository.GetCountByGameSessionIdAsync(sessionId, cancellationToken);
         await moveRepository.AddAsync(new GameMove
@@ -65,16 +75,16 @@ public sealed class DominoGameEngine(
             Id = Guid.NewGuid(),
             GameSessionId = sessionId,
             PlayerId = playerId,
-            CardSuitRank = DominoRules.FormatMoveMarker(action, high, low, end),
+            CardSuitRank = marker,
             MoveOrder = moveOrder,
             CreatedAt = DateTime.UtcNow
         }, cancellationToken);
 
-        var (winnerId, loserId, isDraw) = DominoRules.EvaluateAfterAction(
-            state, creatorId, opponentId, playerId, action);
+        var (winnerId, loserId, isDraw) = NzengueRules.EvaluateAfterMove(
+            state, creatorId, opponentId, playerId);
         if (isDraw)
         {
-            logger.LogWarning("Domino draw session={SessionId} — releasing bets.", sessionId);
+            logger.LogWarning("Nzengue draw session={SessionId} — releasing bets.", sessionId);
             await ReleaseBetsAsync(session, cancellationToken);
             session.Status = GameStatus.Finished;
             session.GameStateJson = null;
@@ -123,28 +133,54 @@ public sealed class DominoGameEngine(
             return null;
         }
 
-        var state = JsonSerializer.Deserialize<DominoGameState>(session.GameStateJson, JsonOptions)!;
-        var viewerIsCreator = playerId == session.CreatorPlayerId;
-        var myHand = viewerIsCreator ? state.CreatorHand : state.OpponentHand;
-        var opponentHand = viewerIsCreator ? state.OpponentHand : state.CreatorHand;
-        var isMyTurn = state.CurrentTurnPlayerId == playerId;
-        var domino = new DominoStateDto(
-            myHand.ToList(),
-            opponentHand.Count,
-            state.Boneyard.Count,
-            state.Chain.ToList(),
-            state.LeftEnd,
-            state.RightEnd,
-            state.IsOpening,
-            isMyTurn && state.IsOpening ? state.OpeningTile : null,
-            isMyTurn && DominoRules.MustDraw(state, playerId, session.CreatorPlayerId),
-            isMyTurn && DominoRules.MustPass(state, playerId, session.CreatorPlayerId));
+        var state = JsonSerializer.Deserialize<NzengueGameState>(session.GameStateJson, JsonOptions)!;
+        var nzengue = ToDto(state, playerId, session.CreatorPlayerId);
         return new GameStateDto(
             session.Id, Array.Empty<string>(), null, state.CurrentTurnPlayerId,
             session.Status == GameStatus.Finished, session.GameResult?.WinnerPlayerId,
             false, pot, opponentName, null, 0, 0, false,
-            GameVariant.Domino, null, null, domino, null,
+            GameVariant.Nzengue, null, null, null, null, nzengue,
             IsDraw: session.Status == GameStatus.Finished && session.GameResult?.WinnerPlayerId == null);
+    }
+
+    internal static NzengueStateDto ToDto(NzengueGameState state, Guid viewerId, Guid creatorId)
+    {
+        var viewerIsCreator = viewerId == creatorId;
+        var occupancy = new int[NzengueRules.PointCount];
+        for (var i = 0; i < NzengueRules.PointCount; i++)
+        {
+            var owner = state.Points[i];
+            if (owner == null)
+                occupancy[i] = 0;
+            else if (owner == viewerId)
+                occupancy[i] = 1;
+            else
+                occupancy[i] = 2;
+        }
+
+        var phase = NzengueRules.PhaseOf(state);
+        var myToPlace = viewerIsCreator ? state.CreatorPiecesToPlace : state.OpponentPiecesToPlace;
+        var oppToPlace = viewerIsCreator ? state.OpponentPiecesToPlace : state.CreatorPiecesToPlace;
+        var canAct = state.CurrentTurnPlayerId == viewerId;
+        IReadOnlyList<int> legalPlaces = Array.Empty<int>();
+        IReadOnlyList<NzengueEdgeDto> legalMoves = Array.Empty<NzengueEdgeDto>();
+        if (canAct && phase == NzengueRules.PhasePlace)
+            legalPlaces = NzengueRules.LegalPlacePoints(state);
+        else if (canAct && phase == NzengueRules.PhaseMove)
+            legalMoves = NzengueRules.LegalMoves(state, viewerId)
+                .Select(m => new NzengueEdgeDto(m.From, m.To))
+                .ToList();
+
+        return new NzengueStateDto(
+            NzengueRules.PointCount,
+            NzengueRules.PiecesPerPlayer,
+            phase,
+            occupancy,
+            myToPlace,
+            oppToPlace,
+            legalPlaces,
+            legalMoves,
+            canAct && (legalPlaces.Count > 0 || legalMoves.Count > 0));
     }
 
     private static GameStateDto LobbyState(
@@ -156,7 +192,7 @@ public sealed class DominoGameEngine(
         Guid? winner = null,
         bool isDraw = false) =>
         new(sessionId, Array.Empty<string>(), null, null, gameOver, winner, waiting, lobbyPot, opponentName,
-            null, 0, 0, false, GameVariant.Domino, null, null, null, null, null, isDraw);
+            null, 0, 0, false, GameVariant.Nzengue, null, null, null, null, null, isDraw);
 
     private async Task<string?> ResolveOpponentDisplayNameAsync(
         Guid viewerPlayerId,
@@ -217,5 +253,11 @@ public sealed class DominoGameEngine(
             GameSessionService.ChargedAmount(session, opponentId),
             cancellationToken);
         await influencerAttribution.DetachGameRedemptionsAsync(session.Id, cancellationToken);
+    }
+
+    private static Guid PickFirstTurn(Guid sessionId, Guid creatorId, Guid opponentId)
+    {
+        var seed = sessionId.GetHashCode() ^ 0x4E_5A_45_4E;
+        return new Random(seed).Next(2) == 0 ? creatorId : opponentId;
     }
 }

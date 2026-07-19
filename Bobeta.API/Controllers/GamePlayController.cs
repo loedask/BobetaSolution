@@ -238,6 +238,29 @@ public class GamePlayController(
         return Ok(state);
     }
 
+    /// <summary>Places or moves a stone in Nzengué.</summary>
+    [HttpPost("nzengue/move")]
+    public async Task<ActionResult<GameStateDto>> NzengueMove([FromBody] NzengueMoveRequest request, CancellationToken cancellationToken)
+    {
+        var move = await _gameEngineService.ApplyNzengueMoveAsync(
+            PlayerId, request.SessionId, request.FromPoint, request.ToPoint, cancellationToken);
+        if (!move.IsSuccess)
+            return BadRequest(new { code = move.ErrorCode, message = DescribeNzengueMoveError(move.ErrorCode) });
+
+        var state = move.State!;
+        await _gameInactivityCoordinator.RecordGameplayActivityAsync(request.SessionId, cancellationToken);
+        if (state.GameOver)
+        {
+            _gameInactivityCoordinator.UnregisterSession(request.SessionId);
+            await _hubContext.Clients.Group(GameHub.GroupPrefix + request.SessionId)
+                .SendAsync("GameResult", state.WinnerPlayerId);
+        }
+
+        var sessionRow = await _sessionRepository.GetByIdAsync(request.SessionId, cancellationToken);
+        await PushGameStateToParticipantsAsync(sessionRow, request.SessionId, state, cancellationToken);
+        return Ok(state);
+    }
+
     /// <summary>Gets the current game state for the authenticated player (hand, last card, whose turn, game over, winner).</summary>
     [HttpGet("state")]
     public async Task<ActionResult<GameStateDto>> GetGameState([FromQuery] Guid sessionId, CancellationToken cancellationToken)
@@ -320,6 +343,13 @@ public class GamePlayController(
     {
         GameMoveErrorCodes.NotYourTurn => "It is not your turn.",
         GameMoveErrorCodes.InvalidMove => "You already threw your tokens.",
+        _ => "Invalid move or game state."
+    };
+
+    private static string DescribeNzengueMoveError(string? code) => code switch
+    {
+        GameMoveErrorCodes.NotYourTurn => "It is not your turn.",
+        GameMoveErrorCodes.InvalidMove => "That Nzengué placement or move is not legal.",
         _ => "Invalid move or game state."
     };
 }
