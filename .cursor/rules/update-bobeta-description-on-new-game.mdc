@@ -1,0 +1,48 @@
+---
+description: When a game is added or removed, refresh Bobeta public description copy
+alwaysApply: true
+---
+
+# Update Bobeta Description When Games Change
+
+When you add, remove, rename, or reclassify a `GameVariant`, update the public Bobeta description so it stays accurate.
+
+## When this applies
+
+- New entry in `Bobeta.Domain/Enums/GameVariant.cs` (or client `GameVariant`)
+- New engine under `Bobeta.Application/Games/**`
+- Shipping or unshipping a game on the landing home grid
+
+## Description pattern to keep
+
+In `Bobeta.Landing/Content/HelpCopy.cs` (`WhatIsEn` and every locale: Fr, Kt, Ln, Sw):
+
+1. **Lead:** Bobeta as real-stakes MoMo, Congolese and African table games, short list, fast matches, clear payouts.
+2. **"A short list, on purpose":**
+   - Skill games: `classic skill games such as …` (comma list of current skill titles).
+   - Chance games: call out separately (`plus Abbia when you want a chance throw`, or equivalent if more chance seats exist).
+   - Keep Congo-first, Africa-wider positioning.
+   - End with pick / stake / play and no endless catalog.
+3. **"Skill play, not a slot wall":** If any chance game ships, keep “Most outcomes…” and name chance mechanics in the fair-randomization sentence.
+
+Classify each new title as **skill** or **chance** before editing copy. Do not list chance games inside the skill `such as` list.
+
+## Also sync these surfaces
+
+- FAQ / help answers that enumerate games (same `HelpCopy.cs` locales)
+- `Bobeta.Landing/Pages/Landing.razor` game cards and ticker
+- `landing_game_*` and related keys in `I18nService`
+- `GameHistoryCopy.cs` + `docs/game-history-sources.md` for the new title
+- Join/create filters and labels that list variants
+
+## Copy constraints
+
+- Follow `human-sounding-copy` and `landing-no-fee-percentages`.
+- Do not invent ethnographic claims; prefer honest house-rules framing when sources are thin.
+- Update every HelpCopy locale in the same change, not English only.
+
+## Done check
+
+- Skill vs chance lists match shipped variants.
+- Congo / African positioning still present.
+- Landing grid, help FAQ, and What is Bobeta? agree on which games exist.

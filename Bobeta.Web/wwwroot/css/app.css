@@ -608,6 +608,83 @@ button.playing-card.playing-card--btn:active:not(:disabled) {
   background: linear-gradient(165deg, #eab308, #a16207);
 }
 
+.game-preview--nzengue {
+  background: linear-gradient(160deg, #1e293b, #0f172a);
+  border: 1px solid hsl(215 20% 35% / 0.5);
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.45);
+}
+
+.game-preview__nzengue {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: 72%;
+  padding: 0.45rem;
+}
+
+.game-preview__nzengue-point {
+  width: 0.45rem;
+  height: 0.45rem;
+  margin: auto;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.5);
+}
+
+.game-preview__nzengue-point--mine {
+  background: linear-gradient(165deg, #eab308, #a16207);
+}
+
+.nzengue-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  width: min(100%, 16rem);
+  margin-inline: auto;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(160deg, #1e293b, #0f172a);
+  border: 1px solid hsl(215 20% 35% / 0.45);
+}
+
+.nzengue-board__point {
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: auto;
+  border-radius: 999px;
+  border: 2px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.65);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.nzengue-board__point--mine {
+  background: linear-gradient(165deg, #facc15, #ca8a04);
+  border-color: rgba(250, 204, 21, 0.55);
+}
+
+.nzengue-board__point--opponent {
+  background: linear-gradient(165deg, #94a3b8, #64748b);
+  border-color: rgba(148, 163, 184, 0.55);
+}
+
+.nzengue-board__point--selected {
+  box-shadow: 0 0 0 3px hsl(45 90% 55% / 0.45);
+  transform: scale(1.06);
+}
+
+.nzengue-board__point--target {
+  box-shadow: 0 0 0 2px hsl(142 70% 45% / 0.55);
+}
+
+.nzengue-board__point--active:not(:disabled) {
+  cursor: pointer;
+}
+
+.nzengue-board__point:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
 .abbia-token {
   display: inline-grid;
   place-items: center;
@@ -816,6 +893,28 @@ button.playing-card.playing-card--btn:active:not(:disabled) {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
+.game-filter-icon--nzengue {
+  background: linear-gradient(160deg, #1e293b, #0f172a);
+  border: 1px solid hsl(215 20% 35% / 0.5);
+}
+
+.game-filter-icon__nzengue {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  width: 1.1rem;
+  padding: 2px;
+}
+
+.game-filter-icon__nzengue span {
+  display: block;
+  width: 0.22rem;
+  height: 0.22rem;
+  margin: auto;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.65);
+}
+
 .game-filter-icon__ngola {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -903,6 +1002,7 @@ button:has(.game-filter-icon).filter-selected .game-filter-icon--kopo,
 button:has(.game-filter-icon).filter-selected .game-filter-icon--ngola,
 button:has(.game-filter-icon).filter-selected .game-filter-icon--domino,
 button:has(.game-filter-icon).filter-selected .game-filter-icon--abbia,
+button:has(.game-filter-icon).filter-selected .game-filter-icon--nzengue,
 button:has(.game-filter-icon).filter-selected .game-filter-icon--all {
   border-color: hsl(45 90% 55% / 0.45);
 }

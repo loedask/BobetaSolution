@@ -26,12 +26,14 @@ public static class GamePlayStateApplier
         table.Ngola = state.Ngola;
         table.Domino = state.Domino;
         table.Abbia = state.Abbia;
+        table.Nzengue = state.Nzengue;
         table.WaitingForOpponent = state.WaitingForGameStart;
         table.PotAmount = state.LobbyPotAmount;
         table.OpponentDisplayName = state.OpponentDisplayName;
         table.CurrentPlayerId = state.CurrentTurnPlayerId;
         table.IsPlayerTurn = !table.WaitingForOpponent && state.CurrentTurnPlayerId == myPlayerId;
-        if (state.Variant is GameVariant.Kopo or GameVariant.Ngola or GameVariant.Domino or GameVariant.Abbia)
+        if (state.Variant is GameVariant.Kopo or GameVariant.Ngola or GameVariant.Domino or GameVariant.Abbia
+            or GameVariant.Nzengue)
         {
             table.PlayerCards = new List<CardViewModel>();
             table.LastPlayedCard = null;

@@ -6,6 +6,7 @@ using Bobeta.Application.Games.Domino;
 using Bobeta.Application.Games.Kopo;
 using Bobeta.Application.Games.Makopa;
 using Bobeta.Application.Games.Ngola;
+using Bobeta.Application.Games.Nzengue;
 using Bobeta.Application.Interfaces;
 using Bobeta.Domain.Entities;
 using Bobeta.Domain.Enums;
@@ -20,7 +21,8 @@ public class GameEngineService(
     KopoGameEngine kopo,
     NgolaGameEngine ngola,
     DominoGameEngine domino,
-    AbbiaGameEngine abbia) : IGameEngineService
+    AbbiaGameEngine abbia,
+    NzengueGameEngine nzengue) : IGameEngineService
 {
     public Task StartGameAsync(Guid sessionId, CancellationToken cancellationToken = default) =>
         WithSessionAsync(sessionId, async (session, engine) =>
@@ -94,6 +96,19 @@ public class GameEngineService(
         return await abbia.ApplyThrowAsync(playerId, sessionId, cancellationToken);
     }
 
+    public async Task<GameMoveResult> ApplyNzengueMoveAsync(
+        Guid playerId,
+        Guid sessionId,
+        int? fromPoint,
+        int toPoint,
+        CancellationToken cancellationToken = default)
+    {
+        var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+        if (session?.Variant != GameVariant.Nzengue)
+            return GameMoveResult.Fail(GameMoveErrorCodes.InvalidState);
+        return await nzengue.ApplyMoveAsync(playerId, sessionId, fromPoint, toPoint, cancellationToken);
+    }
+
     public async Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default)
     {
         var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken);
@@ -109,6 +124,7 @@ public class GameEngineService(
             GameVariant.Ngola => ngola,
             GameVariant.Domino => domino,
             GameVariant.Abbia => abbia,
+            GameVariant.Nzengue => nzengue,
             _ => makopa
         };
 

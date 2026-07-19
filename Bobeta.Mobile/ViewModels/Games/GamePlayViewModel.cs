@@ -50,8 +50,10 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
     public bool IsNgola => Variant == GameVariant.Ngola;
     public DominoStateDto? Domino => _table.Domino;
     public AbbiaStateDto? Abbia => _table.Abbia;
+    public NzengueStateDto? Nzengue => _table.Nzengue;
     public bool IsDomino => Variant == GameVariant.Domino;
     public bool IsAbbia => Variant == GameVariant.Abbia;
+    public bool IsNzengue => Variant == GameVariant.Nzengue;
     public bool IsPlayerTurn => _table.IsPlayerTurn;
     public decimal PotAmount => _table.PotAmount;
     public string? OpponentDisplayName => _table.OpponentDisplayName;
@@ -87,7 +89,7 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
             MyPlayerId.HasValue);
 
     public bool ShowLoadingShell => GamePlayUiHelper.ShowLoadingShell(
-        IsLoading, Variant, Kopo != null || Ngola != null || Domino != null || Abbia != null, PlayerCards.Count, WaitingForOpponent);
+        IsLoading, Variant, Kopo != null || Ngola != null || Domino != null || Abbia != null || Nzengue != null, PlayerCards.Count, WaitingForOpponent);
 
     private readonly List<KopoSquareDto> _kopoPath = new();
     public IReadOnlyList<KopoSquareDto> KopoSelectionPath => _kopoPath;
@@ -554,6 +556,40 @@ public class GamePlayViewModel : ViewModelBase, IAsyncDisposable
         try
         {
             var res = await _gamePlayService.ApplyAbbiaThrowAsync(sessionGuid);
+            if (!res.IsSuccess)
+            {
+                await HandleMoveFailureAsync(res);
+                return;
+            }
+            if (res.Data != null)
+                await ApplyAuthoritativeStateAsync(res.Data);
+        }
+        catch (Exception)
+        {
+            SetError("Something went wrong. Please try again.");
+            await SyncGameStateFromServerAsync();
+        }
+        finally
+        {
+            SetLoading(false);
+            _moveGate.Release();
+            RaiseStateChanged();
+        }
+    }
+
+    public async Task OnNzengueMoveAsync(int? fromPoint, int toPoint)
+    {
+        if (!IsNzengue || !IsPlayerTurn || BlockInteraction
+            || !Guid.TryParse(SessionId, out var sessionGuid) || Nzengue?.CanAct != true)
+            return;
+        if (!await _moveGate.WaitAsync(0))
+            return;
+
+        SetLoading(true);
+        ClearError();
+        try
+        {
+            var res = await _gamePlayService.ApplyNzengueMoveAsync(sessionGuid, fromPoint, toPoint);
             if (!res.IsSuccess)
             {
                 await HandleMoveFailureAsync(res);

@@ -157,7 +157,7 @@ public sealed class AbbiaGameEngine(
         Guid? winner = null,
         bool isDraw = false) =>
         new(sessionId, Array.Empty<string>(), null, null, gameOver, winner, waiting, lobbyPot, opponentName,
-            null, 0, 0, false, GameVariant.Abbia, null, null, null, null, isDraw);
+            null, 0, 0, false, GameVariant.Abbia, null, null, null, null, null, isDraw);
 
     private async Task<string?> ResolveOpponentDisplayNameAsync(
         Guid viewerPlayerId,

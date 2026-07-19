@@ -8,6 +8,7 @@ public static class GameVariantLabels
         GameVariant.Ngola => "Ngola",
         GameVariant.Domino => "Domino",
         GameVariant.Abbia => "Abbia",
+        GameVariant.Nzengue => "Nzengué",
         _ => "Makopa"
     };
 }

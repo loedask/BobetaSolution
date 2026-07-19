@@ -23,6 +23,7 @@ public sealed class CreateGameClientApiContractTests
   [InlineData(GameVariant.Ngola)]
   [InlineData(GameVariant.Domino)]
   [InlineData(GameVariant.Abbia)]
+  [InlineData(GameVariant.Nzengue)]
   public void ClientCreatePayload_DeserializesWithApiJsonOptions(GameVariant variant)
   {
     var clientJson = JsonSerializer.Serialize(
@@ -40,6 +41,7 @@ public sealed class CreateGameClientApiContractTests
       GameVariant.Ngola => Domain.Enums.GameVariant.Ngola,
       GameVariant.Domino => Domain.Enums.GameVariant.Domino,
       GameVariant.Abbia => Domain.Enums.GameVariant.Abbia,
+      GameVariant.Nzengue => Domain.Enums.GameVariant.Nzengue,
       _ => throw new ArgumentOutOfRangeException(nameof(variant))
     }, apiRequest.Variant);
   }

@@ -130,6 +130,9 @@ public sealed class GameStateDto
     [JsonPropertyName("abbia")]
     public AbbiaStateDto? Abbia { get; set; }
 
+    [JsonPropertyName("nzengue")]
+    public NzengueStateDto? Nzengue { get; set; }
+
     [JsonPropertyName("isDraw")]
     public bool IsDraw { get; set; }
 }
@@ -294,6 +297,57 @@ public sealed class AbbiaMoveApiRequest
 {
     [JsonPropertyName("sessionId")]
     public Guid SessionId { get; set; }
+}
+
+public sealed class NzengueStateDto
+{
+    [JsonPropertyName("pointCount")]
+    public int PointCount { get; set; }
+
+    [JsonPropertyName("piecesPerPlayer")]
+    public int PiecesPerPlayer { get; set; }
+
+    [JsonPropertyName("phase")]
+    public string Phase { get; set; } = "place";
+
+    [JsonPropertyName("occupancy")]
+    public List<int>? Occupancy { get; set; }
+
+    [JsonPropertyName("myPiecesToPlace")]
+    public int MyPiecesToPlace { get; set; }
+
+    [JsonPropertyName("opponentPiecesToPlace")]
+    public int OpponentPiecesToPlace { get; set; }
+
+    [JsonPropertyName("legalPlacePoints")]
+    public List<int>? LegalPlacePoints { get; set; }
+
+    [JsonPropertyName("legalMoves")]
+    public List<NzengueEdgeDto>? LegalMoves { get; set; }
+
+    [JsonPropertyName("canAct")]
+    public bool CanAct { get; set; }
+}
+
+public sealed class NzengueEdgeDto
+{
+    [JsonPropertyName("from")]
+    public int From { get; set; }
+
+    [JsonPropertyName("to")]
+    public int To { get; set; }
+}
+
+public sealed class NzengueMoveApiRequest
+{
+    [JsonPropertyName("sessionId")]
+    public Guid SessionId { get; set; }
+
+    [JsonPropertyName("fromPoint")]
+    public int? FromPoint { get; set; }
+
+    [JsonPropertyName("toPoint")]
+    public int ToPoint { get; set; }
 }
 
 public sealed class GameHistoryItemDto

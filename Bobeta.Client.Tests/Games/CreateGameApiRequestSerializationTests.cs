@@ -18,6 +18,7 @@ public sealed class CreateGameApiRequestSerializationTests
   [InlineData(GameVariant.Ngola, "Ngola")]
   [InlineData(GameVariant.Domino, "Domino")]
   [InlineData(GameVariant.Abbia, "Abbia")]
+  [InlineData(GameVariant.Nzengue, "Nzengue")]
   public void SerializeCreateGameApiRequest_WritesStringVariant(GameVariant variant, string expectedVariantName)
   {
     var request = new CreateGameApiRequest { BetAmount = 200, Variant = variant };

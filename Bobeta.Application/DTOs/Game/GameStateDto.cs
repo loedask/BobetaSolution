@@ -29,4 +29,5 @@ public record GameStateDto(
     NgolaStateDto? Ngola = null,
     DominoStateDto? Domino = null,
     AbbiaStateDto? Abbia = null,
+    NzengueStateDto? Nzengue = null,
     bool IsDraw = false);
