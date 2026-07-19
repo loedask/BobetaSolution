@@ -1,0 +1,199 @@
+@namespace Bobeta.Web.Components.Game
+@using Bobeta.Client.Models.Api
+
+<div class="space-y-3">
+    <p class="text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        In hand: @Yote?.MyInHand · Opponent in hand: @Yote?.OpponentInHand
+    </p>
+
+    @if (_removeMode)
+    {
+        <p class="text-center text-xs text-muted-foreground">Tap an opponent piece to remove.</p>
+    }
+    else if (_selectedFrom is int selected)
+    {
+        <p class="text-center text-xs text-muted-foreground">Selected piece at @(selected + 1). Tap destination or another of yours to cancel.</p>
+    }
+
+    <div class="yote-board" role="grid" aria-label="Yoté board" style="@BoardStyle">
+        @for (var i = 0; i < CellCount; i++)
+        {
+            var cell = i;
+            var occupancy = OccupancyAt(cell);
+            var canClick = CanInteract && IsClickable(cell);
+            <button type="button"
+                    class="@CellClass(cell, occupancy, canClick)"
+                    disabled="@(!canClick)"
+                    aria-label="@CellLabel(cell, occupancy)"
+                    @onclick="() => OnCellClicked(cell)">
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public YoteStateDto? Yote { get; set; }
+    [Parameter] public bool CanInteract { get; set; }
+    [Parameter] public EventCallback<(int? From, int To, int? ExtraRemove)> OnPlay { get; set; }
+
+    private int? _selectedFrom;
+    private bool _removeMode;
+    private int? _pendingFrom;
+    private int? _pendingTo;
+
+    private int Rows => Yote?.Rows > 0 ? Yote.Rows : 5;
+    private int Cols => Yote?.Cols > 0 ? Yote.Cols : 6;
+    private int CellCount => Rows * Cols;
+
+    private string BoardStyle => $"grid-template-columns: repeat({Cols}, 1fr);";
+
+    private int OccupancyAt(int cell)
+    {
+        var occ = Yote?.Occupancy;
+        if (occ == null || cell < 0 || cell >= occ.Count)
+            return 0;
+        return occ[cell];
+    }
+
+    private int OpponentOnBoardCount()
+    {
+        var occ = Yote?.Occupancy;
+        if (occ == null)
+            return 0;
+        return occ.Count(x => x == 2);
+    }
+
+    private bool IsClickable(int cell)
+    {
+        if (Yote?.CanAct != true)
+            return false;
+
+        if (_removeMode)
+            return OccupancyAt(cell) == 2;
+
+        if (_selectedFrom is int from)
+        {
+            if (cell == from)
+                return true;
+
+            if (Yote.LegalPlaceCells?.Contains(cell) == true && from == -1)
+                return false;
+
+            if (Yote.LegalSlides?.Any(s => s.From == from && s.To == cell) == true)
+                return true;
+
+            return Yote.LegalCaptures?.Any(c => c.From == from && c.To == cell) == true;
+        }
+
+        if (Yote.LegalPlaceCells?.Contains(cell) == true)
+            return true;
+
+        return OccupancyAt(cell) == 1
+            && ((Yote.LegalSlides?.Any(s => s.From == cell) == true)
+                || (Yote.LegalCaptures?.Any(c => c.From == cell) == true));
+    }
+
+    private async Task OnCellClicked(int cell)
+    {
+        if (!CanInteract || Yote?.CanAct != true)
+            return;
+
+        if (_removeMode && _pendingFrom is int capFrom && _pendingTo is int capTo)
+        {
+            if (OccupancyAt(cell) != 2)
+                return;
+
+            _removeMode = false;
+            _pendingFrom = null;
+            _pendingTo = null;
+            _selectedFrom = null;
+            await OnPlay.InvokeAsync((capFrom, capTo, cell));
+            return;
+        }
+
+        if (_selectedFrom is int from)
+        {
+            if (cell == from)
+            {
+                _selectedFrom = null;
+                return;
+            }
+
+            if (Yote.LegalSlides?.Any(s => s.From == from && s.To == cell) == true)
+            {
+                _selectedFrom = null;
+                await OnPlay.InvokeAsync((from, cell, null));
+                return;
+            }
+
+            var capture = Yote.LegalCaptures?.FirstOrDefault(c => c.From == from && c.To == cell);
+            if (capture != null)
+            {
+                if (OpponentOnBoardCount() > 1)
+                {
+                    _removeMode = true;
+                    _pendingFrom = from;
+                    _pendingTo = cell;
+                    _selectedFrom = null;
+                    return;
+                }
+
+                _selectedFrom = null;
+                await OnPlay.InvokeAsync((from, cell, null));
+            }
+
+            return;
+        }
+
+        if (Yote.LegalPlaceCells?.Contains(cell) == true)
+        {
+            await OnPlay.InvokeAsync((null, cell, null));
+            return;
+        }
+
+        if (OccupancyAt(cell) == 1
+            && ((Yote.LegalSlides?.Any(s => s.From == cell) == true)
+                || (Yote.LegalCaptures?.Any(c => c.From == cell) == true)))
+            _selectedFrom = cell;
+    }
+
+    private string CellClass(int cell, int occupancy, bool canClick)
+    {
+        var css = "yote-board__cell";
+        css += occupancy switch
+        {
+            1 => " yote-board__cell--mine",
+            2 => " yote-board__cell--opponent",
+            _ => ""
+        };
+        if (_selectedFrom == cell)
+            css += " yote-board__cell--selected";
+        else if (_selectedFrom is int from
+                 && (Yote?.LegalSlides?.Any(s => s.From == from && s.To == cell) == true
+                     || Yote?.LegalCaptures?.Any(c => c.From == from && c.To == cell) == true))
+            css += " yote-board__cell--target";
+        else if (_removeMode && occupancy == 2)
+            css += " yote-board__cell--remove";
+        if (canClick)
+            css += " yote-board__cell--active";
+        return css;
+    }
+
+    private static string CellLabel(int cell, int occupancy) => occupancy switch
+    {
+        1 => $"Cell {cell + 1}, your piece",
+        2 => $"Cell {cell + 1}, opponent piece",
+        _ => $"Cell {cell + 1}, empty"
+    };
+
+    protected override void OnParametersSet()
+    {
+        if (Yote?.CanAct != true)
+        {
+            _selectedFrom = null;
+            _removeMode = false;
+            _pendingFrom = null;
+            _pendingTo = null;
+        }
+    }
+}

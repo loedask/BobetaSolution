@@ -25,6 +25,8 @@ internal static class GameStateMapper
         Ngola = dto.Ngola,
         Domino = dto.Domino,
         Abbia = dto.Abbia,
+        Nzengue = dto.Nzengue,
+        Yote = dto.Yote,
         IsDraw = dto.IsDraw
     };
 

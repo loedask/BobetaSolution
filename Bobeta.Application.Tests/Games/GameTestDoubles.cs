@@ -416,6 +416,12 @@ internal sealed class NoOpGameEngineService : IGameEngineService
         throw new NotSupportedException();
     public Task<GameMoveResult> ApplyAbbiaThrowAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
+    public Task<GameMoveResult> ApplyNzengueMoveAsync(
+        Guid playerId, Guid sessionId, int? fromPoint, int toPoint, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+    public Task<GameMoveResult> ApplyYoteMoveAsync(
+        Guid playerId, Guid sessionId, int? fromCell, int toCell, int? extraRemoveCell, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
     public Task<GameStateDto?> GetGameStateAsync(Guid playerId, Guid sessionId, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
 }

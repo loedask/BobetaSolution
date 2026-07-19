@@ -88,6 +88,10 @@
             <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item">Abbia</span>
             <span class="lp-ticker__sep"></span>
+            <span class="lp-ticker__item">Nzengué</span>
+            <span class="lp-ticker__sep"></span>
+            <span class="lp-ticker__item">Yoté</span>
+            <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item lp-ticker__item--accent">BOBETA</span>
             <span class="lp-ticker__sep"></span>
             <span class="lp-ticker__item">MoMo</span>
@@ -227,6 +231,32 @@
                                     <span class="lp-abbia__token lp-abbia__token--carved"></span>
                                 </div>
                                 <p class="lp-felt__label">Abbia</p>
+                            </div>
+                        }
+                        else if (game.Id == "nzengue")
+                        {
+                            <div class="lp-nzengue-wrap">
+                                <div class="lp-nzengue" aria-hidden="true">
+                                    @for (var point = 0; point < 9; point++)
+                                    {
+                                        var occupied = point is 0 or 4 or 8;
+                                        <span class="lp-nzengue__point@(occupied ? " lp-nzengue__point--mine" : "")"></span>
+                                    }
+                                </div>
+                                <p class="lp-felt__label">Nzengué</p>
+                            </div>
+                        }
+                        else if (game.Id == "yote")
+                        {
+                            <div class="lp-yote-wrap">
+                                <div class="lp-yote" aria-hidden="true">
+                                    @for (var cell = 0; cell < 30; cell++)
+                                    {
+                                        var occupied = cell is 7 or 14 or 22;
+                                        <span class="lp-yote__cell@(occupied ? " lp-yote__cell--mine" : "")"></span>
+                                    }
+                                </div>
+                                <p class="lp-felt__label">Yoté</p>
                             </div>
                         }
                     </div>
@@ -375,6 +405,8 @@
         new("ngola", "landing_game_ngola_title", "landing_game_ngola_desc"),
         new("domino", "landing_game_domino_title", "landing_game_domino_desc"),
         new("abbia", "landing_game_abbia_title", "landing_game_abbia_desc"),
+        new("nzengue", "landing_game_nzengue_title", "landing_game_nzengue_desc"),
+        new("yote", "landing_game_yote_title", "landing_game_yote_desc"),
     ];
 
     private bool _headerBound;

@@ -29,6 +29,8 @@ public partial class CreateGamePage : ContentPage
         NgolaBtn.Text = "Ngola";
         DominoBtn.Text = "Domino";
         AbbiaBtn.Text = "Abbia";
+        NzengueBtn.Text = "Nzengué";
+        YoteBtn.Text = "Yoté";
         DescLabel.Text = i18n.T("choose_bet_desc");
         BetLabel.Text = i18n.T("your_bet");
         CreateBtn.Text = i18n.T("create_game");
@@ -62,6 +64,8 @@ public partial class CreateGamePage : ContentPage
         StyleVariant(NgolaBtn, _vm.SelectedVariant == GameVariant.Ngola);
         StyleVariant(DominoBtn, _vm.SelectedVariant == GameVariant.Domino);
         StyleVariant(AbbiaBtn, _vm.SelectedVariant == GameVariant.Abbia);
+        StyleVariant(NzengueBtn, _vm.SelectedVariant == GameVariant.Nzengue);
+        StyleVariant(YoteBtn, _vm.SelectedVariant == GameVariant.Yote);
 
         var hasInvite = _vm.InviteStatus?.HasPendingCode == true;
         InviteBanner.IsVisible = hasInvite;
@@ -88,6 +92,8 @@ public partial class CreateGamePage : ContentPage
     private void OnNgolaVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Ngola);
     private void OnDominoVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Domino);
     private void OnAbbiaVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Abbia);
+    private void OnNzengueVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Nzengue);
+    private void OnYoteVariant(object? sender, EventArgs e) => _vm?.SetVariant(GameVariant.Yote);
 
     private static void StyleVariant(Button button, bool selected)
     {

@@ -41,6 +41,8 @@ public sealed class CreateGameRequestValidatorTests
   [InlineData(GameVariant.Ngola)]
   [InlineData(GameVariant.Domino)]
   [InlineData(GameVariant.Abbia)]
+  [InlineData(GameVariant.Nzengue)]
+  [InlineData(GameVariant.Yote)]
   public void Validate_AcceptsAllVariants(GameVariant variant)
   {
     var request = new CreateGameRequest(200, variant);

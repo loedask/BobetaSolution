@@ -14,6 +14,8 @@ public sealed class CreateGameJsonBindingTests
   [InlineData("Ngola", GameVariant.Ngola)]
   [InlineData("Domino", GameVariant.Domino)]
   [InlineData("Abbia", GameVariant.Abbia)]
+  [InlineData("Nzengue", GameVariant.Nzengue)]
+  [InlineData("Yote", GameVariant.Yote)]
   public void DeserializeCreateGameRequest_AcceptsStringVariant(string variantName, GameVariant expected)
   {
     var options = CreateApiOptions();
@@ -32,6 +34,8 @@ public sealed class CreateGameJsonBindingTests
   [InlineData(2, GameVariant.Ngola)]
   [InlineData(3, GameVariant.Domino)]
   [InlineData(4, GameVariant.Abbia)]
+  [InlineData(5, GameVariant.Nzengue)]
+  [InlineData(6, GameVariant.Yote)]
   public void DeserializeCreateGameRequest_AcceptsIntegerVariant(int variantValue, GameVariant expected)
   {
     var options = CreateApiOptions();

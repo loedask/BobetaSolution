@@ -152,7 +152,7 @@ public class KopoGameEngine(
         Guid? winner = null,
         bool isDraw = false) =>
         new(sessionId, Array.Empty<string>(), null, null, gameOver, winner, waiting, lobbyPot, opponentName,
-            null, 0, 0, false, GameVariant.Kopo, null, null, null, null, isDraw);
+            null, 0, 0, false, GameVariant.Kopo, null, null, null, null, null, null, isDraw);
 
     private async Task<string?> ResolveOpponentDisplayNameAsync(Guid viewerPlayerId, GameSession session, CancellationToken cancellationToken)
     {

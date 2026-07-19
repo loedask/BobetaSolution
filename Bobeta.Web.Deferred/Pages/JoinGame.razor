@@ -100,6 +100,25 @@
                     </span>
                     <span>Abbia</span>
                 </button>
+                <button type="button" class="@FilterClass(GameVariant.Nzengue)" @onclick="() => SetFilter(GameVariant.Nzengue)">
+                    <span class="game-filter-icon game-filter-icon--nzengue" aria-hidden="true">
+                        <span class="game-filter-icon__nzengue">
+                            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                        </span>
+                    </span>
+                    <span>Nzengué</span>
+                </button>
+                <button type="button" class="@FilterClass(GameVariant.Yote)" @onclick="() => SetFilter(GameVariant.Yote)">
+                    <span class="game-filter-icon game-filter-icon--yote" aria-hidden="true">
+                        <span class="game-filter-icon__yote">
+                            @for (var i = 0; i < 12; i++)
+                            {
+                                <span></span>
+                            }
+                        </span>
+                    </span>
+                    <span>Yoté</span>
+                </button>
             </div>
         </div>
 

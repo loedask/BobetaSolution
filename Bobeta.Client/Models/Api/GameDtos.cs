@@ -130,6 +130,12 @@ public sealed class GameStateDto
     [JsonPropertyName("abbia")]
     public AbbiaStateDto? Abbia { get; set; }
 
+    [JsonPropertyName("nzengue")]
+    public NzengueStateDto? Nzengue { get; set; }
+
+    [JsonPropertyName("yote")]
+    public YoteStateDto? Yote { get; set; }
+
     [JsonPropertyName("isDraw")]
     public bool IsDraw { get; set; }
 }
@@ -294,6 +300,126 @@ public sealed class AbbiaMoveApiRequest
 {
     [JsonPropertyName("sessionId")]
     public Guid SessionId { get; set; }
+}
+
+public sealed class NzengueStateDto
+{
+    [JsonPropertyName("pointCount")]
+    public int PointCount { get; set; }
+
+    [JsonPropertyName("piecesPerPlayer")]
+    public int PiecesPerPlayer { get; set; }
+
+    [JsonPropertyName("phase")]
+    public string Phase { get; set; } = "place";
+
+    [JsonPropertyName("occupancy")]
+    public List<int>? Occupancy { get; set; }
+
+    [JsonPropertyName("myPiecesToPlace")]
+    public int MyPiecesToPlace { get; set; }
+
+    [JsonPropertyName("opponentPiecesToPlace")]
+    public int OpponentPiecesToPlace { get; set; }
+
+    [JsonPropertyName("legalPlacePoints")]
+    public List<int>? LegalPlacePoints { get; set; }
+
+    [JsonPropertyName("legalMoves")]
+    public List<NzengueEdgeDto>? LegalMoves { get; set; }
+
+    [JsonPropertyName("canAct")]
+    public bool CanAct { get; set; }
+}
+
+public sealed class NzengueEdgeDto
+{
+    [JsonPropertyName("from")]
+    public int From { get; set; }
+
+    [JsonPropertyName("to")]
+    public int To { get; set; }
+}
+
+public sealed class NzengueMoveApiRequest
+{
+    [JsonPropertyName("sessionId")]
+    public Guid SessionId { get; set; }
+
+    [JsonPropertyName("fromPoint")]
+    public int? FromPoint { get; set; }
+
+    [JsonPropertyName("toPoint")]
+    public int ToPoint { get; set; }
+}
+
+public sealed class YoteStateDto
+{
+    [JsonPropertyName("rows")]
+    public int Rows { get; set; }
+
+    [JsonPropertyName("cols")]
+    public int Cols { get; set; }
+
+    [JsonPropertyName("piecesPerPlayer")]
+    public int PiecesPerPlayer { get; set; }
+
+    [JsonPropertyName("occupancy")]
+    public List<int>? Occupancy { get; set; }
+
+    [JsonPropertyName("myInHand")]
+    public int MyInHand { get; set; }
+
+    [JsonPropertyName("opponentInHand")]
+    public int OpponentInHand { get; set; }
+
+    [JsonPropertyName("legalPlaceCells")]
+    public List<int>? LegalPlaceCells { get; set; }
+
+    [JsonPropertyName("legalSlides")]
+    public List<YoteEdgeDto>? LegalSlides { get; set; }
+
+    [JsonPropertyName("legalCaptures")]
+    public List<YoteCaptureDto>? LegalCaptures { get; set; }
+
+    [JsonPropertyName("canAct")]
+    public bool CanAct { get; set; }
+}
+
+public sealed class YoteEdgeDto
+{
+    [JsonPropertyName("from")]
+    public int From { get; set; }
+
+    [JsonPropertyName("to")]
+    public int To { get; set; }
+}
+
+public sealed class YoteCaptureDto
+{
+    [JsonPropertyName("from")]
+    public int From { get; set; }
+
+    [JsonPropertyName("to")]
+    public int To { get; set; }
+
+    [JsonPropertyName("jumped")]
+    public int Jumped { get; set; }
+}
+
+public sealed class YoteMoveApiRequest
+{
+    [JsonPropertyName("sessionId")]
+    public Guid SessionId { get; set; }
+
+    [JsonPropertyName("fromCell")]
+    public int? FromCell { get; set; }
+
+    [JsonPropertyName("toCell")]
+    public int ToCell { get; set; }
+
+    [JsonPropertyName("extraRemoveCell")]
+    public int? ExtraRemoveCell { get; set; }
 }
 
 public sealed class GameHistoryItemDto

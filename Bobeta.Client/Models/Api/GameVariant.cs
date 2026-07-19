@@ -9,5 +9,7 @@ public enum GameVariant
     Kopo = 1,
     Ngola = 2,
     Domino = 3,
-    Abbia = 4
+    Abbia = 4,
+    Nzengue = 5,
+    Yote = 6
 }

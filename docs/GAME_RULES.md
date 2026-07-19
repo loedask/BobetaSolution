@@ -234,6 +234,76 @@ Simplified 1v1 Abbia: each seat throws five two-faced tokens. Carved side up sco
 
 ---
 
+## Nzengué (1v1 alignment game)
+
+**Source:** `Bobeta.Application/Games/Nzengue/NzengueRules.cs`, `NzengueGameEngine.cs`
+
+Simplified 1v1 Nzengué for MoMo stakes: nine-point board (square corners, edge midpoints, center, diagonals), three stones per seat, placement phase then slide phase.
+
+### Setup
+
+| Rule | Detail |
+|------|--------|
+| Players | Exactly 2 |
+| Board | 9 points connected by edges, midlines, and diagonals through the center |
+| Stones | 3 per seat |
+| First turn | Random seat (session-seeded) |
+
+### Play
+
+| Rule | Detail |
+|------|--------|
+| Place | Alternate placing one stone on an empty point until each seat has placed three |
+| Move | After placement, alternate sliding one of your stones along a line to an adjacent empty point |
+| Win | First player to get three stones in a row wins |
+| Draw | If the current player has no legal move in the move phase, the match is a draw |
+
+### Economy
+
+| Rule | Detail |
+|------|--------|
+| Win | Same 25% platform commission on the pot as other games |
+| Draw | Both players' locked bets are released |
+
+---
+
+## Yoté (1v1 West African capture game)
+
+**Source:** `Bobeta.Application/Games/Yote/YoteRules.cs`, `YoteGameEngine.cs`
+
+Bobeta house rules for Yoté: 5×6 board, 12 pieces per seat in hand, empty board at start. Place from hand, slide orthogonally, or jump-capture. After a jump, remove one more opponent piece if any remain on the board.
+
+### Setup
+
+| Rule | Detail |
+|------|--------|
+| Players | Exactly 2 |
+| Board | 5 rows × 6 columns, starts empty |
+| Pieces | 12 per seat in hand |
+| First turn | Random seat (session-seeded) |
+
+### Play
+
+| Rule | Detail |
+|------|--------|
+| Place | Put one piece from hand on any empty cell |
+| Slide | Move one of your board pieces one orthogonal step to an adjacent empty cell |
+| Capture | Jump orthogonally over one opponent piece to an empty landing cell; remove the jumped piece |
+| Bonus remove | After a jump, if any opponent pieces remain on the board, remove one more of your choice |
+| Optional captures | Captures are never mandatory |
+| One jump | At most one jump per turn; no diagonals |
+| Win | Leave the opponent with zero pieces in hand and on the board |
+| Draw | Both sides have 3 or fewer total pieces (hand + board), or stalemate with equal totals |
+
+### Economy
+
+| Rule | Detail |
+|------|--------|
+| Win | Same 25% platform commission on the pot as other games |
+| Draw | Both players' locked bets are released |
+
+---
+
 ## Platform / session rules (all games)
 
 **Source:** `CreateGameRequestValidator.cs`, `GameSessionService.cs`, `GameInactivityCoordinator.cs`  
@@ -247,7 +317,7 @@ Simplified 1v1 Abbia: each seat throws five two-faced tokens. Carved side up sco
 | Join game | Locks opponent's bet; game auto-starts |
 | Inactivity | 60 s idle → first warning (10 s to Continue or Cancel); after Continue, 40 s idle → second warning; deadline expires → game cancelled, bets released |
 | Real moves | Reset idle timer and dismiss warnings |
-| API routing | `play-card` / `void-follow` → Makopa only; `kopo/move` → Kopo only; `ngola/move` → Ngola only; `domino/move` → Domino only; `abbia/throw` → Abbia only |
+| API routing | `play-card` / `void-follow` → Makopa only; `kopo/move` → Kopo only; `ngola/move` → Ngola only; `domino/move` → Domino only; `abbia/throw` → Abbia only; `nzengue/move` → Nzengue only; `yote/move` → Yote only |
 
 ---
 
@@ -255,7 +325,7 @@ Simplified 1v1 Abbia: each seat throws five two-faced tokens. Carved side up sco
 
 Player-facing rule text is in:
 
-- `Bobeta.Web.Shared/Services/I18nService.cs` — keys `makopa_rules_body`, `kopo_rules_body`, `ngola_rules_body`, `domino_rules_body`
+- `Bobeta.Web.Shared/Services/I18nService.cs` — keys `makopa_rules_body`, `kopo_rules_body`, `ngola_rules_body`, `domino_rules_body`, `abbia_rules_body`, `nzengue_rules_body`, `yote_rules_body`
 - `Bobeta.Mobile/Services/I18nService.cs` — same keys
 
 Displayed in `Bobeta.Web/Pages/GamePlay.razor` and `Bobeta.Mobile/Pages/GamePlayPage.xaml.cs`.
